@@ -147,7 +147,7 @@ def rotateEuler(theta,phi,psi,pos):
     
     return pos_rot
 
-def writeImageGrid(isnap,output_dir,savename,
+def writeImageGrid(isnap,output_dir,
     ResultQ,ResultQ_edge,
     image_length,npix_x,time_Myr,HubbleParam,edgeon=0):
     array_name = "ResultQ" 
@@ -156,7 +156,7 @@ def writeImageGrid(isnap,output_dir,savename,
 
     output_name = "%s_faceOn" % (array_name, )
 
-    h5name=output_dir + h5filename#savename
+    h5name=output_dir + h5filename
     with h5py.File(h5name, "w") as h5file:
         #h5file.createArray(h5file.root, output_name, ResultQ)
         h5file[output_name]=ResultQ
@@ -185,7 +185,7 @@ def writeImageGrid(isnap,output_dir,savename,
 
 def compute_image_grid(pos_all,mass_all,temperature_all,HubbleParam,time_Myr,BoxSize,
     frame_center,frame_width,frame_depth,
-    savename,output_dir,isnap,
+    output_dir,isnap,
     edgeon=1,
     theta=0,phi=0,psi=0,
     pixels=1200,min_temp=2,max_temp=7,**kwargs):
@@ -360,7 +360,7 @@ def compute_image_grid(pos_all,mass_all,temperature_all,HubbleParam,time_Myr,Box
        
         print 'log10 minmax(ResultQ_edgeOn)',min(ravel(ResultQ_edgeOn)),max(ravel(ResultQ_edgeOn))
 
-    writeImageGrid(isnap,output_dir,savename,ResultQ,ResultQ_edgeOn,image_length,npix_x,time_Myr,HubbleParam,edgeon=edgeon)
+    writeImageGrid(isnap,output_dir,ResultQ,ResultQ_edgeOn,image_length,npix_x,time_Myr,HubbleParam,edgeon=edgeon)
     
     return 
 

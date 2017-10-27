@@ -7,14 +7,10 @@ import matplotlib.pyplot as plt
 import numpy as np 
 import os
 
-from distinct_colours import get_distinct
-
-from sne_utils import findClusterExtent,drawSN
-from all_utils import getTemperature
-
 from readsnap import readsnap
 
 
+## system functions
 def makeOutputDirectories(datadir):
     os.mkdir(os.path.join(datadir,'Plots'))
     os.mkdir(os.path.join(datadir,'Plots','GasTwoColour'))
@@ -22,36 +18,22 @@ def makeOutputDirectories(datadir):
     os.mkdir(os.path.join(datadir,'Plots','Projections','Den'))
     os.mkdir(os.path.join(datadir,'Plots','Projections','Temp'))
 
+## math functions 
 
-def plotClusterAtSnap(ax,gal,snap,cluster,datadir,savename,snappath):
-    short = 1
-    to_plot=[]
+## physics functions
+def getTemperature(U_code,y_helium,ElectronAbundance):
+    """U_codes = res['u']
+        y_heliums = res['z'][:,1]
+        ElectronAbundance=res['ne']"""
+    U_cgs = U_code*1e10
+    gamma=5/3.
+    kB=1.38e-16 #erg /K
+    m_proton=1.67e-24 # g
+    mu = (1.0 + 4*y_helium) / (1+y_helium+ElectronAbundance) 
+    mean_molecular_weight=mu*m_proton
+    return mean_molecular_weight * (gamma-1) * U_cgs / kB
 
-    timepath=os.path.join(datadir,"snaptimes"+"_shortsnap.txt")
-    snaps,times=np.genfromtxt(timepath,unpack=1)
-    snaptime = times[snaps==snap]
-
-    for sn in cluster:
-        if sn.launch_time < snaptime:
-            to_plot+=[sn]
-    if len(to_plot):
-        center,extent,(xs,ys,rcools)=findClusterExtent(cluster,real=snappath)
-
-        #add background
-        new_ax=addPrettyGalaxyToAx(ax,snap,gal,center,frame_width=extent,frame_depth=extent,
-            snappath=snappath,datadir=datadir,savefig=0,savename=savename,overwrite=0
-            ,min_den=-0.35,short=short)
-
-        for j,sn in enumerate(to_plot): 
-            drawSN(plt,ax,sn,snaptime,loc=(xs[j],ys[j]))
-        new_ax.set_xlim([center[0]-extent,center[0]+extent])
-        new_ax.set_ylim([center[1]-extent,center[1]+extent])
-        new_ax.get_figure().savefig(os.path.join(datadir,'movies','frames',savename))
-        plt.close()
-
-    return ax
-
-def projectDenTemp(snapdir,snapnum,savename,
+def projectDenTemp(snapdir,snapnum,
     dprojects,tprojects,
     frame_center,frame_width,frame_depth,
     flag_cosmological,
@@ -60,7 +42,6 @@ def projectDenTemp(snapdir,snapnum,savename,
     Input: 
         snapdir - directory the snapshots live in
         snapnum - snapshot number currently rendering
-        savename - name of .hdf5 file
         dprojects - place to save density projections
         tprojects - place to save temperature projections
         frame_center - origin of image in data space
@@ -103,16 +84,16 @@ def projectDenTemp(snapdir,snapnum,savename,
     print 'projecting the density grid'
     den_grid=compute_density_grid(
         frame_center=frame_center,frame_width=frame_width,frame_depth=frame_depth,
-        savename="%s_%d"%(savename,snapnum),output_dir = dprojects,isnap = snapnum,
+        output_dir = dprojects,isnap = snapnum,
         **kwargs)
 
     print 'projecting the temperature grid'
     temp_grid=compute_temp_grid(
         frame_center=frame_center,frame_width=frame_width,frame_depth=frame_depth,
-        savename="%s_%d"%(savename,snapnum),output_dir = tprojects,isnap = snapnum,
+        output_dir = tprojects,isnap = snapnum,
         **kwargs)
 
-def addPrettyGalaxyToAx(ax,snapdir,snapnum,savename,
+def addPrettyGalaxyToAx(ax,snapdir,snapnum,
     frame_center,frame_width,frame_depth,
     overwrite=0,savefig=0,datadir=None,**kwargs):
     """
@@ -120,7 +101,6 @@ def addPrettyGalaxyToAx(ax,snapdir,snapnum,savename,
         ax - matplotlib axis object to draw to
         snapdir - directory where the snapshots live
         snapnum - snapshot number to draw
-        savename - what to call the .hdf5 file
         frame_center - origin of image in data space 
         frame_width - half-width of image in data space
         frame_depth - half-depth of image in data space 
@@ -142,7 +122,7 @@ def addPrettyGalaxyToAx(ax,snapdir,snapnum,savename,
     if datadir ==None:
         datadir = snapdir
 
-    print 'Drawing',savename,'to:',datadir
+    print 'Drawing',snapdir,'to:',datadir
     if 'Plots' not in os.listdir(datadir):
         makeOutputDirectories(datadir)
 
@@ -156,15 +136,15 @@ def addPrettyGalaxyToAx(ax,snapdir,snapnum,savename,
             raise IOError
         print 'plotting image grid'
         plot_image_grid(ax,snapnum,dprojects,tprojects,
-            frame_center,frame_width,savename=savename+'.hdf5',**kwargs)
+            frame_center,frame_width,**kwargs)
 
     except IOError:
         print "Haven't computed image grids"
-        projectDenTemp(snapdir,snapnum,savename+'.hdf5',dprojects,tprojects,
-            frame_center,frame_width,frame_depth,flag_cosmological = 'm12i' in savename,**kwargs)
+        projectDenTemp(snapdir,snapnum,dprojects,tprojects,
+            frame_center,frame_width,frame_depth,flag_cosmological = 'm12i' in snapdir,**kwargs)
         print 'plotting image grid'
         plot_image_grid(ax,snapnum,dprojects,tprojects,
-            frame_center,frame_width,savename=savename+'.hdf5',**kwargs)
+            frame_center,frame_width,**kwargs)
 
     if savefig:
         ax.get_figure().set_size_inches(6,6)
@@ -173,35 +153,3 @@ def addPrettyGalaxyToAx(ax,snapdir,snapnum,savename,
         ax.get_figure().savefig(os.path.join(datadir,'Plots','GasTwoColour',image_name))
     
     return ax
-
-def main(savename,snapnum=0,pixels=1200,frame_width=10,cosmo=0,**kwargs):
-    cosmo == 'm12i' in savename
-    if cosmo:
-        raise Exception("Not Implemented!")
-    else:
-        frame_center=(0,0)
-
-    plt.plot(frame_center[0],frame_center[1]) 
-    ax=plt.gca()
-
-    return addPrettyGalaxyToAx(ax,snapnum,savename,frame_center,frame_width,frame_depth,pixels)
-
-
-if __name__=='__main__':
-    argv = sys.argv[1:]
-    opts,args = getopt.getopt(argv,'',['pixels=','gal=','snap=',
-        'short=','frame_width='])
-
-    #options:
-    #--pixels : how many pixels in each direction to use, defaults to 1200
-    #--gal : which simulation to use, defaults to m1e11f20
-    #--snap : which snapshot
-    #--short : flag for short snapshots starting at 250
-    #--frame_width : size of frame in kpc
-
-    for i,opt in enumerate(opts):
-        if opt[1]=='':
-            opts[i]=('mode',opt[0].replace('-'))
-        else:
-            opts[i]=(opt[0].replace('-',''),opt[1])
-    main(**dict(opts))

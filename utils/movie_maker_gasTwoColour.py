@@ -15,7 +15,7 @@ def round_to_nearest_integer(x):
 
 def plot_image_grid(ax,isnap,dprojects,tprojects,
     frame_center,frame_width,pixels=1200,
-    min_den=-1.0,max_den=1.2,min_temp=2,max_temp=7,edgeon=0,savename=None,**kwargs): 
+    min_den=-1.0,max_den=1.2,min_temp=2,max_temp=7,edgeon=0,**kwargs): 
     print "extra kwargs in plot_2color_image:",kwargs.keys()
     # Set paths
     

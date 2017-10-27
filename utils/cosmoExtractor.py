@@ -1,17 +1,6 @@
-##### This script will output *only* the gas particles near a galaxy from a cosmological
-##### simulation into a "subsnapshot" that has been centered/rotated to be edge on
-
 import h5py,sys,getopt,os
 import numpy as np
-#from readsnap import readsnap
-
-def makeOutputDir(savename):
-    projectDir="/home/abg6257/projects/subsnaps"
-    datadir=os.path.join(projectDir,savename)
-    if savename not in os.listdir(os.path.join(projectDir)):
-        print 'making directory subsnaps/%s in'%savename
-        os.mkdir(datadir)
-    return datadir
+import readsnap
 
 ###### Math Functions
 def rotationMatrixY(theta):
@@ -43,12 +32,7 @@ def rotateVectorsZY(thetay,thetaz,vectors):
 def rotateVectors(rotationMatrix,vectors):
     return np.dot(rotationMatrix,vectors.T).T
 
-def getVcom(masses,velocities):
-    return np.sum(masses[:,None]*velocities,axis=0)/np.sum(masses)
-
-def getAngularMomentum(vectors,masses,velocities):
-    return np.sum(np.cross(vectors,masses[:,None]*velocities),axis=0)
-
+## geometry functions
 def extractSphericalVolumeIndices(rs,rcom,radius2):
     return np.sum((rs - rcom)**2.,axis=1) < radius2
 
@@ -58,6 +42,13 @@ def extractCylindricalVolumeIndices(rs,rcom,radius,height):
     zindices = (rs[:,2]-rcom[2])**2. < height**2.
     indices = np.logical_and(xyindices,zindices)
     return indices
+
+## physics functions
+def getVcom(masses,velocities):
+    return np.sum(masses[:,None]*velocities,axis=0)/np.sum(masses)
+
+def getAngularMomentum(vectors,masses,velocities):
+    return np.sum(np.cross(vectors,masses[:,None]*velocities),axis=0)
 
 def iterativeCoM(coords,masses,n=4,r0=np.array([0,0,0])):
     rcom = r0
@@ -73,29 +64,7 @@ def getThetas(angMom):
     print "want to rotate by",thetay*180/np.pi,thetaz*180/np.pi
     return thetay,thetaz
 
-def extractDisk(snap,radius=30,cylinder=15):
-    """Takes an open snapshot and returns the orientation of the disk,
-        its location, and the index arrays for the stars/gas particles 
-        that make it up
-        Input:
-            snap - an h5py.File instance
-            radius - in kpc, the radius to which you want to include particles
-        Output:
-            thetay/thetaz - orientation angles
-            scom/vscom - location of the center of mass of the star particles and its velocity
-            gindinces/sindices - index arrays for gas/star particles within 30kpc"""
-    HubbleParam = snap['Header'].attrs['HubbleParam']
-
-    ## load star particle info
-    srs = np.array(snap['PartType4/Coordinates'],dtype=np.float64)/HubbleParam #kpc
-    svs = np.array(snap['PartType4/Velocities'],dtype=np.float64) #km/s
-    smasses = np.array(snap['PartType4/Masses'],dtype=np.float64)/HubbleParam*1e10 #solar masses
-
-    ## load gas particle info
-    rs = np.array(snap['PartType0/Coordinates'],dtype=np.float64)/HubbleParam #kpc
-    rhos = np.array(snap['PartType0/Density'],dtype=np.float64)*HubbleParam**2.# mass / len^3 (code)
-    return extractDiskFromArrays(srs,svs,smasses,rs,rhos,radius,cylinder=cylinder)
-
+## main function
 def extractDiskFromArrays(srs,svs,smasses,rs,rhos,radius,cylinder=0):
     """Takes arrays from a snapshot and returns the information required
         from extractDisk. Useful to separate so that external protocols can 
@@ -131,54 +100,22 @@ def extractDiskFromArrays(srs,svs,smasses,rs,rhos,radius,cylinder=0):
 
     return thetay,thetaz,scom,vscom,gindices,sindices
 
-def getHaloIndices(snap):
-    thetay,thetaz,scom,vscom,gindices,sindices=extractDisk(snap)
-    rs = np.array(snap['PartType0/Coordinates'])
-    rotatedCoords=rotateVectorsZY(thetay,thetaz,rs[gindices]-scom)
-    return gindices,rotatedCoords
+def findGalaxyAndOrient(snapdir,snapnum,gaspos,gasdens,frame_width,frame_depth):
+    ## load in stars to find their center of mass
+    star_res = readsnap(snapdir,snapnum,4,cosmological=1)
 
-def outputHDF5(datadir,snapdir,snapnum):
-    with h5py.File(snapdir+"/snapshot_%03d.hdf5"%snapnum,'r') as snap:
-        gindices,rotatedCoords=getHaloIndices(snap)
-        writeSnap(snap,gindices,rotatedCoords,datadir,snapnum)
+    args = {
+        'srs':star_res['p']
+        ,'svs':star_res['v']
+        ,'smasses':star_res['m']
+        ,'rs':gaspos
+        ,'rhos':gasdens
+        ,'radius':2**0.5*frame_width#kpc
+        ,'cylinder':frame_depth#kpc
+        }
 
-def writeSnap(snap,gindices,rotatedCoords,datadir,snapnum):
-    HubbleParam=snap['Header'].attrs['HubbleParam']
-    with h5py.File(datadir+"/snapshot_%03d.hdf5"%snapnum,'w') as buildsnap:
-        ## write header info
-        buildsnap.create_group("Header")
-        buildsnap['Header'].attrs['Time']=snap['Header'].attrs['Time']
-        buildsnap['Header'].attrs['HubbleParam']=1
-        buildsnap['Header'].attrs['BoxSize']=snap['Header'].attrs['BoxSize']
+    thetay,thetaz,scom,vscom,gindices,sindices = extractDiskFromArrays(**args)
+    del star_res
 
-        ## write gas particle info in non-cosmo units
-        buildsnap['PartType0/Coordinates']=rotatedCoords
-        buildsnap['PartType0/Masses']=np.array(snap['PartType0/Masses'],dtype=np.float64)[gindices]/HubbleParam
+    return thetay,thetaz,scom,gindices
 
-        ## write "cosmo-unit-less" gas particle info
-        buildsnap['PartType0/ElectronAbundance']=np.array(snap['PartType0/ElectronAbundance'],dtype=np.float64)[gindices]
-        buildsnap['PartType0/Metallicity']=np.array(snap['PartType0/Metallicity'],dtype=np.float64)[gindices]
-        buildsnap['PartType0/InternalEnergy']=np.array(snap['PartType0/InternalEnergy'],dtype=np.float64)[gindices]
-
-def main(low,high,savename,**kwargs):
-    low,high=int(low),int(high)
-    snapdir = "/home/abg6257/projects/isoDisk/%s/output"%savename
-    datadir = makeOutputDir(savename)
-    for snapnum in xrange(low,high):
-        outputHDF5(datadir,snapdir,snapnum)
-    print "all done!"
-    
-if __name__=='__main__':
-    argv = sys.argv[1:]
-    opts,args = getopt.getopt(argv,'',['low=','high=',"savename="])
-    #options:
-    #-r : read in previous starobjects.npz, default behavior
-    #-n : ignore any preexisting starobjects.npz 
-    #--snap : snapshot number 
-    #--gal  : galaxy prefix 
-    for i,opt in enumerate(opts):
-        if opt[1]=='':
-            opts[i]=('mode',opt[0].replace('-',''))
-        else:
-            opts[i]=(opt[0].replace('-',''),opt[1])
-    main(**dict(opts))    

@@ -3,41 +3,9 @@ import os,sys,getopt
 import copy
 import matplotlib.pyplot as plt
 
-from utils.cosmoExtractor import extractDiskFromArrays,rotateVectorsZY
-from utils.movie_utils import addPrettyGalaxyToAx
+from utils.cosmoExtractor import findGalaxyAndOrient,rotateVectorsZY
+from utils.movie_utils import addPrettyGalaxyToAx,getTemperature
 from utils.readsnap import readsnap
-
-
-def getTemperature(U_code,y_helium,ElectronAbundance):
-    """U_codes = res['u']
-        y_heliums = res['z'][:,1]
-        ElectronAbundance=res['ne']"""
-    U_cgs = U_code*1e10
-    gamma=5/3.
-    kB=1.38e-16 #erg /K
-    m_proton=1.67e-24 # g
-    mu = (1.0 + 4*y_helium) / (1+y_helium+ElectronAbundance) 
-    mean_molecular_weight=mu*m_proton
-    return mean_molecular_weight * (gamma-1) * U_cgs / kB
-
-def findGalaxyAndOrient(snapdir,snapnum,gaspos,gasdens,frame_width,frame_depth):
-    ## load in stars to find their center of mass
-    star_res = readsnap(snapdir,snapnum,4,cosmological=1)
-
-    args = {
-        'srs':star_res['p']
-        ,'svs':star_res['v']
-        ,'smasses':star_res['m']
-        ,'rs':gaspos
-        ,'rhos':gasdens
-        ,'radius':2**0.5*frame_width#kpc
-        ,'cylinder':frame_depth#kpc
-        }
-
-    thetay,thetaz,scom,vscom,gindices,sindices = extractDiskFromArrays(**args)
-    del star_res
-
-    return thetay,thetaz,scom,gindices
 
 def loadDataFromSnapshot(snapdir,snapnum,mode,frame_width,frame_depth):
     if 'r' in mode:
@@ -77,7 +45,6 @@ def loadDataFromSnapshot(snapdir,snapnum,mode,frame_width,frame_depth):
 
 
 def renderGalaxy(ax,snapdir,snapnum,savefig=1,mode='r',**kwargs):
-    savename = snapdir[-6:]+".hdf5" #ignored for now...
     # copy the dictionary so we don't mess anything up 
     copydict = copy.copy(kwargs)
     # add in filtered galaxy data
@@ -86,7 +53,7 @@ def renderGalaxy(ax,snapdir,snapnum,savefig=1,mode='r',**kwargs):
     # make projection map and add to canvas
     print copydict.keys(),'passed'
     addPrettyGalaxyToAx(
-        ax,snapdir,snapnum,savename=savename,
+        ax,snapdir,snapnum,
         savefig=savefig,**copydict)
 
 def main(snapdir,snapstart,snapmax,**kwargs):
