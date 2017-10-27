@@ -73,14 +73,17 @@ if __name__=='__main__':
 
     #options:
     # -r/s = use readsnap or use single snapshot loader
-    #--pixels : how many pixels in each direction to use, defaults to 1200
+    #--snapdir: place where snapshots live
     #--snapstart : which snapshot to start the loop at
     #--snapmax : which snapshot to end the loop at
     #--frame_width : half width of frame in kpc
     #--frame_depth : half depth of frame in kpc
-    #--theta,phi,psi : euler angles for rotation
-    #--min/max_den/temp: bottom/top of color scales for density/temperature
     #--datadir: place to output frames to
+
+    #--theta,phi,psi : euler angles for rotation
+    #--pixels : how many pixels in each direction to use, defaults to 1200
+    #--min/max_den/temp: bottom/top of color scales for density/temperature
+
 
     for i,opt in enumerate(opts):
         if opt[1]=='':
