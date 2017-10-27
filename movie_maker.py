@@ -3,9 +3,9 @@ import os,sys,getopt
 import copy
 import matplotlib.pyplot as plt
 
-from cosmoExtractor import extractDiskFromArrays,rotateVectorsZY
-from movie_utils import addPrettyGalaxyToAx
-from readsnap import readsnap
+from utils.cosmoExtractor import extractDiskFromArrays,rotateVectorsZY
+from utils.movie_utils import addPrettyGalaxyToAx
+from utils.readsnap import readsnap
 
 
 def getTemperature(U_code,y_helium,ElectronAbundance):
@@ -102,7 +102,7 @@ if __name__=='__main__':
         'snapstart=','snapmax=',
         'pixels=','frame_width=','frame_depth=',
         'theta=','phi=','psi=',
-        'min_den=','max_den=','min_temp=','max_temp='])
+        'min_den=','max_den=','min_temp=','max_temp=','datadir='])
 
     #options:
     # -r/s = use readsnap or use single snapshot loader
@@ -113,7 +113,7 @@ if __name__=='__main__':
     #--frame_depth : half depth of frame in kpc
     #--theta,phi,psi : euler angles for rotation
     #--min/max_den/temp: bottom/top of color scales for density/temperature
-    
+    #--datadir: place to output frames to
 
     for i,opt in enumerate(opts):
         if opt[1]=='':
