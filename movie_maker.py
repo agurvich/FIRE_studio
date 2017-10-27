@@ -87,7 +87,7 @@ if __name__=='__main__':
             opts[i]=('mode',opt[0].replace('-'))
         else:
             key = opt[0].replace('-','')
-            if key in ['snapdir']:
+            if key in ['snapdir','datadir']:
                 value= opt[1]
             else:
                 # turn arguments from strings to whatever

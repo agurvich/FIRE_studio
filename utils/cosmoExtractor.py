@@ -1,6 +1,6 @@
 import h5py,sys,getopt,os
 import numpy as np
-import readsnap
+from readsnap import readsnap
 
 ###### Math Functions
 def rotationMatrixY(theta):
