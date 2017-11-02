@@ -50,11 +50,6 @@ def plot_image_grid(ax,isnap,dprojects,tprojects,
     with h5py.File(data_dir_rho + h5name, "r") as h5file:
         exec "ResultW_rho = np.array(h5file['%s_faceOn'])" % (array_name, )
         try:
-            HubbleParam = h5file['HubbleParam'][0]
-        except:
-            HubbleParam = 1
-
-        try:
             time_Myr = h5file['Time_Myr'][0]
         except:
             print dir(h5file.root)
@@ -64,12 +59,11 @@ def plot_image_grid(ax,isnap,dprojects,tprojects,
 
         # if you use cosmological = 1 in readsnap then this is already accounted for!
         # need to think of a self-consistent way to address this
-        HubbleParam = 1 
 
-        Xmin    = -image_length * HubbleParam / 2.0	+frame_center[0]
-        Xmax    = image_length * HubbleParam / 2.0	+frame_center[0]
-        Ymin    = -image_length * HubbleParam / 2.0 +frame_center[1]
-        Ymax    = image_length * HubbleParam / 2.0 	+frame_center[1]
+        Xmin    = -image_length / 2.0	+frame_center[0]
+        Xmax    = image_length / 2.0	+frame_center[0]
+        Ymin    = -image_length / 2.0 +frame_center[1]
+        Ymax    = image_length / 2.0 	+frame_center[1]
         
         ResultW_rho = ResultW_rho - tf_min_rho 
         ResultW_rho = ResultW_rho / (tf_max_rho - tf_min_rho)
@@ -117,12 +111,6 @@ def plot_image_grid(ax,isnap,dprojects,tprojects,
                     value = ResultW_rho[j,i]
                     image_rho[i,j] = value
 
-        print "DENSITY"
-        print image_rho[10,100]
-        print ResultW_rho[10,100]
-        print ResultW_rho.shape
-                    
-        raise Exception("STOP")
         h5file.close() 
 
 
@@ -198,8 +186,6 @@ def plot_image_grid(ax,isnap,dprojects,tprojects,
     fig.add_axes(ax)
     """
 
-    # Length of bar in code units
-    scale_line_length *= HubbleParam
     # Convert to pixels
     length_per_pixel = (Xmax - Xmin) / npix_x
     scale_line_length_px = int(scale_line_length / length_per_pixel)

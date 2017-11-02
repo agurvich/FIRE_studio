@@ -149,7 +149,7 @@ def rotateEuler(theta,phi,psi,pos):
 
 def writeImageGrid(isnap,output_dir,
     ResultQ,ResultQ_edge,
-    image_length,npix_x,time_Myr,HubbleParam,edgeon=0):
+    image_length,npix_x,time_Myr,edgeon=0):
     array_name = "ResultQ" 
     # Write the image grid to HDF5 file 
     h5filename = "gasTemp_proj_%.3d_%.2fkpc.hdf5" % (isnap, image_length)
@@ -158,24 +158,16 @@ def writeImageGrid(isnap,output_dir,
 
     h5name=output_dir + h5filename
     with h5py.File(h5name, "w") as h5file:
-        #h5file.createArray(h5file.root, output_name, ResultQ)
         h5file[output_name]=ResultQ
 
         if edgeon:
             # Write edge on image grid to HDF5 file. 
             output_name = "%s_edgeOn" % (array_name, ) 
-            #h5file.createArray(h5file.root, output_name, ResultQ_edge)
             h5file[output_name]=ResultQ_edge
         try: 
-            #h5file.createArray(h5file.root, "image_length", np.array([image_length]))
-            #h5file.createArray(h5file.root, "npix_x", np.array([npix_x]))
-            #h5file.createArray(h5file.root, "Time_Myr", np.array([time_Myr]))
-            #h5file.createArray(h5file.root, "HubbleParam", np.array([HubbleParam]))
-
             h5file['image_length']=np.array([image_length])
             h5file['npix_x']=np.array([npix_x])
             h5file['Time_Myr']=np.array([time_Myr])
-            h5file['HubbleParam']=np.array([HubbleParam])
 
         except:
             print "name already exists"
@@ -183,7 +175,7 @@ def writeImageGrid(isnap,output_dir,
         h5file.close()
 
 
-def compute_image_grid(pos_all,mass_all,temperature_all,HubbleParam,time_Myr,BoxSize,
+def compute_image_grid(pos_all,mass_all,temperature_all,time_Myr,BoxSize,
     frame_center,frame_width,frame_depth,
     output_dir,isnap,
     edgeon=1,
@@ -219,18 +211,19 @@ def compute_image_grid(pos_all,mass_all,temperature_all,HubbleParam,time_Myr,Box
     hsml_all[:] = 0.0
 
     image_length = 2*frame_width
+    image_depth = 2*frame_depth
 
     global Xmin,Xmax,Ymin,Ymax,Zmin,Zmax
     global L_x,L_y,L_z
-    L_x     = image_length * HubbleParam	   #Size of image in x (in kpc / h)
-    L_y     = image_length * HubbleParam 	   #Size of image in y
-    L_z     = image_length * HubbleParam / 2.0
-    Xmin    = -image_length * HubbleParam / 2.0	+frame_center[0]
-    Xmax    = image_length * HubbleParam / 2.0	+frame_center[0] 
-    Ymin    = -image_length * HubbleParam / 2.0 +frame_center[1]
-    Ymax    = image_length * HubbleParam / 2.0 	+frame_center[1]
-    Zmin    = -frame_depth + frame_center[2]#-image_length * HubbleParam / 4.0 
-    Zmax    = frame_depth + frame_center[2]#image_length * HubbleParam / 4.0 
+    L_x     = image_length  #Size of image in x (in kpc)
+    L_y     = image_length  #Size of image in y (in kpc)
+    L_z     = image_depth   #Size of image in z (in kpc)
+    Xmin    = -image_length/2.0	+ frame_center[0]
+    Xmax    = image_length/2.0 + frame_center[0] 
+    Ymin    = -image_length/2.0 + frame_center[1]
+    Ymax    = image_length/2.0 + frame_center[1]
+    Zmin    = -frame_depth + frame_center[2]
+    Zmax    = frame_depth + frame_center[2] 
 
     print 'extracting cube'
     
@@ -364,7 +357,7 @@ def compute_image_grid(pos_all,mass_all,temperature_all,HubbleParam,time_Myr,Box
        
         print 'log10 minmax(ResultQ_edgeOn)',min(ravel(ResultQ_edgeOn)),max(ravel(ResultQ_edgeOn))
 
-    writeImageGrid(isnap,output_dir,ResultQ,ResultQ_edgeOn,image_length,npix_x,time_Myr,HubbleParam,edgeon=edgeon)
+    writeImageGrid(isnap,output_dir,ResultQ,ResultQ_edgeOn,image_length,npix_x,time_Myr,edgeon=edgeon)
     
     return 
 
@@ -419,16 +412,12 @@ def plot_image_grid(isnap, sim_name):
     
     # Face on image 
     ResultQ = float32(h5file.root.ResultQ_faceOn.read())
-    try:
-        HubbleParam = h5file.root.HubbleParam.read()[0] 
-    except:
-        HubbleParam=1
     time_Myr = h5file.root.Time_Myr.read()[0] 
 
-    Xmin    = -image_length * HubbleParam / 2.0	   
-    Xmax    = image_length * HubbleParam / 2.0	   
-    Ymin    = -image_length * HubbleParam / 2.0    
-    Ymax    = image_length * HubbleParam / 2.0 	   
+    Xmin    = -image_length/2.0	   
+    Xmax    = image_length/2.0	   
+    Ymin    = -image_length/2.0    
+    Ymax    = image_length/2.0 	   
     
 #    ResultQ = ResultQ - tf_min 
 #    ResultQ = ResultQ / (tf_max - tf_min)
@@ -480,8 +469,6 @@ def plot_image_grid(isnap, sim_name):
 
     # We need to create the scale bar
 
-    # Length of bar in code units
-    scale_line_length *= HubbleParam
     # Convert to pixels
     length_per_pixel = (Xmax - Xmin) / npix_x
     scale_line_length_px = int(scale_line_length / length_per_pixel)

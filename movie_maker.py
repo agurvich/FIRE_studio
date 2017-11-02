@@ -18,7 +18,7 @@ def loadDataFromSnapshot(snapdir,snapnum,mode,frame_width,frame_depth):
         ## assumes the only sort of multi-part snapshot you would have is in cosmological units
         ## if you have a multipart snapshot that isn't in cosmological units pray that h=1, or change
         ## this flag
-        res = readsnap(snapdir,snapnum,0,cosmological = 1)
+        res = readsnap(snapdir,snapnum,0,cosmological=1)
 
         pos_all = res['p']
         mass_all = res['m']
@@ -29,8 +29,6 @@ def loadDataFromSnapshot(snapdir,snapnum,mode,frame_width,frame_depth):
         
         ## filter and free up memory
         pos = rotateVectorsZY(thetay,thetaz,pos_all[gindices]-frame_center)
-        print np.min(pos[:,2]),np.max(pos[:,2])
-        raise Exception("STOP")
         frame_center = np.zeros(3) # plot at center of mass
         del pos_all
         mass = mass_all[gindices]
@@ -69,7 +67,7 @@ def renderGalaxy(ax,snapdir,snapnum,savefig=1,noaxis=0,mode='r',**kwargs):
         copydict.update(loadDataFromSnapshot(snapdir,snapnum,mode,kwargs['frame_width'],kwargs['frame_depth']))
         ax = addPrettyGalaxyToAx(
             ax,snapdir,snapnum,
-            frame_center=np.zeros(3),
+            #frame_center=np.zeros(3),
             **copydict)
 
     except IOError:
