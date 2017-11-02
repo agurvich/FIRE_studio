@@ -10,7 +10,7 @@ you can add a rendered galaxy to a matplotlib axis object.
 
 ## Running from the command line
 A render-loop can also be started with the command:
-`python movie_maker.py --snapdir="/projects/b1026/agurvich/cosmo/m12i_res7000/output" --snapstart=555 --snapmax=600 --frame_width=30 --frame_depth=15`
+`python movie_maker.py --snapdir="/projects/b1026/agurvich/cosmo/m12i_res7000_latte/output" --snapstart=555 --snapmax=556 --frame_width=30 --frame_depth=15`
 
 
 ### available keywords from the command line

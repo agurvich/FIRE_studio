@@ -14,7 +14,7 @@ def round_to_nearest_integer(x):
         return int(x) + 1
 
 def plot_image_grid(ax,isnap,dprojects,tprojects,
-    frame_center,frame_width,pixels=1200,
+    frame_center,frame_width,frame_depth,pixels=1200,
     min_den=-1.0,max_den=1.2,min_temp=2,max_temp=7,edgeon=0,**kwargs): 
     print "extra kwargs in plot_2color_image:",kwargs.keys()
     # Set paths
@@ -62,6 +62,10 @@ def plot_image_grid(ax,isnap,dprojects,tprojects,
             time_Myr=h5file.root
             raise Exception("STOP!")
 
+        # if you use cosmological = 1 in readsnap then this is already accounted for!
+        # need to think of a self-consistent way to address this
+        HubbleParam = 1 
+
         Xmin    = -image_length * HubbleParam / 2.0	+frame_center[0]
         Xmax    = image_length * HubbleParam / 2.0	+frame_center[0]
         Ymin    = -image_length * HubbleParam / 2.0 +frame_center[1]
@@ -92,14 +96,11 @@ def plot_image_grid(ax,isnap,dprojects,tprojects,
                     value = ResultW_rho[j,i]
                     image_rho[i+ (0.5 * npix_y),j] = value
                 
-
-
-        h5file.close() 
         if edgeon:
             # Edge on image 
-            npix_y /= 2 
+            npix_y /= 2
 
-            exec "ResultW_rho = h5file['%s_edgeOn']" % (array_name, )
+            exec "ResultW_rho = np.array(h5file['%s_edgeOn'])" % (array_name, )
             
             ResultW_rho = ResultW_rho - tf_min_rho			
             ResultW_rho = ResultW_rho / (tf_max_rho - tf_min_rho)
@@ -115,7 +116,14 @@ def plot_image_grid(ax,isnap,dprojects,tprojects,
                 for j in range(0,npix_x):
                     value = ResultW_rho[j,i]
                     image_rho[i,j] = value
+
+        print "DENSITY"
+        print image_rho[10,100]
+        print ResultW_rho[10,100]
+        print ResultW_rho.shape
                     
+        raise Exception("STOP")
+        h5file.close() 
 
 
     # Now read in temperature image array 
@@ -128,7 +136,9 @@ def plot_image_grid(ax,isnap,dprojects,tprojects,
     h5filename = "gasTemp_proj_%3d_%.2fkpc.hdf5" % (isnap, image_length)
     h5name=h5filename
     with h5py.File(data_dir_T + h5name, "r") as h5file:
-        #npix_y *= 2 
+        if edgeon:
+            # have to undo the halving
+            npix_y *= 2
         ResultQ_T = np.array(h5file['ResultQ_faceOn'])
         
         print 'Image range (temp): ',min(np.ravel(ResultQ_T)),max(np.ravel(ResultQ_T))
@@ -141,7 +151,7 @@ def plot_image_grid(ax,isnap,dprojects,tprojects,
         print 'Image range (8bit): ',min(np.ravel(ResultQ_T)),max(np.ravel(ResultQ_T))
 
         ResultQ_T = ResultQ_T.astype(np.uint16)    
-
+ 
         if not edgeon:
             image_T = np.ndarray((npix_y,npix_x),dtype=np.uint16)
             for i in range(0,npix_y):
@@ -151,13 +161,15 @@ def plot_image_grid(ax,isnap,dprojects,tprojects,
         else:
             image_T = np.ndarray((1.5*npix_y,npix_x),dtype=np.uint16)
             for i in range(0,npix_y):
+                new_i = i+ (0.5 * npix_y)
                 for j in range(0,npix_x):
                     value = ResultQ_T[j,i]
-                    image_rho[i+ (0.5 * npix_y),j] = value
+                    image_T[new_i,j] = value
+
         # Edge on image 
         if edgeon:
             npix_y /= 2 
-            ResultQ_T = h5file['ResultQ_edgeOn']
+            ResultQ_T = np.array(h5file['ResultQ_edgeOn'])
             
             ResultQ_T = ResultQ_T - tf_min_T 
             ResultQ_T = ResultQ_T / (tf_max_T - tf_min_T) 
@@ -173,7 +185,6 @@ def plot_image_grid(ax,isnap,dprojects,tprojects,
                 for j in range(0,npix_x):
                     value = ResultQ_T[j,i]
                     image_T[i,j] = value 
-
 
     # Now take the rho and T images, and combine them 
     # to produce the final image array. 
@@ -221,7 +232,7 @@ def plot_image_grid(ax,isnap,dprojects,tprojects,
 
     #figure_label2 = r"$\rm{UVBthin}$"
     imgplot = ax.imshow(final_image, 
-        extent = (Xmin,Xmax,Ymin,Ymax),origin = 'lower', aspect = 'auto')
+        extent = (Xmin,Xmax,Ymin-(2*frame_depth)*edgeon,Ymax),origin = 'lower', aspect = 'auto')
     figure_label = r"$%03d \, \rm{Myr}$" % (round_to_nearest_integer(time_Myr), )
     figure_label = r"$%.2f \, \rm{Myr}$" % (time_Myr)
     label = pylab.text(0.70, 0.92, figure_label, fontsize = 8, transform = ax.transAxes)
