@@ -8,36 +8,35 @@ matplotlib.use('Agg')
 
 import matplotlib.pyplot as plt
 
-from utils.cosmoExtractor import findGalaxyAndOrient,rotateVectorsZY
-from utils.movie_utils import addPrettyGalaxyToAx,getTemperature
-from utils.readsnap import readsnap
+from firestudio.utils.cosmoExtractor import findGalaxyAndOrient,rotateVectorsZY
+from firestudio.utils.movie_utils import addPrettyGalaxyToAx,getTemperature
+from firestudio.utils.readsnap import readsnap
 
-def loadDataFromSnapshot(snapdir,snapnum,mode,frame_width,frame_depth):
+def loadDataFromSnapshot(snapdir,snapnum,mode,frame_width,frame_depth,frame_center=None):
     if 'r' in mode:
         print "using readsnap to load in data"
         ## assumes the only sort of multi-part snapshot you would have is in cosmological units
         ## if you have a multipart snapshot that isn't in cosmological units pray that h=1, or change
         ## this flag
+        print 'loading snapshot from',snapdir
         res = readsnap(snapdir,snapnum,0,cosmological=1)
 
         pos_all = res['p']
         mass_all = res['m']
         temperature_all = getTemperature(res['u'],res['z'][:,1],res['ne'])
         
-        thetay,thetaz,frame_center,gindices = findGalaxyAndOrient(snapdir,snapnum,pos_all,res['rho'],
-            frame_width,frame_depth)
+        if frame_center == None:
+            thetay,thetaz,frame_center,gindices = findGalaxyAndOrient(snapdir,snapnum,pos_all,res['rho'],
+                frame_width,frame_depth)
         
-        ## filter and free up memory
-        pos = rotateVectorsZY(thetay,thetaz,pos_all[gindices]-frame_center)
-        frame_center = np.zeros(3) # plot at center of mass
-        del pos_all
-        mass = mass_all[gindices]
-        del mass_all
-        temperature = temperature_all[gindices]
-        del temperature_all
+            ## filter and free up memory
+            pos_all = rotateVectorsZY(thetay,thetaz,pos_all[gindices]-frame_center)
+            frame_center = np.zeros(3) # plot at center of mass
+            mass_all = mass_all[gindices]
+            temperature_all = temperature_all[gindices]
 
         mydict = {
-            'pos_all':pos,'mass_all':mass,'temperature_all':temperature,
+            'pos_all':pos_all,'mass_all':mass_all,'temperature_all':temperature_all,
             'HubbleParam':res['hubble'],'time_Myr':res['time'],
             'BoxSize':res['boxsize'],'frame_center' : frame_center
         }
@@ -64,16 +63,17 @@ def renderGalaxy(ax,snapdir,snapnum,savefig=1,noaxis=0,mode='r',**kwargs):
         datadir = copydict['datadir']
 
     try:
-        copydict.update(loadDataFromSnapshot(snapdir,snapnum,mode,kwargs['frame_width'],kwargs['frame_depth']))
+        print "Trying to use a previous projection..."
         ax = addPrettyGalaxyToAx(
             ax,snapdir,snapnum,
             #frame_center=np.zeros(3),
             **copydict)
-
     except IOError:
         ## perhaps we haven't computed the projections yet, force an "overwrite"
         ## load in snapshot data
-        copydict.update(loadDataFromSnapshot(snapdir,snapnum,mode,kwargs['frame_width'],kwargs['frame_depth']))
+        print "Failed to use a previous projection"
+        copydict.update(
+            loadDataFromSnapshot(snapdir,snapnum,mode,**kwargs))
         ax = addPrettyGalaxyToAx(
             ax,snapdir,snapnum,
             overwrite=1,
