@@ -12,7 +12,10 @@ from firestudio.utils.cosmoExtractor import findGalaxyAndOrient,rotateVectorsZY
 from firestudio.utils.movie_utils import addPrettyGalaxyToAx,getTemperature
 from firestudio.utils.readsnap import readsnap
 
-def loadDataFromSnapshot(snapdir,snapnum,mode,frame_width,frame_depth,frame_center=None):
+def loadDataFromSnapshot(
+    snapdir,snapnum,mode,
+    frame_width,frame_depth,frame_center=None,
+    extract_galaxy=True,**kwargs):
     if 'r' in mode:
         print "using readsnap to load in data"
         ## assumes the only sort of multi-part snapshot you would have is in cosmological units
@@ -24,14 +27,17 @@ def loadDataFromSnapshot(snapdir,snapnum,mode,frame_width,frame_depth,frame_cent
         pos_all = res['p']
         mass_all = res['m']
         temperature_all = getTemperature(res['u'],res['z'][:,1],res['ne'])
-        
-        if frame_center == None:
-            thetay,thetaz,frame_center,gindices = findGalaxyAndOrient(snapdir,snapnum,pos_all,res['rho'],
-                frame_width,frame_depth)
+
+        if extract_galaxy:
+            galaxy_radius = 15 #kpc
+            galaxy_depth = 15 #kpc
+
+            thetay,thetaz,galaxy_rcom,gindices = findGalaxyAndOrient(snapdir,snapnum,pos_all,res['rho'],
+                galaxy_radius,galaxy_depth)
         
             ## filter and free up memory
-            pos_all = rotateVectorsZY(thetay,thetaz,pos_all[gindices]-frame_center)
-            frame_center = np.zeros(3) # plot at center of mass
+            pos_all = rotateVectorsZY(thetay,thetaz,pos_all[gindices]-galaxy_rcom)
+            #frame_center = np.zeros(3) # plot at center of mass
             mass_all = mass_all[gindices]
             temperature_all = temperature_all[gindices]
 
@@ -64,9 +70,13 @@ def renderGalaxy(ax,snapdir,snapnum,savefig=1,noaxis=0,mode='r',**kwargs):
 
     try:
         print "Trying to use a previous projection..."
+        if 'redraw' in copydict and copydict['redraw']:
+            raise IOError
+        if 'frame_center' not in copydict:
+            copydict['frame_center']=np.zeros(3),
+
         ax = addPrettyGalaxyToAx(
-            ax,snapdir,snapnum,
-            #frame_center=np.zeros(3),
+            ax,snapdir,snapnum, 
             **copydict)
     except IOError:
         ## perhaps we haven't computed the projections yet, force an "overwrite"
@@ -104,7 +114,6 @@ def renderGalaxy(ax,snapdir,snapnum,savefig=1,noaxis=0,mode='r',**kwargs):
             **savefig_args)
 
     return ax 
-
 
 def main(snapdir,snapstart,snapmax,**kwargs):
     for snapnum in xrange(snapstart,snapmax):
