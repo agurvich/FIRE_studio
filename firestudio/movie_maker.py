@@ -74,7 +74,7 @@ def renderGalaxy(ax,snapdir,snapnum,savefig=1,noaxis=0,mode='r',**kwargs):
         if 'redraw' in copydict and copydict['redraw']:
             raise IOError
         if 'frame_center' not in copydict:
-            copydict['frame_center']=np.zeros(3),
+            copydict['frame_center']=np.zeros(3)
 
         ax = addPrettyGalaxyToAx(
             ax,snapdir,snapnum, 
