@@ -29,8 +29,10 @@ def loadDataFromSnapshot(
         temperature_all = getTemperature(res['u'],res['z'][:,1],res['ne'])
 
         if extract_galaxy:
-            galaxy_radius = 15 #kpc
-            galaxy_depth = 15 #kpc
+            ## extract max because we want to load in the whole galaxy if we're just drawing a patch
+            ## otherwise we would only load in a tiny little chunk as big as the patch we want. 
+            galaxy_radius = max(15, 2**0.5*frame_width) #kpc
+            galaxy_depth = max(15, frame_depth) #kpc
 
             thetay,thetaz,galaxy_rcom,gindices = findGalaxyAndOrient(snapdir,snapnum,pos_all,res['rho'],
                 galaxy_radius,galaxy_depth)
