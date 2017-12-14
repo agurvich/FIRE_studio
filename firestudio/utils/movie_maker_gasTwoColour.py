@@ -84,11 +84,11 @@ def plot_image_grid(ax,isnap,dprojects,tprojects,
                     value = ResultW_rho[j,i]
                     image_rho[i,j] = value
         else:
-            image_rho = np.ndarray((1.5*npix_y,npix_x),dtype=np.uint16)
+            image_rho = np.ndarray((3*npix_y/2,npix_x),dtype=np.uint16)
             for i in range(0,npix_y):
                 for j in range(0,npix_x):
                     value = ResultW_rho[j,i]
-                    image_rho[i+ (0.5 * npix_y),j] = value
+                    image_rho[i+ (npix_y/2),j] = value
                 
         if edgeon:
             # Edge on image 
@@ -147,9 +147,9 @@ def plot_image_grid(ax,isnap,dprojects,tprojects,
                     value = ResultQ_T[j,i]
                     image_T[i,j] = value 
         else:
-            image_T = np.ndarray((1.5*npix_y,npix_x),dtype=np.uint16)
+            image_T = np.ndarray((3*npix_y/2,npix_x),dtype=np.uint16)
             for i in range(0,npix_y):
-                new_i = i+ (0.5 * npix_y)
+                new_i = i+ (npix_y/2)
                 for j in range(0,npix_x):
                     value = ResultQ_T[j,i]
                     image_T[new_i,j] = value
