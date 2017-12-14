@@ -12,6 +12,8 @@ from firestudio.utils.cosmoExtractor import findGalaxyAndOrient,rotateVectorsZY
 from firestudio.utils.movie_utils import addPrettyGalaxyToAx,getTemperature
 from firestudio.utils.readsnap import readsnap
 
+import multiprocessing
+
 def loadDataFromSnapshot(
     snapdir,snapnum,mode,
     frame_width,frame_depth,frame_center=None,
@@ -118,13 +120,25 @@ def renderGalaxy(ax,snapdir,snapnum,savefig=1,noaxis=0,mode='r',**kwargs):
 
     return ax 
 
+def multiProcRender(snapnum):
+    ax = plt.gca()
+    renderGalaxy(ax,glob_snapdir,snapnum,**glob_kwargs)
+    plt.clf()
+    
 def main(snapdir,snapstart,snapmax,**kwargs):
-    for snapnum in xrange(snapstart,snapmax):
-        ax = plt.gca()
-        renderGalaxy(ax,snapdir,snapnum,
-            **kwargs)
-        plt.clf()
-        
+    if 'multiproc' in kwargs and kwargs['multiproc']:
+        ## map a wrapper to a pool of processes
+        global glob_kwargs,glob_snapdir
+        glob_kwargs = kwargs
+        glob_snapdir=snapdir
+        my_pool = multiprocessing.Pool(multiprocessing.cpu_count())
+        my_pool.map(multiProcRender,range(snapstart,snapmax))
+    else:
+        ## just do a for loop
+        for snapnum in xrange(snapstart,snapmax):
+            ax = plt.gca()
+            renderGalaxy(ax,snapdir,snapnum,**kwargs)
+            plt.clf()       
 
 if __name__=='__main__':
     argv = sys.argv[1:]
@@ -135,7 +149,8 @@ if __name__=='__main__':
         'theta=','phi=','psi=',
         'edgeon=',
         'min_den=','max_den=','min_temp=','max_temp=','datadir=',
-        'noaxis='])
+        'noaxis=',
+        'multiproc='])
 
     #options:
     # -r/s = use readsnap or use single snapshot loader
