@@ -37,7 +37,8 @@ def loadDataFromSnapshot(
         
             ## filter and free up memory
             pos_all = rotateVectorsZY(thetay,thetaz,pos_all[gindices]-galaxy_rcom)
-            #frame_center = np.zeros(3) # plot at center of mass
+	    if frame_center is None:
+            	frame_center = np.zeros(3) # plot at center of mass
             mass_all = mass_all[gindices]
             temperature_all = temperature_all[gindices]
 
