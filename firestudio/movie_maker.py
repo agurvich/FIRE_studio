@@ -15,9 +15,7 @@ from firestudio.utils.readsnap import readsnap
 import multiprocessing
 
 def loadDataFromSnapshot(
-    snapdir,snapnum,mode,
-    frame_width,frame_depth,frame_center=None,
-    extract_galaxy=True,**kwargs):
+    snapdir,snapnum,mode,**kwargs):
     if 'r' in mode:
         print "using readsnap to load in data"
         ## assumes the only sort of multi-part snapshot you would have is in cosmological units
@@ -26,38 +24,46 @@ def loadDataFromSnapshot(
         print 'loading snapshot from',snapdir
         res = readsnap(snapdir,snapnum,0,cosmological=1)
 
-        pos_all = res['p']
-        mass_all = res['m']
-        temperature_all = getTemperature(res['u'],res['z'][:,1],res['ne'])
+        mydict = readDataFromReadsnap(res,**kwargs)
 
-        if extract_galaxy:
-            ## extract max because we want to load in the whole galaxy if we're just drawing a patch
-            ## otherwise we would only load in a tiny little chunk as big as the patch we want. 
-            galaxy_radius = max(15, 2**0.5*frame_width) #kpc
-            galaxy_depth = max(15, frame_depth) #kpc
-
-            thetay,thetaz,galaxy_rcom,gindices = findGalaxyAndOrient(snapdir,snapnum,pos_all,res['rho'],
-                galaxy_radius,galaxy_depth)
-        
-            ## filter and free up memory
-            pos_all = rotateVectorsZY(thetay,thetaz,pos_all[gindices]-galaxy_rcom)
-	    if frame_center is None:
-            	frame_center = np.zeros(3) # plot at center of mass
-            mass_all = mass_all[gindices]
-            temperature_all = temperature_all[gindices]
-
-        mydict = {
-            'pos_all':pos_all,'mass_all':mass_all,'temperature_all':temperature_all,
-            'HubbleParam':res['hubble'],'time_Myr':res['time'],
-            'BoxSize':res['boxsize'],'frame_center' : frame_center
-        }
-        
     elif 's' in mode:
         print 'using h5py to load in data'
         mydict={}
         raise Exception("Unimplemented!")
     return mydict
 
+def readDataFromReadsnap(res,
+    frame_width,frame_depth,frame_center=None,
+    extract_galaxy=True,**kwargs):
+
+    pos_all = res['p']
+    mass_all = res['m']
+    temperature_all = getTemperature(res['u'],res['z'][:,1],res['ne'])
+
+    if extract_galaxy:
+        ## extract max because we want to load in the whole galaxy if we're just drawing a patch
+        ## otherwise we would only load in a tiny little chunk as big as the patch we want. 
+        galaxy_radius = max(15, 2**0.5*frame_width) #kpc
+        galaxy_depth = max(15, frame_depth) #kpc
+
+        thetay,thetaz,galaxy_rcom,gindices = findGalaxyAndOrient(snapdir,snapnum,pos_all,res['rho'],
+            galaxy_radius,galaxy_depth)
+    
+        ## filter and free up memory
+        pos_all = rotateVectorsZY(thetay,thetaz,pos_all[gindices]-galaxy_rcom)
+        if frame_center is None:
+            frame_center = np.zeros(3) # plot at center of mass
+        mass_all = mass_all[gindices]
+        temperature_all = temperature_all[gindices]
+
+    mydict = {
+        'pos_all':pos_all,'mass_all':mass_all,'temperature_all':temperature_all,
+        'HubbleParam':res['hubble'],'time_Myr':res['time'],
+        'BoxSize':res['boxsize'],'frame_center' : frame_center
+    }
+    return mydict
+
+    
 
 def renderGalaxy(ax,snapdir,snapnum,savefig=1,noaxis=0,mode='r',**kwargs):
     # copy the dictionary so we don't mess anything up 
@@ -87,22 +93,28 @@ def renderGalaxy(ax,snapdir,snapnum,savefig=1,noaxis=0,mode='r',**kwargs):
         ## perhaps we haven't computed the projections yet, force an "overwrite"
         ## load in snapshot data
         print "Failed to use a previous projection"
-        copydict.update(
-            loadDataFromSnapshot(snapdir,snapnum,mode,**kwargs))
+        if 'readsnap' not in kwargs:
+            copydict.update(
+                loadDataFromSnapshot(snapdir,snapnum,mode,**kwargs))   
+        else:
+            copydict.update(readDataFromReadsnap(kwargs.pop('readsnap'),**kwargs))
+
         ax = addPrettyGalaxyToAx(
             ax,snapdir,snapnum,
             overwrite=1,
             **copydict)
 
-    if savefig:
-        savefig_args={}
-        if 'edgeon' in kwargs and kwargs['edgeon']:
-            ax.get_figure().set_size_inches(6,8)
-        else:
-            ax.get_figure().set_size_inches(6,6)
+    if 'edgeon' in kwargs and kwargs['edgeon']:
+        ax.get_figure().set_size_inches(6,8)
+    else:
+        ax.get_figure().set_size_inches(6,6)
 
+    if noaxis:
+        ax.axis('off')
+
+    if savefig:
+        savefig_args={} 
         if noaxis:
-            ax.axis('off')
             ## remove whitespace around the axis, apparently the x/y origin is offset in pixel 
             ## space and so the bounding box doesn't actually reflect the left/bottom edge of the 
             ## axis
@@ -131,7 +143,7 @@ def main(snapdir,snapstart,snapmax,**kwargs):
         global glob_kwargs,glob_snapdir
         glob_kwargs = kwargs
         glob_snapdir=snapdir
-        my_pool = multiprocessing.Pool(multiprocessing.cpu_count())
+        my_pool = multiprocessing.Pool(10)
         my_pool.map(multiProcRender,range(snapstart,snapmax))
     else:
         ## just do a for loop

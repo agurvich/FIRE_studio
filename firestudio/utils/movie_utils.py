@@ -120,8 +120,6 @@ def addPrettyGalaxyToAx(ax,snapdir,snapnum,
 
     """
 
-    print datadir
-
     print 'Drawing',snapdir,'to:',datadir
     if 'Plots' not in os.listdir(datadir):
         makeOutputDirectories(datadir)
@@ -135,7 +133,6 @@ def addPrettyGalaxyToAx(ax,snapdir,snapnum,
         projectDenTemp(snapdir,snapnum,dprojects,tprojects,
             flag_cosmological = 'm12i' in snapdir,**kwargs)
     print 'plotting image grid'
-    print kwargs
     plot_image_grid(ax,snapnum,dprojects,tprojects,
         **kwargs)
 
