@@ -7,7 +7,8 @@ import matplotlib.pyplot as plt
 import numpy as np 
 import os
 
-import multiprocessing
+from multiprocessing.pool import ThreadPool
+from multiprocessing import Pool
 
 def fauxrenderPatch(sub_res,ax,
     frame_center,frame_width,
@@ -222,8 +223,9 @@ def interpolateKeyFrames(
 
 
     if mps: 
-        my_pool = multiprocessing.pool.ThreadPool(min(len(snapnums),5))
-        my_pool.map(multiProcessFrameDrawingWrapper,argss)
+        my_thread_pool = ThreadPool(min(len(snapnums),5)) 
+        my_thread_pool.map(multiProcessFrameDrawingWrapper,argss)
+        my_thread_pool.close()
     else:
         for args in argss:
             multiProcessFrameDrawingWrapper(args)
@@ -282,8 +284,9 @@ def drawFrames(galaxy,frame_centers,frame_widths,thetas,phis,psis,offset=0,mps=0
             itertools.repeat(offset))
 
     if mps: 
-        my_pool = multiprocessing.Pool(25)
+        my_pool = Pool(25)
         my_pool.map(multiWrapper,args)
+        my_pool.close()
             
     else:
         for arg in args:
