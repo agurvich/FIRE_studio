@@ -23,7 +23,7 @@ def fauxrenderPatch(sub_res,ax,
 
     xs,ys = pos_rot[:,:2][indices].T
 
-    twoDHist(ax,xs,ys,bins=100)
+    twoDHist(ax,xs,ys,bins=300)
 
     ax.set_ylim(frame_center[1]-frame_width,frame_center[1]+frame_width)
     ax.set_xlim(frame_center[0]-frame_width,frame_center[0]+frame_width)
@@ -133,7 +133,8 @@ def drawTimeChangingPath(
         psis[:-1],psis[1:],
         itertools.repeat(steps_per_snap),
         itertools.repeat(start_snap),
-        nframe_offsets,
+        nframe_offsets, # offsets to calculate frame numbers
+        itertools.repeat(1) # multiprocessing flag
         )
 
     for dkeyframe in dkeyframes:
@@ -149,7 +150,7 @@ def interpolateKeyFrames(
     steps_per_snap,
     start_snap,
     nframe_offset=0,
-    mps=1
+    mps=0
     ):
     """ in general nframe_offset will be nkey * nsteps but
         want to let key frame interpolation go at different speeds..."""
