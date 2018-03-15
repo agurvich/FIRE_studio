@@ -80,6 +80,8 @@ def renderGalaxy(ax,snapdir,snapnum,savefig=1,noaxis=0,mode='r',**kwargs):
         datadir = copydict['datadir']
 
     try:
+        if 'overwrite' in copydict:
+            assert not copydict['overwrite']
         print "Trying to use a previous projection..."
         if 'redraw' in copydict and copydict['redraw']:
             raise IOError
@@ -89,19 +91,25 @@ def renderGalaxy(ax,snapdir,snapnum,savefig=1,noaxis=0,mode='r',**kwargs):
         ax = addPrettyGalaxyToAx(
             ax,snapdir,snapnum, 
             **copydict)
-    except IOError:
+    except (IOError,AssertionError):
         ## perhaps we haven't computed the projections yet, force an "overwrite"
         ## load in snapshot data
+
+        ## overwrite whatever projection exists, if it's there
+        if 'overwrite' not in copydict:
+            copydict['overwrite']=1 
+
         print "Failed to use a previous projection"
-        if 'readsnap' not in kwargs:
+        if 'readsnap' not in kwargs and 'subres' not in kwargs:
             copydict.update(
                 loadDataFromSnapshot(snapdir,snapnum,mode,**kwargs))   
-        else:
+        elif 'subres' not in kwargs:
             copydict.update(readDataFromReadsnap(kwargs.pop('readsnap'),**kwargs))
+        else: ## subres is in kwargs, readsnap is not
+            copydict.update(readDataFromReadsnap(kwargs.pop('subres'),extract_galaxy=0,**kwargs))
 
         ax = addPrettyGalaxyToAx(
             ax,snapdir,snapnum,
-            overwrite=1,
             **copydict)
 
     if 'edgeon' in kwargs and kwargs['edgeon']:

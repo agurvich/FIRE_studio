@@ -294,6 +294,10 @@ def compute_image_grid(pos_all,mass_all,time_Myr,BoxSize,
         del mass_all
         del hsml_all
         print '-done'
+
+        ## set them just to 0
+        ResultW_edge = ndarray((npix_x,npix_y),dtype=float32)
+        ResultW_edge[:,:] = 0.0
         
     else:
         ind_box = ((pos_all[:,0] > Xmin) & (pos_all[:,0] < Xmax) &

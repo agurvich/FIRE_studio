@@ -10,6 +10,8 @@ import os
 from multiprocessing.pool import ThreadPool
 from multiprocessing import Pool
 
+from firestudio.movie_maker import renderGalaxy
+
 def fauxrenderPatch(sub_res,ax,
     frame_center,frame_width,
     frame_depth=None,savefig=0,noaxis=0,
@@ -134,7 +136,7 @@ def drawTimeChangingPath(
         itertools.repeat(steps_per_snap),
         itertools.repeat(start_snap),
         nframe_offsets, # offsets to calculate frame numbers
-        itertools.repeat(1) # multiprocessing flag
+        itertools.repeat(1) # multiprocessing flag ## TODO mps flag to change
         )
 
     for dkeyframe in dkeyframes:
@@ -150,7 +152,7 @@ def interpolateKeyFrames(
     steps_per_snap,
     start_snap,
     nframe_offset=0,
-    mps=0
+    mps=0 
     ):
     """ in general nframe_offset will be nkey * nsteps but
         want to let key frame interpolation go at different speeds..."""
@@ -271,13 +273,18 @@ def multiProcessFrameDrawing(
     ##  for an isolated galaxy, not doing much
     galaxy.extractMainHalo()
 
+    ## load galaxy information into the subres
+    galaxy.sub_res['datadir']=galaxy.datadir
+    galaxy.sub_res['snapnum']=galaxy.snapnum
+    galaxy.sub_res['snapdir']=galaxy.snapdir
+
     drawFrames(
         galaxy,frame_centers,frame_widths,
-        thetas,phis,psis,mps=1,offset=nframe_offset)
+        thetas,phis,psis,mps=1,offset=nframe_offset) ##TODO mps flag to change
     
 def drawFrames(galaxy,frame_centers,frame_widths,thetas,phis,psis,offset=0,mps=0):
     nframes = len(frame_centers)
-    args = itertools.izip(
+    argss = itertools.izip(
             range(nframes),
             itertools.repeat(galaxy.sub_res),
             frame_centers,frame_widths,
@@ -286,31 +293,43 @@ def drawFrames(galaxy,frame_centers,frame_widths,thetas,phis,psis,offset=0,mps=0
 
     if mps: 
         my_pool = Pool(25)
-        my_pool.map(multiWrapper,args)
+        my_pool.map(multiWrapper,argss)
         my_pool.close()
             
     else:
-        for arg in args:
-            drawFrame(galaxy,*arg)
+        for args in argss:
+            multiWrapper(args)
 
 def multiWrapper(args):
     multidrawFrame(*args)
+
+def renderGalaxyWrapper(**kwargs):
+    return renderGalaxy(**kwargs)
 
 def multidrawFrame(i,sub_res,frame_center,frame_width,theta,phi,psi,offset):
     """ uses fauxrenderPatch for testing purposes, or full 'render galaxy' 
         if you want to spend the time on it..."""
     ax = plt.gca()
+
+    renderGalaxyWrapper(
+        ax=ax,
+        snapdir=sub_res['snapdir']+'bad', ## where does the data live, ideally we don't open it, hence the bad
+        snapnum=sub_res['snapnum'], ## which snapshot we're doing now
+        overwrite=1, ## overwrite any existing projections for each snapshot
+        noaxis=1, ## don't have axis ticks
+        edgeon=0, ## don't make a 90 degree rotated version
+        frame_center=frame_center, ## center of frame
+        frame_width=frame_width, ## half width of frame
+        frame_depth = frame_width, ## half depth, make a cube
+        theta=theta,phi=phi,psi=psi, ## euler angles
+        datadir = sub_res['datadir'], ## where to save projections to
+        subres=sub_res) ## pass along the already extracted data
+
+    """
     fauxrenderPatch(sub_res,
         ax,frame_center,frame_width,
         theta=theta,phi=phi,psi=psi,noaxis=1)
+    """
     plt.savefig(os.path.join(sub_res['datadir'],'frame_%04d.png'%(i+offset)))
-    plt.clf()
-
-def drawFrame(galaxy,i,frame_center,frame_width,theta,phi,psi,offset):
-    ax = plt.gca()
-    fauxrenderPatch(
-        galaxy.sub_res,
-        ax,frame_center,frame_width,
-        theta=theta,phi=phi,psi=psi,noaxis=1)
-    plt.savefig(os.path.join(galaxy.datadir,'frame_%04d.png'%(i+offset)))
+    plt.gcf().set_size_inches(8,8)
     plt.clf()
