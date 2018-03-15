@@ -113,13 +113,19 @@ def drawTimeChangingPath(
     thetas, phis, psis, # rotation angles
     nstepss, # how many interpolation frames should there be between each keyframe?
     steps_per_snap,
-    start_snap
+    start_snap,
+    faux_frame=1,
+    mps = 0,
+    offset=0
     ):
     """ if you want to fly around just a single snapshot,
         just pass steps_per_snap very large"""
 
+    ## cast to arrays
+    zooms = np.array(zooms)
+
     ## exclusive prefix sum
-    nframe_offsets = [0]
+    nframe_offsets = [offset]
     for nsteps in nstepss[:-1]:
         nframe_offsets+=[nframe_offsets[-1]+nsteps]
 
@@ -136,11 +142,13 @@ def drawTimeChangingPath(
         itertools.repeat(steps_per_snap),
         itertools.repeat(start_snap),
         nframe_offsets, # offsets to calculate frame numbers
-        itertools.repeat(1) # multiprocessing flag ## TODO mps flag to change
+        itertools.repeat(mps), # multiprocessing flag 
+        itertools.repeat(faux_frame)
         )
 
     for dkeyframe in dkeyframes:
         interpolateKeyFrames(*dkeyframe)
+    return nframe_offsets[-1]+nstepss[-1]# frame where we left off, offset
             
 def interpolateKeyFrames(
     nsteps,
@@ -152,7 +160,8 @@ def interpolateKeyFrames(
     steps_per_snap,
     start_snap,
     nframe_offset=0,
-    mps=0 
+    mps=0 ,
+    faux_frame=1
     ):
     """ in general nframe_offset will be nkey * nsteps but
         want to let key frame interpolation go at different speeds..."""
@@ -211,6 +220,8 @@ def interpolateKeyFrames(
         snapnums, 
         frames_to_do,
         nframe_offsets, ## so we know what to save the frame number as
+        itertools.repeat(mps), ## multiprocessing flag
+        itertools.repeat(faux_frame),
         *sub_interp_valsss ## two dimensions are unwrapped here, one by zip and one by *
     )
 
@@ -250,6 +261,8 @@ def multiProcessFrameDrawingWrapper(args):
 def multiProcessFrameDrawing(
     snapnum,nsteps_this_snap,
     nframe_offset,
+    mps,
+    faux_frame,
     xs,ys,zs,
     frame_widths,
     thetas,phis,psis):
@@ -267,6 +280,13 @@ def multiProcessFrameDrawing(
         cosmological=0,
         datadir='/projects/b1026/agurvich/data',easy_load=0)
 
+    try:
+        if not os.path.isdir(os.path.join(galaxy.datadir,'frame_infos')):
+            os.mkdir(os.path.join(galaxy.datadir,'frame_infos'))
+    except:
+        ## it's parallel, one of them probably made the directory
+        pass
+
     ## let's assume that we're only loading the gas particles here
     galaxy.load_gas()
 
@@ -279,12 +299,14 @@ def multiProcessFrameDrawing(
     galaxy.sub_res['snapdir']=galaxy.snapdir
 
     drawFrames(
+        faux_frame,
         galaxy,frame_centers,frame_widths,
-        thetas,phis,psis,mps=1,offset=nframe_offset) ##TODO mps flag to change
+        thetas,phis,psis,mps=mps,offset=nframe_offset) 
     
-def drawFrames(galaxy,frame_centers,frame_widths,thetas,phis,psis,offset=0,mps=0):
+def drawFrames(faux_frame,galaxy,frame_centers,frame_widths,thetas,phis,psis,offset=0,mps=0):
     nframes = len(frame_centers)
     argss = itertools.izip(
+            itertools.repeat(faux_frame),
             range(nframes),
             itertools.repeat(galaxy.sub_res),
             frame_centers,frame_widths,
@@ -306,30 +328,47 @@ def multiWrapper(args):
 def renderGalaxyWrapper(**kwargs):
     return renderGalaxy(**kwargs)
 
-def multidrawFrame(i,sub_res,frame_center,frame_width,theta,phi,psi,offset):
+def multidrawFrame(faux_frame,i,sub_res,frame_center,frame_width,theta,phi,psi,offset):
     """ uses fauxrenderPatch for testing purposes, or full 'render galaxy' 
         if you want to spend the time on it..."""
+
     ax = plt.gca()
 
-    renderGalaxyWrapper(
-        ax=ax,
-        snapdir=sub_res['snapdir']+'bad', ## where does the data live, ideally we don't open it, hence the bad
-        snapnum=sub_res['snapnum'], ## which snapshot we're doing now
-        overwrite=1, ## overwrite any existing projections for each snapshot
-        noaxis=1, ## don't have axis ticks
-        edgeon=0, ## don't make a 90 degree rotated version
-        frame_center=frame_center, ## center of frame
-        frame_width=frame_width, ## half width of frame
-        frame_depth = frame_width, ## half depth, make a cube
-        theta=theta,phi=phi,psi=psi, ## euler angles
-        datadir = sub_res['datadir'], ## where to save projections to
-        subres=sub_res) ## pass along the already extracted data
+    ## write-out frame info
+    with file(
+        os.path.join(
+            sub_res['datadir'],
+            'frame_infos/frame_info_%04d.txt'%(i+offset))
+        ,'w') as handle:
 
-    """
-    fauxrenderPatch(sub_res,
-        ax,frame_center,frame_width,
-        theta=theta,phi=phi,psi=psi,noaxis=1)
-    """
-    plt.savefig(os.path.join(sub_res['datadir'],'frame_%04d.png'%(i+offset)))
-    plt.gcf().set_size_inches(8,8)
+        handle.write("snapnum=%d\n"%sub_res['snapnum'])
+        handle.write("theta=%.2f phi=%.2f psi=%.2f\n"%(theta,phi,psi))
+        handle.write("fc=%s\n"%(str(frame_center)))
+        handle.write("fw=%.2f fd=%.2f\n"%(frame_width,frame_width))
+
+    if not faux_frame:
+        renderGalaxyWrapper(
+            ax=ax,
+            snapdir=sub_res['snapdir']+'bad', ## where does the data live, ideally we don't open it, hence the bad
+            snapnum=sub_res['snapnum'], ## which snapshot we're doing now
+            overwrite=1, ## overwrite any existing projections for each snapshot
+            noaxis=1, ## don't have axis ticks
+            edgeon=0, ## don't make a 90 degree rotated version
+            frame_center=frame_center, ## center of frame
+            frame_width=frame_width, ## half width of frame
+            frame_depth = frame_width, ## half depth, make a cube
+            theta=theta,phi=phi,psi=psi, ## euler angles
+            datadir = sub_res['datadir'], ## where to save projections to
+            subres=sub_res,## pass along the already extracted data
+            h5filename='frame_%04d_'%(i+offset) ## make sure we don't overwrite projections
+            ) 
+
+        plt.savefig(os.path.join(sub_res['datadir'],'frame_%04d.png'%(i+offset)))
+    else:
+        fauxrenderPatch(sub_res,
+            ax,frame_center,frame_width,
+            theta=theta,phi=phi,psi=psi,noaxis=1)
+
+        plt.savefig(os.path.join(sub_res['datadir'],'faux_frame_%04d.png'%(i+offset)))
+
     plt.clf()

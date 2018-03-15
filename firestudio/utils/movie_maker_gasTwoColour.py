@@ -15,7 +15,7 @@ def round_to_nearest_integer(x):
 
 def plot_image_grid(ax,isnap,dprojects,tprojects,
     frame_center,frame_width,frame_depth,pixels=1200,
-    min_den=-1.0,max_den=1.2,min_temp=2,max_temp=7,edgeon=0,**kwargs): 
+    min_den=-1.0,max_den=1.2,min_temp=2,max_temp=7,edgeon=0,h5filename='',**kwargs): 
     print "extra kwargs in plot_2color_image:",kwargs.keys()
     # Set paths
     
@@ -45,8 +45,7 @@ def plot_image_grid(ax,isnap,dprojects,tprojects,
     print 'tf_max_rho = ',tf_max_rho
 
     # First, read in density image arrays 
-    h5filename = "gas_proj_%3d_%.2fkpc.hdf5" % (isnap, image_length)
-    h5name=h5filename
+    h5name=h5filename+"gas_proj_%3d_%.2fkpc.hdf5" % (isnap, image_length)
     with h5py.File(data_dir_rho + h5name, "r") as h5file:
         exec "ResultW_rho = np.array(h5file['%s_faceOn'])" % (array_name, )
         try:
@@ -121,8 +120,7 @@ def plot_image_grid(ax,isnap,dprojects,tprojects,
     print 'tf_min_T = ',tf_min_T
     print 'tf_max_T = ',tf_max_T
 
-    h5filename = "gasTemp_proj_%3d_%.2fkpc.hdf5" % (isnap, image_length)
-    h5name=h5filename
+    h5name=h5filename + "gasTemp_proj_%3d_%.2fkpc.hdf5" % (isnap, image_length)
     with h5py.File(data_dir_T + h5name, "r") as h5file:
         if edgeon:
             # have to undo the halving

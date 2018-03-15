@@ -150,10 +150,10 @@ def rotateEuler(theta,phi,psi,pos):
 
 def writeImageGrid(isnap,output_dir,
     ResultW,ResultW_edge,
-    image_length,npix_x,time_Myr,edgeon=0):
+    image_length,npix_x,time_Myr,edgeon=0,h5filename=''):
     array_name = "ResultW_tot" 
     # Write the image grid to HDF5 file 
-    h5filename = "gas_proj_%.3d_%.2fkpc.hdf5" % (isnap, image_length)
+    h5filename += "gas_proj_%.3d_%.2fkpc.hdf5" % (isnap, image_length)
 
     output_name = "%s_faceOn" % (array_name, )
 
@@ -220,7 +220,7 @@ def compute_image_grid(pos_all,mass_all,time_Myr,BoxSize,
     output_dir,isnap,
     edgeon=1,
     theta=0,phi=0,psi=0,
-    pixels=1200,min_den=-1.0,max_den=1.2,**kwargs):
+    pixels=1200,min_den=-1.0,max_den=1.2,h5filename='',**kwargs):
 
     print "extra kwargs in compute_den:",kwargs.keys()
     print ' rotation = (',theta,',',phi,',',psi,')'
@@ -333,7 +333,10 @@ def compute_image_grid(pos_all,mass_all,time_Myr,BoxSize,
         ResultW_edge = getImageGrid(BoxSize,npix_x,npix_y,pos,mass,hsml,quantity)
         print 'log10 minmax(ResultW_edge)',min(ravel(ResultW_edge)),max(ravel(ResultW_edge))
             
-    writeImageGrid(isnap,output_dir,ResultW,ResultW_edge,image_length,npix_x,time_Myr,edgeon=edgeon)
+    writeImageGrid(
+        isnap,
+        output_dir,ResultW,ResultW_edge,
+        image_length,npix_x,time_Myr,edgeon=edgeon,h5filename=h5filename)
 
 
 ####### ignore beyond here
