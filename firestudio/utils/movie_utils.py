@@ -14,11 +14,23 @@ from readsnap import readsnap
 
 ## system functions
 def makeOutputDirectories(datadir):
-    os.mkdir(os.path.join(datadir,'Plots'))
-    os.mkdir(os.path.join(datadir,'Plots','GasTwoColour'))
-    os.mkdir(os.path.join(datadir,'Plots','Projections'))
-    os.mkdir(os.path.join(datadir,'Plots','Projections','Den'))
-    os.mkdir(os.path.join(datadir,'Plots','Projections','Temp'))
+    ## make the path to store all plots in the datadir
+    path = os.path.join(datadir,'Plots')
+    if not os.path.isdir(path):
+        os.mkdir(path)
+
+    ## make the path to store final images
+    if not os.path.isdir(os.path.join(path,'GasTwoColour')):
+        os.mkdir(os.path.join(path,'GasTwoColour'))
+
+    ## make the paths to store projection hdf5 files
+    path = os.path.join(path,'Projections')
+    if not os.path.isdir(path):
+        os.mkdir(path)
+    if not os.path.isdir(os.path.join(path,'Den')):
+        os.mkdir(os.path.join(path,'Den'))
+    if not os.path.isdir(os.path.join(path,'Temp')):
+        os.mkdir(os.path.join(path,'Temp'))
 
 ## math functions 
 
@@ -121,8 +133,7 @@ def addPrettyGalaxyToAx(ax,snapdir,snapnum,
     """
 
     print 'Drawing',snapdir,'to:',datadir
-    if 'Plots' not in os.listdir(datadir):
-        makeOutputDirectories(datadir)
+    makeOutputDirectories(datadir)
 
     #where to find/save gas/temperature density grids-- this could get crowded!
     dprojects=os.path.join(datadir,'Plots','Projections','Den/')
