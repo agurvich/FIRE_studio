@@ -1,12 +1,14 @@
+import os
+import numpy as np
+import math
+import scipy.ndimage.interpolation as interpolate
+import struct
+
 def colors_table( age_in_Gyr, metallicity_in_solar_units, 
     BAND_ID=0, SALPETER_IMF=0, CHABRIER_IMF=1, QUIET=0, CRUDE=0, 
     RETURN_NU_EFF=0, RETURN_LAMBDA_EFF=0, UNITS_SOLAR_IN_BAND=0 ):
 
-    import pfh_viz.utilities as util
-    import numpy as np
-    import math
-    import scipy.ndimage.interpolation as interpolate
-    import struct
+    
 
     age_in_Gyr=np.array(age_in_Gyr,ndmin=1);
     metallicity_in_solar_units=np.array(metallicity_in_solar_units,ndmin=1);
@@ -33,7 +35,9 @@ def colors_table( age_in_Gyr, metallicity_in_solar_units,
         if (RETURN_NU_EFF==1): return nu_eff[band];
         if (RETURN_LAMBDA_EFF==1): return lam_eff[band];
     
-    froot = util.return_python_routines_homedir()+'/colors_sps/'; # directory in which the data binaries are stored
+    curpath = os.path.realpath(__file__)
+    curpath = curpath[:len("utils")+curpath.index("utils")] #split off this filename
+    froot = os.path.join(curpath,'colors_sps/') # directory in which the data binaries are stored
     if (CHABRIER_IMF==1): fname=froot+'colors.chabrier.dat'
     if (SALPETER_IMF==1): fname=froot+'colors.salpeter.dat'
 

@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import math
 import ctypes
@@ -62,7 +63,7 @@ def gas_raytrace_temperature( TEMPERATURE_CUTS, \
 
     return raytrace_projection_compute(gas_x,gas_y,gas_z,gas_hsml,gas_mass,\
         wt1,wt2,wt3,kappa[0],kappa[1],kappa[2],\
-        xrange=xrange,yrange=yrange,zrange=zrange,pixels=pixels,TRIM_PARTICLES=1);
+        xlim=xlim,ylim=ylim,zlim=zlim,pixels=pixels,TRIM_PARTICLES=1);
 
 
 
@@ -79,7 +80,7 @@ def stellar_raytrace( BAND_IDS, \
         stellar_x, stellar_y, stellar_z, \
         stellar_mass, stellar_age, stellar_metallicity, stellar_hsml, \
         gas_x, gas_y, gas_z, gas_mass, gas_metallicity, gas_hsml, \
-        xrange=0, yrange=0, zrange=0, pixels=720, 
+        xlim=0, ylim=0, zlim=0, pixels=720, 
         KAPPA_UNITS=2.08854068444, \
         IMF_CHABRIER=1, IMF_SALPETER=0 , \
         ADD_BASE_METALLICITY=0.0, ADD_BASE_AGE=0.0 ):
@@ -118,7 +119,7 @@ def stellar_raytrace( BAND_IDS, \
     k1=kappa[0]; k2=kappa[1]; k3=kappa[2];
         
     return raytrace_projection_compute(x,y,z,hsml,mass,wt1,wt2,wt3,k1,k2,k3,\
-        xrange=xrange,yrange=yrange,zrange=zrange,pixels=pixels,TRIM_PARTICLES=1);
+        xlim=xlim,ylim=ylim,zlim=zlim,pixels=pixels,TRIM_PARTICLES=1);
 
 
 ##
@@ -138,14 +139,14 @@ def stellar_raytrace( BAND_IDS, \
 ##    float *OUT0, float *OUT1, float *OUT2, float*OUT3 ) // output vectors with final weights
 ##
 def raytrace_projection_compute( x, y, z, hsml, mass, wt1, wt2, wt3, \
-    kappa_1, kappa_2, kappa_3, xrange=0, yrange=0, zrange=0, pixels=720, \
+    kappa_1, kappa_2, kappa_3, xlim=0, ylim=0, zlim=0, pixels=720, \
     TRIM_PARTICLES=1 ):
 
     ## define bounaries
-    if(checklen(xrange)<=1): xrange=[np.min(x),np.max(x)];
-    if(checklen(yrange)<=1): yrange=[np.min(y),np.max(y)];
-    if(checklen(zrange)<=1): zrange=[np.min(z),np.max(z)];
-    xr=xrange; yr=yrange; zr=zrange;
+    if(checklen(xlim)<=1): xlim=[np.min(x),np.max(x)];
+    if(checklen(ylim)<=1): ylim=[np.min(y),np.max(y)];
+    if(checklen(zlim)<=1): zlim=[np.min(z),np.max(z)];
+    xr=xlim; yr=ylim; zr=zlim;
     x00=0.5*(xr[1]+xr[0]); y00=0.5*(yr[1]+yr[0]); z00=0.5*(zr[1]+zr[0]); 
     tolfac = 1.0e10;
     if (TRIM_PARTICLES==1): tolfac = 0.05; 
@@ -170,10 +171,7 @@ def raytrace_projection_compute( x, y, z, hsml, mass, wt1, wt2, wt3, \
     ## load the routine we need
     curpath = os.path.realpath(__file__)
     curpath = curpath[:len("utils")+curpath.index("utils")] #split off this filename
-    print curpath
-    raise Exception("STOP!")
-
-    exec_call=util.return_python_routines_cdir()+'/RayTrace_RGB/raytrace_rgb.so'
+    exec_call=os.path.join(curpath,'c_libraries/RayTrace_RGB/raytrace_rgb.so')
     routine=ctypes.cdll[exec_call];
     
     ## cast the variables to store the results
