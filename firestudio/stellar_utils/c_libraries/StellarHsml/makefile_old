@@ -1,0 +1,41 @@
+
+EXEC   = starhsml.so
+
+SRCS   = main.c ngbtree3d.c  \
+	 nrutil.c selectb.c
+
+
+OBJS   = $(SRCS:.c=.o)
+INCL   = nrutil.h forcetree.h proto.h
+
+
+#CFLAGS =  -shared -m32
+#CFLAGS = -bundle
+#
+#LIBS   =   
+
+CFLAGS =  -fPIC -O3 -g  #  -Wall
+LNKCMD =  ld -L/usr/lib -L/usr/local/lib  -shared
+
+CC     =  gcc 
+
+$(EXEC): $(OBJS) 
+	$(CC) $(CFLAGS) $(OBJS) $(LIBS)  -o $(EXEC)
+
+
+$(OBJS): $(INCL) 
+
+
+
+clean:
+	rm $(OBJS) $(EXEC)
+
+
+
+
+
+
+
+
+
+
