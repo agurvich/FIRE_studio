@@ -15,7 +15,8 @@ def round_to_nearest_integer(x):
 
 def plot_image_grid(ax,isnap,dprojects,tprojects,
     frame_center,frame_width,frame_depth,pixels=1200,
-    min_den=-1.0,max_den=1.2,min_temp=2,max_temp=7,edgeon=0,h5filename='',**kwargs): 
+    min_den=-1.0,max_den=1.2,min_temp=2,max_temp=7,edgeon=0,h5filename='',
+    plot_time = 1, scale_bar = 1,**kwargs): 
     print "extra kwargs in plot_2color_image:",kwargs.keys()
     # Set paths
     
@@ -184,46 +185,50 @@ def plot_image_grid(ax,isnap,dprojects,tprojects,
     fig.add_axes(ax)
     """
 
-    # Convert to pixels
-    length_per_pixel = (Xmax - Xmin) / npix_x
-    scale_line_length_px = int(scale_line_length / length_per_pixel)
+    if scale_bar:
+        # Convert to pixels
+        length_per_pixel = (Xmax - Xmin) / npix_x
+        scale_line_length_px = int(scale_line_length / length_per_pixel)
 
-    # Position in terms of image array indices
-    scale_line_x_start = int(0.05 * npix_x)
-    scale_line_x_end = min(scale_line_x_start + scale_line_length_px,npix_x)
-    scale_line_y = int(0.02 * npix_y)
+        # Position in terms of image array indices
+        scale_line_x_start = int(0.05 * npix_x)
+        scale_line_x_end = min(scale_line_x_start + scale_line_length_px,npix_x)
+        scale_line_y = int(0.02 * npix_y)
 
-    # Go through pixels for scale bar, setting them to white
-    for x_index in xrange(scale_line_x_start, scale_line_x_end):
-        final_image[scale_line_y, x_index, 0] = 1
-        final_image[scale_line_y, x_index, 1] = 1
-        final_image[scale_line_y, x_index, 2] = 1
-        final_image[scale_line_y + 1, x_index, 0] = 1
-        final_image[scale_line_y + 1, x_index, 1] = 1
-        final_image[scale_line_y + 1, x_index, 2] = 1
-        final_image[scale_line_y + 2, x_index, 0] = 1
-        final_image[scale_line_y + 2, x_index, 1] = 1
-        final_image[scale_line_y + 2, x_index, 2] = 1
-        final_image[scale_line_y + 3, x_index, 0] = 1
-        final_image[scale_line_y + 3, x_index, 1] = 1
-        final_image[scale_line_y + 3, x_index, 2] = 1
-        final_image[scale_line_y + 4, x_index, 0] = 1
-        final_image[scale_line_y + 4, x_index, 1] = 1
-        final_image[scale_line_y + 4, x_index, 2] = 1
-        final_image[scale_line_y + 5, x_index, 0] = 1
-        final_image[scale_line_y + 5, x_index, 1] = 1
-        final_image[scale_line_y + 5, x_index, 2] = 1
+        # Go through pixels for scale bar, setting them to white
+        for x_index in xrange(scale_line_x_start, scale_line_x_end):
+            final_image[scale_line_y, x_index, 0] = 1
+            final_image[scale_line_y, x_index, 1] = 1
+            final_image[scale_line_y, x_index, 2] = 1
+            final_image[scale_line_y + 1, x_index, 0] = 1
+            final_image[scale_line_y + 1, x_index, 1] = 1
+            final_image[scale_line_y + 1, x_index, 2] = 1
+            final_image[scale_line_y + 2, x_index, 0] = 1
+            final_image[scale_line_y + 2, x_index, 1] = 1
+            final_image[scale_line_y + 2, x_index, 2] = 1
+            final_image[scale_line_y + 3, x_index, 0] = 1
+            final_image[scale_line_y + 3, x_index, 1] = 1
+            final_image[scale_line_y + 3, x_index, 2] = 1
+            final_image[scale_line_y + 4, x_index, 0] = 1
+            final_image[scale_line_y + 4, x_index, 1] = 1
+            final_image[scale_line_y + 4, x_index, 2] = 1
+            final_image[scale_line_y + 5, x_index, 0] = 1
+            final_image[scale_line_y + 5, x_index, 1] = 1
+            final_image[scale_line_y + 5, x_index, 2] = 1
 
     #figure_label2 = r"$\rm{UVBthin}$"
     imgplot = ax.imshow(final_image, 
         extent = (Xmin,Xmax,Ymin-(2*frame_depth)*edgeon,Ymax),origin = 'lower', aspect = 'auto')
-    figure_label = r"$%03d \, \rm{Myr}$" % (round_to_nearest_integer(time_Myr), )
-    figure_label = r"$%.2f \, \rm{Myr}$" % (time_Myr)
-    label = pylab.text(0.70, 0.92, figure_label, fontsize = 8, transform = ax.transAxes)
-    label.set_color('white')
-    label2 = pylab.text(scale_label_position, 0.03, scale_label_text, fontweight = 'bold', transform = ax.transAxes)
-    label2.set_color('white')
-    label2.set_fontsize(6)
+    if plot_time:
+        figure_label = r"$%03d \, \rm{Myr}$" % (round_to_nearest_integer(time_Myr), )
+        figure_label = r"$%.2f \, \rm{Myr}$" % (time_Myr)
+        label = pylab.text(0.70, 0.92, figure_label, fontsize = 8, transform = ax.transAxes)
+        label.set_color('white')
+    if scale_bar: 
+        label2 = pylab.text(scale_label_position,
+            0.03, scale_label_text, fontweight = 'bold', transform = ax.transAxes)
+        label2.set_color('white')
+        label2.set_fontsize(6)
     #label3 = pylab.text(0.10, 0.92, figure_label2, fontsize = 8, transform = ax.transAxes)
     #label3.set_color('white')
 

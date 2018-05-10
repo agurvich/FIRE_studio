@@ -1,4 +1,3 @@
-
 import matplotlib.pyplot as plt
 import numpy as np 
 from stellar_utils import raytrace_projection,load_stellar_hsml
@@ -67,7 +66,6 @@ def make_threeband_image(
     maxden = 1e-3, dynrange = 1.001,
     pixels = 1200):
 
-    maxden,dynrange=[(.001,1+.001),(.6,1e4)][0]
     image24, massmap = makethreepic.make_threeband_image_process_bandmaps(
         out_r,out_g,out_u,
         maxden=maxden,dynrange=dynrange,pixels=pixels,
@@ -76,3 +74,22 @@ def make_threeband_image(
     plt.imshow(image24,interpolation='bicubic')#,aspect='normal')
     plt.gcf().set_size_inches(6,6)
     plt.gca().axis('off')
+
+def renderGalaxyFromPath(path):
+    raise Exception("Unimplemented!")
+    xs,ys,zs = galaxy.sub_star_res['p'].T
+    mstar,ages, metals = galaxy.sub_star_res['m'],galaxy.sub_star_res['age_gyr'],galaxy.sub_star_res['z'][:,0]
+    gxs, gys, gzs, = galaxy.sub_res['p'].T
+    mgas,gas_metals, h_gas = galaxy.sub_res['m'],galaxy.sub_res['z'][:,0],galaxy.sub_res['h']
+
+    h_star = calc_stellar_hsml(xs,ys,zs)
+
+    gas_out,out_u,out_g,out_r = raytrace_ugr_attenuation(
+        xs,ys,zs,
+        mstar,ages,metals,
+        h_star,
+        gxs,gys,gzs,
+        mgas,gas_metals,h_gas,
+    )
+
+    make_threeband_image(out_r,out_g,out_u,dynrange=1e1)
