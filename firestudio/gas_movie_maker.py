@@ -8,29 +8,12 @@ matplotlib.use('Agg')
 
 import matplotlib.pyplot as plt
 
-from firestudio.utils.cosmoExtractor import findGalaxyAndOrient,rotateVectorsZY
-from firestudio.utils.movie_utils import addPrettyGalaxyToAx,getTemperature
-from firestudio.utils.readsnap import readsnap
+from firestudio.utils.gas_utils.gas_utils import addPrettyGalaxyToAx,getTemperature
+
+from abg_python.snapshot_utils import openSnapshot
+from abg_python.cosmoExtractor import rotateVectorsZY,diskFilterDictionary
 
 import multiprocessing
-
-def loadDataFromSnapshot(
-    snapdir,snapnum,mode,**kwargs):
-    if 'r' in mode:
-        print "using readsnap to load in data"
-        ## assumes the only sort of multi-part snapshot you would have is in cosmological units
-        ## if you have a multipart snapshot that isn't in cosmological units pray that h=1, or change
-        ## this flag
-        print 'loading snapshot from',snapdir
-        res = readsnap(snapdir,snapnum,0,cosmological=1)
-
-        mydict = readDataFromReadsnap(res,**kwargs)
-
-    elif 's' in mode:
-        print 'using h5py to load in data'
-        mydict={}
-        raise Exception("Unimplemented!")
-    return mydict
 
 def readDataFromReadsnap(res,
     frame_width,frame_depth,frame_center=None,
@@ -41,6 +24,8 @@ def readDataFromReadsnap(res,
     temperature_all = getTemperature(res['u'],res['z'][:,1],res['ne'])
 
     if extract_galaxy:
+        ## TODO
+        raise Exception("need to implement with openSnapshot and diskFilterDictionary!")
         ## extract max because we want to load in the whole galaxy if we're just drawing a patch
         ## otherwise we would only load in a tiny little chunk as big as the patch we want. 
         galaxy_radius = max(15, 2**0.5*frame_width) #kpc
@@ -62,8 +47,6 @@ def readDataFromReadsnap(res,
         'BoxSize':res['boxsize'],'frame_center' : frame_center
     }
     return mydict
-
-    
 
 def renderGalaxy(ax,snapdir,snapnum,savefig=1,noaxis=0,mode='r',**kwargs):
     # copy the dictionary so we don't mess anything up 

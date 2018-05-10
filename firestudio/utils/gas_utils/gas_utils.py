@@ -1,6 +1,6 @@
-from movie_maker_gasTwoColour import plot_image_grid
-from movie_maker_gasDensity_v2 import compute_image_grid as compute_density_grid
-from movie_maker_gasTemperature_v2 import compute_image_grid as compute_temp_grid
+from utils.gas_utils.movie_maker_gasTwoColour import plot_image_grid
+from utils.gas_utils.movie_maker_gasDensity_v2 import compute_image_grid as compute_density_grid
+from utils.gas_utils.movie_maker_gasTemperature_v2 import compute_image_grid as compute_temp_grid
 
 
 import matplotlib 

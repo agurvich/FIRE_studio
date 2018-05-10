@@ -75,7 +75,7 @@ def make_threeband_image(
     plt.gcf().set_size_inches(6,6)
     plt.gca().axis('off')
 
-def renderGalaxyFromPath(path):
+def renderStellarGalaxyFromPath(path):
     raise Exception("Unimplemented!")
     xs,ys,zs = galaxy.sub_star_res['p'].T
     mstar,ages, metals = galaxy.sub_star_res['m'],galaxy.sub_star_res['age_gyr'],galaxy.sub_star_res['z'][:,0]
