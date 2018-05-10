@@ -1,3 +1,5 @@
+
+import matplotlib.pyplot as plt
 import numpy as np 
 from stellar_utils import raytrace_projection,load_stellar_hsml
 import stellar_utils.make_threeband_image as makethreepic
@@ -60,12 +62,17 @@ def raytrace_ugr_attenuation(
         ADD_BASE_METALLICITY=0.001*0.02,ADD_BASE_AGE=0.0003,
         IMF_SALPETER=0,IMF_CHABRIER=1
     )
-def make_threeband_image(self):
-
+def make_threeband_image(
+    out_r,out_g,out_u,
+    maxden = 1e-3, dynrange = 1.001,
+    pixels = 1200):
 
     maxden,dynrange=[(.001,1+.001),(.6,1e4)][0]
     image24, massmap = makethreepic.make_threeband_image_process_bandmaps(
-        out_r,out_g,out_u,maxden=maxden,dynrange=dynrange,pixels=1200,color_scheme_nasa=1,color_scheme_sdss=0)
+        out_r,out_g,out_u,
+        maxden=maxden,dynrange=dynrange,pixels=pixels,
+        color_scheme_nasa=1,color_scheme_sdss=0)
+
     plt.imshow(image24,interpolation='bicubic')#,aspect='normal')
     plt.gcf().set_size_inches(6,6)
     plt.gca().axis('off')
