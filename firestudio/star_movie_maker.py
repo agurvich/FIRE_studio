@@ -1,7 +1,8 @@
 import matplotlib.pyplot as plt
 import numpy as np 
-from stellar_utils import raytrace_projection,load_stellar_hsml
-import stellar_utils.make_threeband_image as makethreepic
+
+from firestudio.utils.stellar_utils import raytrace_projection,load_stellar_hsml
+import firestudio.utils.stellar_utils.make_threeband_image as makethreepic
 
 ## Stellar light attenuation projection
 def calc_stellar_hsml(x,y,z):
