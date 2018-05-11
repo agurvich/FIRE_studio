@@ -37,7 +37,7 @@ def colors_table( age_in_Gyr, metallicity_in_solar_units,
     
     curpath = os.path.realpath(__file__)
     curpath = curpath[:len("utils")+curpath.index("utils")] #split off this filename
-    froot = os.path.join(curpath,'colors_sps/') # directory in which the data binaries are stored
+    froot = os.path.join(curpath,'stellar_utils','colors_sps/') # directory in which the data binaries are stored
     if (CHABRIER_IMF==1): fname=froot+'colors.chabrier.dat'
     if (SALPETER_IMF==1): fname=froot+'colors.salpeter.dat'
 

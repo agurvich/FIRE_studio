@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np 
+import h5py
 
 from firestudio.utils.stellar_utils import raytrace_projection,load_stellar_hsml
 import firestudio.utils.stellar_utils.make_threeband_image as makethreepic
@@ -76,21 +77,83 @@ def make_threeband_image(
     plt.gcf().set_size_inches(6,6)
     plt.gca().axis('off')
 
-def renderStellarGalaxyFromPath(path):
-    raise Exception("Unimplemented!")
-    xs,ys,zs = galaxy.sub_star_res['p'].T
-    mstar,ages, metals = galaxy.sub_star_res['m'],galaxy.sub_star_res['age_gyr'],galaxy.sub_star_res['z'][:,0]
-    gxs, gys, gzs, = galaxy.sub_res['p'].T
-    mgas,gas_metals, h_gas = galaxy.sub_res['m'],galaxy.sub_res['z'][:,0],galaxy.sub_res['h']
+def get_h_star(xs,ys,zs,savefile=None):
+    try:
+        if savefile is not None:
+            with h5py.File(savefile,'r') as handle:
+                return np.array(handle['StarHs'])
+        else:
+            raise IOError
+    except IOError:
+        h_star =  calc_stellar_hsml(xs,ys,zs)
+        if savefile is not None:
+            ## save it for next time!
+            with h5py.File(savefile,'w') as handle:
+                handle['StarHs']=h_star
+        return h_star
 
-    h_star = calc_stellar_hsml(xs,ys,zs)
+def get_bands_out(
+    xs,ys,zs,
+    mstar,ages,metals,
+    h_star,
+    gxs,gys,gzs,
+    mgas,gas_metals,h_gas,
+    savefile=None
+    ):
+    try:
+        if savefile is not None:
+            with h5py.File(savefile,'r') as handle:
+                return np.array(handle['out_u']),np.array(handle['out_g']),np.array(handle['out_r'])
+        else:
+            raise IOError
+    except (IOError,KeyError):
+        gas_out,out_u,out_g,out_r = raytrace_ugr_attenuation(
+            xs,ys,zs,
+            mstar,ages,metals,
+            h_star,
+            gxs,gys,gzs,
+            mgas,gas_metals,h_gas,
+        ) 
+        if savefile is not None:
+            ## save it for next time!
+            with h5py.File(savefile,'w') as handle:
+                handle['out_u']=out_u
+                handle['out_g']=out_g
+                handle['out_r']=out_r
 
-    gas_out,out_u,out_g,out_r = raytrace_ugr_attenuation(
-        xs,ys,zs,
-        mstar,ages,metals,
-        h_star,
-        gxs,gys,gzs,
-        mgas,gas_metals,h_gas,
-    )
+        return out_u,out_g,out_r
 
-    make_threeband_image(out_r,out_g,out_u,dynrange=1e1)
+def renderStarGalaxy(ax,snapdir,snapnum,savefig=1,noaxis=0,savefile=None,mode='r',**kwargs):
+    ## we've already been passed open snapshot data
+    if ('star_snap' in kwargs) and ('snap' in kwargs):
+        star_snap = kwargs['star_snap']
+        snap = kwargs['snap']
+
+        ## unpack relevant information
+        xs,ys,zs = star_snap['Coordinates'].T
+        mstar,ages, metals = star_snap['Masses'],star_snap['AgeGyr'],star_snap['Metallicity'][:,0]
+        gxs, gys, gzs, = snap['Coordinates'].T
+        mgas,gas_metals, h_gas = snap['Masses'],snap['Metallicity'][:,0],snap['SmoothingLength']
+
+
+        h_star = get_h_star(xs,ys,zs,savefile if mode =='r' else None)
+
+        
+        out_u,out_g,out_r=get_bands_out(
+            xs,ys,zs,
+            mstar,ages,metals,
+            h_star,
+            gxs,gys,gzs,
+            mgas,gas_metals,h_gas,
+            savefile=savefile if mode =='r' else None
+            )
+
+        make_threeband_image(out_r,out_g,out_u,dynrange=1e1)
+
+    ## need to load the snapshot data!
+    else:
+        raise Exception("Unimplemented!")
+
+
+if __name__ == '__main__':
+    print 'running from the command line' 

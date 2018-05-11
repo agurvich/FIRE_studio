@@ -37,7 +37,7 @@ def get_particle_hsml( x, y, z, DesNgb=32, Hmax=0.):
     ## load the routine we need
     curpath = os.path.realpath(__file__)
     curpath = curpath[:len("utils")+curpath.index("utils")] #split off this filename
-    exec_call=os.path.join(curpath,'c_libraries/StellarHsml/starhsml.so')
+    exec_call=os.path.join(curpath,'stellar_utils/c_libraries/StellarHsml/starhsml.so')
     h_routine=ctypes.cdll[exec_call];
 
     h_out_cast=ctypes.c_float*N; H_OUT=h_out_cast();
