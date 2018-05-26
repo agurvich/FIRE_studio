@@ -1,1 +1,1 @@
-python firestudio/movie_maker.py --snapdir="/home/abg6257/projects/cosmo/m12i_res7000_latte/output" --snapstart=555 --snapmax=600 --frame_width=30 --frame_depth=15 --edgeon=1 --datadir="/home/abg6257/src/FIRE_studio" --multiproc=1
+python firestudio/gas_movie_maker.py --snapdir="/home/abg6257/projects/cosmo/m12i_res7000_latte/output" --snapstart=555 --snapmax=556 --frame_width=30 --frame_depth=15 --edgeon=1 --datadir="/home/abg6257/src/FIRE_studio" --multiproc=1 --extract_galaxy=1 --noaxis=1

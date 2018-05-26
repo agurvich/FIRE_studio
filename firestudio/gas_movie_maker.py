@@ -35,7 +35,9 @@ def addSnapKeys(
     else:
         ## cosmological snapshot it is then... 
         snapdict=openSnapshot(snapdir,snapnum,ptype=0,cosmological=1)
-        scom,rvir,rstar_half = load_AHF(snapdir,snapnum)
+        scom,rvir,rstar_half = load_AHF(
+            snapdir,snapnum,
+            ahf_path=kwargs['ahf_path'] if 'ahf_path' in kwargs else None)
 
         ## filter all the keys in the snapdict as necessary to extract a spherical volume
         ##  centered on scom (the halo center), using 5*rstar_half  (thanks Zach for galaxy definition)
@@ -188,7 +190,9 @@ if __name__=='__main__':
         'edgeon=',
         'min_den=','max_den=','min_temp=','max_temp=','datadir=',
         'noaxis=',
-        'multiproc='])
+        'multiproc=',
+        'extract_galaxy=',
+        'ahf_path='])
 
     #options:
     # -r/s = use readsnap or use single snapshot loader
@@ -205,6 +209,8 @@ if __name__=='__main__':
     #--min/max_den/temp: bottom/top of color scales for density/temperature
     #--noaxis : flag for removing axis and whitespace for just the pretty part
     #--multiproc : how many processes should be run simultaneously, keep in mind memory constraints
+    #--extract_galaxy=False : flag to use abg_python.cosmoExtractor to extract main halo
+    #--ahf_path : path relative to snapdir where the halo files are stored
 
 
     for i,opt in enumerate(opts):
