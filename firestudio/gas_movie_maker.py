@@ -8,66 +8,110 @@ matplotlib.use('Agg')
 
 import matplotlib.pyplot as plt
 
-from firestudio.utils.gas_utils.gas_utils import addPrettyGalaxyToAx,getTemperature
+from firestudio.utils.gas_utils.gas_utils import addPrettyGalaxyToAx
 
 from abg_python.snapshot_utils import openSnapshot
 from abg_python.cosmoExtractor import rotateVectorsZY,diskFilterDictionary
+from abg_python.cosmo_utils import load_AHF
 
 import multiprocessing
 
-def readDataFromReadsnap(res,
-    frame_width,frame_depth,frame_center=None,
-    extract_galaxy=True,**kwargs):
+def addSnapKeys(
+    snapdir,snapnum,
+    extract_galaxy=False,
+    snapdict=None,
+    frame_center=None,
+    **kwargs):
 
-    pos_all = res['p']
-    mass_all = res['m']
-    temperature_all = getTemperature(res['u'],res['z'][:,1],res['ne'])
+    ## have to go get the snapdict and add it to the copydict
+    if snapdict is not None:
+        pass
+    elif not extract_galaxy:
+        ## isolated galaxy huh? good choice. 
+        ##  don't worry, cosmological will be overwritten in openSnapshot if 
+        ##  HubbleParam != 1, none of the coordinates will be updated
+        ##  and the galaxy won't be rotated or extracted
+        snapdict=openSnapshot(snapdir,snapnum,ptype=0,cosmological=0)
+    else:
+        ## cosmological snapshot it is then... 
+        snapdict=openSnapshot(snapdir,snapnum,ptype=0,cosmological=1)
+        scom,rvir,rstar_half = load_AHF(snapdir,snapnum)
 
-    if extract_galaxy:
-        ## TODO
-        raise Exception("need to implement with openSnapshot and diskFilterDictionary!")
-        ## extract max because we want to load in the whole galaxy if we're just drawing a patch
-        ## otherwise we would only load in a tiny little chunk as big as the patch we want. 
-        galaxy_radius = max(15, 2**0.5*frame_width) #kpc
-        galaxy_depth = max(15, frame_depth) #kpc
+        ## filter all the keys in the snapdict as necessary to extract a spherical volume
+        ##  centered on scom (the halo center), using 5*rstar_half  (thanks Zach for galaxy definition)
+        diskFilterDictionary(
+            None,snapdict,
+            radius=rstar_half*5,scom=scom)
 
-        thetay,thetaz,galaxy_rcom,gindices = findGalaxyAndOrient(snapdir,snapnum,pos_all,res['rho'],
-            galaxy_radius,galaxy_depth)
-    
-        ## filter and free up memory
-        pos_all = rotateVectorsZY(thetay,thetaz,pos_all[gindices]-galaxy_rcom)
-        if frame_center is None:
-            frame_center = np.zeros(3) # plot at center of mass
-        mass_all = mass_all[gindices]
-        temperature_all = temperature_all[gindices]
+    pos_all = snapdict['Coordinates']
+    mass_all = snapdict['Masses']
+
+    ## temperature is computed in openSnapshot
+    temperature_all = snapdict['Temperature']
 
     mydict = {
         'pos_all':pos_all,'mass_all':mass_all,'temperature_all':temperature_all,
-        'HubbleParam':res['hubble'],'time_Myr':res['time'],
-        'BoxSize':res['boxsize'],'frame_center' : frame_center
+        'HubbleParam':snapdict['HubbleParam'],'time_Myr':snapdict['Time'],
+        'BoxSize':snapdict['BoxSize'],'frame_center' : frame_center
     }
     return mydict
 
-def renderGalaxy(ax,snapdir,snapnum,savefig=1,noaxis=0,mode='r',**kwargs):
-    # copy the dictionary so we don't mess anything up 
-    copydict = copy.copy(kwargs)
-    # add in filtered galaxy data
+def renderGalaxy(
+    ax,
+    snapdir,snapnum,
+    savefig=1,noaxis=0,mode='r',
+    datadir=None,
+    extract_galaxy=0,
+    overwrite=0,
+    **kwargs):
+    """
+        Input:
+            ax - matplotlib axis object to draw to
+            snapdir - location that the snapshots live in
+            snapnum - snapshot number
+        Optional:
+            savefig=1 - flag to save figure to datadir (default snapdir, but can be a kwarg)
+            noaxis=0 - flag to turn off axis (1=off 0=on)
+            mode='r' - 'r' for reading from intermediate files, anything else to ignore intermediate files
+            datadir=None - place to save intermediate files (None -> snapdir)
+            extract_galaxy=False - flag to use abg_python.cosmoExtractor to extract main halo
+            overwrite=0 -  flag to overwrite intermediate files
+        Available kwargs:
+            snapdict=None - snapshot dictionary of gas particles to use, will ignore extract_galaxy if present
 
-    # make projection map and add to canvas
+            -- make image --
+            theta=0 - euler rotation angle
+            phi=0 - euler rotation angle
+            psi=0 - euler rotation angle
+            pixels=1200 - the resolution of image (pixels x pixels)
+            min_den=-0.4 - the minimum of the log(density) color scale
+            max_den=1.6 - the maximum of the log(density) color scale
+            min_temp=2 - the minimum of the log(temperature) color scale
+            max_temp=7 - the maximum of the log(temperature) color scale
+            edgeon=0 - flag to create and plot an edgeon view
+
+            frame_center=None - origin of image in data space, if None will use [0,0,0]
+            frame_width=None - half-width of image in data space, if None will use ? 
+            frame_depth=None - half-depth of image in data space, if None will use ? 
+    """
+    ## copy the dictionary so we don't mess anything up 
+    copydict = copy.copy(kwargs)
     print copydict.keys(),'keys passed'
 
-    if 'datadir' not in copydict:
+    ## pass along input to next routines through copydict
+    copydict['overwrite']=overwrite
+
+    ## default to snapdir, pass datadir to next routines through copydict
+    if 'datadir' is None:
         datadir = snapdir
-        copydict['datadir']=snapdir
-    else:
-        datadir = copydict['datadir']
+    copydict['datadir']=datadir
 
     try:
-        if 'overwrite' in copydict:
-            assert not copydict['overwrite']
+        ## if we're being told to overwrite we shouldn't use the previous intermediate files
+        assert not overwrite
         print "Trying to use a previous projection..."
-        if 'redraw' in copydict and copydict['redraw']:
-            raise IOError
+
+        ## pass a dummy frame_center, it's not used but will raise an error
         if 'frame_center' not in copydict:
             copydict['frame_center']=np.zeros(3)
 
@@ -75,34 +119,25 @@ def renderGalaxy(ax,snapdir,snapnum,savefig=1,noaxis=0,mode='r',**kwargs):
             ax,snapdir,snapnum, 
             **copydict)
     except (IOError,AssertionError):
-        ## perhaps we haven't computed the projections yet, force an "overwrite"
-        ## load in snapshot data
-
-        ## overwrite whatever projection exists, if it's there
-        if 'overwrite' not in copydict:
-            copydict['overwrite']=1 
-
         print "Failed to use a previous projection"
-        if 'readsnap' not in kwargs and 'subres' not in kwargs:
-            copydict.update(
-                loadDataFromSnapshot(snapdir,snapnum,mode,**kwargs))   
-        elif 'subres' not in kwargs:
-            copydict.update(readDataFromReadsnap(kwargs.pop('readsnap'),**kwargs))
-        else: ## subres is in kwargs, readsnap is not
-            copydict.update(readDataFromReadsnap(kwargs.pop('subres'),extract_galaxy=0,**kwargs))
-
+        ## add the snapshot keys to the copydict
+        copydict.update(addSnapKeys(snapdir,snapnum,extract_galaxy,**copydict))
+    
         ax = addPrettyGalaxyToAx(
             ax,snapdir,snapnum,
             **copydict)
 
+    ## set the figure size appropriately, extended for the edgeon view
     if 'edgeon' in kwargs and kwargs['edgeon']:
         ax.get_figure().set_size_inches(6,8)
     else:
         ax.get_figure().set_size_inches(6,6)
 
+    ## turn off the axis if asked
     if noaxis:
         ax.axis('off')
 
+    ## save the figure if asked
     if savefig:
         savefig_args={} 
         if noaxis:

@@ -192,7 +192,7 @@ def getImageGrid(BoxSize,npix_x,npix_y,pos,mass,hsml,quantity):
     print '------------------------------------------'
     curpath = os.path.realpath(__file__)
     curpath = curpath[:len("utils")+curpath.index("utils")] #split off this filename
-    c_obj = CDLL(os.path.join(curpath,'HsmlAndProject_cubicSpline/HsmlAndProject.so'))
+    c_obj = CDLL(os.path.join(curpath,'gas_utils','HsmlAndProject_cubicSpline/HsmlAndProject.so'))
     c_obj.findHsmlAndProject(c_int(n_smooth),pos_p,hsml_p,mass_p,quantity_p,\
                              c_float(Xmin),c_float(Xmax),c_float(Ymin),c_float(Ymax),c_float(Zmin),c_float(Zmax),\
                              c_int(npix_x),c_int(npix_y),c_int(desngb),\
