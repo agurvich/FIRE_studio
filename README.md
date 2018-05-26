@@ -3,6 +3,9 @@ Movie Making Utilities for FIRE simulations
 
 This git repository was lovingly made.
 
+requirements:
+[abg_python](https://www.github.com/agurvich/abg_python)
+
 ## Features
 The main function will extract the main  galaxy from a cosmological snapshot, project density and temperature maps for face- and edge-on 
 orientations, combine the density/temperature to make an image whose color is the temperature and whose saturation is the density, 
@@ -16,16 +19,10 @@ and output an image to the snapshot directory provided (along with .hdf5 files c
 * Can change the image resolution in number of pixels to a side 
 * Can change the minimum/maximum limits for density/temperature colorscales
 
-
 ## Installation Instructions
 Installation is as simple as cloning the repository and adding 
 `/path/to/FIRE_studio `
 to your `PYTHONPATH` environment variable. 
-
-## Importing to a preexisting script
-With a simple 
-`from movie_maker import renderGalaxy`,
-you can add a rendered galaxy to a matplotlib axis object. 
 
 ## Running from the command line
 A render-loop can also be started with the command:
@@ -41,5 +38,37 @@ A render-loop can also be started with the command:
 * `datadir` - place to output images/projections to
 
 * `theta/phi/psi` - euler angles to transform your view by
-* `pixels` - resolution of image
+* `pixels` - resolution of image (pixels x pixels)
 * `min/max_den/temp` - colorbar limits for density/temperature
+
+
+## Running from within a python script
+With a simple 
+`from movie_maker import renderGalaxy`, you can add a rendered galaxy to a matplotlib axis object. 
+The appropriate function call resembles:
+```python
+renderGalaxy(
+    ax,
+    snapdir,snapnum,
+    frame_width=gal_radius, ## half-width of frame in code units
+    frame_depth=gal_radius, ## half-depth of the frame in code units
+    frame_center=np.zeros(3), ## position to put the center of the frame on
+    extract_galaxy=False, ## flag for whether FIRE_studio should find the main galaxy and extract it
+    snapdict=snapdict, ## dictionary with snapshot info using default snapshot keys
+    datadir=datadir, ## directory to save intermediate files to
+    savefig=savefig, ## flag to save the image to datadir
+    noaxis=noaxis, ## flag for turning off axis (1=off 0=on)
+    **kwargs)
+```
+
+Where `snapdict` is a python dictionary holding the snapshot arrays with keys that match the FIRE defaults, 
+`abg_python.snap_utils.openSnapshot` will do this for you. 
+
+### additional keywords you can pass
+* `theta/phi/psi` - euler angles to transform your view by
+* `pixels` - resolution of image (pixels x pixels)
+* `min/max_den/temp` - colorbar limits for density/temperature
+
+## Stellar Movie Maker
+---- TODO  ----
+identical functionality to above exists but is not documented nor stable, see `stellar_movie_maker.py`. 

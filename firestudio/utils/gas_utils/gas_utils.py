@@ -66,6 +66,7 @@ def projectDenTemp(snapdir,snapnum,
             max_den=1.6 - the maximum of the density color scale
             min_temp=2 - the minimum of the temperature color scale
             max_temp=7 - the maximum of the temperature color scale
+            edgeon - create and plot an edgeon view
 
             frame_center - origin of image in data space
             frame_width - half-width of image in data space

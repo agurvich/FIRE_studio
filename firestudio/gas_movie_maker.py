@@ -134,7 +134,7 @@ def main(snapdir,snapstart,snapmax,**kwargs):
         global glob_kwargs,glob_snapdir
         glob_kwargs = kwargs
         glob_snapdir=snapdir
-        my_pool = multiprocessing.Pool(10)
+        my_pool = multiprocessing.Pool(int(kwargs['multiproc']))
         my_pool.map(multiProcRender,range(snapstart,snapmax))
     else:
         ## just do a for loop
@@ -169,6 +169,7 @@ if __name__=='__main__':
     #--pixels : how many pixels in each direction to use, defaults to 1200
     #--min/max_den/temp: bottom/top of color scales for density/temperature
     #--noaxis : flag for removing axis and whitespace for just the pretty part
+    #--multiproc : how many processes should be run simultaneously, keep in mind memory constraints
 
 
     for i,opt in enumerate(opts):
