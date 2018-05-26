@@ -37,6 +37,7 @@ def addSnapKeys(
         snapdict=openSnapshot(snapdir,snapnum,ptype=0,cosmological=1)
         scom,rvir,rstar_half = load_AHF(
             snapdir,snapnum,
+            snapdict['Redshift'],
             ahf_path=kwargs['ahf_path'] if 'ahf_path' in kwargs else None)
 
         ## filter all the keys in the snapdict as necessary to extract a spherical volume
@@ -120,10 +121,13 @@ def renderGalaxy(
         ax = addPrettyGalaxyToAx(
             ax,snapdir,snapnum, 
             **copydict)
+
     except (IOError,AssertionError):
         print "Failed to use a previous projection"
         ## add the snapshot keys to the copydict
+        print "HELLO"
         copydict.update(addSnapKeys(snapdir,snapnum,extract_galaxy,**copydict))
+        print "HELLO"
     
         ax = addPrettyGalaxyToAx(
             ax,snapdir,snapnum,

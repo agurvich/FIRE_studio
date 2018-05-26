@@ -26,7 +26,8 @@ to your `PYTHONPATH` environment variable.
 
 ## Running from the command line
 A render-loop can also be started with the command:
-`python movie_maker.py --snapdir="/projects/b1026/agurvich/cosmo/m12i_res7000_latte/output" --snapstart=555 --snapmax=556 --frame_width=30 --frame_depth=15`
+
+`python firestudio/gas_movie_maker.py --snapdir="/home/abg6257/projects/snaps/m12i_res7100/output" --snapstart=555 --snapmax=601 --frame_width=30 --frame_depth=15 --edgeon=1 --datadir="/home/abg6257/src/FIRE_studio" --multiproc=4 --extract_galaxy=1 --noaxis=1`
 
 
 ### available keywords from the command line
@@ -36,10 +37,13 @@ A render-loop can also be started with the command:
 * `frame_width` - half-width of frame in code units
 * `frame_depth` - half-depth of frame in code units
 * `datadir` - place to output images/projections to
-
+* `edgeon` - plot 90 degree rotation underneath
 * `theta/phi/psi` - euler angles to transform your view by
 * `pixels` - resolution of image (pixels x pixels)
 * `min/max_den/temp` - colorbar limits for density/temperature
+* `multiproc` - uses that many multiprocessing threads
+* `extract_galaxy` - flag to use abg_python.cosmoExtractor to extract main halo
+* `ahf_path` - path relative to snapdir where the halo files are stored, defaults to "../ahf/halo"
 
 
 ## Running from within a python script
@@ -68,6 +72,7 @@ Where `snapdict` is a python dictionary holding the snapshot arrays with keys th
 * `theta/phi/psi` - euler angles to transform your view by
 * `pixels` - resolution of image (pixels x pixels)
 * `min/max_den/temp` - colorbar limits for density/temperature
+* `ahf_path` - path relative to snapdir where the halo files are stored, defaults to "../ahf/halo"
 
 ## Stellar Movie Maker
 ---- TODO  ----

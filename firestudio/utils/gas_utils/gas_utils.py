@@ -95,7 +95,6 @@ def addPrettyGalaxyToAx(ax,snapdir,snapnum,
 
     """
 
-    print kwargs.keys()
     print 'Drawing',snapdir,'to:',datadir
     makeOutputDirectories(datadir)
 
