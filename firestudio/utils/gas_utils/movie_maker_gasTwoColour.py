@@ -49,13 +49,14 @@ def plot_image_grid(ax,isnap,dprojects,tprojects,
     h5name=h5filename+"gas_proj_%3d_%.2fkpc.hdf5" % (isnap, image_length)
     with h5py.File(data_dir_rho + h5name, "r") as h5file:
         exec "ResultW_rho = np.array(h5file['%s_faceOn'])" % (array_name, )
-        try:
-            time_Myr = h5file['Time_Myr'][0]
-        except:
-            print dir(h5file.root)
-            print h5file.keys()
-            time_Myr=h5file.root
-            raise Exception("STOP!")
+        if plot_time:
+            try:
+                time_Myr = h5file['Time_Myr'][0]
+            except:
+                print dir(h5file.root)
+                print h5file.keys()
+                time_Myr=h5file.root
+                raise Exception("STOP!")
 
         # if you use cosmological = 1 in readsnap then this is already accounted for!
         # need to think of a self-consistent way to address this

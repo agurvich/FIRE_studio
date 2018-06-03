@@ -33,7 +33,6 @@ def makeOutputDirectories(datadir):
 ## physics functions
 def projectDenTemp(snapdir,snapnum,
     dprojects,tprojects,
-    flag_cosmological,
     **kwargs):
     """ 
     Input: 
@@ -95,17 +94,21 @@ def addPrettyGalaxyToAx(ax,snapdir,snapnum,
 
     """
 
-    print 'Drawing',snapdir,'to:',datadir
+    print 'Drawing',snapdir,snapnum,'to:',datadir
     makeOutputDirectories(datadir)
 
     #where to find/save gas/temperature density grids-- this could get crowded!
     dprojects=os.path.join(datadir,'Plots','Projections','Den/')
     tprojects=os.path.join(datadir,'Plots','Projections','Temp/')
 
-    if overwrite:
+    h5filename='' if 'h5filename' not in kwargs else kwargs['h5filename']
+    d_h5name=h5filename+"gas_proj_%3d_%.2fkpc.hdf5" % (snapnum, kwargs['frame_width']*2)
+    T_h5name=h5filename + "gasTemp_proj_%3d_%.2fkpc.hdf5" % (snapnum, kwargs['frame_width']*2)
+    if overwrite or (
+        (not os.path.isfile(os.path.join(dprojects,d_h5name))) and 
+        (not os.path.isfile(os.path.join(dprojects,T_h5name)))):
         ## compute the projections
-        projectDenTemp(snapdir,snapnum,dprojects,tprojects,
-            flag_cosmological = 'm12i' in snapdir,**kwargs)
+        projectDenTemp(snapdir,snapnum,dprojects,tprojects,**kwargs)
 
     print 'plotting image grid'
     plot_image_grid(ax,snapnum,dprojects,tprojects,

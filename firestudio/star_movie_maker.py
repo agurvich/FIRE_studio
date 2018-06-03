@@ -63,19 +63,21 @@ def raytrace_ugr_attenuation(
         ADD_BASE_METALLICITY=0.001*0.02,ADD_BASE_AGE=0.0003,
         IMF_SALPETER=0,IMF_CHABRIER=1
     )
-def make_threeband_image(
+def make_threeband_image(ax,
     out_r,out_g,out_u,
     maxden = 1e-3, dynrange = 1.001,
-    pixels = 1200):
+    pixels = 1200,
+    noaxis=0):
 
     image24, massmap = makethreepic.make_threeband_image_process_bandmaps(
         out_r,out_g,out_u,
         maxden=maxden,dynrange=dynrange,pixels=pixels,
         color_scheme_nasa=1,color_scheme_sdss=0)
 
-    plt.imshow(image24,interpolation='bicubic')#,aspect='normal')
-    plt.gcf().set_size_inches(6,6)
-    plt.gca().axis('off')
+    ax.imshow(image24,interpolation='bicubic')#,aspect='normal')
+    ax.get_figure().set_size_inches(6,6)
+    if noaxis:
+        ax.axis('off')
 
 def get_h_star(xs,ys,zs,savefile=None):
     try:
@@ -84,11 +86,11 @@ def get_h_star(xs,ys,zs,savefile=None):
                 return np.array(handle['StarHs'])
         else:
             raise IOError
-    except IOError:
+    except (IOError,KeyError):
         h_star =  calc_stellar_hsml(xs,ys,zs)
         if savefile is not None:
             ## save it for next time!
-            with h5py.File(savefile,'w') as handle:
+            with h5py.File(savefile,'a') as handle:
                 handle['StarHs']=h_star
         return h_star
 
@@ -116,7 +118,7 @@ def get_bands_out(
         ) 
         if savefile is not None:
             ## save it for next time!
-            with h5py.File(savefile,'w') as handle:
+            with h5py.File(savefile,'a') as handle:
                 handle['out_u']=out_u
                 handle['out_g']=out_g
                 handle['out_r']=out_r
@@ -148,7 +150,7 @@ def renderStarGalaxy(ax,snapdir,snapnum,savefig=1,noaxis=0,savefile=None,mode='r
             savefile=savefile if mode =='r' else None
             )
 
-        make_threeband_image(out_r,out_g,out_u,dynrange=1e1)
+        make_threeband_image(ax,out_r,out_g,out_u,dynrange=1e1,noaxis=noaxis)
 
     ## need to load the snapshot data!
     else:
