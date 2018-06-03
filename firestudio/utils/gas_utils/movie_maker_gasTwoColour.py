@@ -16,7 +16,8 @@ def round_to_nearest_integer(x):
 def plot_image_grid(ax,isnap,dprojects,tprojects,
     frame_center,frame_width,frame_depth,pixels=1200,
     min_den=-1.0,max_den=1.2,min_temp=2,max_temp=7,edgeon=0,h5filename='',
-    plot_time = 1, scale_bar = 1,**kwargs): 
+    plot_time = 1, scale_bar = 1,
+    time_Myr=None,figure_label=None,fontsize=None,**kwargs): 
     print "extra kwargs in plot_2color_image:",kwargs.keys()
     # Set paths
     
@@ -31,9 +32,15 @@ def plot_image_grid(ax,isnap,dprojects,tprojects,
     image_length =2*frame_width #8.0
     scale_label_position = 0.06 
 
-    if image_length > 1.5 : 
+
+    if image_length > 15 : 
+        scale_line_length = 5
+        scale_label_text = r"$\mathbf{5 \, \rm{kpc}}$"
+
+    elif image_length > 1.5 : 
         scale_line_length = 1.0 
         scale_label_text = r"$\mathbf{1 \, \rm{kpc}}$"
+
     else:
         scale_line_length = .1
         scale_label_text = r"$\mathbf{100 \, \rm{pc}}$"
@@ -50,13 +57,14 @@ def plot_image_grid(ax,isnap,dprojects,tprojects,
     with h5py.File(data_dir_rho + h5name, "r") as h5file:
         exec "ResultW_rho = np.array(h5file['%s_faceOn'])" % (array_name, )
         if plot_time:
-            try:
-                time_Myr = h5file['Time_Myr'][0]
-            except:
-                print dir(h5file.root)
-                print h5file.keys()
-                time_Myr=h5file.root
-                raise Exception("STOP!")
+            if time_Myr is None:
+                try:
+                    time_Myr = h5file['Time_Myr'][0]
+                except:
+                    print dir(h5file.root)
+                    print h5file.keys()
+                    time_Myr=h5file.root
+                    raise Exception("STOP!")
 
         # if you use cosmological = 1 in readsnap then this is already accounted for!
         # need to think of a self-consistent way to address this
@@ -220,16 +228,20 @@ def plot_image_grid(ax,isnap,dprojects,tprojects,
     #figure_label2 = r"$\rm{UVBthin}$"
     imgplot = ax.imshow(final_image, 
         extent = (Xmin,Xmax,Ymin-(2*frame_depth)*edgeon,Ymax),origin = 'lower', aspect = 'auto')
+    fontsize=8 if fontsize is None else fontsize 
     if plot_time:
-        figure_label = r"$%03d \, \rm{Myr}$" % (round_to_nearest_integer(time_Myr), )
-        figure_label = r"$%.2f \, \rm{Myr}$" % (time_Myr)
-        label = pylab.text(0.70, 0.92, figure_label, fontsize = 8, transform = ax.transAxes)
+        ## handle default values
+        if figure_label is None:
+            figure_label = r"$%03d \, \rm{Myr}$" % (round_to_nearest_integer(time_Myr), )
+            figure_label = r"$%.2f \, \rm{Myr}$" % (time_Myr)
+
+        label = pylab.text(0.95, 0.92, figure_label, fontsize = fontsize, transform = ax.transAxes,ha='right')
         label.set_color('white')
     if scale_bar: 
         label2 = pylab.text(scale_label_position,
             0.03, scale_label_text, fontweight = 'bold', transform = ax.transAxes)
         label2.set_color('white')
-        label2.set_fontsize(6)
+        label2.set_fontsize(fontsize*0.75)
     #label3 = pylab.text(0.10, 0.92, figure_label2, fontsize = 8, transform = ax.transAxes)
     #label3.set_color('white')
 

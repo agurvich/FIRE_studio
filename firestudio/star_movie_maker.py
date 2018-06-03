@@ -74,11 +74,12 @@ def make_threeband_image(ax,
         maxden=maxden,dynrange=dynrange,pixels=pixels,
         color_scheme_nasa=1,color_scheme_sdss=0)
 
-    ax.imshow(image24,interpolation='bicubic')#,aspect='normal')
-    ax.get_figure().set_size_inches(6,6)
-    if noaxis:
-        ax.axis('off')
-
+    ## for some reason it's rotated 90 degrees...? kind of like transposed but different
+    ##  need to take the rows of the output image and make them the columns, iteratively,
+    ##  for now... 
+    #image24=np.rot90(image24,k=1,axes=(0,1))
+    return np.transpose(image24,axes=(1,0,2))
+    
 def get_h_star(xs,ys,zs,savefile=None):
     try:
         if savefile is not None:
@@ -125,7 +126,41 @@ def get_bands_out(
 
         return out_u,out_g,out_r
 
-def renderStarGalaxy(ax,snapdir,snapnum,savefig=1,noaxis=0,savefile=None,mode='r',**kwargs):
+def add_scale_bar(final_image,image_length,npix,scale_line_length):
+    # Convert to pixels
+    length_per_pixel = image_length/ npix
+    scale_line_length_px = int(scale_line_length / length_per_pixel)
+
+    # Position in terms of image array indices
+    scale_line_x_start = int(0.05 * npix)
+    scale_line_x_end = min(scale_line_x_start + scale_line_length_px,npix)
+    scale_line_y = int(0.02 * npix)
+
+    # Go through pixels for scale bar, setting them to white
+    for x_index in xrange(scale_line_x_start, scale_line_x_end):
+        final_image[scale_line_y, x_index, 0] = 1
+        final_image[scale_line_y, x_index, 1] = 1
+        final_image[scale_line_y, x_index, 2] = 1
+        final_image[scale_line_y + 1, x_index, 0] = 1
+        final_image[scale_line_y + 1, x_index, 1] = 1
+        final_image[scale_line_y + 1, x_index, 2] = 1
+        final_image[scale_line_y + 2, x_index, 0] = 1
+        final_image[scale_line_y + 2, x_index, 1] = 1
+        final_image[scale_line_y + 2, x_index, 2] = 1
+        final_image[scale_line_y + 3, x_index, 0] = 1
+        final_image[scale_line_y + 3, x_index, 1] = 1
+        final_image[scale_line_y + 3, x_index, 2] = 1
+        final_image[scale_line_y + 4, x_index, 0] = 1
+        final_image[scale_line_y + 4, x_index, 1] = 1
+        final_image[scale_line_y + 4, x_index, 2] = 1
+        final_image[scale_line_y + 5, x_index, 0] = 1
+        final_image[scale_line_y + 5, x_index, 1] = 1
+        final_image[scale_line_y + 5, x_index, 2] = 1
+
+    return final_image
+
+def renderStarGalaxy(ax,snapdir,snapnum,savefig=1,noaxis=0,savefile=None,mode='r',fontsize=None,
+    scale_bar=1,**kwargs):
     ## we've already been passed open snapshot data
     if ('star_snap' in kwargs) and ('snap' in kwargs):
         star_snap = kwargs['star_snap']
@@ -137,9 +172,7 @@ def renderStarGalaxy(ax,snapdir,snapnum,savefig=1,noaxis=0,savefile=None,mode='r
         gxs, gys, gzs, = snap['Coordinates'].T
         mgas,gas_metals, h_gas = snap['Masses'],snap['Metallicity'][:,0],snap['SmoothingLength']
 
-
         h_star = get_h_star(xs,ys,zs,savefile if mode =='r' else None)
-
         
         out_u,out_g,out_r=get_bands_out(
             xs,ys,zs,
@@ -150,7 +183,39 @@ def renderStarGalaxy(ax,snapdir,snapnum,savefig=1,noaxis=0,savefile=None,mode='r
             savefile=savefile if mode =='r' else None
             )
 
-        make_threeband_image(ax,out_r,out_g,out_u,dynrange=1e1,noaxis=noaxis)
+        image24=make_threeband_image(ax,out_r,out_g,out_u,dynrange=1e1,noaxis=noaxis)
+
+
+    image_length = np.max(xs)-np.min(xs)
+
+    if image_length > 15 : 
+        scale_line_length = 5
+        scale_label_text = r"$\mathbf{5 \, \rm{kpc}}$"
+
+    elif image_length > 1.5 : 
+        scale_line_length = 1.0 
+        scale_label_text = r"$\mathbf{1 \, \rm{kpc}}$"
+
+    else:
+        scale_line_length = .1
+        scale_label_text = r"$\mathbf{100 \, \rm{pc}}$"
+
+    ## handle default
+    fontsize=8 if fontsize is None else fontsize
+    scale_label_position = 0.06 
+    pixels = 1200 if 'pixels' not in kwargs else kwargs['pixels']
+
+    if scale_bar:
+        image24=add_scale_bar(image24,image_length,pixels,scale_line_length)
+        label2 = ax.text(scale_label_position,
+            0.03, scale_label_text, fontweight = 'bold', transform = ax.transAxes)
+        label2.set_color('white')
+        label2.set_fontsize(fontsize*0.75)
+
+    ax.imshow(image24,interpolation='bicubic',origin='lower')#,aspect='normal')
+    ax.get_figure().set_size_inches(6,6)
+    if noaxis:
+        ax.axis('off')
 
     ## need to load the snapshot data!
     else:
