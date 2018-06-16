@@ -14,7 +14,7 @@ def round_to_nearest_integer(x):
         return int(x) + 1
 
 def plot_image_grid(ax,isnap,dprojects,tprojects,
-    frame_center,frame_width,frame_depth,pixels=1200,
+    frame_center,frame_half_width,frame_depth,pixels=1200,
     min_den=-1.0,max_den=1.2,min_temp=2,max_temp=7,edgeon=0,h5filename='',
     plot_time = 1, scale_bar = 1,
     time_Myr=None,figure_label=None,fontsize=None,**kwargs): 
@@ -29,7 +29,7 @@ def plot_image_grid(ax,isnap,dprojects,tprojects,
     # Set parameters
     npix_x   = pixels#1200 
     npix_y   = pixels#1200 
-    image_length =2*frame_width #8.0
+    image_length =2*frame_half_width #8.0
     scale_label_position = 0.06 
 
 

@@ -216,7 +216,7 @@ def getImageGrid(BoxSize,npix_x,npix_y,pos,mass,hsml,quantity):
     return ResultW
 
 def compute_image_grid(pos_all,mass_all,time_Myr,BoxSize,
-    frame_center,frame_width,frame_depth,
+    frame_center,frame_half_width,frame_depth,
     output_dir,isnap,
     edgeon=1,
     theta=0,phi=0,psi=0,
@@ -238,7 +238,7 @@ def compute_image_grid(pos_all,mass_all,time_Myr,BoxSize,
     hsml_all = ndarray(npart,dtype=float32)
     hsml_all[:] = 0.0
 
-    image_length = 2*frame_width
+    image_length = 2*frame_half_width
     image_depth = 2*frame_depth
 
     global L_x,L_y,L_z

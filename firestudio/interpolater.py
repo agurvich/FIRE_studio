@@ -13,12 +13,12 @@ from multiprocessing import Pool
 from firestudio.movie_maker import renderGalaxy
 
 def fauxrenderPatch(sub_res,ax,
-    frame_center,frame_width,
+    frame_center,frame_half_width,
     frame_depth=None,savefig=0,noaxis=0,
     theta=0,phi=0,psi=0,**kwargs):
 
     indices = extractRectangularVolumeIndices(sub_res['p'],
-        frame_center,frame_width,frame_width if frame_depth is None else frame_depth)
+        frame_center,frame_half_width,frame_half_width if frame_depth is None else frame_depth)
 
     pos = sub_res['p'] - frame_center # want to rotate about frame_center
     pos_rot = rotateEuler(theta,phi,psi,pos) +frame_center # add back the offset post rotation...?
@@ -27,8 +27,8 @@ def fauxrenderPatch(sub_res,ax,
 
     twoDHist(ax,xs,ys,bins=300)
 
-    ax.set_ylim(frame_center[1]-frame_width,frame_center[1]+frame_width)
-    ax.set_xlim(frame_center[0]-frame_width,frame_center[0]+frame_width)
+    ax.set_ylim(frame_center[1]-frame_half_width,frame_center[1]+frame_half_width)
+    ax.set_xlim(frame_center[0]-frame_half_width,frame_center[0]+frame_half_width)
 
     if noaxis:
         ax.axis('off')
@@ -108,7 +108,7 @@ def new_matrix(m,n):
 
 ###### BEGIN MOVIE PERSPECTIVE+TIME INTERPOLATION CODE
 def drawTimeChangingPath(
-    frame_width, # fixed frame width, like FoV
+    frame_half_width, # fixed frame width, like FoV
     frame_centers,zooms, # position and how far zoomed in am i? 
     thetas, phis, psis, # rotation angles
     nstepss, # how many interpolation frames should there be between each keyframe?
@@ -135,7 +135,7 @@ def drawTimeChangingPath(
     dkeyframes = itertools.izip(
         nstepss,
         frame_centers[:-1],frame_centers[1:],
-        frame_width/zooms[:-1],frame_width/zooms[1:],
+        frame_half_width/zooms[:-1],frame_half_width/zooms[1:],
         thetas[:-1],thetas[1:],
         phis[:-1],phis[1:],
         psis[:-1],psis[1:],
@@ -153,7 +153,7 @@ def drawTimeChangingPath(
 def interpolateKeyFrames(
     nsteps,
     r0,rf,
-    frame_width0,frame_widthf,
+    frame_half_width0,frame_half_widthf,
     thetamin,thetamax,
     phimin,phimax,
     psimin,psimax,
@@ -202,7 +202,7 @@ def interpolateKeyFrames(
             [(xmin,xmax),
             (ymin,ymax),
             (zmin,zmax),
-            (frame_width0,frame_widthf),
+            (frame_half_width0,frame_half_widthf),
             (thetamin,thetamax),
             (phimin,phimax),
             (psimin,psimax),
@@ -264,7 +264,7 @@ def multiProcessFrameDrawing(
     mps,
     faux_frame,
     xs,ys,zs,
-    frame_widths,
+    frame_half_widths,
     thetas,phis,psis):
     """ Loads snapshot and draws 'relevant' (see above) interpolated frames from it"""
 
@@ -300,16 +300,16 @@ def multiProcessFrameDrawing(
 
     drawFrames(
         faux_frame,
-        galaxy,frame_centers,frame_widths,
+        galaxy,frame_centers,frame_half_widths,
         thetas,phis,psis,mps=mps,offset=nframe_offset) 
     
-def drawFrames(faux_frame,galaxy,frame_centers,frame_widths,thetas,phis,psis,offset=0,mps=0):
+def drawFrames(faux_frame,galaxy,frame_centers,frame_half_widths,thetas,phis,psis,offset=0,mps=0):
     nframes = len(frame_centers)
     argss = itertools.izip(
             itertools.repeat(faux_frame),
             range(nframes),
             itertools.repeat(galaxy.sub_res),
-            frame_centers,frame_widths,
+            frame_centers,frame_half_widths,
             thetas,phis,psis,
             itertools.repeat(offset))
 
@@ -328,7 +328,7 @@ def multiWrapper(args):
 def renderGalaxyWrapper(**kwargs):
     return renderGalaxy(**kwargs)
 
-def multidrawFrame(faux_frame,i,sub_res,frame_center,frame_width,theta,phi,psi,offset):
+def multidrawFrame(faux_frame,i,sub_res,frame_center,frame_half_width,theta,phi,psi,offset):
     """ uses fauxrenderPatch for testing purposes, or full 'render galaxy' 
         if you want to spend the time on it..."""
 
@@ -344,7 +344,7 @@ def multidrawFrame(faux_frame,i,sub_res,frame_center,frame_width,theta,phi,psi,o
         handle.write("snapnum=%d\n"%sub_res['snapnum'])
         handle.write("theta=%.2f phi=%.2f psi=%.2f\n"%(theta,phi,psi))
         handle.write("fc=%s\n"%(str(frame_center)))
-        handle.write("fw=%.2f fd=%.2f\n"%(frame_width,frame_width))
+        handle.write("fw=%.2f fd=%.2f\n"%(frame_half_width,frame_half_width))
 
     if not faux_frame:
         renderGalaxyWrapper(
@@ -355,8 +355,8 @@ def multidrawFrame(faux_frame,i,sub_res,frame_center,frame_width,theta,phi,psi,o
             noaxis=1, ## don't have axis ticks
             edgeon=0, ## don't make a 90 degree rotated version
             frame_center=frame_center, ## center of frame
-            frame_width=frame_width, ## half width of frame
-            frame_depth = frame_width, ## half depth, make a cube
+            frame_half_width=frame_half_width, ## half width of frame
+            frame_depth = frame_half_width, ## half depth, make a cube
             theta=theta,phi=phi,psi=psi, ## euler angles
             datadir = sub_res['datadir'], ## where to save projections to
             subres=sub_res,## pass along the already extracted data
@@ -366,7 +366,7 @@ def multidrawFrame(faux_frame,i,sub_res,frame_center,frame_width,theta,phi,psi,o
         plt.savefig(os.path.join(sub_res['datadir'],'frame_%04d.png'%(i+offset)))
     else:
         fauxrenderPatch(sub_res,
-            ax,frame_center,frame_width,
+            ax,frame_center,frame_half_width,
             theta=theta,phi=phi,psi=psi,noaxis=1)
 
         plt.savefig(os.path.join(sub_res['datadir'],'faux_frame_%04d.png'%(i+offset)))

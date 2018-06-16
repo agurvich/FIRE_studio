@@ -5,6 +5,11 @@ import h5py
 from firestudio.utils.stellar_utils import raytrace_projection,load_stellar_hsml
 import firestudio.utils.stellar_utils.make_threeband_image as makethreepic
 
+from abg_python import all_utils.filterDictionary as filterDictionary
+from abg_python import snapshot_utils.openSnapshot as openSnapshot
+from abg_python import cosmo_utils.load_AHF as load_AHF
+from abg_python import cosmoExtractor.diskFilterDictionary as orientFaceon
+
 ## Stellar light attenuation projection
 def calc_stellar_hsml(x,y,z):
     starhsml = load_stellar_hsml.get_particle_hsml
@@ -126,9 +131,9 @@ def get_bands_out(
 
         return out_u,out_g,out_r
 
-def add_scale_bar(final_image,image_length,npix,scale_line_length):
+def add_scale_bar(final_image,frame_half_width,npix,scale_line_length):
     # Convert to pixels
-    length_per_pixel = image_length/ npix
+    length_per_pixel = frame_half_width/ npix
     scale_line_length_px = int(scale_line_length / length_per_pixel)
 
     # Position in terms of image array indices
@@ -159,40 +164,124 @@ def add_scale_bar(final_image,image_length,npix,scale_line_length):
 
     return final_image
 
-def renderStarGalaxy(ax,snapdir,snapnum,savefig=1,noaxis=0,savefile=None,mode='r',fontsize=None,
-    scale_bar=1,**kwargs):
+def get_indices(
+    snap,
+    frame_center,
+    frame_half_width,frame_depth=None):
+
+    ## offset, unpack, and square coordinates
+    xs2,ys2,zs2 = (snap['Coordinates']-frame_center)**2.T
+
+    ## compare to half-width squared
+    xindices = xs2 <= (frame_half_width/2.)**2
+    yindices = ys2 <= (frame_half_width/2.)**2
+    zindices = zs2 <= (frame_depth/2.)**2
+
+    return np.logical_and(np.logical_and(xindices,yindices),zindices)
+
+def renderStarGalaxy(
+    ax,
+    snapdir,snapnum,
+    frame_half_width,frame_depth=None,
+    frame_center=np.zeros(3),
+    savefig=1,noaxis=0,
+    savefile=None,mode='r',
+    fontsize=None,scale_bar=1,
+    **kwargs):
+     """
+        Input:
+            ax - matplotlib axis object to draw to
+            snapdir - location that the snapshots live in
+            snapnum - snapshot number
+        Optional:
+            savefig=1 - flag to save figure to datadir (default snapdir, but can be a kwarg)
+            noaxis=0 - flag to turn off axis (1=off 0=on)
+            mode='r' - 'r' for reading from intermediate files, anything else to ignore intermediate files
+            datadir=None - place to save intermediate files (None -> snapdir)
+            extract_galaxy=False - flag to use abg_python.cosmoExtractor to extract main halo
+            overwrite=0 -  flag to overwrite intermediate files
+        Available kwargs:
+            snapdict=None - snapshot dictionary of gas particles to use, will ignore extract_galaxy if present
+
+            -- make image --
+            theta=0 - euler rotation angle
+            phi=0 - euler rotation angle
+            psi=0 - euler rotation angle
+            pixels=1200 - the resolution of image (pixels x pixels)
+            min_den=-0.4 - the minimum of the log(density) color scale
+            max_den=1.6 - the maximum of the log(density) color scale
+            min_temp=2 - the minimum of the log(temperature) color scale
+            max_temp=7 - the maximum of the log(temperature) color scale
+            edgeon=0 - flag to create and plot an edgeon view
+
+            frame_center=None - origin of image in data space, if None will use [0,0,0]
+            frame_half_width=None - half-width of image in data space, if None will use ? 
+            frame_depth=None - half-depth of image in data space, if None will use ? 
+    """
+    ## handle default arguments
+    frame_depth = frame_half_width if frame_depth is None else frame_depth
+
     ## we've already been passed open snapshot data
     if ('star_snap' in kwargs) and ('snap' in kwargs):
         star_snap = kwargs['star_snap']
         snap = kwargs['snap']
+    else:
+        print "Assuming all stars are part type 4, hope this isn't an isolated galaxy!"
+        ## load star particles
+        star_snap = openSnapshot(
+            snapdir,snapnum,4,
+            cosmological=1,
+            keys_to_extract=['Coordinates','Masses','AgeGyr','Metallicity'])
 
-        ## unpack relevant information
-        xs,ys,zs = star_snap['Coordinates'].T
-        mstar,ages, metals = star_snap['Masses'],star_snap['AgeGyr'],star_snap['Metallicity'][:,0]
-        gxs, gys, gzs, = snap['Coordinates'].T
-        mgas,gas_metals, h_gas = snap['Masses'],snap['Metallicity'][:,0],snap['SmoothingLength']
+        ## load gas particles
+        snap = openSnapshot(
+            snapdir,snapnum,0,
+            cosmological=1,
+            keys_to_extract=['Coordinates','Masses','Metallicity','SmoothingLength'])
 
-        h_star = get_h_star(xs,ys,zs,savefile if mode =='r' else None)
-        
-        out_u,out_g,out_r=get_bands_out(
-            xs,ys,zs,
-            mstar,ages,metals,
-            h_star,
-            gxs,gys,gzs,
-            mgas,gas_metals,h_gas,
-            savefile=savefile if mode =='r' else None
-            )
+        ## load the center of the halo
+        scom,rvir,vesc = load_AHF(snapdir,snapnum,snap['Redshift'],
+            ahf_path=kwargs['ahf_path'] if 'ahf_path' in kwargs else None,
+            extra_names_to_read = [])
 
-        image24=make_threeband_image(ax,out_r,out_g,out_u,dynrange=1e1,noaxis=noaxis)
+        ## overwrite star_snap/snap with a subset that contains only within 0.2 rvir
+        ##  of the halo center-- or within a frame_half_width radius, whichever is larger
+        star_snap,snap = orientFaceon(star_snap,snap,
+            radius = max(0.2*rvir,frame_half_width),
+            scom = scom, orient_stars = 0)
 
+    ## find only the particles within the viewbox
+    ##  apply indices to all the arrays in the snapdict
+    indices = get_indices(star_snap,frame_center,frame_half_width,frame_depth)
+    star_snap = filterDictionary(star_snap,indices)
 
-    image_length = np.max(xs)-np.min(xs)
+    indices = get_indices(star_snap,frame_center,frame_half_width,frame_depth)
+    snap = filterDictionary(snap,indices)
 
-    if image_length > 15 : 
+    ## unpack relevant information
+    xs,ys,zs = star_snap['Coordinates'].T
+    mstar,ages, metals = star_snap['Masses'],star_snap['AgeGyr'],star_snap['Metallicity'][:,0]
+    gxs, gys, gzs, = snap['Coordinates'].T
+    mgas,gas_metals, h_gas = snap['Masses'],snap['Metallicity'][:,0],snap['SmoothingLength']
+
+    h_star = get_h_star(xs,ys,zs,savefile if mode =='r' else None)
+    
+    out_u,out_g,out_r=get_bands_out(
+        xs,ys,zs,
+        mstar,ages,metals,
+        h_star,
+        gxs,gys,gzs,
+        mgas,gas_metals,h_gas,
+        savefile=savefile if mode =='r' else None
+        )
+
+    image24=make_threeband_image(ax,out_r,out_g,out_u,dynrange=1e1,noaxis=noaxis)
+
+    if frame_half_width > 15 : 
         scale_line_length = 5
         scale_label_text = r"$\mathbf{5 \, \rm{kpc}}$"
 
-    elif image_length > 1.5 : 
+    elif frame_half_width > 1.5 : 
         scale_line_length = 1.0 
         scale_label_text = r"$\mathbf{1 \, \rm{kpc}}$"
 
@@ -206,7 +295,7 @@ def renderStarGalaxy(ax,snapdir,snapnum,savefig=1,noaxis=0,savefile=None,mode='r
     pixels = 1200 if 'pixels' not in kwargs else kwargs['pixels']
 
     if scale_bar:
-        image24=add_scale_bar(image24,image_length,pixels,scale_line_length)
+        image24=add_scale_bar(image24,frame_half_width,pixels,scale_line_length)
         label2 = ax.text(scale_label_position,
             0.03, scale_label_text, fontweight = 'bold', transform = ax.transAxes)
         label2.set_color('white')
@@ -217,10 +306,86 @@ def renderStarGalaxy(ax,snapdir,snapnum,savefig=1,noaxis=0,savefile=None,mode='r
     if noaxis:
         ax.axis('off')
 
-    ## need to load the snapshot data!
-    else:
-        raise Exception("Unimplemented!")
+def multiProcRender(snapnum):
+    ax = plt.gca()
+    renderStarGalaxy(ax,glob_snapdir,snapnum,**glob_kwargs)
+    plt.clf()
 
+def run():
+    renderStarGalaxy(
+        ax,
+        self.snapdir,self.snapnum,
+        frame_half_width=self.sub_radius,
+        frame_depth=self.sub_cylinder if self.sub_cylinder else self.sub_radius,
+        frame_center=np.zeros(3),
+        #extract_galaxy=False, ## already extracted the galaxy
+        #datadir=self.datadir,
+        snap=self.sub_snap,
+        star_snap=self.sub_star_snap,
+        savefig=savefig,noaxis=noaxis,
+        savefile = os.path.join(self.datadir,'Plots','Projections','hubble_image_%03d.hdf'%self.snapnum),
+        **kwargs)
+    
+def main(snapdir,snapstart,snapmax,**kwargs):
+    if 'multiproc' in kwargs and kwargs['multiproc']:
+        ## map a wrapper to a pool of processes
+        global glob_kwargs,glob_snapdir
+        glob_kwargs = kwargs
+        glob_snapdir=snapdir
+        my_pool = multiprocessing.Pool(int(kwargs['multiproc']))
+        my_pool.map(multiProcRender,range(snapstart,snapmax))
+    else:
+        ## just do a for loop
+        for snapnum in xrange(snapstart,snapmax):
+            ax = plt.gca()
+            renderStarGalaxy(ax,snapdir,snapnum,**kwargs)
+            plt.clf()       
+
+if __name__=='__main__':
+    argv = sys.argv[1:]
+    opts,args = getopt.getopt(argv,'rs',[
+        'snapdir=',
+        'snapstart=','snapmax=',
+        'pixels=','frame_half_width=','frame_depth=',
+        'theta=','phi=','psi=',
+        'edgeon=',
+        'datadir=',
+        'noaxis=',
+        'multiproc=',
+        'extract_galaxy=',
+        'ahf_path='])
+
+    #options:
+    # -r/s = use readsnap or use single snapshot loader
+    #--snapdir: place where snapshots live
+    #--snapstart : which snapshot to start the loop at
+    #--snapmax : which snapshot to end the loop at
+    #--frame_half_width : half width of frame in kpc
+    #--frame_depth : half depth of frame in kpc
+    #--datadir: place to output frames to
+
+    #--theta,phi,psi : euler angles for rotation
+    #--edgeon : flag for sticking a 90 degree edge on rotation underneath 
+    #--pixels : how many pixels in each direction to use, defaults to 1200
+    #--noaxis : flag for removing axis and whitespace for just the pretty part
+    #--multiproc : how many processes should be run simultaneously, keep in mind memory constraints
+    #--extract_galaxy=False : flag to use abg_python.cosmoExtractor to extract main halo
+    #--ahf_path : path relative to snapdir where the halo files are stored
+
+
+    for i,opt in enumerate(opts):
+        if opt[1]=='':
+            opts[i]=('mode',opt[0].replace('-'))
+        else:
+            key = opt[0].replace('-','')
+            if key in ['snapdir','datadir']:
+                value= opt[1]
+            else:
+                # turn arguments from strings to whatever
+                value = eval(opt[1])
+            opts[i]=(key,value)
+    main(**dict(opts))
 
 if __name__ == '__main__':
     print 'running from the command line' 
+

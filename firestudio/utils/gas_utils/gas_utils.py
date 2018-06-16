@@ -52,7 +52,7 @@ def projectDenTemp(snapdir,snapnum,
             edgeon - create and plot an edgeon view
 
             frame_center - origin of image in data space
-            frame_width - half-width of image in data space
+            frame_half_width - half-width of image in data space
             frame_depth - half-depth of image in data space
     """
 
@@ -89,7 +89,7 @@ def addPrettyGalaxyToAx(ax,snapdir,snapnum,
             edgeon - create and plot an edgeon view
 
             frame_center - origin of image in data space 
-            frame_width - half-width of image in data space
+            frame_half_width - half-width of image in data space
             frame_depth - half-depth of image in data space 
 
     """
@@ -102,8 +102,8 @@ def addPrettyGalaxyToAx(ax,snapdir,snapnum,
     tprojects=os.path.join(datadir,'Plots','Projections','Temp/')
 
     h5filename='' if 'h5filename' not in kwargs else kwargs['h5filename']
-    d_h5name=h5filename+"gas_proj_%3d_%.2fkpc.hdf5" % (snapnum, kwargs['frame_width']*2)
-    T_h5name=h5filename + "gasTemp_proj_%3d_%.2fkpc.hdf5" % (snapnum, kwargs['frame_width']*2)
+    d_h5name=h5filename+"gas_proj_%3d_%.2fkpc.hdf5" % (snapnum, kwargs['frame_half_width']*2)
+    T_h5name=h5filename + "gasTemp_proj_%3d_%.2fkpc.hdf5" % (snapnum, kwargs['frame_half_width']*2)
     if overwrite or (
         (not os.path.isfile(os.path.join(dprojects,d_h5name))) and 
         (not os.path.isfile(os.path.join(dprojects,T_h5name)))):

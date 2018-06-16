@@ -35,7 +35,7 @@ def addSnapKeys(
     else:
         ## cosmological snapshot it is then... 
         snapdict=openSnapshot(snapdir,snapnum,ptype=0,cosmological=1)
-        scom,rvir,rstar_half = load_AHF(
+        scom,rvir,vesc,rstar_half = load_AHF(
             snapdir,snapnum,
             snapdict['Redshift'],
             ahf_path=kwargs['ahf_path'] if 'ahf_path' in kwargs else None)
@@ -94,7 +94,7 @@ def renderGalaxy(
             edgeon=0 - flag to create and plot an edgeon view
 
             frame_center=None - origin of image in data space, if None will use [0,0,0]
-            frame_width=None - half-width of image in data space, if None will use ? 
+            frame_half_width=None - half-width of image in data space, if None will use ? 
             frame_depth=None - half-depth of image in data space, if None will use ? 
     """
     ## copy the dictionary so we don't mess anything up 
@@ -154,7 +154,7 @@ def renderGalaxy(
             savefig_args['pad_inches']=0
 
         pixels = 1200 if 'pixels' not in kwargs else kwargs['pixels'] 
-        image_name = "frame_%3d_%dkpc.png" % (snapnum, 2*kwargs['frame_width'])
+        image_name = "frame_%3d_%dkpc.png" % (snapnum, 2*kwargs['frame_half_width'])
 
         ax.get_figure().savefig(
             os.path.join(datadir,'Plots','GasTwoColour',image_name),
@@ -187,7 +187,7 @@ if __name__=='__main__':
     opts,args = getopt.getopt(argv,'rs',[
         'snapdir=',
         'snapstart=','snapmax=',
-        'pixels=','frame_width=','frame_depth=',
+        'pixels=','frame_half_width=','frame_depth=',
         'theta=','phi=','psi=',
         'edgeon=',
         'min_den=','max_den=','min_temp=','max_temp=','datadir=',
@@ -201,7 +201,7 @@ if __name__=='__main__':
     #--snapdir: place where snapshots live
     #--snapstart : which snapshot to start the loop at
     #--snapmax : which snapshot to end the loop at
-    #--frame_width : half width of frame in kpc
+    #--frame_half_width : half width of frame in kpc
     #--frame_depth : half depth of frame in kpc
     #--datadir: place to output frames to
 
