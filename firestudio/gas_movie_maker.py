@@ -96,6 +96,10 @@ def renderGalaxy(
             frame_center=None - origin of image in data space, if None will use [0,0,0]
             frame_half_width=None - half-width of image in data space, if None will use ? 
             frame_depth=None - half-depth of image in data space, if None will use ? 
+
+            fontsize=None - size of font on the scale bar and the text label
+            scale_bar=1 - flag to include a scale bar
+            figure_label="" - text to display in the upper right corner, defaults to current time?
     """
     ## copy the dictionary so we don't mess anything up 
     copydict = copy.copy(kwargs)
