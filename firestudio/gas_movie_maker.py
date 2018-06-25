@@ -198,7 +198,8 @@ if __name__=='__main__':
         'noaxis=',
         'multiproc=',
         'extract_galaxy=',
-        'ahf_path='])
+        'ahf_path=',
+	'figure_label='])
 
     #options:
     # -r/s = use readsnap or use single snapshot loader
@@ -217,6 +218,7 @@ if __name__=='__main__':
     #--multiproc : how many processes should be run simultaneously, keep in mind memory constraints
     #--extract_galaxy=False : flag to use abg_python.cosmoExtractor to extract main halo
     #--ahf_path : path relative to snapdir where the halo files are stored
+    #--figure_label: text to put in the upper right hand corner
 
 
     for i,opt in enumerate(opts):

@@ -1,5 +1,7 @@
 from matplotlib.colors import rgb_to_hsv, hsv_to_rgb 
 import numpy as np 
+from pfh_colormaps import load_my_custom_color_tables
+import matplotlib.pyplot as plt
 
 def inferno_colmap(): 
     cols = [[  1.46159096e-03,   4.66127766e-04,   1.38655200e-02],
@@ -789,12 +791,24 @@ def inferno_reversed_colmap():
     cols = inferno_colmap() 
     return cols[::-1] 
 
+def produce_colmap(cmap_name):
+    ## load in phil's custom colormaps, for whatever they're worth
+    load_my_custom_color_tables()
+    cmap = plt.get_cmap(cmap_name)
+    ## discretize the colormap into 256 parts...
+    return [
+	list(cmap(i/255.)[:3]) for i in xrange(0,256)
+	]
+    
+
 def produce_viridis_hsv_image(image_1, image_2): 
     # image_1 and image_2 are arrays of pixels 
     # with integer values in the range 0 to 255. 
     # These will be mapped onto hue and brightness, 
     # respectively, with saturation fixed at 1. 
-    cols = viridis_colmap() 
+    #cols = magma_colmap() 
+    # 'ocean' looks like viridis without the green
+    cols = produce_colmap('viridis')
     cols = np.array(cols) 
 
     cols_2d = np.ones((len(cols), 1, 3)) 

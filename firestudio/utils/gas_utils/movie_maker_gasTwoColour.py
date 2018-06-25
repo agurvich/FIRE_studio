@@ -74,6 +74,7 @@ def plot_image_grid(ax,isnap,dprojects,tprojects,
         Ymin    = -image_length / 2.0 +frame_center[1]
         Ymax    = image_length / 2.0 	+frame_center[1]
         
+        print 'Image range (rho): ',min(np.ravel(ResultW_rho)),max(np.ravel(ResultW_rho))
         ResultW_rho = ResultW_rho - tf_min_rho 
         ResultW_rho = ResultW_rho / (tf_max_rho - tf_min_rho)
         ResultW_rho[ResultW_rho < 0.0] = 0.0
