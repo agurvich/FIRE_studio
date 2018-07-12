@@ -1,5 +1,5 @@
 
-#include <malloc.h>
+#include <malloc/malloc.h>
 
 void determine_hsml(void);
 void make_map(void);

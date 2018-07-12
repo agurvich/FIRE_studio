@@ -15,7 +15,7 @@ LNKCMD =  ld -shared
 
 LIBS   =  -lm 
 
-CC     =  gcc
+CC     = clang 
 
 $(EXEC): $(OBJS)
 	 $(LNKCMD)  $(OBJS) $(LIBS)  -o $(EXEC)

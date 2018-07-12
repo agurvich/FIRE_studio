@@ -2,6 +2,10 @@ from matplotlib.colors import rgb_to_hsv, hsv_to_rgb
 import numpy as np 
 from pfh_colormaps import load_my_custom_color_tables
 import matplotlib.pyplot as plt
+try:
+    import palettable
+except:
+    print "palettable colormaps are not installed"
 
 def inferno_colmap(): 
     cols = [[  1.46159096e-03,   4.66127766e-04,   1.38655200e-02],
@@ -794,7 +798,15 @@ def inferno_reversed_colmap():
 def produce_colmap(cmap_name):
     ## load in phil's custom colormaps, for whatever they're worth
     load_my_custom_color_tables()
-    cmap = plt.get_cmap(cmap_name)
+    try:
+	cmap = plt.get_cmap(cmap_name)
+    except:
+	## perhaps i was passed a palettable cmap path
+	cmap_name = cmap_name.split(".")
+	cmap = palettable
+	for name in cmap_name:
+	    cmap = getattr(cmap,name)
+	cmap = cmap.mpl_colormap
     ## discretize the colormap into 256 parts...
     return [
 	list(cmap(i/255.)[:3]) for i in xrange(0,256)
@@ -809,6 +821,7 @@ def produce_viridis_hsv_image(image_1, image_2):
     #cols = magma_colmap() 
     # 'ocean' looks like viridis without the green
     cols = produce_colmap('viridis')
+    #cols = produce_colmap('cartocolors.sequential.OrYel_7')
     cols = np.array(cols) 
 
     cols_2d = np.ones((len(cols), 1, 3)) 
