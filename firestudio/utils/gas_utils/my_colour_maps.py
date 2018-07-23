@@ -1,11 +1,17 @@
 from matplotlib.colors import rgb_to_hsv, hsv_to_rgb 
 import numpy as np 
-from pfh_colormaps import load_my_custom_color_tables
+
 import matplotlib.pyplot as plt
 try:
+
     import palettable
 except:
     print "palettable colormaps are not installed"
+
+try:
+    from pfh_colormaps import load_my_custom_color_tables
+except:
+    print "don't have phil's colormaps"
 
 def inferno_colmap(): 
     cols = [[  1.46159096e-03,   4.66127766e-04,   1.38655200e-02],
