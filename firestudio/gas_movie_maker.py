@@ -127,7 +127,6 @@ def renderGalaxy(
             **copydict)
 
     except (IOError,AssertionError,TypeError):
-	raise
         print "Failed to use a previous projection"
         ## add the snapshot keys to the copydict
         copydict.update(addSnapKeys(snapdir,snapnum,extract_galaxy,**copydict))
