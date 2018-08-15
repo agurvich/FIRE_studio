@@ -409,7 +409,7 @@ def plot_image_grid(isnap, sim_name):
     print 'tf_min = ',tf_min
     print 'tf_max = ',tf_max
 
-    h5filename += "gasTemperature_projection_%.3d_%.2fkpc_%dpx.hdf5" % (isnap, image_length, npix_x)
+    h5filename += "gasTemperature_projection_%03d_%.2fkpc_%dpx.hdf5" % (isnap, image_length, npix_x)
     h5file = tables.openFile(data_dir + h5filename, "r")
     
     # Face on image 

@@ -53,7 +53,7 @@ def plot_image_grid(ax,isnap,dprojects,tprojects,
     print 'tf_max_rho = ',tf_max_rho
 
     # First, read in density image arrays 
-    h5name=h5filename+"gas_proj_%3d_%.2fkpc.hdf5" % (isnap, image_length)
+    h5name=h5filename+"gas_proj_%03d_%.2fkpc.hdf5" % (isnap, image_length)
     with h5py.File(data_dir_rho + h5name, "r") as h5file:
         exec "ResultW_rho = np.array(h5file['%s_faceOn'])" % (array_name, )
         if plot_time:
@@ -131,7 +131,7 @@ def plot_image_grid(ax,isnap,dprojects,tprojects,
     print 'tf_min_T = ',tf_min_T
     print 'tf_max_T = ',tf_max_T
 
-    h5name=h5filename + "gasTemp_proj_%3d_%.2fkpc.hdf5" % (isnap, image_length)
+    h5name=h5filename + "gasTemp_proj_%03d_%.2fkpc.hdf5" % (isnap, image_length)
     with h5py.File(data_dir_T + h5name, "r") as h5file:
         if edgeon:
             # have to undo the halving

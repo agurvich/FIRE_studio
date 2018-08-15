@@ -127,6 +127,7 @@ def renderGalaxy(
             **copydict)
 
     except (IOError,AssertionError,TypeError):
+	raise
         print "Failed to use a previous projection"
         ## add the snapshot keys to the copydict
         copydict.update(addSnapKeys(snapdir,snapnum,extract_galaxy,**copydict))
@@ -139,7 +140,9 @@ def renderGalaxy(
     if 'edgeon' in kwargs and kwargs['edgeon']:
         ax.get_figure().set_size_inches(6,8)
     else:
-        ax.get_figure().set_size_inches(6,6)
+	# TODO 8x8, 6x6 is normal
+	print "SETTING THE SIZE"
+        ax.get_figure().set_size_inches(8,8)
 
     ## turn off the axis if asked
     if noaxis:
@@ -158,10 +161,10 @@ def renderGalaxy(
             savefig_args['pad_inches']=0
 
         pixels = 1200 if 'pixels' not in kwargs else kwargs['pixels'] 
-        image_name = "frame_%3d_%dkpc.png" % (snapnum, 2*kwargs['frame_half_width'])
+        image_name = "frame_%03d_%dkpc.png" % (snapnum, 2*kwargs['frame_half_width'])
 
         ax.get_figure().savefig(
-            os.path.join(datadir,'Plots','GasTwoColour',image_name),
+            os.path.join(datadir,'Plots','GasTwoColour',image_name),dpi=387,
             **savefig_args)
 
     return ax 
