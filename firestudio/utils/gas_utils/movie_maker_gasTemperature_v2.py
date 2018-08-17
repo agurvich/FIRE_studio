@@ -86,8 +86,8 @@ def matmul(matrix1,matrix2):
     # Matrix multiplication
     if len(matrix1[0]) != len(matrix2):
         # Check matrix dimensions
-        print 'Matrices must be m*n and n*p to multiply!'
-        print len(matrix1[0]),len(matrix2)
+        print('Matrices must be m*n and n*p to multiply!')
+        print(len(matrix1[0]),len(matrix2))
     else:
         # Multiply if correct dimensions
         my_matrix = new_matrix(len(matrix1),len(matrix2[0]))
@@ -109,9 +109,9 @@ def rotateEuler(theta,phi,psi,pos):
 
     # construct rotation matrix
     rot_matrix      = new_matrix(3,3)
-    print 'theta = ',theta_rad
-    print 'phi   = ',phi_rad
-    print 'psi   = ',psi_rad
+    print('theta = ',theta_rad)
+    print('phi   = ',phi_rad)
+    print('psi   = ',psi_rad)
     rot_matrix[0][0] =  cos(phi_rad)*cos(psi_rad)
     rot_matrix[0][1] = -cos(phi_rad)*sin(psi_rad)
     rot_matrix[0][2] =  sin(phi_rad)
@@ -121,7 +121,7 @@ def rotateEuler(theta,phi,psi,pos):
     rot_matrix[2][0] =  sin(theta_rad)*sin(psi_rad) - cos(theta_rad)*sin(phi_rad)*cos(psi_rad)
     rot_matrix[2][1] =  sin(theta_rad)*cos(psi_rad) - cos(theta_rad)*sin(phi_rad)*sin(psi_rad)
     rot_matrix[2][2] =  cos(theta_rad)*cos(phi_rad)
-    print rot_matrix
+    print(rot_matrix)
 
     # translate particles so centre = origin
     pos[:,0] -= (Xmin + (L_x/2.))
@@ -170,7 +170,7 @@ def writeImageGrid(isnap,output_dir,
             h5file['Time_Myr']=np.array([time_Myr])
 
         except:
-            print "name already exists"
+            print("name already exists")
             raise Exception("overwriting!!")
         h5file.close()
 
@@ -182,8 +182,8 @@ def compute_image_grid(pos_all,mass_all,temperature_all,time_Myr,BoxSize,
     theta=0,phi=0,psi=0,
     pixels=1200,min_temp=2,max_temp=7,h5filename='',**kwargs):
 
-    print "extra kwargs in compute_temp:",kwargs.keys()
-    print ' rotation = (',theta,',',phi,',',psi,')'
+    print("extra kwargs in compute_temp:",kwargs.keys())
+    print(' rotation = (',theta,',',phi,',',psi,')')
   
     # Set paths
 
@@ -225,7 +225,7 @@ def compute_image_grid(pos_all,mass_all,temperature_all,time_Myr,BoxSize,
     Zmin    = -frame_depth + frame_center[2]
     Zmax    = frame_depth + frame_center[2] 
 
-    print 'extracting cube'
+    print('extracting cube')
     
     ind_box = ((pos_all[:,0] > Xmin) & (pos_all[:,0] < Xmax) &
                (pos_all[:,1] > Ymin) & (pos_all[:,1] < Ymax) &
@@ -233,7 +233,7 @@ def compute_image_grid(pos_all,mass_all,temperature_all,time_Myr,BoxSize,
     global n_box
     n_box = sum(ind_box)
     
-    print 'n_box = ',n_box	#This is the number of particles in the box.
+    print('n_box = ',n_box)#This is the number of particles in the box.
     
     pos = ndarray((n_box, 3), dtype=float32)
     pos[:,0] = pos_all[ind_box,0]
@@ -246,7 +246,7 @@ def compute_image_grid(pos_all,mass_all,temperature_all,time_Myr,BoxSize,
     Hmax     = 0.5*L_y	
     n_smooth = n_box
 
-    print '-done'
+    print('-done')
 
     # rotate particles by angle derived from frame number
     ## rotate by euler angles if necessary
@@ -269,7 +269,7 @@ def compute_image_grid(pos_all,mass_all,temperature_all,time_Myr,BoxSize,
     q_f_p    = ResultQ.ctypes.data_as(c_f_p)
 
 
-    print '------------------------------------------'
+    print('------------------------------------------')
     curpath = os.path.realpath(__file__)
     curpath = curpath[:len("utils")+curpath.index("utils")] #split off this filename
     c_obj = CDLL(os.path.join(curpath,'gas_utils','HsmlAndProject_cubicSpline/HsmlAndProject.so'))
@@ -277,13 +277,13 @@ def compute_image_grid(pos_all,mass_all,temperature_all,time_Myr,BoxSize,
                              c_float(Xmin),c_float(Xmax),c_float(Ymin),c_float(Ymax),c_float(Zmin),c_float(Zmax),\
                              c_int(npix_x),c_int(npix_y),c_int(desngb),\
                              c_int(Axis1),c_int(Axis2),c_int(Axis3),c_float(Hmax),c_double(BoxSize),w_f_p,q_f_p)
-    print '------------------------------------------'
+    print('------------------------------------------')
 
     # ResultQ contains the mass-weighted temperature, in K. 
 
     ResultQ = np_log10(ResultQ)
    
-    print 'log10 minmax(ResultQ)',min(ravel(ResultQ)),max(ravel(ResultQ))
+    print('log10 minmax(ResultQ)',min(ravel(ResultQ)),max(ravel(ResultQ)))
 
 
     # EDGE ON orientation.    
@@ -297,19 +297,19 @@ def compute_image_grid(pos_all,mass_all,temperature_all,time_Myr,BoxSize,
 
     if not edgeon:
         # free up some memory
-        print '-releasing original snapshot memory'
+        print('-releasing original snapshot memory')
         del pos_all
         del mass_all
         del hsml_all
         del temperature_all 
-        print '-done'
+        print('-done')
     else:
         ind_box = ((pos_all[:,0] > Xmin) & (pos_all[:,0] < Xmax) &
                    (pos_all[:,1] > Ymin) & (pos_all[:,1] < Ymax) &
                    (pos_all[:,2] > Zmin) & (pos_all[:,2] < Zmax))
         n_box = sum(ind_box)
         
-        print 'n_box = ',n_box	#This is the number of particles in the box.
+        print('n_box = ',n_box)#This is the number of particles in the box.
         
         pos = ndarray((n_box, 3), dtype=float32)
         pos[:,0] = pos_all[ind_box,0]
@@ -322,15 +322,15 @@ def compute_image_grid(pos_all,mass_all,temperature_all,time_Myr,BoxSize,
         Hmax     = 0.5*L_y	
         n_smooth = n_box
 
-        print '-done'
+        print('-done')
 
         # free up some memory
-        print '-releasing original snapshot memory'
+        print('-releasing original snapshot memory')
         del pos_all
         del mass_all
         del hsml_all
         del temperature_all 
-        print '-done'
+        print('-done')
 
         # rotate particles by 90 degrees 
         pos = rotateEuler(-90,0,0,pos)
@@ -343,7 +343,7 @@ def compute_image_grid(pos_all,mass_all,temperature_all,time_Myr,BoxSize,
         w_f_p    = ResultW_edgeOn.ctypes.data_as(c_f_p)
         q_f_p    = ResultQ_edgeOn.ctypes.data_as(c_f_p)
 
-        print '------------------------------------------'
+        print('------------------------------------------')
         curpath = os.path.realpath(__file__)
         curpath = curpath[:len("utils")+curpath.index("utils")] #split off this filename
         c_obj = CDLL(os.path.join(curpath,'gas_utils','HsmlAndProject_cubicSpline/HsmlAndProject.so'))
@@ -351,11 +351,11 @@ def compute_image_grid(pos_all,mass_all,temperature_all,time_Myr,BoxSize,
                                  c_float(Xmin),c_float(Xmax),c_float(Zmin),c_float(Zmax),c_float(Ymin),c_float(Ymax),\
                                  c_int(npix_x),c_int(npix_y),c_int(desngb),\
                                  c_int(Axis1),c_int(Axis2),c_int(Axis3),c_float(Hmax),c_double(BoxSize),w_f_p,q_f_p)
-        print '------------------------------------------'
+        print('------------------------------------------')
 
         ResultQ_edgeOn = np_log10(ResultQ_edgeOn)
        
-        print 'log10 minmax(ResultQ_edgeOn)',min(ravel(ResultQ_edgeOn)),max(ravel(ResultQ_edgeOn))
+        print('log10 minmax(ResultQ_edgeOn)',min(ravel(ResultQ_edgeOn)),max(ravel(ResultQ_edgeOn)))
 
     writeImageGrid(isnap,output_dir,
         ResultQ,ResultQ_edgeOn,image_length,npix_x,time_Myr,
@@ -406,8 +406,8 @@ def plot_image_grid(isnap, sim_name):
     tf_min = min_temp
     tf_max = max_temp
 
-    print 'tf_min = ',tf_min
-    print 'tf_max = ',tf_max
+    print('tf_min = ',tf_min)
+    print('tf_max = ',tf_max)
 
     h5filename += "gasTemperature_projection_%03d_%.2fkpc_%dpx.hdf5" % (isnap, image_length, npix_x)
     h5file = tables.openFile(data_dir + h5filename, "r")
@@ -481,7 +481,7 @@ def plot_image_grid(isnap, sim_name):
     scale_line_y = int(0.2 * npix_y)
 
     # Go through pixels for scale bar, setting them to white
-    for x_index in xrange(scale_line_x_start, scale_line_x_end):
+    for x_index in range(scale_line_x_start, scale_line_x_end):
         image[scale_line_y, x_index] = 0
         image[scale_line_y + 1, x_index] = 0
         image[scale_line_y + 2, x_index] = 0
@@ -525,7 +525,7 @@ def plot_image_grid(isnap, sim_name):
     cbar.outline.set_linewidth(0.4)
     cbar.set_label(my_cbar_label, color = 'k', fontsize=6, fontweight='bold', labelpad = 0.5)
 
-    print cbar.get_clim()
+    print(cbar.get_clim())
 
     '''ax_c = pylab.axes([0.05, 0.2, 0.9, 0.02])
     norm = matplotlib.colors.Normalize(vmin = tf_min, vmax = tf_max)
@@ -551,8 +551,7 @@ def plot_image_grid(isnap, sim_name):
 
     extent = ax.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
     exec "pylab.savefig('%s/frame%04d.png', dpi = 600, bbox_inches=extent)" % (output_dir, isnap)
-    print '-done'
-    print ''
+    print('-done')
     pylab.close()
 
     h5file.close() 
@@ -568,7 +567,7 @@ def plot_image_grid(isnap, sim_name):
     plot_mode = int(sys.argv[5])   # 0 - compute image grid 
                                    # 1 - plot image grid 
 
-    for isnap in xrange(isnap_low, isnap_hi):
+    for isnap in range(isnap_low, isnap_hi):
         if plot_mode == 0: 
             # compute temperature maps. 
             compute_image_grid(isnap, sim_name, chimes_mode) 
