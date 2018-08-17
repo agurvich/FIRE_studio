@@ -11,39 +11,17 @@
 import os
 import sys
 import string
-import getopt
-from io import *
 import numpy as np 
 #import tables
 import h5py
-from numpy import zeros
-from numpy import where
-from numpy import ravel
-from numpy import shape
-from numpy import array
-from numpy import ndarray
-from numpy import float32
-from numpy import arange
-from numpy import uint8
-from numpy import uint16
-from numpy import cos
-from numpy import sin
-from numpy import reshape
-from numpy import log10 as np_log10
-from numpy.ctypeslib import ndpointer
-from ctypes import *
-import math
-import matplotlib 
-#matplotlib.use('Agg') 
-import pylab
-from matplotlib import colors, colorbar 
+import ctypes
 
 class colour_table_class:
     
-    index  = zeros(256,dtype=uint8)
-    red    = zeros(256,dtype=uint8)
-    green  = zeros(256,dtype=uint8)
-    blue   = zeros(256,dtype=uint8)
+    index  = np.zeros(256,dtype=np.uint8)
+    red    = np.zeros(256,dtype=np.uint8)
+    green  = np.zeros(256,dtype=np.uint8)
+    blue   = np.zeros(256,dtype=np.uint8)
 
     def __init__(self):
         return
@@ -87,8 +65,8 @@ def matmul(matrix1,matrix2):
     # Matrix multiplication
     if len(matrix1[0]) != len(matrix2):
         # Check matrix dimensions
-        print 'Matrices must be m*n and n*p to multiply!'
-        print len(matrix1[0]),len(matrix2)
+        print('Matrices must be m*n and n*p to multiply!')
+        print(len(matrix1[0]),len(matrix2))
     else:
         # Multiply if correct dimensions
         my_matrix = new_matrix(len(matrix1),len(matrix2[0]))
@@ -110,9 +88,9 @@ def rotateEuler(theta,phi,psi,pos):
 
     # construct rotation matrix
     rot_matrix      = new_matrix(3,3)
-    print 'theta = ',theta_rad
-    print 'phi   = ',phi_rad
-    print 'psi   = ',psi_rad
+    print('theta = ',theta_rad)
+    print('phi   = ',phi_rad)
+    print('psi   = ',psi_rad)
     rot_matrix[0][0] =  cos(phi_rad)*cos(psi_rad)
     rot_matrix[0][1] = -cos(phi_rad)*sin(psi_rad)
     rot_matrix[0][2] =  sin(phi_rad)
@@ -122,7 +100,7 @@ def rotateEuler(theta,phi,psi,pos):
     rot_matrix[2][0] =  sin(theta_rad)*sin(psi_rad) - cos(theta_rad)*sin(phi_rad)*cos(psi_rad)
     rot_matrix[2][1] =  sin(theta_rad)*cos(psi_rad) - cos(theta_rad)*sin(phi_rad)*sin(psi_rad)
     rot_matrix[2][2] =  cos(theta_rad)*cos(phi_rad)
-    print rot_matrix
+    print(rot_matrix)
 
     # translate particles so centre = origin
     pos[:,0] -= (Xmin + (L_x/2.))
@@ -130,7 +108,7 @@ def rotateEuler(theta,phi,psi,pos):
     pos[:,2] -= (Zmin + (L_z/2.))
 
     # rotate about each axis with a matrix operation
-    pos_rot = ndarray((n_box, 3), dtype=float32)
+    pos_rot = np.ndarray((n_box, 3), dtype=np.float32)
     for ipart in range(n_box):
         pos_matrix = new_matrix(3,1)
         pos_matrix[0][0] = pos[ipart,0]
@@ -170,18 +148,18 @@ def writeImageGrid(isnap,output_dir,
             h5file['npix_x']=np.array([npix_x])
             h5file['Time_Myr']=np.array([time_Myr])
         except:
-            print "name already exists"
+            print("name already exists")
             raise Exception("overwriting!!")
         h5file.close()
         
     
 def getImageGrid(BoxSize,npix_x,npix_y,pos,mass,hsml,quantity):
-    ResultW = ndarray((npix_x,npix_y),dtype=float32)
-    ResultQ = ndarray((npix_x,npix_y),dtype=float32)
+    ResultW = np.ndarray((npix_x,npix_y),dtype=np.float32)
+    ResultQ = np.ndarray((npix_x,npix_y),dtype=np.float32)
     ResultW[:,:] = 0.0
     ResultQ[:,:] = 0.0
     
-    c_f_p      = POINTER(c_float)
+    c_f_p      = ctypes.POINTER(ctypes.c_float)
     pos_p      = pos.ctypes.data_as(c_f_p)
     hsml_p     = hsml.ctypes.data_as(c_f_p)
     mass_p     = mass.ctypes.data_as(c_f_p)
@@ -189,15 +167,21 @@ def getImageGrid(BoxSize,npix_x,npix_y,pos,mass,hsml,quantity):
     w_f_p    = ResultW.ctypes.data_as(c_f_p)
     q_f_p    = ResultQ.ctypes.data_as(c_f_p)
 
-    print '------------------------------------------'
+    print('------------------------------------------')
     curpath = os.path.realpath(__file__)
     curpath = curpath[:len("utils")+curpath.index("utils")] #split off this filename
-    c_obj = CDLL(os.path.join(curpath,'gas_utils','HsmlAndProject_cubicSpline/HsmlAndProject.so'))
-    c_obj.findHsmlAndProject(c_int(n_smooth),pos_p,hsml_p,mass_p,quantity_p,\
-                             c_float(Xmin),c_float(Xmax),c_float(Ymin),c_float(Ymax),c_float(Zmin),c_float(Zmax),\
-                             c_int(npix_x),c_int(npix_y),c_int(desngb),\
-                             c_int(Axis1),c_int(Axis2),c_int(Axis3),c_float(Hmax),c_double(BoxSize),w_f_p,q_f_p)
-    print '------------------------------------------'
+    c_obj = ctypes.CDLL(os.path.join(curpath,'gas_utils','HsmlAndProject_cubicSpline/HsmlAndProject.so'))
+    c_obj.findHsmlAndProject(
+	ctypes.c_int(n_smooth),
+	pos_p,hsml_p,mass_p,quantity_p,
+        ctypes.c_float(Xmin),ctypes.c_float(Xmax),
+	ctypes.c_float(Ymin),ctypes.c_float(Ymax),
+	ctypes.c_float(Zmin),ctypes.c_float(Zmax),
+        ctypes.c_int(npix_x),ctypes.c_int(npix_y),
+	ctypes.c_int(desngb),
+        ctypes.c_int(Axis1),ctypes.c_int(Axis2),ctypes.c_int(Axis3),
+	ctypes.c_float(Hmax),ctypes.c_double(BoxSize),w_f_p,q_f_p)
+    print('------------------------------------------')
 
     # normalise by area
     Lcell    = (L_x)/float(npix_x)
@@ -210,9 +194,9 @@ def getImageGrid(BoxSize,npix_x,npix_y,pos,mass,hsml,quantity):
     conv_fac = (unitmass_in_g/solar_mass) / (1.0e6)
     ResultW *= conv_fac
 
-    ResultW = np_log10(ResultW)
+    ResultW = np.log10(ResultW)
    
-    print 'log10 minmax(ResultW)',min(ravel(ResultW)),max(ravel(ResultW))
+    print('log10 minmax(ResultW)',min(np.ravel(ResultW)),max(np.ravel(ResultW)))
     return ResultW
 
 def compute_image_grid(pos_all,mass_all,time_Myr,BoxSize,
@@ -222,8 +206,8 @@ def compute_image_grid(pos_all,mass_all,time_Myr,BoxSize,
     theta=0,phi=0,psi=0,
     pixels=1200,min_den=-1.0,max_den=1.2,h5filename='',**kwargs):
 
-    print "extra kwargs in compute_den:",kwargs.keys()
-    print ' rotation = (',theta,',',phi,',',psi,')'
+    print("extra kwargs in compute_den:",kwargs.keys())
+    print(' rotation = (',theta,',',phi,',',psi,')')
 
     # Set parameters
     npix_x   = pixels#1200
@@ -235,7 +219,7 @@ def compute_image_grid(pos_all,mass_all,time_Myr,BoxSize,
     Axis3    = 2
 
     npart    = len(mass_all)
-    hsml_all = ndarray(npart,dtype=float32)
+    hsml_all = np.ndarray(npart,dtype=np.float32)
     hsml_all[:] = 0.0
 
     image_length = 2*frame_half_width
@@ -253,7 +237,7 @@ def compute_image_grid(pos_all,mass_all,time_Myr,BoxSize,
     Zmin = -frame_depth + frame_center[2]
     Zmax = frame_depth + frame_center[2] 
 
-    print 'extracting cube'
+    print('extracting cube')
     
     ind_box = ((pos_all[:,0] > Xmin) & (pos_all[:,0] < Xmax) &
                (pos_all[:,1] > Ymin) & (pos_all[:,1] < Ymax) &
@@ -261,22 +245,22 @@ def compute_image_grid(pos_all,mass_all,time_Myr,BoxSize,
     global n_box
     n_box = np.sum(ind_box)
     
-    print 'n_box = ',n_box	#This is the number of particles in the box.
+    print('n_box = ',n_box)	#This is the number of particles in the box.
     
-    pos = ndarray((n_box, 3), dtype=float32)
+    pos = np.ndarray((n_box, 3), dtype=np.float32)
     pos[:,0] = pos_all[ind_box,0]
     pos[:,1] = pos_all[ind_box,1]
     pos[:,2] = pos_all[ind_box,2]
 
-    mass     = mass_all[ind_box].astype(float32)
-    hsml     = hsml_all[ind_box].astype(float32)
+    mass     = mass_all[ind_box].astype(np.float32)
+    hsml     = hsml_all[ind_box].astype(np.float32)
     quantity = mass
     global Hmax
     Hmax     = 0.5*L_y	
     global n_smooth
     n_smooth = n_box
 
-    print '-done'
+    print('-done')
 
     ## rotate by euler angles if necessary
     pos = rotateEuler(theta,phi,psi,pos)
@@ -289,14 +273,14 @@ def compute_image_grid(pos_all,mass_all,time_Myr,BoxSize,
 
     if not edgeon:
         # free up some memory
-        print '-releasing original snapshot memory'
+        print('-releasing original snapshot memory')
         del pos_all
         del mass_all
         del hsml_all
-        print '-done'
+        print('-done')
 
         ## set them just to 0
-        ResultW_edge = ndarray((npix_x,npix_y),dtype=float32)
+        ResultW_edge = np.ndarray((npix_x,npix_y),dtype=np.float32)
         ResultW_edge[:,:] = 0.0
         
     else:
@@ -305,33 +289,33 @@ def compute_image_grid(pos_all,mass_all,time_Myr,BoxSize,
                    (pos_all[:,2] > Zmin) & (pos_all[:,2] < Zmax))
         n_box = sum(ind_box)
         
-        print 'n_box = ',n_box	#This is the number of particles in the box.
+        print('n_box = ',n_box)#This is the number of particles in the box.
         
-        pos = ndarray((n_box, 3), dtype=float32)
+        pos = np.ndarray((n_box, 3), dtype=np.float32)
         pos[:,0] = pos_all[ind_box,0]
         pos[:,1] = pos_all[ind_box,1]
         pos[:,2] = pos_all[ind_box,2]
-        mass     = mass_all[ind_box].astype(float32)
-        hsml     = hsml_all[ind_box].astype(float32)
+        mass     = mass_all[ind_box].astype(np.float32)
+        hsml     = hsml_all[ind_box].astype(np.float32)
         quantity = mass
         Hmax     = 0.5*L_y	
         n_smooth = n_box
 
-        print '-done'
+        print('-done')
 
         # free up some memory
-        print '-releasing original snapshot memory'
+        print('-releasing original snapshot memory')
         del pos_all
         del mass_all
         del hsml_all
-        print '-done'
+        print('-done')
 
         # rotate particles by 90 degrees to do edge on view
         pos = rotateEuler(-90,0,0,pos)
         Ymin,Ymax,Zmin,Zmax=Zmin,Zmax,Ymin,Ymax
 
         ResultW_edge = getImageGrid(BoxSize,npix_x,npix_y,pos,mass,hsml,quantity)
-        print 'log10 minmax(ResultW_edge)',min(ravel(ResultW_edge)),max(ravel(ResultW_edge))
+        print('log10 minmax(ResultW_edge)',min(np.ravel(ResultW_edge)),max(np.ravel(ResultW_edge)))
             
     writeImageGrid(
         isnap,
@@ -341,6 +325,7 @@ def compute_image_grid(pos_all,mass_all,time_Myr,BoxSize,
 
 ####### ignore beyond here
 """
+from matplotlib import colors, colorbar 
 def plot_image_grid(isnap, sim_name, species_index):
 
     # Set paths
@@ -375,7 +360,7 @@ def plot_image_grid(isnap, sim_name, species_index):
         my_cbar_label = r"$\mathbf{\log \, \Sigma_{\rm{H,} \, \rm{tot}} \, (\rm{M}_{\odot} \, \rm{pc}^{-2})}$"
         output_dir  = sim_dir + 'Plots/GasDensity/Htot/' 
     else: 
-        print "ERROR: species_index not recognised. "
+        print("ERROR: species_index not recognised. ")
 
     data_dir = sim_dir + 'Plots/GasDensity/' 
 
@@ -383,7 +368,7 @@ def plot_image_grid(isnap, sim_name, species_index):
     colour_table = read_colour_table(ct_file)
              
     cols = []
-    for x in xrange(256):
+    for x in range(256):
         rcol = float(colour_table.red[x]) / 255.
         gcol = float(colour_table.green[x]) / 255.
         bcol = float(colour_table.blue[x]) / 255.
@@ -405,8 +390,8 @@ def plot_image_grid(isnap, sim_name, species_index):
     cbar_ticks = np.arange(tf_min,tf_max+0.4,0.4)#[-0.4, 0.0, 0.4, 0.8, 1.2, 1.6] 
 
 
-    print 'tf_min = ',tf_min
-    print 'tf_max = ',tf_max
+    print('tf_min = ',tf_min)
+    print('tf_max = ',tf_max)
 
     h5filename = "gas_projection_%03d_%.2fkpc_%dpx.hdf5" % (isnap, image_length, npix_x)
     h5file = tables.openFile(data_dir + h5filename, "r")
@@ -425,14 +410,14 @@ def plot_image_grid(isnap, sim_name, species_index):
     ResultW[ResultW > 1.0] = 1.0
     ResultW = ResultW*255.0
 
-    print 'Image range (8bit): ',min(ravel(ResultW)),max(ravel(ResultW))
+    print('Image range (8bit): ',min(np.ravel(ResultW)),max(np.ravel(ResultW)))
 
     ResultW = ResultW.astype(uint16)    
 
     # translate ResultW into a 3-channel array using the colour table
     # Also, the array 'image' has twice as many x-pixels, to accommodate
     # the other orientation. 
-    image = ndarray((1.5*npix_y,npix_x,3),dtype=uint8)
+    image = np.ndarray((1.5*npix_y,npix_x,3),dtype=uint8)
     for i in range(0,npix_y):
         for j in range(0,npix_x):
             value = ResultW[j,i]
@@ -443,7 +428,7 @@ def plot_image_grid(isnap, sim_name, species_index):
     # Edge on image 
     npix_y /= 2 
 
-    exec "ResultW = h5file.root.%s_edgeOn.read()" % (array_name, )
+    ResultW = h5file['%s_edgeOn'% (array_name, )] 
     
     ResultW = ResultW - tf_min			
     ResultW = ResultW / (tf_max - tf_min)
@@ -451,7 +436,7 @@ def plot_image_grid(isnap, sim_name, species_index):
     ResultW[ResultW > 1.0] = 1.0
     ResultW = ResultW*255.0
 
-    print 'Image range (8bit): ',min(ravel(ResultW)),max(ravel(ResultW))
+    print('Image range (8bit): ',min(np.ravel(ResultW)),max(np.ravel(ResultW)))
 
     ResultW = ResultW.astype(uint16) 
             
@@ -462,6 +447,7 @@ def plot_image_grid(isnap, sim_name, species_index):
             image[i,j,1] = colour_table.green[value]
             image[i,j,2] = colour_table.blue[value]
             
+    import pylab
     fig = pylab.figure(figsize = (npix_x / 600.0, 3.0 * npix_y / 600.0), dpi=600, frameon=False)
     ax = pylab.Axes(fig, [0,0,1,1])
     ax.set_axis_off()
@@ -479,7 +465,7 @@ def plot_image_grid(isnap, sim_name, species_index):
     scale_line_y = int(0.2 * npix_y)
 
     # Go through pixels for scale bar, setting them to white
-    for x_index in xrange(scale_line_x_start, scale_line_x_end):
+    for x_index in range(scale_line_x_start, scale_line_x_end):
         image[scale_line_y, x_index, 0] = 255
         image[scale_line_y, x_index, 1] = 255
         image[scale_line_y, x_index, 2] = 255
@@ -534,13 +520,12 @@ def plot_image_grid(isnap, sim_name, species_index):
     cbar.outline.set_linewidth(0.4)
     cbar.set_label(my_cbar_label, color = 'w', fontsize=6, fontweight='bold', labelpad = 0.5)
 
-    print cbar.get_clim()
+    print(cbar.get_clim())
 
     extent = ax.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
     exec "pylab.savefig('%s/frame%04d.png', dpi = 600, bbox_inches=extent)" % (output_dir, isnap)
     
-    print '-done'
-    print ''
+    print('-done')
     pylab.close() 
 
     h5file.close() 
@@ -558,7 +543,7 @@ def plot_image_grid(isnap, sim_name, species_index):
                                    # 1 - plot image grid. 
     species_index = int(sys.argv[6]) 
 
-    for isnap in xrange(isnap_low, isnap_hi):
+    for isnap in range(isnap_low, isnap_hi):
         if plot_mode == 0:
             compute_image_grid(isnap, sim_name, eqm_mode, species_index)
         elif plot_mode == 1: 

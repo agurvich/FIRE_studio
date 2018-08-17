@@ -103,7 +103,7 @@ def renderGalaxy(
     """
     ## copy the dictionary so we don't mess anything up 
     copydict = copy.copy(kwargs)
-    print copydict.keys(),'keys passed'
+    print(list(copydict.keys()),'keys passed')
 
     ## pass along input to next routines through copydict
     copydict['overwrite']=overwrite
@@ -116,7 +116,7 @@ def renderGalaxy(
     try:
         ## if we're being told to overwrite we shouldn't use the previous intermediate files
         assert not overwrite
-        print "Trying to use a previous projection..."
+        print("Trying to use a previous projection...")
 
         ## pass a dummy frame_center, it's not used but will raise an error
         if 'frame_center' not in copydict:
@@ -127,7 +127,7 @@ def renderGalaxy(
             **copydict)
 
     except (IOError,AssertionError,TypeError):
-        print "Failed to use a previous projection"
+        print("Failed to use a previous projection")
         ## add the snapshot keys to the copydict
         copydict.update(addSnapKeys(snapdir,snapnum,extract_galaxy,**copydict))
     
@@ -139,9 +139,7 @@ def renderGalaxy(
     if 'edgeon' in kwargs and kwargs['edgeon']:
         ax.get_figure().set_size_inches(6,8)
     else:
-	# TODO 8x8, 6x6 is normal
-	print "SETTING THE SIZE"
-        ax.get_figure().set_size_inches(8,8)
+        ax.get_figure().set_size_inches(6,6)
 
     ## turn off the axis if asked
     if noaxis:
@@ -163,7 +161,7 @@ def renderGalaxy(
         image_name = "frame_%03d_%dkpc.png" % (snapnum, 2*kwargs['frame_half_width'])
 
         ax.get_figure().savefig(
-            os.path.join(datadir,'Plots','GasTwoColour',image_name),dpi=387,
+            os.path.join(datadir,'Plots','GasTwoColour',image_name),dpi=300,
             **savefig_args)
 
     return ax 
@@ -183,7 +181,7 @@ def main(snapdir,snapstart,snapmax,**kwargs):
         my_pool.map(multiProcRender,range(snapstart,snapmax))
     else:
         ## just do a for loop
-        for snapnum in xrange(snapstart,snapmax):
+        for snapnum in range(snapstart,snapmax):
             ax = plt.gca()
             renderGalaxy(ax,snapdir,snapnum,**kwargs)
             plt.clf()       

@@ -56,12 +56,12 @@ def projectDenTemp(snapdir,snapnum,
             frame_depth - half-depth of image in data space
     """
 
-    print 'projecting the density grid'
+    print('projecting the density grid')
     den_grid=compute_density_grid(
         output_dir = dprojects,isnap = snapnum,
         **kwargs)
 
-    print 'projecting the temperature grid'
+    print('projecting the temperature grid')
     temp_grid=compute_temp_grid(
         output_dir = tprojects,isnap = snapnum,
         **kwargs)
@@ -94,7 +94,7 @@ def addPrettyGalaxyToAx(ax,snapdir,snapnum,
 
     """
 
-    print 'Drawing',snapdir,snapnum,'to:',datadir
+    print('Drawing',snapdir,snapnum,'to:',datadir)
     makeOutputDirectories(datadir)
 
     #where to find/save gas/temperature density grids-- this could get crowded!
@@ -110,7 +110,7 @@ def addPrettyGalaxyToAx(ax,snapdir,snapnum,
         ## compute the projections
         projectDenTemp(snapdir,snapnum,dprojects,tprojects,**kwargs)
 
-    print 'plotting image grid'
+    print('plotting image grid')
     plot_image_grid(ax,snapnum,dprojects,tprojects,
         **kwargs)
 
