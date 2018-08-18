@@ -81,7 +81,7 @@ def projectColumnDensityAndQuantity(
     raise Exception("NO!")
     print('projecting the density grid')
     den_grid=compute_density_grid(
-        output_dir = projection_dir,snapnum = snapnum,
+        projection_dir = projection_dir,snapnum = snapnum,
         **kwargs)
 
 def addPrettyGalaxyToAx(ax,snapdir,snapnum,
@@ -145,6 +145,7 @@ def addPrettyGalaxyToAx(ax,snapdir,snapnum,
 	    projection_dir,**kwargs)
 
     print('plotting image grid')
+    print kwargs.keys(),'passed to plot_image_grid'
     plot_image_grid(ax,snapnum,projection_dir,
         **kwargs)
 

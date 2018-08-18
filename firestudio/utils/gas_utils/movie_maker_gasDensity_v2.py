@@ -19,8 +19,9 @@ import ctypes
 def compute_image_grid(
     Coordinates,Masses,Quantity,
     BoxSize,quantity_name,
-    frame_center,frame_half_width,frame_depth,
-    output_dir,snapnum,
+    frame_half_width,frame_depth,
+    frame_center,
+    projection_dir,snapnum,
     theta=0,phi=0,psi=0,
     pixels=1200,
     min_den=-1.0,max_den=1.2,
@@ -68,7 +69,7 @@ def compute_image_grid(
     ## write the output to an .hdf5 file
     writeImageGrid(
         snapnum,
-        output_dir,
+        projection_dir,
 	columnDensityMap,
 	massWeightedQuantityMap, quantity_name,
         npix_x,frame_half_width,frame_depth,
@@ -211,7 +212,7 @@ def getImageGrid(
 
 def writeImageGrid(
     snapnum,
-    output_dir,
+    projection_dir,
     columnDensityMap,
     massWeightedQuantityMap,quantity_name,
     npix_x,frame_half_width,frame_depth,
@@ -222,7 +223,7 @@ def writeImageGrid(
 
     ## Write the image grids to HDF5 file 
     h5prefix += "proj_maps_%d.hdf5" % snapnum
-    h5name=os.path.join(output_dir,h5prefix)
+    h5name=os.path.join(projection_dir,h5prefix)
 
     ## what should we call this setup? need a unique identifier
     ## let the user give it a

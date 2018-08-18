@@ -5,34 +5,35 @@ import numpy as np
 import my_colour_maps as mcm 
 import sys 
 import h5py
+import os
 
-def round_to_nearest_integer(x):
-    delta_x = x - int(x)
-    if delta_x < 0.5:
-        return int(x)
-    else:
-        return int(x) + 1
+def plot_image_grid(
+    ax,
+    snapnum,projection_dir,
+    frame_half_width,frame_depth,
+    frame_center,
+    quantity_name='temperature',
+    this_setup_id = None,
+    pixels=1200,
+    theta=0,phi=0,psi=0,
+    min_den=-1.0,max_den=1.2,
+    min_quantity=2,max_quantity=7,
+    h5prefix='',
+    plot_time = 0, scale_bar = 1,
+    time_Myr=None,
+    figure_label=None,
+    fontsize=None,
+    **kwargs): 
 
-def plot_image_grid(ax,isnap,dprojects,tprojects,
-    frame_center,frame_half_width,frame_depth,pixels=1200,
-    min_den=-1.0,max_den=1.2,min_temp=2,max_temp=7,edgeon=0,h5filename='',
-    plot_time = 1, scale_bar = 1,
-    time_Myr=None,figure_label=None,fontsize=None,**kwargs): 
     print "extra kwargs in plot_2color_image:",kwargs.keys()
-    # Set paths
-    
-    array_name = "ResultW_tot" 
 
-    data_dir_rho = dprojects #sim_dir + 'Plots/GasDensity/' 
-    data_dir_T = tprojects #sim_dir + 'Plots/GasTemperature/'
-
-    # Set parameters
-    npix_x   = pixels#1200 
-    npix_y   = pixels#1200 
-    image_length =2*frame_half_width #8.0
+    ## Set parameters
+    npix_x   = pixels  
+    npix_y   = pixels  
+    image_length =2*frame_half_width # kpc
     scale_label_position = 0.06 
 
-
+    ## set scale bar length
     if image_length > 15 : 
         scale_line_length = 5
         scale_label_text = r"$\mathbf{5 \, \rm{kpc}}$"
@@ -45,156 +46,66 @@ def plot_image_grid(ax,isnap,dprojects,tprojects,
         scale_line_length = .1
         scale_label_text = r"$\mathbf{100 \, \rm{pc}}$"
 
-    tf_min_rho = min_den
-    tf_max_rho = max_den
+    print('min_den = ',min_den)
+    print('max_den = ',max_den)
 
+    ## uniquely identify this projection setup
+    this_setup_id = (
+	"npix%d_width%.2fkpc_depth%.2fkpc_x%.2f_y%.2f_z%.2f_theta%.2f_phi%.2f_psi%.2f"%(
+	    npix_x, 2*frame_half_width,frame_depth,
+	    frame_center[0],frame_center[1],frame_center[2],
+	    theta,phi,psi)
+	if this_setup_id is None else this_setup_id)
 
-    print 'tf_min_rho = ',tf_min_rho
-    print 'tf_max_rho = ',tf_max_rho
+    ## read in the column density and quantity maps
+    h5name=h5prefix+"proj_maps_%03d.hdf5" % snapnum
+    with h5py.File(os.path.join(projection_dir,h5name), "r") as handle:
+	this_group=handle[this_setup_id]
+	columnDensityMap = np.array(this_group['columnDensityMap'])
+	massWeightedQuantityMap = np.array(this_group['massWeighted%sMap'%quantity_name.title()])
+	if plot_time:
+	    raise Exception("need to get time value")
 
-    # First, read in density image arrays 
-    h5name=h5filename+"gas_proj_%03d_%.2fkpc.hdf5" % (isnap, image_length)
-    with h5py.File(data_dir_rho + h5name, "r") as h5file:
-        exec "ResultW_rho = np.array(h5file['%s_faceOn'])" % (array_name, )
-        if plot_time:
-            if time_Myr is None:
-                try:
-                    time_Myr = h5file['Time_Myr'][0]
-                except:
-                    print dir(h5file.root)
-                    print h5file.keys()
-                    time_Myr=h5file.root
-                    raise Exception("STOP!")
-
-        # if you use cosmological = 1 in readsnap then this is already accounted for!
-        # need to think of a self-consistent way to address this
-
-        Xmin    = -image_length / 2.0	+frame_center[0]
-        Xmax    = image_length / 2.0	+frame_center[0]
-        Ymin    = -image_length / 2.0 +frame_center[1]
-        Ymax    = image_length / 2.0 	+frame_center[1]
+    Xmin,Ymin = -frame_half_width+frame_center[:2]
+    Xmax,Ymax = frame_half_width+frame_center[:2]
         
-        print 'Image range (rho): ',min(np.ravel(ResultW_rho)),max(np.ravel(ResultW_rho))
-        ResultW_rho = ResultW_rho - tf_min_rho 
-        ResultW_rho = ResultW_rho / (tf_max_rho - tf_min_rho)
-        ResultW_rho[ResultW_rho < 0.0] = 0.0
-        ResultW_rho[ResultW_rho > 1.0] = 1.0
-        ResultW_rho = ResultW_rho*255.0
+    print('Image range (rho): ',np.max(columnDensityMap),np.max(columnDensityMap))
+    columnDensityMap = columnDensityMap - min_den 
+    columnDensityMap = columnDensityMap / (max_den - min_den)
+    
+    ## clip anything outside the range
+    columnDensityMap[columnDensityMap < 0.0] = 0.0
+    columnDensityMap[columnDensityMap > 1.0] = 1.0
+    columnDensityMap = columnDensityMap*255.0
 
-        print 'Image range (8bit): ',min(np.ravel(ResultW_rho)),max(np.ravel(ResultW_rho))
+    print('Image range (8bit): ',np.min(columnDensityMap),np.max(columnDensityMap))
 
-        ResultW_rho = ResultW_rho.astype(np.uint16) 
+    ## cast to integer to use as indices for cmap array
+    columnDensityMap = columnDensityMap.astype(np.uint16) 
+    image_rho = columnDensityMap.T
 
-        # Create the image array for both panels, and read 
-        # ResultW_rho into it. 
-        if not edgeon:
-            image_rho = np.ndarray((npix_y,npix_x),dtype=np.uint16)
-            for i in range(0,npix_y):
-                for j in range(0,npix_x):
-                    value = ResultW_rho[j,i]
-                    image_rho[i,j] = value
-        else:
-            image_rho = np.ndarray((3*npix_y/2,npix_x),dtype=np.uint16)
-            for i in range(0,npix_y):
-                for j in range(0,npix_x):
-                    value = ResultW_rho[j,i]
-                    image_rho[i+ (npix_y/2),j] = value
-                
-        if edgeon:
-            # Edge on image 
-            npix_y /= 2
-
-            exec "ResultW_rho = np.array(h5file['%s_edgeOn'])" % (array_name, )
-            
-            ResultW_rho = ResultW_rho - tf_min_rho			
-            ResultW_rho = ResultW_rho / (tf_max_rho - tf_min_rho)
-            ResultW_rho[ResultW_rho < 0.0] = 0.0
-            ResultW_rho[ResultW_rho > 1.0] = 1.0
-            ResultW_rho = ResultW_rho*255.0
-
-            print 'Image range (8bit): ',min(np.ravel(ResultW_rho)),max(np.ravel(ResultW_rho))
-
-            ResultW_rho = ResultW_rho.astype(np.uint16) 
-                    
-            for i in range(0,npix_y):
-                for j in range(0,npix_x):
-                    value = ResultW_rho[j,i]
-                    image_rho[i,j] = value
-
-        h5file.close() 
-
-
-    # Now read in temperature image array 
-    tf_min_T = min_temp
-    tf_max_T = max_temp
-
-    print 'tf_min_T = ',tf_min_T
-    print 'tf_max_T = ',tf_max_T
-
-    h5name=h5filename + "gasTemp_proj_%03d_%.2fkpc.hdf5" % (isnap, image_length)
-    with h5py.File(data_dir_T + h5name, "r") as h5file:
-        if edgeon:
-            # have to undo the halving
-            npix_y *= 2
-        ResultQ_T = np.array(h5file['ResultQ_faceOn'])
+    print 'min_%s = '%quantity_name,min_quantity
+    print 'max_%s = '%quantity_name,max_quantity
         
-        print 'Image range (temp): ',min(np.ravel(ResultQ_T)),max(np.ravel(ResultQ_T))
-        ResultQ_T = ResultQ_T - tf_min_T 
-        ResultQ_T = ResultQ_T / (tf_max_T - tf_min_T)
-        ResultQ_T[ResultQ_T < 0.0] = 0.0
-        ResultQ_T[ResultQ_T > 1.0] = 1.0
-        ResultQ_T = ResultQ_T*255.0
+    print('Image range (temp): ',np.min(massWeightedQuantityMap),np.max(massWeightedQuantityMap))
+    massWeightedQuantityMap = massWeightedQuantityMap - min_quantity 
+    massWeightedQuantityMap = massWeightedQuantityMap / (max_quantity - min_quantity)
+    
+    ## clip anything outside the range
+    massWeightedQuantityMap[massWeightedQuantityMap < 0.0] = 0.0
+    massWeightedQuantityMap[massWeightedQuantityMap > 1.0] = 1.0
+    massWeightedQuantityMap = massWeightedQuantityMap*255.0
+    print('Image range (8bit): ',np.min(massWeightedQuantityMap),np.max(massWeightedQuantityMap))
 
-        print 'Image range (8bit): ',min(np.ravel(ResultQ_T)),max(np.ravel(ResultQ_T))
-
-        ResultQ_T = ResultQ_T.astype(np.uint16)    
- 
-        if not edgeon:
-            image_T = np.ndarray((npix_y,npix_x),dtype=np.uint16)
-            for i in range(0,npix_y):
-                for j in range(0,npix_x):
-                    value = ResultQ_T[j,i]
-                    image_T[i,j] = value 
-        else:
-            image_T = np.ndarray((3*npix_y/2,npix_x),dtype=np.uint16)
-            for i in range(0,npix_y):
-                new_i = i+ (npix_y/2)
-                for j in range(0,npix_x):
-                    value = ResultQ_T[j,i]
-                    image_T[new_i,j] = value
-
-        # Edge on image 
-        if edgeon:
-            npix_y /= 2 
-            ResultQ_T = np.array(h5file['ResultQ_edgeOn'])
-            
-            ResultQ_T = ResultQ_T - tf_min_T 
-            ResultQ_T = ResultQ_T / (tf_max_T - tf_min_T) 
-            ResultQ_T[ResultQ_T < 0.0] = 0.0
-            ResultQ_T[ResultQ_T > 1.0] = 1.0
-            ResultQ_T = ResultQ_T*255.0
-
-            print 'Image range (8bit): ',min(np.ravel(ResultQ_T)),max(np.ravel(ResultQ_T))
-
-            ResultQ_T = ResultQ_T.astype(np.uint16) 
-                    
-            for i in range(0,npix_y):
-                for j in range(0,npix_x):
-                    value = ResultQ_T[j,i]
-                    image_T[i,j] = value 
-
-    # Now take the rho and T images, and combine them 
-    # to produce the final image array. 
+    ## cast to integer to use as indices for cmap array 
+    massWeightedQuantityMap = massWeightedQuantityMap.astype(np.uint16)    
+    image_T = massWeightedQuantityMap.T
+    
+    ## Now take the rho and T images, and combine them 
+    ##	to produce the final image array. 
     final_image = mcm.produce_viridis_hsv_image(image_T, image_rho) 
-            
-    """
-    fig = pylab.figure(figsize = (npix_x / 600.0, npix_y / 600.0), dpi=600, frameon=False)
-    ax = pylab.Axes(fig, [0,0,1,1])
-    ax.set_axis_off()
-    fig = pylab.gcf()
-    fig.add_axes(ax)
-    """
 
+    ## plot the scale bar
     if scale_bar:
         # Convert to pixels
         length_per_pixel = (Xmax - Xmin) / npix_x
@@ -207,28 +118,15 @@ def plot_image_grid(ax,isnap,dprojects,tprojects,
 
         # Go through pixels for scale bar, setting them to white
         for x_index in xrange(scale_line_x_start, scale_line_x_end):
-            final_image[scale_line_y, x_index, 0] = 1
-            final_image[scale_line_y, x_index, 1] = 1
-            final_image[scale_line_y, x_index, 2] = 1
-            final_image[scale_line_y + 1, x_index, 0] = 1
-            final_image[scale_line_y + 1, x_index, 1] = 1
-            final_image[scale_line_y + 1, x_index, 2] = 1
-            final_image[scale_line_y + 2, x_index, 0] = 1
-            final_image[scale_line_y + 2, x_index, 1] = 1
-            final_image[scale_line_y + 2, x_index, 2] = 1
-            final_image[scale_line_y + 3, x_index, 0] = 1
-            final_image[scale_line_y + 3, x_index, 1] = 1
-            final_image[scale_line_y + 3, x_index, 2] = 1
-            final_image[scale_line_y + 4, x_index, 0] = 1
-            final_image[scale_line_y + 4, x_index, 1] = 1
-            final_image[scale_line_y + 4, x_index, 2] = 1
-            final_image[scale_line_y + 5, x_index, 0] = 1
-            final_image[scale_line_y + 5, x_index, 1] = 1
-            final_image[scale_line_y + 5, x_index, 2] = 1
+            final_image[scale_line_y:scale_line_y+6, x_index,:3] = 1
 
-    #figure_label2 = r"$\rm{UVBthin}$"
-    imgplot = ax.imshow(final_image, 
-        extent = (Xmin,Xmax,Ymin-(2*frame_depth)*edgeon,Ymax),origin = 'lower', aspect = 'auto')
+    ## main imshow call
+    imgplot = ax.imshow(
+	final_image, 
+        extent = (Xmin,Xmax,Ymin,Ymax),
+	origin = 'lower', aspect = 'auto')
+
+    ## handle any text additions
     fontsize=8 if fontsize is None else fontsize 
     if plot_time:
         ## handle default values
@@ -236,25 +134,34 @@ def plot_image_grid(ax,isnap,dprojects,tprojects,
             figure_label = r"$%03d \, \rm{Myr}$" % (round_to_nearest_integer(time_Myr), )
             figure_label = r"$%.2f \, \rm{Myr}$" % (time_Myr)
 
-        label = pylab.text(0.95, 0.92, figure_label, fontsize = fontsize, transform = ax.transAxes,ha='right')
+	## plot the  figure label
+        label = pylab.text(
+	    0.95, 0.92,
+	    figure_label,
+	    fontsize = fontsize,
+	    transform = ax.transAxes,
+	    ha='right')
         label.set_color('white')
-    if scale_bar: 
-        label2 = pylab.text(scale_label_position,
-            0.03, scale_label_text, fontweight = 'bold', transform = ax.transAxes)
-        label2.set_color('white')
-        label2.set_fontsize(fontsize*0.75)
-    #label3 = pylab.text(0.10, 0.92, figure_label2, fontsize = 8, transform = ax.transAxes)
-    #label3.set_color('white')
 
-    # colour bar
+    if scale_bar: 
+	## plot the scale bar label
+        label2 = pylab.text(
+	    scale_label_position,0.03,
+	    scale_label_text,
+	    fontweight = 'bold',
+	    fontsize=fontsize*0.75,
+	    transform = ax.transAxes)
+        label2.set_color('white')
+
+    ## colour bar
     use_colorbar=0
     if use_colorbar:
-
+	raise Exception('Unimplemented!')
         colour_map = matplotlib.colors.LinearSegmentedColormap.from_list("PaulT_rainbow", cols)
         colour_map.set_under('k')
 
         ax_c = pylab.axes([0.15, 0.415, 0.7, 0.015])
-        norm = matplotlib.colors.Normalize(vmin = tf_min_T, vmax = tf_max_T)
+        norm = matplotlib.colors.Normalize(vmin = min_quantity, vmax = max_quantity)
         cbar = matplotlib.colorbar.ColorbarBase(ax_c, cmap = colour_map, norm = norm, orientation = 'horizontal') 
         cbar.set_ticks(cbar_ticks)
         cbar_tick_labels = []
@@ -279,21 +186,65 @@ def plot_image_grid(ax,isnap,dprojects,tprojects,
 
     """
     extent = ax.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
-    exec "pylab.savefig('%s/frame%04d.png', dpi = 600, bbox_inches=extent)" % (output_dir, isnap)
+    exec "pylab.savefig('%s/frame%04d.png', dpi = 600, bbox_inches=extent)" % (output_dir, snapnum)
     pylab.close() 
     """
 
     return ax
 
-def main(): 
-    isnap_low = int(sys.argv[1]) 
-    isnap_hi = int(sys.argv[2]) 
-    sim_name = sys.argv[3]   # of the form 'data_dir' 
+"""
+        if edgeon:
+            # Edge on image 
+            npix_y /= 2
 
-    for isnap in xrange(isnap_low, isnap_hi):
-        plot_image_grid(isnap)
+            exec "columnDensityMap = np.array(h5file['%s_edgeOn'])" % (array_name, )
+            
+            columnDensityMap = columnDensityMap - min_den			
+            columnDensityMap = columnDensityMap / (max_den - min_den)
+            columnDensityMap[columnDensityMap < 0.0] = 0.0
+            columnDensityMap[columnDensityMap > 1.0] = 1.0
+            columnDensityMap = columnDensityMap*255.0
 
-    return 
+            print 'Image range (8bit): ',min(np.ravel(columnDensityMap)),max(np.ravel(columnDensityMap))
 
-if __name__=='__main__':
-    main() 
+            columnDensityMap = columnDensityMap.astype(np.uint16) 
+                    
+            for i in range(0,npix_y):
+                for j in range(0,npix_x):
+                    value = columnDensityMap[j,i]
+                    image_rho[i,j] = value
+
+	"""
+
+
+
+"""
+        else:
+            image_T = np.ndarray((3*npix_y/2,npix_x),dtype=np.uint16)
+            for i in range(0,npix_y):
+                new_i = i+ (npix_y/2)
+                for j in range(0,npix_x):
+                    value = massWeightedQuantityMap[j,i]
+                    image_T[new_i,j] = value
+
+        # Edge on image 
+        if edgeon:
+            npix_y /= 2 
+            massWeightedQuantityMap = np.array(h5file['ResultQ_edgeOn'])
+            
+            massWeightedQuantityMap = massWeightedQuantityMap - min_quantity 
+            massWeightedQuantityMap = massWeightedQuantityMap / (max_quantity - min_quantity) 
+            massWeightedQuantityMap[massWeightedQuantityMap < 0.0] = 0.0
+            massWeightedQuantityMap[massWeightedQuantityMap > 1.0] = 1.0
+            massWeightedQuantityMap = massWeightedQuantityMap*255.0
+
+            print 'Image range (8bit): ',min(np.ravel(massWeightedQuantityMap)),max(np.ravel(massWeightedQuantityMap))
+
+            massWeightedQuantityMap = massWeightedQuantityMap.astype(np.uint16) 
+                    
+            for i in range(0,npix_y):
+                for j in range(0,npix_x):
+                    value = massWeightedQuantityMap[j,i]
+                    image_T[i,j] = value 
+
+    """
