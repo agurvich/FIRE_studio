@@ -18,17 +18,18 @@ import ctypes
 
 def compute_image_grid(
     Coordinates,Masses,Quantity,
-    BoxSize,quantity_name,
+    BoxSize,
     frame_half_width,frame_depth,
     frame_center,
     projection_dir,snapnum,
+    quantity_name='Temperature',
+    this_setup_id = None,
     theta=0,phi=0,psi=0,
     pixels=1200,
-    min_den=-1.0,max_den=1.2,
     edgeon=0,
     h5prefix='',**kwargs):
     if edgeon==1:
-	raise Exception("Unimplemented edgeon!")
+        raise Exception("Unimplemented edgeon!")
 
     print("extra kwargs in compute_den:",kwargs.keys())
     print(' rotation = (',theta,',',phi,',',psi,')')
@@ -236,36 +237,28 @@ def writeImageGrid(
 	if this_setup_id is None else this_setup_id)
 
     with h5py.File(h5name, "a") as h5file:
-	if this_setup_id not in list(h5file.keys()):
-	    this_group = h5file.create_group(this_setup_id)
-	    ## save the maps themselves
-	    this_group['columnDensityMap']=columnDensityMap
-	    this_group['massWeighted%sMap'%quantity_name]=massWeightedQuantityMap
+        if this_setup_id not in list(h5file.keys()):
+            this_group = h5file.create_group(this_setup_id)
+            ## save the maps themselves
+            this_group['columnDensityMap']=columnDensityMap
+            this_group['massWeighted%sMap'%quantity_name.title()]=massWeightedQuantityMap
 
-	    ## save the meta data
-	    this_group['npix_x']=npix_x
-	    this_group['frame_center']=frame_center
-	    this_group['frame_half_width']=frame_half_width
-	    this_group['frame_depth']=frame_depth
-	    this_group['theta']=theta
-	    this_group['phi']=phi
-	    this_group['psi']=psi
-	    this_group['quantity_names']=[quantity_name]
-	    ## TODO should I put in metadata that allows you to recreate
-	    ##  frames without access to the relevant snapshots?
-	    ##  e.g. current time/redshift
+            ## save the meta data
+            this_group['npix_x']=npix_x
+            this_group['frame_center']=frame_center
+            this_group['frame_half_width']=frame_half_width
+            this_group['frame_depth']=frame_depth
+            this_group['theta']=theta
+            this_group['phi']=phi
+            this_group['psi']=psi
+            ## TODO should I put in metadata that allows you to recreate
+            ##  frames without access to the relevant snapshots?
+            ##  e.g. current time/redshift
 
-	else:
-	    ## appending another quantity, cool!
-	    this_group = h5file[this_setup_id]
-	    ## rename the generic "quantity" if it exists:
-	    quantity_names = this_group['quantity_names'].value
-	    assert quantity_name not in quantity_names
-
-	    ## save this new quantity
-	    this_group['massWeighted%sMap'%quantity_name.title()]=massWeightedQuantityMap
-	    
-	    ## append quantity_name to the hdf5 file
-	    quantity_names +=[quantity_name] 
-	    del this_group['quantity_names']
-	    this_group['quantity_names']=quantity_name
+        else:
+            ## appending another quantity, cool!
+            this_group = h5file[this_setup_id]
+            quantity_names = this_group['quantity_names'].value
+            assert "massWeighted%sMap"%quantity_name.title() not in this_group.keys() 
+            ## save this new quantity
+            this_group['massWeighted%sMap'%quantity_name.title()]=massWeightedQuantityMap

@@ -6,12 +6,12 @@ try:
 
     import palettable
 except:
-    print "palettable colormaps are not installed"
+    print("palettable colormaps are not installed")
 
 try:
     from pfh_colormaps import load_my_custom_color_tables
 except:
-    print "don't have phil's colormaps"
+    print("don't have phil's colormaps")
 
 def inferno_colmap(): 
     cols = [[  1.46159096e-03,   4.66127766e-04,   1.38655200e-02],
@@ -805,19 +805,16 @@ def produce_colmap(cmap_name):
     ## load in phil's custom colormaps, for whatever they're worth
     load_my_custom_color_tables()
     try:
-	cmap = plt.get_cmap(cmap_name)
+        cmap = plt.get_cmap(cmap_name)
     except:
-	## perhaps i was passed a palettable cmap path
-	cmap_name = cmap_name.split(".")
-	cmap = palettable
-	for name in cmap_name:
-	    cmap = getattr(cmap,name)
-	cmap = cmap.mpl_colormap
+        ## perhaps i was passed a palettable cmap path
+        cmap_name = cmap_name.split(".")
+        cmap = palettable
+        for name in cmap_name:
+            cmap = getattr(cmap,name)
+        cmap = cmap.mpl_colormap
     ## discretize the colormap into 256 parts...
-    return [
-	list(cmap(i/255.)[:3]) for i in xrange(0,256)
-	]
-    
+    return [list(cmap(i/255.)[:3]) for i in range(0,256)]
 
 def produce_viridis_hsv_image(image_1, image_2): 
     # image_1 and image_2 are arrays of pixels 
@@ -840,8 +837,8 @@ def produce_viridis_hsv_image(image_1, image_2):
     npix_x = len(image_1) 
     npix_y = len(image_1[0]) 
     output_image_hsv = np.zeros((npix_x, npix_y, 3)) 
-    for i in xrange(npix_x): 
-        for j in xrange(npix_y): 
+    for i in range(npix_x): 
+        for j in range(npix_y): 
             output_image_hsv[i, j, 0] = hue_viridis[image_1[i, j]] 
             output_image_hsv[i, j, 1] = 1.0 
             output_image_hsv[i, j, 2] = float(image_2[i, j]) / 255.0 

@@ -2,17 +2,17 @@ import matplotlib
 matplotlib.use('Agg') 
 import pylab 
 import numpy as np 
-import my_colour_maps as mcm 
+import firestudio.utils.gas_utils.my_colour_maps as mcm 
 import sys 
 import h5py
 import os
 
 def plot_image_grid(
     ax,
-    snapnum,projection_dir,
     frame_half_width,frame_depth,
     frame_center,
-    quantity_name='temperature',
+    projection_dir,snapnum,
+    quantity_name='Temperature',
     this_setup_id = None,
     pixels=1200,
     theta=0,phi=0,psi=0,
@@ -25,7 +25,7 @@ def plot_image_grid(
     fontsize=None,
     **kwargs): 
 
-    print "extra kwargs in plot_2color_image:",kwargs.keys()
+    print("extra kwargs in plot_2color_image:",list(kwargs.keys()))
 
     ## Set parameters
     npix_x   = pixels  
@@ -60,11 +60,11 @@ def plot_image_grid(
     ## read in the column density and quantity maps
     h5name=h5prefix+"proj_maps_%03d.hdf5" % snapnum
     with h5py.File(os.path.join(projection_dir,h5name), "r") as handle:
-	this_group=handle[this_setup_id]
-	columnDensityMap = np.array(this_group['columnDensityMap'])
-	massWeightedQuantityMap = np.array(this_group['massWeighted%sMap'%quantity_name.title()])
-	if plot_time:
-	    raise Exception("need to get time value")
+        this_group=handle[this_setup_id]
+        columnDensityMap = np.array(this_group['columnDensityMap'])
+        massWeightedQuantityMap = np.array(this_group['massWeighted%sMap'%quantity_name.title()])
+        if plot_time:
+            raise Exception("need to get time value")
 
     Xmin,Ymin = -frame_half_width+frame_center[:2]
     Xmax,Ymax = frame_half_width+frame_center[:2]
@@ -84,10 +84,10 @@ def plot_image_grid(
     columnDensityMap = columnDensityMap.astype(np.uint16) 
     image_rho = columnDensityMap.T
 
-    print 'min_%s = '%quantity_name,min_quantity
-    print 'max_%s = '%quantity_name,max_quantity
+    print('min_%s = '%quantity_name,min_quantity)
+    print('max_%s = '%quantity_name,max_quantity)
         
-    print('Image range (temp): ',np.min(massWeightedQuantityMap),np.max(massWeightedQuantityMap))
+    print('Image range (%s): '%quantity_name,np.min(massWeightedQuantityMap),np.max(massWeightedQuantityMap))
     massWeightedQuantityMap = massWeightedQuantityMap - min_quantity 
     massWeightedQuantityMap = massWeightedQuantityMap / (max_quantity - min_quantity)
     
@@ -105,9 +105,9 @@ def plot_image_grid(
     ##	to produce the final image array. 
     final_image = mcm.produce_viridis_hsv_image(image_T, image_rho) 
 
-    ## plot the scale bar
+    ## fill the pixels of the the scale bar with white
     if scale_bar:
-        # Convert to pixels
+        # Convert to pixel space
         length_per_pixel = (Xmax - Xmin) / npix_x
         scale_line_length_px = int(scale_line_length / length_per_pixel)
 
@@ -117,7 +117,7 @@ def plot_image_grid(
         scale_line_y = int(0.02 * npix_y)
 
         # Go through pixels for scale bar, setting them to white
-        for x_index in xrange(scale_line_x_start, scale_line_x_end):
+        for x_index in range(scale_line_x_start, scale_line_x_end):
             final_image[scale_line_y:scale_line_y+6, x_index,:3] = 1
 
     ## main imshow call
@@ -131,7 +131,6 @@ def plot_image_grid(
     if plot_time:
         ## handle default values
         if figure_label is None:
-            figure_label = r"$%03d \, \rm{Myr}$" % (round_to_nearest_integer(time_Myr), )
             figure_label = r"$%.2f \, \rm{Myr}$" % (time_Myr)
 
 	## plot the  figure label
@@ -156,7 +155,7 @@ def plot_image_grid(
     ## colour bar
     use_colorbar=0
     if use_colorbar:
-	raise Exception('Unimplemented!')
+        raise Exception('Unimplemented!')
         colour_map = matplotlib.colors.LinearSegmentedColormap.from_list("PaulT_rainbow", cols)
         colour_map.set_under('k')
 
@@ -182,7 +181,7 @@ def plot_image_grid(
         cbar.outline.set_linewidth(0.4)
         cbar.set_label(my_cbar_label, color = 'w', fontsize=6, fontweight='bold', labelpad = 0.5)
 
-        print cbar.get_clim()
+        print(cbar.get_clim())
 
     """
     extent = ax.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
