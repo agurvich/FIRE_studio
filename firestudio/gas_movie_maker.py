@@ -46,15 +46,14 @@ def addSnapKeys(
             None,snapdict,
             radius=rstar_half*5,scom=scom)
 
-    pos_all = snapdict['Coordinates']
-    mass_all = snapdict['Masses']
+    Coordinates = snapdict['Coordinates']
+    Masses = snapdict['Masses']
 
     ## temperature is computed in openSnapshot
     temperature_all = snapdict['Temperature']
 
     mydict = {
-        'pos_all':pos_all,'mass_all':mass_all,'temperature_all':temperature_all,
-        'HubbleParam':snapdict['HubbleParam'],'time_Myr':snapdict['Time'],
+        'Coordinates':Coordinates,'Masses':Masses,'Quantity':temperature_all,
         'BoxSize':snapdict['BoxSize'],'frame_center' : frame_center
     }
     return mydict

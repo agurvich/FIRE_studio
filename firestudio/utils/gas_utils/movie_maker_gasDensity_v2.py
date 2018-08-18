@@ -17,15 +17,15 @@ import h5py
 import ctypes
 
 def compute_image_grid(
-    pos_all,mass_all,temperature_all,
-    BoxSize,
+    Coordinates,Masses,Quantity,
+    BoxSize,quantity_name,
     frame_center,frame_half_width,frame_depth,
     output_dir,snapnum,
     theta=0,phi=0,psi=0,
     pixels=1200,
     min_den=-1.0,max_den=1.2,
     edgeon=0,
-    h5filename='',**kwargs):
+    h5prefix='',**kwargs):
     if edgeon==1:
 	raise Exception("Unimplemented edgeon!")
 
@@ -43,13 +43,13 @@ def compute_image_grid(
 
     ## extract a cube of particles that are in relevant area
     print('extracting cube')
-    ind_box = ((pos_all[:,0] > Xmin) & (pos_all[:,0] < Xmax) &
-               (pos_all[:,1] > Ymin) & (pos_all[:,1] < Ymax) &
-               (pos_all[:,2] > Zmin) & (pos_all[:,2] < Zmax))
+    ind_box = ((Coordinates[:,0] > Xmin) & (Coordinates[:,0] < Xmax) &
+               (Coordinates[:,1] > Ymin) & (Coordinates[:,1] < Ymax) &
+               (Coordinates[:,2] > Zmin) & (Coordinates[:,2] < Zmax))
 
-    pos = pos_all[ind_box].astype(np.float32)
-    mass = mass_all[ind_box].astype(np.float32)
-    quantity = temperature_all[ind_box].astype(np.float32)
+    pos = Coordinates[ind_box].astype(np.float32)
+    mass = Masses[ind_box].astype(np.float32)
+    quantity = Quantity[ind_box].astype(np.float32)
 
     print('-done')
 
@@ -69,11 +69,12 @@ def compute_image_grid(
     writeImageGrid(
         snapnum,
         output_dir,
-	columnDensityMap, massWeightedQuantityMap,
+	columnDensityMap,
+	massWeightedQuantityMap, quantity_name,
         npix_x,frame_half_width,frame_depth,
 	frame_center,
 	theta,phi,psi,
-	h5filename=h5filename)
+	h5prefix=h5prefix)
 
 def rotateEuler(
     theta,phi,psi,
@@ -199,7 +200,7 @@ def getImageGrid(
 	np.min(columnDensityMap),
 	np.max(columnDensityMap))
 
-    # massWeightedQuantityMap contains the mass-weighted temperature, in K, most often
+    # massWeightedQuantityMap contains the mass-weighted quantity
     massWeightedQuantityMap = np.log10(massWeightedQuantityMap)
     print(
 	'log10 minmax(massWeightedQuantityMap)',
@@ -211,16 +212,17 @@ def getImageGrid(
 def writeImageGrid(
     snapnum,
     output_dir,
-    columnDensityMap, massWeightedQuantityMap,
+    columnDensityMap,
+    massWeightedQuantityMap,quantity_name,
     npix_x,frame_half_width,frame_depth,
     frame_center,
     theta,phi,psi,
-    h5filename='',
+    h5prefix='',
     this_setup_id=None):
 
     ## Write the image grids to HDF5 file 
-    h5filename += "proj_maps_%d.hdf5" % snapnum
-    h5name=os.path.join(output_dir,h5filename)
+    h5prefix += "proj_maps_%d.hdf5" % snapnum
+    h5name=os.path.join(output_dir,h5prefix)
 
     ## what should we call this setup? need a unique identifier
     ## let the user give it a
@@ -232,22 +234,37 @@ def writeImageGrid(
 	    theta,phi,psi)
 	if this_setup_id is None else this_setup_id)
 
-    with h5py.File(h5name, "w") as h5file:
-	this_group = h5file.create_group(this_setup_id)
-	
-	## save the maps themselves
-        this_group['columnDensityMap']=columnDensityMap
-        this_group['massWeightedQuantityMap']=massWeightedQuantityMap
-	
-	## save the meta data
-	this_group['npix_x']=npix_x
-	this_group['frame_center']=frame_center
-	this_group['frame_half_width']=frame_half_width
-	this_group['frame_depth']=frame_depth
-	this_group['theta']=theta
-	this_group['phi']=phi
-	this_group['psi']=psi
+    with h5py.File(h5name, "a") as h5file:
+	if this_setup_id not in list(h5file.keys()):
+	    this_group = h5file.create_group(this_setup_id)
+	    ## save the maps themselves
+	    this_group['columnDensityMap']=columnDensityMap
+	    this_group['massWeighted%sMap'%quantity_name]=massWeightedQuantityMap
 
-	## TODO should I put in metadata that allows you to recreate
-	##  frames without access to the relevant snapshots?
-	##  e.g. current time/redshift 
+	    ## save the meta data
+	    this_group['npix_x']=npix_x
+	    this_group['frame_center']=frame_center
+	    this_group['frame_half_width']=frame_half_width
+	    this_group['frame_depth']=frame_depth
+	    this_group['theta']=theta
+	    this_group['phi']=phi
+	    this_group['psi']=psi
+	    this_group['quantity_names']=[quantity_name]
+	    ## TODO should I put in metadata that allows you to recreate
+	    ##  frames without access to the relevant snapshots?
+	    ##  e.g. current time/redshift
+
+	else:
+	    ## appending another quantity, cool!
+	    this_group = h5file[this_setup_id]
+	    ## rename the generic "quantity" if it exists:
+	    quantity_names = this_group['quantity_names'].value
+	    assert quantity_name not in quantity_names
+
+	    ## save this new quantity
+	    this_group['massWeighted%sMap'%quantity_name.title()]=massWeightedQuantityMap
+	    
+	    ## append quantity_name to the hdf5 file
+	    quantity_names +=[quantity_name] 
+	    del this_group['quantity_names']
+	    this_group['quantity_names']=quantity_name

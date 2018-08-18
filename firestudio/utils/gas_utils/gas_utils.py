@@ -91,28 +91,39 @@ def addPrettyGalaxyToAx(ax,snapdir,snapnum,
         ax - matplotlib axis object to draw to
         snapdir - location that the snapshots live in
         snapnum - snapshot number
+
     Optional:
-        overwrite - flag to overwrite the intermediate grid files
-        datadir - directory to output the the intermediate grid files and output png
+        overwrite=0 - flag to overwrite the intermediate grid files
+        datadir=None - directory to output the the intermediate grid files and output png
 
-        kwargs able to be passed along: 
-            theta=0- euler rotation angle
-            phi=0- euler rotation angle
-            psi=0 - euler rotation angle
-            pixels=1200 - the resolution of image (pixels x pixels)
-            min_den=-0.4 - the minimum of the density color scale
-            max_den=1.6 - the maximum of the density color scale
-            min_temp=2 - the minimum of the temperature color scale
-            max_temp=7 - the maximum of the temperature color scale
-            edgeon - create and plot an edgeon view
+    Mandatory kwargs to be passed along:
+	Coordinates - coordinates of particles to be projected, in kpc
+	Masses - masses of particles to be projected, in 1e10 msun
+	Quantity - quantity of particles to be mass weighted/projected
+	
+	BoxSize -
 
-            frame_center - origin of image in data space 
-            frame_half_width - half-width of image in data space
-            frame_depth - half-depth of image in data space 
+	frame_center - origin of image in data space 
+	frame_half_width - half-width of image in data space
+	frame_depth - half-depth of image in data space 
 
+    Optional kwargs to be passed along: 
+	quantity_name='temperature' - the name of the quantity that you're mass weighting
+	    should match whatever array you're passing in as quantity
+
+	theta=0- euler rotation angle
+	phi=0- euler rotation angle
+	psi=0 - euler rotation angle
+	pixels=1200 - the resolution of image (pixels x pixels)
+	min_den=-0.4 - the minimum of the density color scale
+	max_den=1.6 - the maximum of the density color scale
+	min_temp=2 - the minimum of the temperature color scale
+	max_temp=7 - the maximum of the temperature color scale
+
+	h5prefix='' - a string that you can prepend to the projection filename if desired
     """
 
-    print('Drawing',snapdir,snapnum,'to:',datadir)
+    print('Drawing %s:%d'%(snapdir,snapnum)+' to:%s'%datadir)
     makeOutputDirectories(datadir)
 
     ## where to find/save column density/quantity maps-- this could get crowded!
@@ -120,8 +131,8 @@ def addPrettyGalaxyToAx(ax,snapdir,snapnum,
 
     ## what are we going to call the intermediate filename? 
     ##	will it have a prefix? 
-    h5filename='' if 'h5filename' not in kwargs else kwargs['h5filename']
-    h5name=h5filename+"proj_maps_%03d.hdf5" % snapnum
+    h5prefix='' if 'h5prefix' not in kwargs else kwargs['h5prefix']
+    h5name=h5prefix+"proj_maps_%03d.hdf5" % snapnum
 
     ## check if we've already projected this setup and saved it to intermediate file
     this_setup_in_projection_file = checkProjectionFile(
