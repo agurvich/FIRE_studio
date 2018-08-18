@@ -9,6 +9,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np 
 import os
+import h5py
 
 ## system functions
 def makeOutputDirectories(datadir):
@@ -25,45 +26,62 @@ def makeOutputDirectories(datadir):
     path = os.path.join(path,'Projections')
     if not os.path.isdir(path):
         os.mkdir(path)
-    if not os.path.isdir(os.path.join(path,'Den')):
-        os.mkdir(os.path.join(path,'Den'))
-    if not os.path.isdir(os.path.join(path,'Temp')):
-        os.mkdir(os.path.join(path,'Temp'))
 
-## physics functions
-def projectDenTemp(snapdir,snapnum,
-    dprojects,tprojects,
+def checkProjectionFile(
+    projection_file,
+    pixels, frame_half_width,frame_depth,
+    frame_center,
+    theta=0,phi=0,psi=0,
     **kwargs):
+    try:
+	with h5py.File(projection_file,'r') as handle:
+	    for group in handle.keys():
+		this_group = handle[group]
+		flag = 1
+		for key,variable in zip(
+		    ['npix_x','frame_half_width','frame_depth','frame_center','theta','phi','psi'],
+		    [ pixels , frame_half_width , frame_depth , frame_center , theta , phi , psi ]):
+    
+		    ## read the value in the hdf5 file and compare to variable
+		    if key not in ['npix_x']:
+			## key is not an integer so we have to round it somehow
+			flag = flag and np.all(this_group[key].value == np.round(variable,decimals=2))
+		    else:
+			## key is an integer
+			flag = flag and this_group[key].value == variable
+
+		## found the one we wanted
+		if flag:
+		    return 1 
+
+	return 0 
+    except IOError:
+	return 0
+    
+## physics functions
+def projectColumnDensityAndQuantity(
+    snapdir,snapnum,
+    projection_dir,**kwargs):
     """ 
     Input: 
         snapdir - directory the snapshots live in
         snapnum - snapshot number currently rendering
-        dprojects - place to save density projections
-        tprojects - place to save temperature projections
+        projection_dir - place to save projections
         available kwargs:
             theta=0- euler rotation angle
             phi=0- euler rotation angle
             psi=0 - euler rotation angle
             pixels=1200 - the resolution of image (pixels x pixels)
-            min_den=-0.4 - the minimum of the density color scale
-            max_den=1.6 - the maximum of the density color scale
-            min_temp=2 - the minimum of the temperature color scale
-            max_temp=7 - the maximum of the temperature color scale
-            edgeon - create and plot an edgeon view
 
             frame_center - origin of image in data space
             frame_half_width - half-width of image in data space
             frame_depth - half-depth of image in data space
     """
 
+    raise Exception("NO!")
     print('projecting the density grid')
     den_grid=compute_density_grid(
-        output_dir = dprojects,isnap = snapnum,
-        **kwargs)
-
-    print('projecting the temperature grid')
-    temp_grid=compute_temp_grid(
-        output_dir = tprojects,isnap = snapnum,
+        output_dir = projection_dir,snapnum = snapnum,
         **kwargs)
 
 def addPrettyGalaxyToAx(ax,snapdir,snapnum,
@@ -97,21 +115,26 @@ def addPrettyGalaxyToAx(ax,snapdir,snapnum,
     print('Drawing',snapdir,snapnum,'to:',datadir)
     makeOutputDirectories(datadir)
 
-    #where to find/save gas/temperature density grids-- this could get crowded!
-    dprojects=os.path.join(datadir,'Plots','Projections','Den/')
-    tprojects=os.path.join(datadir,'Plots','Projections','Temp/')
+    ## where to find/save column density/quantity maps-- this could get crowded!
+    projection_dir=os.path.join(datadir,'Plots','Projections')
 
+    ## what are we going to call the intermediate filename? 
+    ##	will it have a prefix? 
     h5filename='' if 'h5filename' not in kwargs else kwargs['h5filename']
-    d_h5name=h5filename+"gas_proj_%03d_%.2fkpc.hdf5" % (snapnum, kwargs['frame_half_width']*2)
-    T_h5name=h5filename + "gasTemp_proj_%03d_%.2fkpc.hdf5" % (snapnum, kwargs['frame_half_width']*2)
-    if overwrite or (
-        (not os.path.isfile(os.path.join(dprojects,d_h5name))) and 
-        (not os.path.isfile(os.path.join(dprojects,T_h5name)))):
+    h5name=h5filename+"proj_maps_%03d.hdf5" % snapnum
+
+    ## check if we've already projected this setup and saved it to intermediate file
+    this_setup_in_projection_file = checkProjectionFile(
+	os.path.join(projection_dir,h5name),**kwargs)
+    
+    if overwrite or not this_setup_in_projection_file:
         ## compute the projections
-        projectDenTemp(snapdir,snapnum,dprojects,tprojects,**kwargs)
+        projectColumnDensityAndQuantity(
+	    snapdir,snapnum,
+	    projection_dir,**kwargs)
 
     print('plotting image grid')
-    plot_image_grid(ax,snapnum,dprojects,tprojects,
+    plot_image_grid(ax,snapnum,projection_dir,
         **kwargs)
 
     return ax

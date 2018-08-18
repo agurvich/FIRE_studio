@@ -18,9 +18,9 @@ import ctypes
 
 def compute_image_grid(
     pos_all,mass_all,temperature_all,
-    time_Myr,BoxSize,
+    BoxSize,
     frame_center,frame_half_width,frame_depth,
-    output_dir,isnap,
+    output_dir,snapnum,
     theta=0,phi=0,psi=0,
     pixels=1200,
     min_den=-1.0,max_den=1.2,
@@ -35,7 +35,6 @@ def compute_image_grid(
     ## Set image size 
     npix_x   = pixels #1200 by default
     npix_y   = pixels #1200 by default
-    image_length = 2*frame_half_width
 
     ## calculate edges of the frame
     Xmin,Ymin = -frame_half_width + frame_center[:2]
@@ -68,11 +67,12 @@ def compute_image_grid(
 
     ## write the output to an .hdf5 file
     writeImageGrid(
-        isnap,
+        snapnum,
         output_dir,
 	columnDensityMap, massWeightedQuantityMap,
-        image_length,npix_x,
-	time_Myr,
+        npix_x,frame_half_width,frame_depth,
+	frame_center,
+	theta,phi,psi,
 	h5filename=h5filename)
 
 def rotateEuler(
@@ -209,19 +209,28 @@ def getImageGrid(
     return columnDensityMap,massWeightedQuantityMap
 
 def writeImageGrid(
-    isnap,
+    snapnum,
     output_dir,
     columnDensityMap, massWeightedQuantityMap,
-    image_length,npix_x,
-    time_Myr,
-    h5filename=''):
+    npix_x,frame_half_width,frame_depth,
+    frame_center,
+    theta,phi,psi,
+    h5filename='',
+    this_setup_id=None):
 
-    this_setup_id = "%d_%.2fkpc"%(npix_x, image_length)
-
-    # Write the image grid to HDF5 file 
-    h5filename += "proj_maps_%s.hdf5" % this_setup_id
-
+    ## Write the image grids to HDF5 file 
+    h5filename += "proj_maps_%d.hdf5" % snapnum
     h5name=os.path.join(output_dir,h5filename)
+
+    ## what should we call this setup? need a unique identifier
+    ## let the user give it a
+    ##	custom name through kwargs later on TODO
+    this_setup_id = (
+	"npix%d_width%.2fkpc_depth%.2fkpc_x%.2f_y%.2f_z%.2f_theta%.2f_phi%.2f_psi%.2f"%(
+	    npix_x, 2*frame_half_width,frame_depth,
+	    frame_center[0],frame_center[1],frame_center[2],
+	    theta,phi,psi)
+	if this_setup_id is None else this_setup_id)
 
     with h5py.File(h5name, "w") as h5file:
 	this_group = h5file.create_group(this_setup_id)
@@ -231,6 +240,14 @@ def writeImageGrid(
         this_group['massWeightedQuantityMap']=massWeightedQuantityMap
 	
 	## save the meta data
-	this_group['image_length']=np.array([image_length])
-	this_group['npix_x']=np.array([npix_x])
-	this_group['Time_Myr']=np.array([time_Myr])
+	this_group['npix_x']=npix_x
+	this_group['frame_center']=frame_center
+	this_group['frame_half_width']=frame_half_width
+	this_group['frame_depth']=frame_depth
+	this_group['theta']=theta
+	this_group['phi']=phi
+	this_group['psi']=psi
+
+	## TODO should I put in metadata that allows you to recreate
+	##  frames without access to the relevant snapshots?
+	##  e.g. current time/redshift 
