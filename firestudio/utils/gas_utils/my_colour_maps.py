@@ -33,10 +33,7 @@ def produce_cmap_hsv_image(image_1, image_2,cmap='viridis'):
     # with integer values in the range 0 to 255. 
     # These will be mapped onto hue and brightness, 
     # respectively, with saturation fixed at 1. 
-    #cols = magma_colmap() 
-    # 'ocean' looks like viridis without the green
     cols = produce_colmap(cmap)
-    #cols = produce_colmap('cartocolors.sequential.OrYel_7')
     cols = np.array(cols) 
 
     cols_2d = np.ones((len(cols), 1, 3)) 
@@ -48,13 +45,20 @@ def produce_cmap_hsv_image(image_1, image_2,cmap='viridis'):
 
     npix_x = len(image_1) 
     npix_y = len(image_1[0]) 
-    output_image_hsv = np.zeros((npix_x, npix_y, 3)) 
-    for i in range(npix_x): 
-        for j in range(npix_y): 
-            output_image_hsv[i, j, 0] = hue_viridis[image_1[i, j]] 
-            output_image_hsv[i, j, 1] = 1.0 
-            output_image_hsv[i, j, 2] = float(image_2[i, j]) / 255.0 
+    if image_2 is not None:
+        output_image_hsv = np.zeros((npix_x, npix_y, 3)) 
+        for i in range(npix_x): 
+            for j in range(npix_y): 
+                output_image_hsv[i, j, 0] = hue_viridis[image_1[i, j]] 
+                output_image_hsv[i, j, 1] = 1.0 
+                output_image_hsv[i, j, 2] = float(image_2[i, j]) / 255.0 
 
-    output_image_rgb = hsv_to_rgb(output_image_hsv) 
+        output_image_rgb = hsv_to_rgb(output_image_hsv) 
+    else:
+        output_image_rgb = np.zeros((npix_x, npix_y, 3)) 
+        for i in range(npix_x): 
+            for j in range(npix_y): 
+                output_image_rgb[i,j]=cols[image_1[i,j]]
+                
     return output_image_rgb 
 

@@ -23,6 +23,7 @@ def plot_image_grid(
     scale_bar = 1,
     figure_label=None,
     fontsize=None,
+    single_image=None,
     **kwargs): 
 
     print("extra kwargs in plot_2color_image:",list(kwargs.keys()))
@@ -97,11 +98,16 @@ def plot_image_grid(
 
     ## cast to integer to use as indices for cmap array 
     massWeightedQuantityMap = massWeightedQuantityMap.astype(np.uint16)    
-    image_T = massWeightedQuantityMap.T
+    image_Q = massWeightedQuantityMap.T
     
-    ## Now take the rho and T images, and combine them 
-    ##	to produce the final image array. 
-    final_image = mcm.produce_cmap_hsv_image(image_T, image_rho,cmap=cmap) 
+    if single_image is None:
+        ## Now take the rho and T images, and combine them 
+        ##	to produce the final image array. 
+        final_image = mcm.produce_cmap_hsv_image(image_Q, image_rho,cmap=cmap) 
+    elif single_image == 'Density':
+        final_image = mcm.produce_cmap_hsv_image(image_rho,None,cmap=cmap)
+    else:
+        final_image = mcm.produce_cmap_hsv_image(image_Q,None,cmap=cmap)
 
     ## fill the pixels of the the scale bar with white
     if scale_bar:
@@ -213,12 +219,12 @@ def plot_image_grid(
 
 """
         else:
-            image_T = np.ndarray((3*npix_y/2,npix_x),dtype=np.uint16)
+            image_Q = np.ndarray((3*npix_y/2,npix_x),dtype=np.uint16)
             for i in range(0,npix_y):
                 new_i = i+ (npix_y/2)
                 for j in range(0,npix_x):
                     value = massWeightedQuantityMap[j,i]
-                    image_T[new_i,j] = value
+                    image_Q[new_i,j] = value
 
         # Edge on image 
         if edgeon:
@@ -238,6 +244,6 @@ def plot_image_grid(
             for i in range(0,npix_y):
                 for j in range(0,npix_x):
                     value = massWeightedQuantityMap[j,i]
-                    image_T[i,j] = value 
+                    image_Q[i,j] = value 
 
     """

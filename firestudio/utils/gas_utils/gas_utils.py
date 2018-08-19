@@ -127,7 +127,10 @@ def addPrettyGalaxyToAx(
         scale_bar=1 - should you plot a scale bar in the bottom left corner
         figure_label=None - what string should you put in the top right corner? 
         fontsize=None - fontsize for all text in frame
-
+        single_image=None - string, if it's "Density" it will plot a column 
+            density projection, if it's anything else it will be a mass weighted
+            `quantity_name` projection. None will be a "two-colour" projection
+            with hue determined by `quantity_name` and saturation by density
     """
 
     print('Drawing %s:%d'%(snapdir,snapnum)+' to:%s'%datadir)

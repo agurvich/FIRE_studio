@@ -74,6 +74,10 @@ def renderGalaxy(
         scale_bar=1 - should you plot a scale bar in the bottom left corner
         figure_label=None - what string should you put in the top right corner? 
         fontsize=None - fontsize for all text in frame
+        single_image=None - string, if it's "Density" it will plot a column 
+            density projection, if it's anything else it will be a mass weighted
+            `quantity_name` projection. None will be a "two-colour" projection
+            with hue determined by `quantity_name` and saturation by density
     """
     ## copy the dictionary so we don't mess anything up 
     copydict = copy.copy(kwargs)
@@ -220,7 +224,8 @@ if __name__=='__main__':
         'extract_galaxy=',
         'ahf_path=',
         'figure_label=',
-        'cmap='])
+        'cmap=',
+        'single_image='])
 
     #options:
     # -r/s = use readsnap or use single snapshot loader
@@ -251,7 +256,10 @@ if __name__=='__main__':
                 value= opt[1]
             else:
                 # turn arguments from strings to whatever
-                value = eval(opt[1])
+                try:
+                    value = eval(opt[1])
+                except:
+                    value = opt[1]
             opts[i]=(key,value)
     main(**dict(opts))
 
