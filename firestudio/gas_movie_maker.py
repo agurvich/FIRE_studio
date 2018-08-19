@@ -78,6 +78,9 @@ def renderGalaxy(
             density projection, if it's anything else it will be a mass weighted
             `quantity_name` projection. None will be a "two-colour" projection
             with hue determined by `quantity_name` and saturation by density
+        use_colorbar=False - flag for whether to plot a colorbar at all
+        cbar_label=None - string that shows up next to colorbar, good for specifying 
+            units, otherwise will default to just quantity_name.title()
     """
     ## copy the dictionary so we don't mess anything up 
     copydict = copy.copy(kwargs)
@@ -225,7 +228,9 @@ if __name__=='__main__':
         'ahf_path=',
         'figure_label=',
         'cmap=',
-        'single_image='])
+        'single_image=',
+        'use_colorbar=', 
+        'cbar_label='])
 
     #options:
     # -r/s = use readsnap or use single snapshot loader

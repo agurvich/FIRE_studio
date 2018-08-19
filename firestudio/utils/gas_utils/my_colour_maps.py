@@ -13,8 +13,7 @@ try:
 except:
     print("don't have phil's colormaps")
 
-def produce_colmap(cmap_name):
-    ## load in phil's custom colormaps, for whatever they're worth
+def get_cmap(cmap_name):
     load_my_custom_color_tables()
     try:
         cmap = plt.get_cmap(cmap_name)
@@ -25,6 +24,10 @@ def produce_colmap(cmap_name):
         for name in cmap_name:
             cmap = getattr(cmap,name)
         cmap = cmap.mpl_colormap
+    return cmap
+
+def produce_colmap(cmap_name):
+    cmap = get_cmap(cmap_name)
     ## discretize the colormap into 256 parts...
     return [list(cmap(i/255.)[:3]) for i in range(0,256)]
 

@@ -3,6 +3,7 @@ matplotlib.use('Agg')
 import pylab 
 import numpy as np 
 import firestudio.utils.gas_utils.my_colour_maps as mcm 
+from abg_python.plot_utils import addColorbar
 import sys 
 import h5py
 import os
@@ -24,6 +25,8 @@ def plot_image_grid(
     figure_label=None,
     fontsize=None,
     single_image=None,
+    use_colorbar=False,
+    cbar_label=None,
     **kwargs): 
 
     print("extra kwargs in plot_2color_image:",list(kwargs.keys()))
@@ -100,12 +103,14 @@ def plot_image_grid(
     massWeightedQuantityMap = massWeightedQuantityMap.astype(np.uint16)    
     image_Q = massWeightedQuantityMap.T
     
+    cbar_label = quantity_name.title() if cbar_label is None else cbar_label
     if single_image is None:
         ## Now take the rho and T images, and combine them 
         ##	to produce the final image array. 
         final_image = mcm.produce_cmap_hsv_image(image_Q, image_rho,cmap=cmap) 
     elif single_image == 'Density':
         final_image = mcm.produce_cmap_hsv_image(image_rho,None,cmap=cmap)
+        cbar_label='Column Density' if cbar_label is None else cbar_label
     else:
         final_image = mcm.produce_cmap_hsv_image(image_Q,None,cmap=cmap)
 
@@ -153,8 +158,13 @@ def plot_image_grid(
         label2.set_color('white')
 
     ## colour bar
-    use_colorbar=0
     if use_colorbar:
+        addColorbar(
+            ax,mcm.get_cmap(cmap),
+            10**min_quantity,10**max_quantity,
+            cbar_label,logflag = 1,
+            fontsize=16,cmap_number=0)
+    """
         raise Exception('Unimplemented!')
         colour_map = matplotlib.colors.LinearSegmentedColormap.from_list("PaulT_rainbow", cols)
         colour_map.set_under('k')
@@ -182,7 +192,7 @@ def plot_image_grid(
         cbar.set_label(my_cbar_label, color = 'w', fontsize=6, fontweight='bold', labelpad = 0.5)
 
         print(cbar.get_clim())
-
+    """
     """
     extent = ax.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
     exec "pylab.savefig('%s/frame%04d.png', dpi = 600, bbox_inches=extent)" % (output_dir, snapnum)

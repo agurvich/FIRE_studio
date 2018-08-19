@@ -131,6 +131,10 @@ def addPrettyGalaxyToAx(
             density projection, if it's anything else it will be a mass weighted
             `quantity_name` projection. None will be a "two-colour" projection
             with hue determined by `quantity_name` and saturation by density
+
+        use_colorbar=False - flag for whether to plot a colorbar at all
+        cbar_label=None - string that shows up next to colorbar, good for specifying 
+            units, otherwise will default to just quantity_name.title()
     """
 
     print('Drawing %s:%d'%(snapdir,snapnum)+' to:%s'%datadir)
