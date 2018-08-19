@@ -16,11 +16,11 @@ def plot_image_grid(
     this_setup_id = None,
     pixels=1200,
     theta=0,phi=0,psi=0,
+    cmap='viridis',
     min_den=-1.0,max_den=1.2,
     min_quantity=2,max_quantity=7,
     h5prefix='',
-    plot_time = 0, scale_bar = 1,
-    time_Myr=None,
+    scale_bar = 1,
     figure_label=None,
     fontsize=None,
     **kwargs): 
@@ -63,8 +63,6 @@ def plot_image_grid(
         this_group=handle[this_setup_id]
         columnDensityMap = np.array(this_group['columnDensityMap'])
         massWeightedQuantityMap = np.array(this_group['massWeighted%sMap'%quantity_name.title()])
-        if plot_time:
-            raise Exception("need to get time value")
 
     Xmin,Ymin = -frame_half_width+frame_center[:2]
     Xmax,Ymax = frame_half_width+frame_center[:2]
@@ -103,7 +101,7 @@ def plot_image_grid(
     
     ## Now take the rho and T images, and combine them 
     ##	to produce the final image array. 
-    final_image = mcm.produce_viridis_hsv_image(image_T, image_rho) 
+    final_image = mcm.produce_cmap_hsv_image(image_T, image_rho,cmap=cmap) 
 
     ## fill the pixels of the the scale bar with white
     if scale_bar:
@@ -128,12 +126,8 @@ def plot_image_grid(
 
     ## handle any text additions
     fontsize=8 if fontsize is None else fontsize 
-    if plot_time:
-        ## handle default values
-        if figure_label is None:
-            figure_label = r"$%.2f \, \rm{Myr}$" % (time_Myr)
-
-	## plot the  figure label
+    if figure_label is not None:
+    ## plot the  figure label in the top right corner
         label = pylab.text(
 	    0.95, 0.92,
 	    figure_label,

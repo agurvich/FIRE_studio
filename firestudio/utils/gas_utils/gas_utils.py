@@ -81,8 +81,11 @@ def projectColumnDensityAndQuantity(
         projection_dir = projection_dir,snapnum = snapnum,
         **kwargs)
 
-def addPrettyGalaxyToAx(ax,snapdir,snapnum,
-    overwrite=0,datadir=None,**kwargs):
+def addPrettyGalaxyToAx(
+    ax,
+    snapdir,snapnum,
+    overwrite=0,datadir=None,
+    **kwargs):
     """
     Input:
         ax - matplotlib axis object to draw to
@@ -94,30 +97,37 @@ def addPrettyGalaxyToAx(ax,snapdir,snapnum,
         datadir=None - directory to output the the intermediate grid files and output png
 
     Mandatory kwargs to be passed along:
-	Coordinates - coordinates of particles to be projected, in kpc
-	Masses - masses of particles to be projected, in 1e10 msun
-	Quantity - quantity of particles to be mass weighted/projected
-	
-	BoxSize -
+        Coordinates - coordinates of particles to be projected, in kpc
+        Masses - masses of particles to be projected, in 1e10 msun
+        Quantity - quantity of particles to be mass weighted/projected
+        
+        BoxSize - c routine needs it, probably fine to pass in a large number
 
-	frame_center - origin of image in data space 
-	frame_half_width - half-width of image in data space
-	frame_depth - half-depth of image in data space 
+        frame_center - origin of image in data space 
+        frame_half_width - half-width of image in data space
+        frame_depth - half-depth of image in data space 
 
     Optional kwargs to be passed along: 
-	quantity_name='temperature' - the name of the quantity that you're mass weighting
-	    should match whatever array you're passing in as quantity
+        quantity_name='Temperature' - the name of the quantity that you're mass weighting
+            should match whatever array you're passing in as quantity
 
-	theta=0- euler rotation angle
-	phi=0- euler rotation angle
-	psi=0 - euler rotation angle
-	pixels=1200 - the resolution of image (pixels x pixels)
-	min_den=-0.4 - the minimum of the density color scale
-	max_den=1.6 - the maximum of the density color scale
-	min_temp=2 - the minimum of the temperature color scale
-	max_temp=7 - the maximum of the temperature color scale
+        theta=0- euler rotation angle
+        phi=0- euler rotation angle
+        psi=0 - euler rotation angle
+        pixels=1200 - the resolution of image (pixels x pixels)
+        min_den=-0.4 - the minimum of the density color scale
+        max_den=1.6 - the maximum of the density color scale
+        min_quantity=2 - the minimum of the temperature color scale
+        max_quantity=7 - the maximum of the temperature color scale
 
-	h5prefix='' - a string that you can prepend to the projection filename if desired
+        h5prefix='' - a string that you can prepend to the projection filename if desired
+        this_setup_id=None - string that defines the projection setup, None by default means
+            it defaults to a gross combination of frame params + angles
+        cmap='viridis' - string name for cmap to use 
+        scale_bar=1 - should you plot a scale bar in the bottom left corner
+        figure_label=None - what string should you put in the top right corner? 
+        fontsize=None - fontsize for all text in frame
+
     """
 
     print('Drawing %s:%d'%(snapdir,snapnum)+' to:%s'%datadir)
