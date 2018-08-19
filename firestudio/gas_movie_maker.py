@@ -44,11 +44,12 @@ def renderGalaxy(
         snapdict=None - snapshot dictionary of gas particles to use,
             will ignore extract_galaxy if present
 
-        Coordinates - coordinates of particles to be projected, in kpc
-        Masses - masses of particles to be projected, in 1e10 msun
-        Quantity - quantity of particles to be mass weighted/projected
+            Required elements in snapdict:
+                Coordinates - coordinates of particles to be projected, in kpc
+                Masses - masses of particles to be projected, in 1e10 msun
+                Quantity - quantity of particles to be mass weighted/projected
         
-        BoxSize - c routine needs it, probably fine to pass in a large number
+                BoxSize - c routine needs it, probably fine to pass in a large number
 
         frame_center - origin of image in data space 
         frame_half_width - half-width of image in data space
