@@ -82,6 +82,8 @@ def renderGalaxy(
         use_colorbar=False - flag for whether to plot a colorbar at all
         cbar_label=None - string that shows up next to colorbar, good for specifying 
             units, otherwise will default to just quantity_name.title()
+        take_log_of_quantity=True - should we save the log of the quantity being plotted
+            to the intermediate hdf5 file (to be subsequently plotted?)
     """
     ## copy the dictionary so we don't mess anything up 
     copydict = copy.copy(kwargs)
@@ -231,7 +233,9 @@ if __name__=='__main__':
         'cmap=',
         'single_image=',
         'use_colorbar=', 
-        'cbar_label='])
+        'cbar_label=',
+        'take_log_of_quantity=',
+    ])
 
     #options:
     # -r/s = use readsnap or use single snapshot loader

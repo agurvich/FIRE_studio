@@ -27,7 +27,9 @@ def compute_image_grid(
     theta=0,phi=0,psi=0,
     pixels=1200,
     edgeon=0,
-    h5prefix='',**kwargs):
+    h5prefix='',
+    take_log_of_quantity=True,
+    **kwargs):
     if edgeon==1:
         raise Exception("Unimplemented edgeon!")
 
@@ -203,7 +205,8 @@ def getImageGrid(
 	np.max(columnDensityMap))
 
     # massWeightedQuantityMap contains the mass-weighted quantity
-    massWeightedQuantityMap = np.log10(massWeightedQuantityMap)
+    if take_log_of_quantity:
+        massWeightedQuantityMap = np.log10(massWeightedQuantityMap)
     print(
 	'log10 minmax(massWeightedQuantityMap)',
 	np.min(massWeightedQuantityMap),
