@@ -36,7 +36,7 @@ def checkProjectionFile(
         with h5py.File(projection_file,'r') as handle:
             for group in handle.keys():
                 this_group = handle[group]
-                flag = 1
+                flag = True
                 for key,variable in zip(
                     ['npix_x','frame_half_width','frame_depth','frame_center','theta','phi','psi'],
                     [ pixels , frame_half_width , frame_depth , frame_center , theta , phi , psi ]):
@@ -44,7 +44,8 @@ def checkProjectionFile(
                     ## read the value in the hdf5 file and compare to variable
                     if key not in ['npix_x']:
                         ## key is not an integer so we have to round it somehow
-                        flag = flag and np.all(this_group[key].value == np.round(variable,decimals=2))
+                        flag = flag and np.all(
+                            np.round(this_group[key].value,decimals=2) == np.round(variable,decimals=2))
                     else:
                         ## key is an integer
                         flag = flag and this_group[key].value == variable

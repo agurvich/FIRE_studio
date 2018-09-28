@@ -85,6 +85,11 @@ def renderGalaxy(
         take_log_of_quantity=True - should we save the log of the quantity being plotted
             to the intermediate hdf5 file (to be subsequently plotted?)
     """
+
+    ## default value for pixels, handled this way so we don't have to pass it around
+    if 'pixels' not in kwargs:
+        kwargs['pixels']=1200
+
     ## copy the dictionary so we don't mess anything up 
     copydict = copy.copy(kwargs)
     print(list(copydict.keys()),'keys passed to FIRE_studio')

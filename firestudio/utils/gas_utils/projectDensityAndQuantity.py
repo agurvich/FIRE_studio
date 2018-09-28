@@ -67,7 +67,8 @@ def compute_image_grid(
 	Ymin,Ymax,
 	Zmin,Zmax,
 	npix_x,npix_y,
-	pos,mass,quantity)
+	pos,mass,quantity,
+        take_log_of_quantity)
 
     ## write the output to an .hdf5 file
     writeImageGrid(
@@ -128,7 +129,8 @@ def getImageGrid(
     Ymin,Ymax,
     Zmin,Zmax,
     npix_x,npix_y,
-    pos,mass,quantity):
+    pos,mass,quantity,
+    take_log_of_quantity):
 
     ## set c-routine variables
     desngb   = 32
@@ -261,7 +263,6 @@ def writeImageGrid(
         else:
             ## appending another quantity, cool!
             this_group = h5file[this_setup_id]
-            quantity_names = this_group['quantity_names'].value
             assert "massWeighted%sMap"%quantity_name.title() not in this_group.keys() 
             ## save this new quantity
             this_group['massWeighted%sMap'%quantity_name.title()]=massWeightedQuantityMap

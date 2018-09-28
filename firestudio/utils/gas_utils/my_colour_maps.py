@@ -10,11 +10,11 @@ except:
 
 try:
     from pfh_colormaps import load_my_custom_color_tables
+    load_my_custom_color_tables()
 except:
     print("don't have phil's colormaps")
 
 def get_cmap(cmap_name):
-    load_my_custom_color_tables()
     try:
         cmap = plt.get_cmap(cmap_name)
     except:
