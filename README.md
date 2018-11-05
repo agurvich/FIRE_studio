@@ -1,7 +1,7 @@
 # FIRE_studio
 Movie Making Utilities for FIRE simulations
 
-This git repository was lovingly made.
+This git repository was lovingly made, the code it contains is largely based off two separate (but related) visualization codes built by Volker Springel and Phil Hopkins. This is not the greatest song in the world, this is just a tribute.
 
 requirements:
 [abg_python](https://www.github.com/agurvich/abg_python)
