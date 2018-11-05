@@ -277,7 +277,8 @@ def renderStarGalaxy(
 
 
     ## handle default arguments for the frame now that data is laoded
-    frame_half_width = 0.2*rvir/2**0.5 if frame_half_width is None else frame_half_width
+    if frame_half_width is None:
+        frame_half_width = 0.2*rvir/2**0.5
     frame_depth = frame_half_width if frame_depth is None else frame_depth
 
     ## now find only the particles within the viewbox
@@ -290,7 +291,6 @@ def renderStarGalaxy(
 
     ## unpack relevant information
     xs,ys,zs = star_snap['Coordinates'].T
-    print 'final',star_snap.keys()
     mstar,ages, metals = star_snap['Masses'],star_snap['AgeGyr'],star_snap['Metallicity'][:,0]
     gxs, gys, gzs, = snap['Coordinates'].T
     mgas,gas_metals, h_gas = snap['Masses'],snap['Metallicity'][:,0],snap['SmoothingLength']

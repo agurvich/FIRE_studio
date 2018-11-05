@@ -1,6 +1,6 @@
 import itertools 
 
-from all_utils import * 
+import abg_python.all_utils as all_utils
 from gal_utils import Galaxy
 
 import matplotlib.pyplot as plt
@@ -10,7 +10,7 @@ import os
 from multiprocessing.pool import ThreadPool
 from multiprocessing import Pool
 
-from firestudio.movie_maker import renderGalaxy
+from firestudio.gas_movie_maker import renderGalaxy
 
 def fauxrenderPatch(sub_res,ax,
     frame_center,frame_half_width,
