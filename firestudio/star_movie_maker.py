@@ -141,7 +141,7 @@ def get_bands_out(
 
 def add_scale_bar(final_image,frame_half_width,npix,scale_line_length):
     # Convert to pixels
-    length_per_pixel = 1.0*frame_half_width/ npix
+    length_per_pixel = 2.0*frame_half_width/ npix
     scale_line_length_px = int(scale_line_length / length_per_pixel)
 
     # Position in terms of image array indices
@@ -181,9 +181,9 @@ def get_indices(
     xs2,ys2,zs2 = (snap['Coordinates']-frame_center).T**2
 
     ## compare to half-width squared
-    xindices = xs2 <= (frame_half_width/2.)**2
-    yindices = ys2 <= (frame_half_width/2.)**2
-    zindices = zs2 <= (frame_depth/2.)**2
+    xindices = xs2 <= (frame_half_width)**2
+    yindices = ys2 <= (frame_half_width)**2
+    zindices = zs2 <= (frame_depth)**2
 
     return np.logical_and(np.logical_and(xindices,yindices),zindices)
 
