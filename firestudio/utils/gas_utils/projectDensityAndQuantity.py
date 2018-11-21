@@ -15,6 +15,7 @@ import numpy as np
 #import tables
 import h5py
 import ctypes
+import copy
 
 def compute_image_grid(
     Coordinates,Masses,Quantity,
@@ -29,6 +30,7 @@ def compute_image_grid(
     edgeon=0,
     h5prefix='',
     take_log_of_quantity=True,
+    Hsml = None,
     **kwargs):
     if edgeon==1:
         raise Exception("Unimplemented edgeon!")
@@ -54,6 +56,11 @@ def compute_image_grid(
     pos = Coordinates[ind_box].astype(np.float32)
     mass = Masses[ind_box].astype(np.float32)
     quantity = Quantity[ind_box].astype(np.float32)
+    frame_center = frame_center.astype(np.float32)
+    if Hsml is None:
+        hsml = Hsml
+    else:
+        hsml = Hsml[ind_box].astype(np.float32)
 
     print('-done')
 
@@ -68,7 +75,8 @@ def compute_image_grid(
 	Zmin,Zmax,
 	npix_x,npix_y,
 	pos,mass,quantity,
-        take_log_of_quantity)
+        take_log_of_quantity,
+        hsml = hsml)
 
     ## write the output to an .hdf5 file
     writeImageGrid(
@@ -88,13 +96,13 @@ def rotateEuler(
     ## if need to rotate at all really -__-
     if theta==0 and phi==0 and psi==0:
         return pos
+    theta=phi=psi=1e-8
     # rotate particles by angle derived from frame number
     theta_rad = np.pi*theta/ 1.8e2
     phi_rad   = np.pi*phi  / 1.8e2
     psi_rad   = np.pi*psi  / 1.8e2
 
     # construct rotation matrix
-    rot_matrix      = new_matrix(3,3)
     print('theta = ',theta_rad)
     print('phi   = ',phi_rad)
     print('psi   = ',psi_rad)
@@ -110,17 +118,81 @@ def rotateEuler(
 	[np.sin(theta_rad)*np.sin(psi_rad) - np.cos(theta_rad)*np.sin(phi_rad)*np.cos(psi_rad),#zx
 	    np.sin(theta_rad)*np.cos(psi_rad) - np.cos(theta_rad)*np.sin(phi_rad)*np.sin(psi_rad),#zy
 	    np.cos(theta_rad)*np.cos(phi_rad)]#zz
-	])
+	]).astype(np.float32)
 	    
-    ## translate the particles so we are rotating about the center of our frame
-    pos-=frame_center
 
-    ## rotate each of the vectors in the pos array
-    pos = np.dot(rot_matrix,pos.T).T
+    ## rotate each of the vectors in the pos array about the frame center
+    pos_rot = np.dot(rot_matrix,(pos-frame_center).T).T
 
     # translate particles back
-    pos+=frame_center
+    pos_rot+=frame_center
     
+
+    assert np.allclose(pos,pos_rot)
+    print "the arrays are identical"
+    return pos
+    return pos_rot.astype(np.float32)
+
+def rotateEuler(theta,phi,psi,pos,frame_center):
+    def new_matrix(m,n):
+        # Create zero matrix
+        matrix = [[0 for row in range(n)] for col in range(m)]
+        return matrix
+
+    pos-=frame_center
+    ## if need to rotate at all really -__-
+    if theta==0 and phi==0 and psi==0:
+        return pos
+    # rotate particles by angle derived from frame number
+    pi        = 3.14159265e0
+    theta_rad = pi*theta/ 1.8e2
+    phi_rad   = pi*phi  / 1.8e2
+    psi_rad   = pi*psi  / 1.8e2
+
+    # construct rotation matrix
+    rot_matrix      = new_matrix(3,3)
+    #print 'theta = ',theta_rad
+    #print 'phi   = ',phi_rad
+    #print 'psi   = ',psi_rad
+    rot_matrix[0][0] =  np.cos(phi_rad)*np.cos(psi_rad)
+    rot_matrix[0][1] = -np.cos(phi_rad)*np.sin(psi_rad)
+    rot_matrix[0][2] =  np.sin(phi_rad)
+    rot_matrix[1][0] =  np.cos(theta_rad)*np.sin(psi_rad) + np.sin(theta_rad)*np.sin(phi_rad)*np.cos(psi_rad)
+    rot_matrix[1][1] =  np.cos(theta_rad)*np.cos(psi_rad) - np.sin(theta_rad)*np.sin(phi_rad)*np.sin(psi_rad)
+    rot_matrix[1][2] = -np.sin(theta_rad)*np.cos(phi_rad)
+    rot_matrix[2][0] =  np.sin(theta_rad)*np.sin(psi_rad) - np.cos(theta_rad)*np.sin(phi_rad)*np.cos(psi_rad)
+    rot_matrix[2][1] =  np.sin(theta_rad)*np.cos(psi_rad) - np.cos(theta_rad)*np.sin(phi_rad)*np.sin(psi_rad)
+    rot_matrix[2][2] =  np.cos(theta_rad)*np.cos(phi_rad)
+    #print rot_matrix
+
+    ## this needs to be done before passing to rotateeuler
+    # translate particles so centre = origin
+    #pos[:,0] -= (Xmin + (L_x/2.))
+    #pos[:,1] -= (Ymin + (L_y/2.))
+    #pos[:,2] -= (Zmin + (L_z/2.))
+
+    ## global variable inside real render 
+    n_box = pos.shape[0]
+
+    # rotate about each axis with a matrix operation
+    pos_rot = np.ndarray((n_box, 3), dtype=np.float32)
+    for ipart in range(n_box):
+        pos_matrix = new_matrix(3,1)
+        pos_matrix[0][0] = pos[ipart,0]
+        pos_matrix[1][0] = pos[ipart,1]
+        pos_matrix[2][0] = pos[ipart,2]
+        rotated = np.matmul(rot_matrix,pos_matrix)
+        pos_rot[ipart,0] = rotated[0][0]
+        pos_rot[ipart,1] = rotated[1][0]
+        pos_rot[ipart,2] = rotated[2][0]
+    
+    ## occurs outside rotateeuler
+    # translate particles back
+    #pos[:,0] += (Xmin + (L_x/2.))
+    #pos[:,1] += (Ymin + (L_y/2.))
+    #pos[:,2] += (Zmin + (L_z/2.))
+    
+    pos_rot+=frame_center
     return pos_rot
     
 def getImageGrid(
@@ -130,7 +202,8 @@ def getImageGrid(
     Zmin,Zmax,
     npix_x,npix_y,
     pos,mass,quantity,
-    take_log_of_quantity):
+    take_log_of_quantity,
+    hsml=None):
 
     ## set c-routine variables
     desngb   = 32
@@ -141,6 +214,7 @@ def getImageGrid(
     Hmax     = 0.5*(Xmax-Xmin)
 
     n_smooth = pos.shape[0]
+    print(type(n_smooth),'nsmooth')
 
     ## output array for sum along the line of sight
     totalMassMap = np.zeros(shape = (npix_x,npix_y),dtype=np.float32)
@@ -149,7 +223,10 @@ def getImageGrid(
     massWeightedQuantityMap = np.zeros(shape = (npix_x,npix_y),dtype=np.float32)
     
     ## create hsml output array
-    hsml = np.zeros(mass.shape[0])
+    if hsml is None:
+        hsml = np.zeros(mass.shape[0],dtype=np.float32)
+    else:
+        print("Using provided smoothing lengths")
     
     c_f_p      = ctypes.POINTER(ctypes.c_float)
     pos_p      = pos.ctypes.data_as(c_f_p)
@@ -163,32 +240,44 @@ def getImageGrid(
     curpath = os.path.realpath(__file__)
     curpath = curpath[:len("utils")+curpath.index("utils")] #split off this filename
     c_obj = ctypes.CDLL(os.path.join(curpath,'gas_utils','HsmlAndProject_cubicSpline/HsmlAndProject.so'))
-    
-   #print(n_smooth)
-   #print(pos_p)
-   #print(hsml_p)
-   #print(mass_p)
-   #print(quantity_p)
-   #print(Xmin,Xmax)
-   #print(Ymin,Ymax)
-   #print(Zmin,Zmax)
-   #print(npix_x,npix_y)
-   #print(desngb)
-   #print(Axis1,Axis2,Axis3)
-   #print(Hmax,BoxSize)
+
+    Xmin = pos[:,0].min()
+    Xmax = pos[:,0].max()
+
+    Ymin = pos[:,1].min()
+    Ymax = pos[:,1].max()
+
+    Zmin = pos[:,2].min()
+    Zmax = pos[:,2].max()
+    print(type(Xmin),type(Xmax),type(Ymin),type(Ymax),type(Zmin),type(Zmax))
+
+    #print(n_smooth)
+    #print(pos_p)
+    #print(hsml_p)
+    #print(mass_p)
+    #print(quantity_p)
+    #print(Xmin,Xmax)
+    #print(Ymin,Ymax)
+    #print(Zmin,Zmax)
+    #print(npix_x,npix_y)
+    #print(desngb)
+    #print(Axis1,Axis2,Axis3)
+    #print(Hmax,BoxSize)
+    print(pos,type(pos),type(pos[0]),type(pos[0][0]),np.shape(pos))
 
     c_obj.findHsmlAndProject(
 	ctypes.c_int(n_smooth), ## number of particles
 	pos_p,hsml_p,mass_p,quantity_p, ## position, mass, and "quantity" of particles
-        ctypes.c_float(Xmin),ctypes.c_float(Xmax), ## xmin/xmax
-	ctypes.c_float(Ymin),ctypes.c_float(Ymax), ## ymin/ymax
-	ctypes.c_float(Zmin),ctypes.c_float(Zmax), ## zmin/zmax
+        ctypes.c_float(Xmin.astype(np.float32)),ctypes.c_float(Xmax.astype(np.float32)), ## xmin/xmax
+	ctypes.c_float(Ymin.astype(np.float32)),ctypes.c_float(Ymax.astype(np.float32)), ## ymin/ymax
+	ctypes.c_float(Zmin.astype(np.float32)),ctypes.c_float(Zmax.astype(np.float32)), ## zmin/zmax
         ctypes.c_int(npix_x),ctypes.c_int(npix_y), ## npixels
 	ctypes.c_int(desngb), ## neighbor depth
         ctypes.c_int(Axis1),ctypes.c_int(Axis2),ctypes.c_int(Axis3), ## axes...?
 	ctypes.c_float(Hmax),ctypes.c_double(BoxSize), ## maximum smoothing length and size of box
 	w_f_p,q_f_p) ## pointers to output cell-mass and cell-mass-weighted-quantity
     print('------------------------------------------')
+    print(pos,type(pos),type(pos[0]),type(pos[0][0]),np.shape(pos))
 
     # normalise by area to get SFC density (column density)
     ## NOTE does the image HAVE to be square? should look at the C routine
