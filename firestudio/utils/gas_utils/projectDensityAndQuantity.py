@@ -241,16 +241,6 @@ def getImageGrid(
     curpath = curpath[:len("utils")+curpath.index("utils")] #split off this filename
     c_obj = ctypes.CDLL(os.path.join(curpath,'gas_utils','HsmlAndProject_cubicSpline/HsmlAndProject.so'))
 
-    Xmin = pos[:,0].min()
-    Xmax = pos[:,0].max()
-
-    Ymin = pos[:,1].min()
-    Ymax = pos[:,1].max()
-
-    Zmin = pos[:,2].min()
-    Zmax = pos[:,2].max()
-    print(type(Xmin),type(Xmax),type(Ymin),type(Ymax),type(Zmin),type(Zmax))
-
     #print(n_smooth)
     #print(pos_p)
     #print(hsml_p)
