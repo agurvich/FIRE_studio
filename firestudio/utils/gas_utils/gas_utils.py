@@ -139,8 +139,7 @@ def addPrettyGalaxyToAx(
         use_colorbar=False - flag for whether to plot a colorbar at all
         cbar_label=None - string that shows up next to colorbar, good for specifying 
             units, otherwise will default to just quantity_name.title()
-        take_log_of_quantity=True - should we save the log of the quantity being plotted
-            to the intermediate hdf5 file (to be subsequently plotted?)
+        take_log_of_quantity=True - should we plot the log of the resulting quantity map?
     """
 
     print('Drawing %s:%d'%(snapdir,snapnum)+' to:%s'%datadir)

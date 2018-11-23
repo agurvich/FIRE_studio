@@ -17,14 +17,11 @@ def compute_image_grid(
     theta=0,phi=0,psi=0,
     aspect_ratio = 1,
     pixels=1200,
-    edgeon=0,
     h5prefix='',
     take_log_of_quantity=True,
     Hsml = None,
     overwrite=0,
     **kwargs):
-    if edgeon==1:
-        raise Exception("Unimplemented edgeon!")
 
     print("extra kwargs in compute_den:",kwargs.keys())
     print(' rotation = (',theta,',',phi,',',psi,')')

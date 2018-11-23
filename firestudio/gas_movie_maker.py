@@ -3,10 +3,12 @@ import os,sys,getopt
 import copy
 
 
+
 import matplotlib 
 matplotlib.use('Agg') 
 
 import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
 
 from firestudio.utils.gas_utils.gas_utils import addPrettyGalaxyToAx
 
@@ -23,6 +25,7 @@ def renderGalaxy(
     datadir=None,
     extract_galaxy=0,
     overwrite=0,
+    edgeon = 0,
     **kwargs):
     """
     Input:
@@ -83,8 +86,7 @@ def renderGalaxy(
         use_colorbar=False - flag for whether to plot a colorbar at all
         cbar_label=None - string that shows up next to colorbar, good for specifying 
             units, otherwise will default to just quantity_name.title()
-        take_log_of_quantity=True - should we save the log of the quantity being plotted
-            to the intermediate hdf5 file (to be subsequently plotted?)
+        take_log_of_quantity=True - should we plot the log of the resulting quantity map?
     """
 
     ## default value for pixels, handled this way so we don't have to pass it around
@@ -94,6 +96,16 @@ def renderGalaxy(
     ## copy the dictionary so we don't mess anything up 
     copydict = copy.copy(kwargs)
     print(list(copydict.keys()),'keys passed to FIRE_studio')
+    if edgeon:
+        print("Drawing an edgeon view, rotating theta = 90")
+        if 'theta' in copydict:
+            copydict['theta']+=90
+        else:
+            copydict['theta']=90
+        if 'aspect_ratio' in copydict:
+            copydict['aspect_ratio']*=0.5
+        else:
+            copydict['aspect_ratio']=0.5
 
     ## pass along input to next routines through copydict
     copydict['overwrite']=overwrite
@@ -106,7 +118,6 @@ def renderGalaxy(
     ## pass a dummy frame_center if not given one
     if 'frame_center' not in copydict:
         copydict['frame_center']=np.zeros(3)
-
 
     try:
         ## if we're being told to overwrite we shouldn't use the previous intermediate files
@@ -128,8 +139,8 @@ def renderGalaxy(
             **copydict)
 
     ## set the figure size appropriately, extended for the edgeon view
-    if 'edgeon' in kwargs and kwargs['edgeon']:
-        ax.get_figure().set_size_inches(6,8)
+    if edgeon:
+        ax.get_figure().set_size_inches(6,9)
     else:
         ax.get_figure().set_size_inches(6,6)
 
@@ -203,25 +214,63 @@ def addSnapKeys(
         mydict['Hsml']=snapdict['SmoothingLength']
     return mydict
 
-def multiProcRender(snapnum):
-    ax = plt.gca()
-    renderGalaxy(ax,glob_snapdir,snapnum,**glob_kwargs)
-    plt.clf()
+def renderWrapper(snapnum):
+    if glob_edgeon:
+        fig = plt.figure()
+        gs = gridspec.GridSpec(3,1)
+
+        axs = [
+            fig.add_subplot(gs[0:2,0]),
+            fig.add_subplot(gs[2:3,0])
+        ]
+
+        gs.update(wspace=0,hspace=-0.1) ## NOTE why doesn't hspace = 0 work???
+
+        ## make a copy so we can change stuff without messing up other threads
+        kwargs = copy.copy(glob_kwargs)
+
+        ## do the face on view
+        renderGalaxy(
+            axs[0],
+            glob_snapdir,
+            snapnum,
+            scale_bar=0,
+            **kwargs)
+
+        if 'figure_label' in kwargs:
+            kwargs.pop('figure_label')
+        ## do the edge on view
+        renderGalaxy(
+            axs[1],
+            glob_snapdir,snapnum,
+            edgeon=True,
+            figure_label=None,
+            **kwargs)
+
+        ## clean up after ourselves
+        del kwargs
+
+        plt.close(fig)
+
+    else:
+        ax = plt.gca()
+        renderGalaxy(ax,glob_snapdir,snapnum,**glob_kwargs)
+        plt.clf()
     
-def main(snapdir,snapstart,snapmax,**kwargs):
+def main(snapdir,snapstart,snapmax,edgeon=0,**kwargs):
+    global glob_kwargs,glob_snapdir,glob_edgeon
+    glob_kwargs = kwargs
+    glob_snapdir = snapdir
+    glob_edgeon = edgeon
+        
     if 'multiproc' in kwargs and kwargs['multiproc']:
         ## map a wrapper to a pool of processes
-        global glob_kwargs,glob_snapdir
-        glob_kwargs = kwargs
-        glob_snapdir=snapdir
         my_pool = multiprocessing.Pool(int(kwargs['multiproc']))
-        my_pool.map(multiProcRender,range(snapstart,snapmax))
+        my_pool.map(renderWrapper,range(snapstart,snapmax))
     else:
         ## just do a for loop
         for snapnum in range(snapstart,snapmax+1):
-            ax = plt.gca()
-            renderGalaxy(ax,snapdir,snapnum,**kwargs)
-            plt.clf()       
+            renderWrapper(snapnum)
 
 if __name__=='__main__':
     argv = sys.argv[1:]
@@ -265,6 +314,12 @@ if __name__=='__main__':
     #--extract_galaxy=False : flag to use abg_python.cosmoExtractor to extract main halo
     #--ahf_path : path relative to snapdir where the halo files are stored
     #--figure_label: text to put in the upper right hand corner
+
+    #--cmap : string of colormap name to use
+    #--single_image : string of quantity name that you want to make a one-color mass weighted map of
+    #--use_colorbar : flag to create a colorbar
+    #--cbar_label :  flag to label the colorbar
+    #--take_log_of_quantity : flag to take the log of the quantity you are making a map of
 
     #--overwrite: flag to  overwrite the cached projection if it exists
 
