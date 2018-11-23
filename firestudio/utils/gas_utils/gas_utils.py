@@ -38,9 +38,6 @@ def checkProjectionFile(
             for group in handle.keys():
                 this_group = handle[group]
                 flag = True
-                print(this_group['aspect_ratio'].value,aspect_ratio)
-                key,variable = 'aspect_ratio',aspect_ratio
-                print(np.round(this_group[key].value,decimals=2) , np.round(variable,decimals=2))
                 for key,variable in zip(
                     ['npix_x','frame_half_width','frame_depth',
                     'frame_center','theta','phi','psi','aspect_ratio'],
@@ -57,8 +54,6 @@ def checkProjectionFile(
                         flag = flag and this_group[key].value == variable
                 ## found the one we wanted
                 if flag:
-                    ## TODO remove this lol
-                    return 0 
                     return 1 
         return 0 
     except IOError:
