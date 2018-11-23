@@ -27,13 +27,12 @@ def plot_image_grid(
     single_image=None,
     use_colorbar=False,
     cbar_label=None,
+    aspect_ratio=1,
     **kwargs): 
 
     print("extra kwargs in plot_2color_image:",list(kwargs.keys()))
 
     ## Set parameters
-    npix_x   = pixels  
-    npix_y   = pixels  
     image_length =2*frame_half_width # kpc
     scale_label_position = 0.06 
 
@@ -55,10 +54,18 @@ def plot_image_grid(
 
     ## uniquely identify this projection setup
     this_setup_id = (
-	"npix%d_width%.2fkpc_depth%.2fkpc_x%.2f_y%.2f_z%.2f_theta%.2f_phi%.2f_psi%.2f"%(
-	    npix_x, 2*frame_half_width,frame_depth,
-	    frame_center[0],frame_center[1],frame_center[2],
-	    theta,phi,psi)
+	"npix%d_width%.2fkpc_depth%.2fkpc_x%.2f_y%.2f_z%.2f_theta%.2f_phi%.2f_psi%.2f_aspect%.2f"%(
+	    pixels, 
+            np.round(2*frame_half_width,decimals=2),
+            np.round(frame_depth,decimals=2),
+	    np.round(frame_center[0],decimals=2),
+            np.round(frame_center[1],decimals=2),
+            np.round(frame_center[2],decimals=2),
+	    np.round(theta,decimals=2),
+            np.round(phi,decimals=2),
+            np.round(psi,decimals=2),
+            np.round(aspect_ratio,decimals=2)
+            )
 	if this_setup_id is None else this_setup_id)
 
     ## read in the column density and quantity maps
@@ -68,8 +75,21 @@ def plot_image_grid(
         columnDensityMap = np.array(this_group['columnDensityMap'])
         massWeightedQuantityMap = np.array(this_group['massWeighted%sMap'%quantity_name.title()])
 
-    Xmin,Ymin = -frame_half_width+frame_center[:2]
-    Xmax,Ymax = frame_half_width+frame_center[:2]
+
+    ## calculate edges of the frame
+    Xmin,Xmax = frame_center[0] + np.array([-frame_half_width,frame_half_width])
+    Ymin,Ymax = frame_center[1] + np.array([-frame_half_width,frame_half_width])*aspect_ratio
+    Zmin,Zmax = frame_center[2] + np.array([-frame_depth,frame_depth])
+
+    ## Set image size 
+    npix_x   = pixels #1200 by default
+    npix_y   = int(pixels*aspect_ratio) #1200 by default
+
+    try:
+        assert columnDensityMap.shape == (npix_x,npix_y)
+    except:
+        raise ValueError("Map (%d,%d) is not the correct shape (%d,%d)"%
+            (columnDensityMap.shape[0],columnDensityMap.shape[1],npix_x,npix_y))
         
     print('Image range (rho): ',np.max(columnDensityMap),np.max(columnDensityMap))
     columnDensityMap = columnDensityMap - min_den 
@@ -133,7 +153,9 @@ def plot_image_grid(
     imgplot = ax.imshow(
 	final_image, 
         extent = (Xmin,Xmax,Ymin,Ymax),
-	origin = 'lower', aspect = 'auto')
+	origin = 'lower')
+    ax.set_aspect(1)
+    print(aspect_ratio,Xmin,Xmax,Ymin,Ymax,npix_x,npix_y)
 
     ## handle any text additions
     fontsize=8 if fontsize is None else fontsize 

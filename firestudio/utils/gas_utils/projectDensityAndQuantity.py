@@ -31,6 +31,7 @@ def compute_image_grid(
     h5prefix='',
     take_log_of_quantity=True,
     Hsml = None,
+    aspect_ratio = 1,
     **kwargs):
     if edgeon==1:
         raise Exception("Unimplemented edgeon!")
@@ -38,14 +39,15 @@ def compute_image_grid(
     print("extra kwargs in compute_den:",kwargs.keys())
     print(' rotation = (',theta,',',phi,',',psi,')')
 
+    ## calculate edges of the frame
+    Xmin,Xmax = frame_center[0] + np.array([-frame_half_width,frame_half_width])
+    Ymin,Ymax = frame_center[1] + np.array([-frame_half_width,frame_half_width])*aspect_ratio
+    Zmin,Zmax = frame_center[2] + np.array([-frame_depth,frame_depth])
+
     ## Set image size 
     npix_x   = pixels #1200 by default
-    npix_y   = pixels #1200 by default
+    npix_y   = int(pixels*aspect_ratio) #1200 by default
 
-    ## calculate edges of the frame
-    Xmin,Ymin = -frame_half_width + frame_center[:2]
-    Xmax,Ymax = frame_half_width + frame_center[:2]
-    Zmin,Zmax = -frame_depth+frame_center[2],frame_depth+frame_center[2]
 
     ## extract a cube of particles that are in relevant area
     print('extracting cube')
@@ -84,9 +86,10 @@ def compute_image_grid(
         projection_dir,
 	columnDensityMap,
 	massWeightedQuantityMap, quantity_name,
-        npix_x,frame_half_width,frame_depth,
+        pixels,frame_half_width,frame_depth,
 	frame_center,
 	theta,phi,psi,
+        aspect_ratio,
 	h5prefix=h5prefix)
 
 def rotateEuler(
@@ -303,6 +306,7 @@ def writeImageGrid(
     npix_x,frame_half_width,frame_depth,
     frame_center,
     theta,phi,psi,
+    aspect_ratio,
     h5prefix='',
     this_setup_id=None):
 
@@ -314,10 +318,18 @@ def writeImageGrid(
     ## let the user give it a
     ##	custom name through kwargs later on TODO
     this_setup_id = (
-	"npix%d_width%.2fkpc_depth%.2fkpc_x%.2f_y%.2f_z%.2f_theta%.2f_phi%.2f_psi%.2f"%(
-	    npix_x, 2*frame_half_width,frame_depth,
-	    frame_center[0],frame_center[1],frame_center[2],
-	    theta,phi,psi)
+	"npix%d_width%.2fkpc_depth%.2fkpc_x%.2f_y%.2f_z%.2f_theta%.2f_phi%.2f_psi%.2f_aspect%.2f"%(
+	    npix_x, 
+            np.round(2*frame_half_width,decimals=2),
+            np.round(frame_depth,decimals=2),
+	    np.round(frame_center[0],decimals=2),
+            np.round(frame_center[1],decimals=2),
+            np.round(frame_center[2],decimals=2),
+	    np.round(theta,decimals=2),
+            np.round(phi,decimals=2),
+            np.round(psi,decimals=2),
+            np.round(aspect_ratio,decimals=2)
+            )
 	if this_setup_id is None else this_setup_id)
 
     with h5py.File(h5name, "a") as h5file:
@@ -335,6 +347,7 @@ def writeImageGrid(
             this_group['theta']=theta
             this_group['phi']=phi
             this_group['psi']=psi
+            this_group['aspect_ratio']=aspect_ratio
             ## TODO should I put in metadata that allows you to recreate
             ##  frames without access to the relevant snapshots?
             ##  e.g. current time/redshift

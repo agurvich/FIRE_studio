@@ -31,15 +31,21 @@ def checkProjectionFile(
     pixels, frame_half_width,frame_depth,
     frame_center,
     theta=0,phi=0,psi=0,
+    aspect_ratio=1,
     **kwargs):
     try:
         with h5py.File(projection_file,'r') as handle:
             for group in handle.keys():
                 this_group = handle[group]
                 flag = True
+                print(this_group['aspect_ratio'].value,aspect_ratio)
+                key,variable = 'aspect_ratio',aspect_ratio
+                print(np.round(this_group[key].value,decimals=2) , np.round(variable,decimals=2))
                 for key,variable in zip(
-                    ['npix_x','frame_half_width','frame_depth','frame_center','theta','phi','psi'],
-                    [ pixels , frame_half_width , frame_depth , frame_center , theta , phi , psi ]):
+                    ['npix_x','frame_half_width','frame_depth',
+                    'frame_center','theta','phi','psi','aspect_ratio'],
+                    [ pixels , frame_half_width , frame_depth ,
+                     frame_center , theta , phi , psi , aspect_ratio ]):
 
                     ## read the value in the hdf5 file and compare to variable
                     if key not in ['npix_x']:
@@ -49,8 +55,7 @@ def checkProjectionFile(
                     else:
                         ## key is an integer
                         flag = flag and this_group[key].value == variable
-
-				## found the one we wanted
+                ## found the one we wanted
                 if flag:
                     return 1 
         return 0 
