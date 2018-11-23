@@ -57,6 +57,8 @@ def checkProjectionFile(
                         flag = flag and this_group[key].value == variable
                 ## found the one we wanted
                 if flag:
+                    ## TODO remove this lol
+                    return 0 
                     return 1 
         return 0 
     except IOError:

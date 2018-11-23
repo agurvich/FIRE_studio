@@ -92,56 +92,7 @@ def compute_image_grid(
         aspect_ratio,
 	h5prefix=h5prefix)
 
-def rotateEuler(
-    theta,phi,psi,
-    pos,frame_center):
-
-    ## if need to rotate at all really -__-
-    if theta==0 and phi==0 and psi==0:
-        return pos
-    theta=phi=psi=1e-8
-    # rotate particles by angle derived from frame number
-    theta_rad = np.pi*theta/ 1.8e2
-    phi_rad   = np.pi*phi  / 1.8e2
-    psi_rad   = np.pi*psi  / 1.8e2
-
-    # construct rotation matrix
-    print('theta = ',theta_rad)
-    print('phi   = ',phi_rad)
-    print('psi   = ',psi_rad)
-
-    ## explicitly define the euler rotation matrix 
-    rot_matrix = np.array([
-	[np.cos(phi_rad)*np.cos(psi_rad), #xx
-	    -np.cos(phi_rad)*np.sin(psi_rad), #xy
-	    np.sin(phi_rad)], #xz
-	[np.cos(theta_rad)*np.sin(psi_rad) + np.sin(theta_rad)*np.sin(phi_rad)*np.cos(psi_rad),#yx
-	    np.cos(theta_rad)*np.cos(psi_rad) - np.sin(theta_rad)*np.sin(phi_rad)*np.sin(psi_rad),#yy
-	    -np.sin(theta_rad)*np.cos(phi_rad)],#yz
-	[np.sin(theta_rad)*np.sin(psi_rad) - np.cos(theta_rad)*np.sin(phi_rad)*np.cos(psi_rad),#zx
-	    np.sin(theta_rad)*np.cos(psi_rad) - np.cos(theta_rad)*np.sin(phi_rad)*np.sin(psi_rad),#zy
-	    np.cos(theta_rad)*np.cos(phi_rad)]#zz
-	]).astype(np.float32)
-	    
-
-    ## rotate each of the vectors in the pos array about the frame center
-    pos_rot = np.dot(rot_matrix,(pos-frame_center).T).T
-
-    # translate particles back
-    pos_rot+=frame_center
-    
-
-    assert np.allclose(pos,pos_rot)
-    print "the arrays are identical"
-    return pos
-    return pos_rot.astype(np.float32)
-
 def rotateEuler(theta,phi,psi,pos,frame_center):
-    def new_matrix(m,n):
-        # Create zero matrix
-        matrix = [[0 for row in range(n)] for col in range(m)]
-        return matrix
-
     pos-=frame_center
     ## if need to rotate at all really -__-
     if theta==0 and phi==0 and psi==0:
@@ -153,50 +104,34 @@ def rotateEuler(theta,phi,psi,pos,frame_center):
     psi_rad   = pi*psi  / 1.8e2
 
     # construct rotation matrix
-    rot_matrix      = new_matrix(3,3)
-    #print 'theta = ',theta_rad
-    #print 'phi   = ',phi_rad
-    #print 'psi   = ',psi_rad
-    rot_matrix[0][0] =  np.cos(phi_rad)*np.cos(psi_rad)
-    rot_matrix[0][1] = -np.cos(phi_rad)*np.sin(psi_rad)
-    rot_matrix[0][2] =  np.sin(phi_rad)
-    rot_matrix[1][0] =  np.cos(theta_rad)*np.sin(psi_rad) + np.sin(theta_rad)*np.sin(phi_rad)*np.cos(psi_rad)
-    rot_matrix[1][1] =  np.cos(theta_rad)*np.cos(psi_rad) - np.sin(theta_rad)*np.sin(phi_rad)*np.sin(psi_rad)
-    rot_matrix[1][2] = -np.sin(theta_rad)*np.cos(phi_rad)
-    rot_matrix[2][0] =  np.sin(theta_rad)*np.sin(psi_rad) - np.cos(theta_rad)*np.sin(phi_rad)*np.cos(psi_rad)
-    rot_matrix[2][1] =  np.sin(theta_rad)*np.cos(psi_rad) - np.cos(theta_rad)*np.sin(phi_rad)*np.sin(psi_rad)
-    rot_matrix[2][2] =  np.cos(theta_rad)*np.cos(phi_rad)
-    #print rot_matrix
+    rot_matrix = np.array([
+	[np.cos(phi_rad)*np.cos(psi_rad), #xx
+	    -np.cos(phi_rad)*np.sin(psi_rad), #xy
+	    np.sin(phi_rad)], #xz
+	[np.cos(theta_rad)*np.sin(psi_rad) + np.sin(theta_rad)*np.sin(phi_rad)*np.cos(psi_rad),#yx
+	    np.cos(theta_rad)*np.cos(psi_rad) - np.sin(theta_rad)*np.sin(phi_rad)*np.sin(psi_rad),#yy
+	    -np.sin(theta_rad)*np.cos(phi_rad)],#yz
+	[np.sin(theta_rad)*np.sin(psi_rad) - np.cos(theta_rad)*np.sin(phi_rad)*np.cos(psi_rad),#zx
+	    np.sin(theta_rad)*np.cos(psi_rad) - np.cos(theta_rad)*np.sin(phi_rad)*np.sin(psi_rad),#zy
+	    np.cos(theta_rad)*np.cos(phi_rad)]#zz
+	]).astype(np.float32)
 
-    ## this needs to be done before passing to rotateeuler
-    # translate particles so centre = origin
-    #pos[:,0] -= (Xmin + (L_x/2.))
-    #pos[:,1] -= (Ymin + (L_y/2.))
-    #pos[:,2] -= (Zmin + (L_z/2.))
-
-    ## global variable inside real render 
     n_box = pos.shape[0]
 
-    # rotate about each axis with a matrix operation
-    pos_rot = np.ndarray((n_box, 3), dtype=np.float32)
-    for ipart in range(n_box):
-        pos_matrix = new_matrix(3,1)
-        pos_matrix[0][0] = pos[ipart,0]
-        pos_matrix[1][0] = pos[ipart,1]
-        pos_matrix[2][0] = pos[ipart,2]
-        rotated = np.matmul(rot_matrix,pos_matrix)
-        pos_rot[ipart,0] = rotated[0][0]
-        pos_rot[ipart,1] = rotated[1][0]
-        pos_rot[ipart,2] = rotated[2][0]
+    ## rotate about each axis with a matrix operation
+    pos_rot = np.matmul(rot_matrix,pos.T).T
+
+    ## on 11/23/2018 (the day after thanksgiving) I discovered that 
+    ##  numpy will change to column major order or something if you
+    ##  take the transpose of a transpose, as above. Try commenting out
+    ##  this line and see what garbage you get. ridiculous.
+    pos_rot = np.array(pos_rot,order='C')
     
-    ## occurs outside rotateeuler
-    # translate particles back
-    #pos[:,0] += (Xmin + (L_x/2.))
-    #pos[:,1] += (Ymin + (L_y/2.))
-    #pos[:,2] += (Zmin + (L_z/2.))
-    
+    ## add the frame_center back
     pos_rot+=frame_center
-    return pos_rot
+
+    ## can never be too careful that we're float32
+    return pos_rot.astype(np.float32)
     
 def getImageGrid(
     BoxSize,
@@ -217,7 +152,6 @@ def getImageGrid(
     Hmax     = 0.5*(Xmax-Xmin)
 
     n_smooth = pos.shape[0]
-    print(type(n_smooth),'nsmooth')
 
     ## output array for sum along the line of sight
     totalMassMap = np.zeros(shape = (npix_x,npix_y),dtype=np.float32)
@@ -256,7 +190,6 @@ def getImageGrid(
     #print(desngb)
     #print(Axis1,Axis2,Axis3)
     #print(Hmax,BoxSize)
-    print(pos,type(pos),type(pos[0]),type(pos[0][0]),np.shape(pos))
 
     c_obj.findHsmlAndProject(
 	ctypes.c_int(n_smooth), ## number of particles
@@ -270,7 +203,6 @@ def getImageGrid(
 	ctypes.c_float(Hmax),ctypes.c_double(BoxSize), ## maximum smoothing length and size of box
 	w_f_p,q_f_p) ## pointers to output cell-mass and cell-mass-weighted-quantity
     print('------------------------------------------')
-    print(pos,type(pos),type(pos[0]),type(pos[0][0]),np.shape(pos))
 
     # normalise by area to get SFC density (column density)
     ## NOTE does the image HAVE to be square? should look at the C routine
@@ -355,6 +287,13 @@ def writeImageGrid(
         else:
             ## appending another quantity, cool!
             this_group = h5file[this_setup_id]
-            assert "massWeighted%sMap"%quantity_name.title() not in this_group.keys() 
-            ## save this new quantity
-            this_group['massWeighted%sMap'%quantity_name.title()]=massWeightedQuantityMap
+            try:
+                assert "massWeighted%sMap"%quantity_name.title() not in this_group.keys() 
+                ## save this new quantity
+                this_group['massWeighted%sMap'%quantity_name.title()]=massWeightedQuantityMap
+            except:
+                ## ignoring the savefile then...
+                pass
+                
+                
+
