@@ -1,18 +1,7 @@
-#########################################################
-# Ported IDL script for use on the cluster              #
-# For making 2d images of GADGET sims                   #
-# Created 02/04/2010 by RAC                             #
-# Last modified: N/A                                    #
-#########################################################
-
-#!/usr/bin/env python
-
-# Import system and vtk routines
 import os
 import sys
 import string
 import numpy as np 
-#import tables
 import h5py
 import ctypes
 import copy
@@ -26,12 +15,13 @@ def compute_image_grid(
     quantity_name='Temperature',
     this_setup_id = None,
     theta=0,phi=0,psi=0,
+    aspect_ratio = 1,
     pixels=1200,
     edgeon=0,
     h5prefix='',
     take_log_of_quantity=True,
     Hsml = None,
-    aspect_ratio = 1,
+    overwrite=0,
     **kwargs):
     if edgeon==1:
         raise Exception("Unimplemented edgeon!")
@@ -90,7 +80,8 @@ def compute_image_grid(
 	frame_center,
 	theta,phi,psi,
         aspect_ratio,
-	h5prefix=h5prefix)
+	h5prefix=h5prefix,
+        overwrite=overwrite)
 
 def rotateEuler(theta,phi,psi,pos,frame_center):
     pos-=frame_center
@@ -240,7 +231,8 @@ def writeImageGrid(
     theta,phi,psi,
     aspect_ratio,
     h5prefix='',
-    this_setup_id=None):
+    this_setup_id=None,
+    overwrite=0):
 
     ## Write the image grids to HDF5 file 
     h5prefix += "proj_maps_%d.hdf5" % snapnum
@@ -285,15 +277,20 @@ def writeImageGrid(
             ##  e.g. current time/redshift
 
         else:
-            ## appending another quantity, cool!
+            ## appending another quantity, or overwriting a map, cool!
             this_group = h5file[this_setup_id]
-            try:
-                assert "massWeighted%sMap"%quantity_name.title() not in this_group.keys() 
-                ## save this new quantity
-                this_group['massWeighted%sMap'%quantity_name.title()]=massWeightedQuantityMap
-            except:
-                ## ignoring the savefile then...
-                pass
-                
-                
 
+            ## might want to overwrite a quantity map
+            if "massWeighted%sMap"%quantity_name.title() in this_group.keys():
+                if overwrite:
+                    del this_group["massWeighted%sMap"%quantity_name.title()]
+                else:
+                    raise IOError("massWeighted%sMap already exists."%quantity_name.title())
+
+            if overwrite:
+                ## column density map will certainly be in there already
+                del this_group["columnDensityMap"]
+                this_group["columnDensityMap"] = columnDensityMap
+
+            ## save this new quantity
+            this_group["massWeighted%sMap"%quantity_name.title()] = massWeightedQuantityMap

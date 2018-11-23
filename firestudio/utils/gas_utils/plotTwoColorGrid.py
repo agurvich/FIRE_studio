@@ -17,6 +17,7 @@ def plot_image_grid(
     this_setup_id = None,
     pixels=1200,
     theta=0,phi=0,psi=0,
+    aspect_ratio=1,
     cmap='viridis',
     min_den=-1.0,max_den=1.2,
     min_quantity=2,max_quantity=7,
@@ -27,7 +28,6 @@ def plot_image_grid(
     single_image=None,
     use_colorbar=False,
     cbar_label=None,
-    aspect_ratio=1,
     **kwargs): 
 
     print("extra kwargs in plot_2color_image:",list(kwargs.keys()))

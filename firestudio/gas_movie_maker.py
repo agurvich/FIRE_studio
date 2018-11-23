@@ -62,6 +62,7 @@ def renderGalaxy(
         theta=0- euler rotation angle
         phi=0- euler rotation angle
         psi=0 - euler rotation angle
+        aspect_ratio - the 'shape' of the image (y/x)
         pixels=1200 - the resolution of image (pixels x pixels)
         min_den=-0.4 - the minimum of the density color scale
         max_den=1.6 - the maximum of the density color scale
@@ -102,14 +103,15 @@ def renderGalaxy(
         datadir = snapdir
     copydict['datadir']=datadir
 
+    ## pass a dummy frame_center if not given one
+    if 'frame_center' not in copydict:
+        copydict['frame_center']=np.zeros(3)
+
+
     try:
         ## if we're being told to overwrite we shouldn't use the previous intermediate files
         assert not overwrite
         print("Trying to use a previous projection...")
-
-        ## pass a dummy frame_center if not given one
-        if 'frame_center' not in copydict:
-            copydict['frame_center']=np.zeros(3)
 
         ax = addPrettyGalaxyToAx(
             ax,snapdir,snapnum, 
@@ -147,7 +149,6 @@ def renderGalaxy(
             savefig_args['bbox_inches']='tight'
             savefig_args['pad_inches']=0
 
-        pixels = 1200 if 'pixels' not in kwargs else kwargs['pixels'] 
         image_name = "frame_%03d_%dkpc.png" % (snapnum, 2*kwargs['frame_half_width'])
 
         ax.get_figure().savefig(
@@ -197,6 +198,9 @@ def addSnapKeys(
         'Coordinates':Coordinates,'Masses':Masses,'Quantity':Quantity,
         'BoxSize':snapdict['BoxSize'],'frame_center' : frame_center
     }
+
+    if 'SmoothingLength' in snapdict:
+        mydict['Hsml']=snapdict['SmoothingLength']
     return mydict
 
 def multiProcRender(snapnum):
@@ -214,7 +218,7 @@ def main(snapdir,snapstart,snapmax,**kwargs):
         my_pool.map(multiProcRender,range(snapstart,snapmax))
     else:
         ## just do a for loop
-        for snapnum in range(snapstart,snapmax):
+        for snapnum in range(snapstart,snapmax+1):
             ax = plt.gca()
             renderGalaxy(ax,snapdir,snapnum,**kwargs)
             plt.clf()       
@@ -240,6 +244,7 @@ if __name__=='__main__':
         'use_colorbar=', 
         'cbar_label=',
         'take_log_of_quantity=',
+        'overwrite=',
     ])
 
     #options:
@@ -260,6 +265,8 @@ if __name__=='__main__':
     #--extract_galaxy=False : flag to use abg_python.cosmoExtractor to extract main halo
     #--ahf_path : path relative to snapdir where the halo files are stored
     #--figure_label: text to put in the upper right hand corner
+
+    #--overwrite: flag to  overwrite the cached projection if it exists
 
 
     for i,opt in enumerate(opts):

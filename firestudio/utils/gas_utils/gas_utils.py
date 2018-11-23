@@ -117,6 +117,7 @@ def addPrettyGalaxyToAx(
         theta=0- euler rotation angle
         phi=0- euler rotation angle
         psi=0 - euler rotation angle
+        aspect_ratio - the 'shape' of the image (y/x)
         pixels=1200 - the resolution of image (pixels x pixels)
         min_den=-0.4 - the minimum of the density color scale
         max_den=1.6 - the maximum of the density color scale
@@ -155,13 +156,13 @@ def addPrettyGalaxyToAx(
 
     ## check if we've already projected this setup and saved it to intermediate file
     this_setup_in_projection_file = checkProjectionFile(
-	os.path.join(projection_dir,h5name),**kwargs)
+        os.path.join(projection_dir,h5name),**kwargs)
     
-    if overwrite or not this_setup_in_projection_file:
+    if not this_setup_in_projection_file or overwrite:
         ## compute the projections
         projectColumnDensityAndQuantity(
 	    snapdir,snapnum,
-	    projection_dir,**kwargs)
+	    projection_dir,overwrite=overwrite,**kwargs)
 
     print('plotting image grid')
     print(list(kwargs.keys()),'passed to plot_image_grid')
