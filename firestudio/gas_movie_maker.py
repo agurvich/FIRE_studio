@@ -21,7 +21,7 @@ import multiprocessing
 def renderGalaxy(
     ax,
     snapdir,snapnum,
-    savefig=1,noaxis=0,mode='r',
+    savefig=1,noaxis=0,
     datadir=None,
     extract_galaxy=0,
     overwrite=0,
@@ -34,9 +34,7 @@ def renderGalaxy(
         snapnum - snapshot number
 
     Optional:
-        savefig=1 - flag to save figure to datadir (default snapdir, but can be a kwarg)
-        noaxis=0 - flag to turn off axis (1=off 0=on)
-        mode='r' - 'r' for reading from intermediate files, anything else to ignore intermediate files
+
         extract_galaxy=False - flag to use abg_python.cosmoExtractor to extract main halo
 
         overwrite=0 - flag to overwrite the intermediate grid files
@@ -89,172 +87,20 @@ def renderGalaxy(
         take_log_of_quantity=True - should we plot the log of the resulting quantity map?
     """
 
-    ## default value for pixels, handled this way so we don't have to pass it around
-    if 'pixels' not in kwargs:
-        kwargs['pixels']=1200
 
-    ## copy the dictionary so we don't mess anything up 
-    copydict = copy.copy(kwargs)
-    print(list(copydict.keys()),'keys passed to FIRE_studio')
-    if edgeon:
-        print("Drawing an edgeon view, rotating theta = 90")
-        if 'theta' in copydict:
-            copydict['theta']+=90
-        else:
-            copydict['theta']=90
-        if 'aspect_ratio' in copydict:
-            copydict['aspect_ratio']*=0.5
-        else:
-            copydict['aspect_ratio']=0.5
+def renderWrapper(snapnum,image_names):
+    gasStudio = GasStudio(
+        snapdir=glob_snapdir,
+        snapnum=snapnum,
+        **glob_kwargs)
 
-    ## pass along input to next routines through copydict
-    copydict['overwrite']=overwrite
-
-    ## default to snapdir, pass datadir to next routines through copydict
-    if 'datadir' is None:
-        datadir = snapdir
-    copydict['datadir']=datadir
-
-    ## pass a dummy frame_center if not given one
-    if 'frame_center' not in copydict:
-        copydict['frame_center']=np.zeros(3)
-
-    try:
-        ## if we're being told to overwrite we shouldn't use the previous intermediate files
-        assert not overwrite
-        print("Trying to use a previous projection...")
-
-        ax = addPrettyGalaxyToAx(
-            ax,snapdir,snapnum, 
-            **copydict)
-
-    except (IOError,AssertionError,TypeError):
-        print("Failed to use a previous projection")
-        ## unpack the snapshot keys from snapdict or open the snapshot 
-        ##  itself to load data into the copydict
-        copydict.update(addSnapKeys(snapdir,snapnum,extract_galaxy,**copydict))
-    
-        ax = addPrettyGalaxyToAx(
-            ax,snapdir,snapnum,
-            **copydict)
-
-    ## set the figure size appropriately, extended for the edgeon view
-    if edgeon:
-        ax.get_figure().set_size_inches(6,9)
-    else:
-        ax.get_figure().set_size_inches(6,6)
-
-    ## turn off the axis if asked
-    if noaxis:
-        ax.axis('off')
-
-    ## save the figure if asked
-    if savefig:
-        savefig_args={} 
-        if noaxis:
-            ## remove whitespace around the axis, apparently the x/y origin is offset in pixel 
-            ## space and so the bounding box doesn't actually reflect the left/bottom edge of the 
-            ## axis
-            ax.xaxis.set_major_locator(plt.NullLocator())
-            ax.yaxis.set_major_locator(plt.NullLocator())
-            savefig_args['bbox_inches']='tight'
-            savefig_args['pad_inches']=0
-
-        image_name = "frame_%03d_%dkpc.png" % (snapnum, 2*kwargs['frame_half_width'])
-
-        ax.get_figure().savefig(
-            os.path.join(datadir,'Plots','GasTwoColour',image_name),dpi=300,
-            **savefig_args)
-
-    return ax 
-
-def addSnapKeys(
-    snapdir,snapnum,
-    extract_galaxy=False,
-    snapdict=None,
-    frame_center=None,
-    **kwargs):
-    quantity_name = kwargs['quantity_name'] if ('quantity_name' in kwargs) else 'Temperature'
-
-    ## have to go get the snapdict and add it to the copydict
-    if snapdict is not None:
-        pass
-    elif not extract_galaxy:
-        ## isolated galaxy huh? good choice. 
-        ##  don't worry, cosmological will be overwritten in openSnapshot if 
-        ##  HubbleParam != 1, none of the coordinates will be offset
-        ##  and the galaxy won't be rotated or extracted
-        snapdict=openSnapshot(snapdir,snapnum,ptype=0,cosmological=0)
-    else:
-        ## cosmological snapshot it is then... 
-        snapdict=openSnapshot(snapdir,snapnum,ptype=0,cosmological=1)
-        scom,rvir,vesc,rstar_half = load_AHF(
-            snapdir,snapnum,
-            snapdict['Redshift'],
-            ahf_path=kwargs['ahf_path'] if 'ahf_path' in kwargs else None)
-
-        ## filter all the keys in the snapdict as necessary to extract a spherical volume
-        ##  centered on scom (the halo center), using 5*rstar_half  (thanks Zach for galaxy definition)
-        diskFilterDictionary(
-            None,snapdict,
-            radius=rstar_half*5,scom=scom)
-
-    Coordinates = snapdict['Coordinates']
-    Masses = snapdict['Masses']
-
-    ## temperature is computed in openSnapshot
-    Quantity = snapdict[quantity_name]
-
-    mydict = {
-        'Coordinates':Coordinates,'Masses':Masses,'Quantity':Quantity,
-        'BoxSize':snapdict['BoxSize'],'frame_center' : frame_center
-    }
-
-    if 'SmoothingLength' in snapdict:
-        mydict['Hsml']=snapdict['SmoothingLength']
-    return mydict
-
-def renderWrapper(snapnum):
     if glob_edgeon:
-        fig = plt.figure()
-        gs = gridspec.GridSpec(3,1)
-
-        axs = [
-            fig.add_subplot(gs[0:2,0]),
-            fig.add_subplot(gs[2:3,0])
-        ]
-
-        gs.update(wspace=0,hspace=-0.1) ## NOTE why doesn't hspace = 0 work???
-
-        ## make a copy so we can change stuff without messing up other threads
-        kwargs = copy.copy(glob_kwargs)
-
-        ## do the face on view
-        renderGalaxy(
-            axs[0],
-            glob_snapdir,
-            snapnum,
-            scale_bar=0,
-            **kwargs)
-
-        if 'figure_label' in kwargs:
-            kwargs.pop('figure_label')
-        ## do the edge on view
-        renderGalaxy(
-            axs[1],
-            glob_snapdir,snapnum,
-            edgeon=True,
-            figure_label=None,
-            **kwargs)
-
-        ## clean up after ourselves
-        del kwargs
-
-        plt.close(fig)
-
+        gasStudio.renderFaceAppendEdgeViews(image_names)
     else:
         ax = plt.gca()
-        renderGalaxy(ax,glob_snapdir,snapnum,**glob_kwargs)
+        ## set figure size to square
+        ax.get_figure().set_size_inches(6,6)
+        gasStudio.render(ax,image_names)
         plt.clf()
     
 def main(snapdir,snapstart,snapmax,edgeon=0,**kwargs):
@@ -274,7 +120,7 @@ def main(snapdir,snapstart,snapmax,edgeon=0,**kwargs):
 
 if __name__=='__main__':
     argv = sys.argv[1:]
-    opts,args = getopt.getopt(argv,'rs',[
+    opts,args = getopt.getopt(argv,'',[
         'snapdir=',
         'snapstart=','snapmax=',
         'pixels=','frame_half_width=','frame_depth=',
@@ -297,7 +143,6 @@ if __name__=='__main__':
     ])
 
     #options:
-    # -r/s = use readsnap or use single snapshot loader
     #--snapdir: place where snapshots live
     #--snapstart : which snapshot to start the loop at
     #--snapmax : which snapshot to end the loop at

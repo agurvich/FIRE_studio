@@ -8,7 +8,6 @@ import os,sys,getopt
 
 from firestudio.utils.stellar_utils import raytrace_projection,load_stellar_hsml
 import firestudio.utils.stellar_utils.make_threeband_image as makethreepic
-from firestudio.utils.gas_utils.gas_utils import makeOutputDirectories
 
 from abg_python.all_utils import filterDictionary
 from abg_python.snapshot_utils import openSnapshot
@@ -75,6 +74,7 @@ def raytrace_ugr_attenuation(
         ADD_BASE_METALLICITY=0.001*0.02,ADD_BASE_AGE=0.0003,
         IMF_SALPETER=0,IMF_CHABRIER=1
     )
+
 def make_threeband_image(ax,
     out_r,out_g,out_u,
     maxden = 1e-3, dynrange = 1.001,
@@ -190,8 +190,8 @@ def get_indices(
 def renderStarGalaxy(
     ax,
     snapdir,snapnum,
-    datadir=None,
-    frame_half_width=None,frame_depth=None,
+    datadir,
+    frame_half_width,frame_depth,
     frame_center=np.zeros(3),
     savefig=1,noaxis=0,
     savefile=None,mode='r',overwrite=0,
@@ -241,46 +241,8 @@ def renderStarGalaxy(
         star_snap = kwargs['star_snap']
         snap = kwargs['snap']
     else:
-        try:
-            assert extract_galaxy
-        except:
-            raise Exception("Fullbox render from the command line isn't supported yet!")
-
-        print "Assuming all stars are part type 4, hope this isn't an isolated galaxy!"
-        ## load star particles
-        star_snap = openSnapshot(
-            snapdir,snapnum,4,
-            cosmological=1)
-            #,keys_to_extract=['Coordinates','Masses','AgeGyr','Metallicity','Velocities'])
-
-        ## load gas particles
-        snap = openSnapshot(
-            snapdir,snapnum,0,
-            cosmological=1)
-            #,keys_to_extract=[
-            #   'Coordinates','Masses','Metallicity','Velocities',
-            #   'SmoothingLength','InternalEnergy','ElectronAbundance',
-            #   'Density'])
-
-        ## load the center of the halo
-        scom,rvir,vesc = load_AHF(snapdir,snapnum,snap['Redshift'],
-            ahf_path=kwargs['ahf_path'] if 'ahf_path' in kwargs else None,
-            extra_names_to_read = [])
-
-        ## overwrite star_snap/snap with a subset that contains only within 0.2 rvir
-        ##  of the halo center-- or within a frame_half_width radius, whichever is larger
-        ##  orient_stars = 0 -> find angular momentum vector of gas and make that new z axis
-        radius = 0.2*rvir if frame_half_width is None else np.max([0.2*rvir,frame_half_width]) 
-        snap,star_snap = orientFaceon(star_snap,snap,
-            radius = radius, ## even if frame_half_width is None this works, huh..
-            scom = scom, orient_stars = 0)
-
-
-    ## handle default arguments for the frame now that data is laoded
-    if frame_half_width is None:
-        frame_half_width = 0.2*rvir/2**0.5
-    frame_depth = frame_half_width if frame_depth is None else frame_depth
-
+        snap,star_snap = loadSnapshotData(extract_galaxy,snapdir,snapnum)
+    
     ## now find only the particles within the viewbox
     ##  apply indices to all the arrays in the snapdict
     indices = get_indices(star_snap,frame_center,frame_half_width,frame_depth)
@@ -288,7 +250,9 @@ def renderStarGalaxy(
 
     indices = get_indices(star_snap,frame_center,frame_half_width,frame_depth)
     snap = filterDictionary(snap,indices)
+    image24 = processSnapshots(snap,star_snap,dynrange,maxden)
 
+def processSnapshots(snap,star_snap,dynrange,maxden):
     ## unpack relevant information
     xs,ys,zs = star_snap['Coordinates'].T
     mstar,ages, metals = star_snap['Masses'],star_snap['AgeGyr'],star_snap['Metallicity'][:,0]
@@ -312,6 +276,9 @@ def renderStarGalaxy(
         dynrange=dynrange,
         maxden=maxden)
 
+    return image24
+
+def addScaleBarAndFigureLabel(image24,frame_half_width,fontsize,pixels):
     if 2*frame_half_width > 15 : 
         scale_line_length = 5
         scale_label_text = r"$\mathbf{5 \, \rm{kpc}}$"
@@ -355,6 +322,41 @@ def renderStarGalaxy(
         ax.get_figure().savefig(savename,
             **savefig_args)
         
+    def loadSnapshotData(extract_galaxy,snapdir,snapnum):
+        try:
+            assert extract_galaxy
+        except:
+            raise Exception("Fullbox render from the command line isn't supported yet!")
+
+        print "Assuming all stars are part type 4, hope this isn't an isolated galaxy!"
+        ## load star particles
+        star_snap = openSnapshot(
+            snapdir,snapnum,4,
+            cosmological=1)
+            #,keys_to_extract=['Coordinates','Masses','AgeGyr','Metallicity','Velocities'])
+
+        ## load gas particles
+        snap = openSnapshot(
+            snapdir,snapnum,0,
+            cosmological=1)
+            #,keys_to_extract=[
+            #   'Coordinates','Masses','Metallicity','Velocities',
+            #   'SmoothingLength','InternalEnergy','ElectronAbundance',
+            #   'Density'])
+
+        ## load the center of the halo
+        scom,rvir,vesc = load_AHF(snapdir,snapnum,snap['Redshift'],
+            ahf_path=kwargs['ahf_path'] if 'ahf_path' in kwargs else None,
+            extra_names_to_read = [])
+
+        ## overwrite star_snap/snap with a subset that contains only within 0.2 rvir
+        ##  of the halo center-- or within a frame_half_width radius, whichever is larger
+        ##  orient_stars = 0 -> find angular momentum vector of gas and make that new z axis
+        radius = 0.2*rvir if frame_half_width is None else np.max([0.2*rvir,frame_half_width]) 
+        snap,star_snap = orientFaceon(star_snap,snap,
+            radius = radius, ## even if frame_half_width is None this works, huh..
+            scom = scom, orient_stars = 0)
+    return snap,star_snap
 
 def multiProcRender(snapnum):
     ax = plt.gca()
@@ -390,12 +392,22 @@ if __name__=='__main__':
         'snapstart=','snapmax=',
         'pixels=','frame_half_width=','frame_depth=',
         'theta=','phi=','psi=',
+        'dynrange=',
+        'maxden=',
         'edgeon=',
         'datadir=',
         'noaxis=',
         'multiproc=',
         'extract_galaxy=',
-        'ahf_path='])
+        'ahf_path=',
+        'figure_label=',
+        'cmap=',
+        'single_image=',
+        'use_colorbar=', 
+        'cbar_label=',
+        'take_log_of_quantity=',
+        'overwrite=',
+    ])
 
     #options:
     # -r/s = use readsnap or use single snapshot loader
@@ -407,12 +419,25 @@ if __name__=='__main__':
     #--datadir: place to output frames to
 
     #--theta,phi,psi : euler angles for rotation
-    #TODO--edgeon : flag for sticking a 90 degree edge on rotation underneath 
+
+    #--dynrange : TODO unknown
+    #--maxden : TODO unknown
+
+    #--edgeon : flag for sticking a 90 degree edge on rotation underneath 
     #--pixels : how many pixels in each direction to use, defaults to 1200
     #--noaxis : flag for removing axis and whitespace for just the pretty part
     #--multiproc : how many processes should be run simultaneously, keep in mind memory constraints
     #--extract_galaxy=False : flag to use abg_python.cosmoExtractor to extract main halo
     #--ahf_path : path relative to snapdir where the halo files are stored
+    #--figure_label: text to put in the upper right hand corner
+
+    #--cmap : string of colormap name to use
+    #--single_image : string of quantity name that you want to make a one-color mass weighted map of
+    #--use_colorbar : flag to create a colorbar
+    #--cbar_label :  flag to label the colorbar
+    #--take_log_of_quantity : flag to take the log of the quantity you are making a map of
+
+    #--overwrite: flag to  overwrite the cached projection if it exists
 
 
     for i,opt in enumerate(opts):
@@ -424,7 +449,11 @@ if __name__=='__main__':
                 value= opt[1]
             else:
                 # turn arguments from strings to whatever
-                value = eval(opt[1])
+                try:
+                    value = eval(opt[1])
+                except:
+                    value = opt[1]
             opts[i]=(key,value)
     main(**dict(opts))
+
 
