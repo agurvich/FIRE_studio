@@ -1,30 +1,16 @@
 import numpy as np 
 import os,sys,getopt
 import copy
-
-
-
-import matplotlib 
-matplotlib.use('Agg') 
-
-import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
-
-from firestudio.utils.gas_utils.gas_utils import addPrettyGalaxyToAx
-
-from abg_python.snapshot_utils import openSnapshot
-from abg_python.cosmoExtractor import rotateVectorsZY,diskFilterDictionary
-from abg_python.cosmo_utils import load_AHF
-
 import multiprocessing
+import itertools
+
+from firestudio.studios.gas_studio import GasStudio
 
 def renderGalaxy(
     ax,
     snapdir,snapnum,
-    savefig=1,noaxis=0,
-    datadir=None,
-    extract_galaxy=0,
-    overwrite=0,
+    datadir,
+    frame_half_width,frame_depth,
     edgeon = 0,
     **kwargs):
     """
@@ -32,91 +18,115 @@ def renderGalaxy(
         ax - matplotlib axis object to draw to
         snapdir - location that the snapshots live in
         snapnum - snapshot number
+        datadir - directory to output the the intermediate grid files and output png
 
-    Optional:
-
-        extract_galaxy=False - flag to use abg_python.cosmoExtractor to extract main halo
-
-        overwrite=0 - flag to overwrite the intermediate grid files
-        datadir=None - place to save intermediate files (None -> snapdir)
-
-    Mandatory kwargs to be passed along:
-
-        snapdict=None - snapshot dictionary of gas particles to use,
-            will ignore extract_galaxy if present
-
-            Required elements in snapdict:
-                Coordinates - coordinates of particles to be projected, in kpc
-                Masses - masses of particles to be projected, in 1e10 msun
-                Quantity - quantity of particles to be mass weighted/projected
-        
-                BoxSize - c routine needs it, probably fine to pass in a large number
-
-        frame_center - origin of image in data space 
         frame_half_width - half-width of image in data space
         frame_depth - half-depth of image in data space 
 
-    Optional kwargs to be passed along: 
-        quantity_name='Temperature' - the name of the quantity that you're mass weighting
-            should match whatever array you're passing in as quantity
-
-        theta=0- euler rotation angle
-        phi=0- euler rotation angle
-        psi=0 - euler rotation angle
-        aspect_ratio - the 'shape' of the image (y/x)
-        pixels=1200 - the resolution of image (pixels x pixels)
+    ------- GasStudio
+    Optional:
         min_den=-0.4 - the minimum of the density color scale
         max_den=1.6 - the maximum of the density color scale
         min_quantity=2 - the minimum of the temperature color scale
         max_quantity=7 - the maximum of the temperature color scale
 
-        h5prefix='' - a string that you can prepend to the projection filename if desired
-        this_setup_id=None - string that defines the projection setup, None by default means
-            it defaults to a gross combination of frame params + angles
-        cmap='viridis' - string name for cmap to use 
-        scale_bar=1 - should you plot a scale bar in the bottom left corner
-        figure_label=None - what string should you put in the top right corner? 
-        fontsize=None - fontsize for all text in frame
         single_image=None - string, if it's "Density" it will plot a column 
             density projection, if it's anything else it will be a mass weighted
             `quantity_name` projection. None will be a "two-colour" projection
             with hue determined by `quantity_name` and saturation by density
+
+        quantity_name='Temperature' - the name of the quantity that you're mass weighting
+            should match whatever array you're passing in as quantity
+
+        cmap='viridis' - string name for cmap to use 
         use_colorbar=False - flag for whether to plot a colorbar at all
         cbar_label=None - string that shows up next to colorbar, good for specifying 
             units, otherwise will default to just quantity_name.title()
         take_log_of_quantity=True - should we plot the log of the resulting quantity map?
+        Hsml=None - Provided, gas smoothing lengths, speeds up projection calculation
+        snapdict=None - Dictionary-like holding gas snapshot data, open from disk if None
+        use_hsml=True - Flag to use the provided Hsml argument (implemented to test speedup)
+        intermediate_file_name = "proj_maps" ##  the name of the file to save maps to
+
+    ------- Studio
+
+        theta=0- euler rotation angle
+        phi=0- euler rotation angle
+        psi=0 - euler rotation angle
+        aspect_ratio=1 - the 'shape' of the image (y/x)
+        pixels=1200 - the resolution of image (pixels x pixels)
+        h5prefix='' - a string that you can prepend to the projection filename if desired
+        fontsize=None - fontsize for all text in frame
+        figure_label=None - what string should you put in the top right corner? 
+        scale_bar=1 - should you plot a scale bar in the bottom left corner
+        overwrite=False - flag to overwrite intermediate maps in projection file
+        this_setup_id=None - string that defines the projection setup, None by default means
+            it defaults to a gross combination of frame params + angles
+        noaxis=0 - flag to turn off axis (1=off 0=on)
+        savefig=1 - flag to save figure to datadir (default snapdir, but can be a kwarg)
+        ahf_path=None - path relative to snapdir where the halo files are stored
+            defaults to snapdir/../halo/ahf
+        extract_galaxy=False - flag to extract the main galaxy using abg_python.cosmoExtractor
     """
+    return render(
+        snapdir,snapnum,
+        datadir,
+        frame_half_width,frame_depth,
+        edgeon,kwargs,ax):
 
+def renderWrapper(args):
+    return render(*args)
 
-def renderWrapper(snapnum,image_names):
+def render(
+    snapdir,snapnum,
+    datadir,
+    frame_half_width,frame_depth,
+    edgeon,
+    kwargs,
+    ax=None):
+
     gasStudio = GasStudio(
-        snapdir=glob_snapdir,
+        snapdir=snapdir,
         snapnum=snapnum,
-        **glob_kwargs)
+        **kwargs)
 
-    if glob_edgeon:
+    if edgeon:
         gasStudio.renderFaceAppendEdgeViews(image_names)
     else:
-        ax = plt.gca()
-        ## set figure size to square
-        ax.get_figure().set_size_inches(6,6)
+        if ax is None:
+            ax = plt.gca()
+            ## set figure size to square
+            ax.get_figure().set_size_inches(6,6)
         gasStudio.render(ax,image_names)
-        plt.clf()
+        if ax is None:
+            plt.clf()
     
-def main(snapdir,snapstart,snapmax,edgeon=0,**kwargs):
-    global glob_kwargs,glob_snapdir,glob_edgeon
-    glob_kwargs = kwargs
-    glob_snapdir = snapdir
-    glob_edgeon = edgeon
-        
+def main(
+    snapdir,
+    snapstart,snapmax,
+    datadir,
+    frame_half_width,
+    frame_depth,
+    edgeon=0,
+    **kwargs):
+
     if 'multiproc' in kwargs and kwargs['multiproc']:
         ## map a wrapper to a pool of processes
+        argss = itertools.izip(
+            itertools.repeat(snapdir),
+            range(snapstart,snapmax+1),
+            itertools.repeat(datadir),
+            itertools.repeat(frame_half_width),
+            itertools.repeat(frame_depth),
+            itertools.repeat(edgeon),
+            itertools.repeat(kwargs)
+            itertools.repeat(None))
         my_pool = multiprocessing.Pool(int(kwargs['multiproc']))
-        my_pool.map(renderWrapper,range(snapstart,snapmax))
+        my_pool.map(renderWrapper,argss)
     else:
         ## just do a for loop
         for snapnum in range(snapstart,snapmax+1):
-            renderWrapper(snapnum)
+            render(snapdir,snapnum,edgeon,kwargs,ax)
 
 if __name__=='__main__':
     argv = sys.argv[1:]
@@ -168,7 +178,6 @@ if __name__=='__main__':
 
     #--overwrite: flag to  overwrite the cached projection if it exists
 
-
     for i,opt in enumerate(opts):
         if opt[1]=='':
             opts[i]=('mode',opt[0].replace('-'))
@@ -184,4 +193,3 @@ if __name__=='__main__':
                     value = opt[1]
             opts[i]=(key,value)
     main(**dict(opts))
-

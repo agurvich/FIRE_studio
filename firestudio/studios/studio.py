@@ -49,7 +49,8 @@ class Studio(object):
         noaxis = True, ## turns off axis ticks
         savefig = True, ## save the image as a png
         ahf_path = None, ## path relative to snapdir where the halo files are stored
-        extract_galaxy = False ## uses halo center to extract region around main halo
+        extract_galaxy = False, ## uses halo center to extract region around main halo
+        intermediate_file_name = "proj_maps" ##  the name of the file to save maps to
         ):
 
         ## IO stuff
@@ -82,7 +83,7 @@ class Studio(object):
         ##  this could get crowded! sets self.image_dir and self.projection_dir
         self.makeOutputDirectories(datadir)
 
-        h5name=h5prefix+"proj_maps_%03d.hdf5" % snapnum
+        h5name=h5prefix+intermediate_file_name+"_%03d.hdf5"% snapnum
         self.projection_file = os.path.join(self.projection_dir,h5name)
 
         ## determine the edges of our frame so we can cull the rest later
@@ -119,6 +120,7 @@ class Studio(object):
         ax.get_figure().set_size_inches(6,9)
         self.render(
             axs[1],
+            image_names,
             edgeon=True)
 
         plt.close(fig)
@@ -176,12 +178,6 @@ class Studio(object):
             self.identifyThisSetup()
             self.computeFrameBoundaries()
 
-    def projectImage(self):
-        raise Exception("Studio is a base-class and this method must be implemented in a child.")
-
-    def produceImage(self):
-        raise Exception("Studio is a base-class and this method must be implemented in a child.")
-
     def plotImage(
         self,
         ax,
@@ -214,7 +210,8 @@ class Studio(object):
     def openSnapshot(
         self,
         load_stars = 0,
-        keys_to_extract = None):
+        keys_to_extract = None
+        star_keys_to_extract = None):
 
         ## we've already opened this snapshot
         if ('snapdict' in self.__dict__ and
@@ -233,7 +230,7 @@ class Studio(object):
                 star_snapdict = openSnapshot(
                     self.snapdir,self.snapnum,
                     ptype=4,cosmological=0,
-                    keys_to_extract=keys_to_extract)
+                    keys_to_extract=star_keys_to_extract)
 
                 ## could just be a sub-snapshot that's been pre-extracted
                 if not star_snapdict['cosmological']:
@@ -248,7 +245,7 @@ class Studio(object):
                 star_snapdict = openSnapshot(
                     self.snapdir,self.snapnum,
                     ptype=4,cosmological=1,
-                    keys_to_extract=keys_to_extract)
+                    keys_to_extract=star_keys_to_extract)
             else:
                 star_snapdict = None
 
@@ -525,4 +522,14 @@ class Studio(object):
         ## cast to integer to use as indices for cmap array
         image = image.astype(np.uint16) 
         return image.T
+
+#### FUNCTIONS THAT SHOULD BE OVERWRITTEN IN SUBCLASSES
+    def makeOutputDirectories(self,datadir):
+        raise Exception("Studio is a base-class and this method must be implemented in a child.")
+
+    def projectImage(self):
+        raise Exception("Studio is a base-class and this method must be implemented in a child.")
+
+    def produceImage(self):
+        raise Exception("Studio is a base-class and this method must be implemented in a child.")
 
