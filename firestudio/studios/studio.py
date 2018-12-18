@@ -299,10 +299,6 @@ class Studio(object):
         try:
             with h5py.File(self.projection_file,'r') as handle:
                 for group in handle.keys():
-                    ## this is saving derived information about a particle type
-                    ##  not a projection map...
-                    if 'PartType' in group:
-                        continue
                     this_group = handle[group]
                     flag = True
                     for key in ['npix_x','frame_half_width','frame_depth',
