@@ -61,7 +61,7 @@ class Studio(object):
         intermediate_file_name = "proj_maps", ##  the name of the file to save maps to
         **kwargs
         ):
-        print("extra kwargs:\n",kwargs)
+        print("extra kwargs:\n",list(kwargs.keys()))
 
         ## IO stuff
         self.snapdir = snapdir
@@ -320,7 +320,7 @@ class Studio(object):
                     ## found the setup one we wanted, does it have all the images we want?
                     if flag:
                         for image_name in image_names:
-                            flag == flag and image_name in this_group.keys()
+                            flag = flag and (image_name in this_group.keys())
                         return flag
             return 0 
         except IOError:

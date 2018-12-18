@@ -66,7 +66,7 @@ def renderStarGalaxy(
         extract_galaxy=False - flag to extract the main galaxy using abg_python.cosmoExtractor
     """
     ## make the call to renderWrapper
-    render(snapdir,snapnum,edgeon,kwargs,ax)
+    render(snapdir,snapnum,datadir,frame_half_width,frame_depth,edgeon,kwargs,ax)
 
 
 ######## Meat and Potatoes render looping functions
@@ -81,7 +81,7 @@ def render(
     kwargs,
     ax=None):
 
-    image_names = ['out_u','oul_g','out_r']
+    image_names = ['out_u','oul_g','out_r','hubble']
     starStudio = StarStudio(
         snapdir=snapdir,
         snapnum=snapnum,

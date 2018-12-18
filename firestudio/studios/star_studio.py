@@ -31,8 +31,8 @@ class StarStudio(Studio):
         overwrite=0 - flag to overwrite the intermediate grid files
         datadir=None - directory to output the the intermediate grid files and output png
 
-        maxden=1e-3 - controls the saturation of the image in a non-obvious way
-        dynrange=1.001 - controls the saturation of the image in a non-obvious way
+        maxden=1e-2 - controls the saturation of the image in a non-obvious way
+        dynrange=100.0 - controls the saturation of the image in a non-obvious way
         color_scheme_nasa=True - flag to use nasa colors (vs. SDSS if false) 
 
         single_image=None - string, if it's "Density" it will plot a column 
@@ -54,8 +54,8 @@ class StarStudio(Studio):
         datadir, ## directory to put intermediate and output files
         frame_half_width, ## half-width of image in x direction
         frame_depth, ## z-depth of image (thickness is 2*frame_depth)
-        maxden = 1e-3, ## controls the saturation of the image in a non-obvious way
-        dynrange = 1.001, ## controls the saturation of the image in a non-obvious way
+        maxden = 1.0e-2, ## controls the saturation of the image in a non-obvious way
+        dynrange = 100.0, ## controls the saturation of the image in a non-obvious way
         color_scheme_nasa = True, ## flag to use nasa colors (vs. SDSS if false)
         star_snapdict = None, ## provide an open snapshot dictionary to save time opening
         snapdict = None, ## provide an open snapshot dictionary to save time opening
