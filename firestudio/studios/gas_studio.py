@@ -8,6 +8,7 @@ import numpy as np
 import ctypes
 
 ## abg_python imports
+from abg_python.all_utils import filterDictionary
 from abg_python.plot_utils import addColorbar
 
 ## firestudio imports
@@ -102,7 +103,14 @@ class GasStudio(Studio):
                     quantity_name,
                     'SmoothingLength'])
         else:
-            self.snapdict = snapdict
+            self.snapdict=snapdict
+
+        """
+        indices = np.logical_and(
+            coords[:,0]**2<self.frame_half_width**2,
+            coords[:,1]**2<(self.frame_half_width*self.aspect_ratio)**2)
+        self.snapdict = filterDictionary
+        """
 
 ####### makeOutputDirectories implementation #######
     def makeOutputDirectories(self,datadir):

@@ -297,6 +297,9 @@ class Studio(object):
                     for key in ['npix_x','frame_half_width','frame_depth',
                         'frame_center','theta','phi','psi','aspect_ratio']:
                         variable = getattr(self,key)
+                        if key not in this_group.keys():
+                            flag = False
+                            break
 
                         ## read the value in the hdf5 file and compare to variable
                         if key not in ['npix_x']:
