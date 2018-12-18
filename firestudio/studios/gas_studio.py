@@ -20,15 +20,11 @@ class GasStudio(Studio):
     Input:
         snapdir - location that the snapshots live in
         snapnum - snapshot number
-
-        frame_center - origin of image in data space 
+        datadir - directory to output the the intermediate grid files and output png
         frame_half_width - half-width of image in data space
         frame_depth - half-depth of image in data space 
 
     Optional:
-        overwrite=0 - flag to overwrite the intermediate grid files
-        datadir=None - directory to output the the intermediate grid files and output png
-
         min_den=-0.4 - the minimum of the density color scale
         max_den=1.6 - the maximum of the density color scale
         min_quantity=2 - the minimum of the temperature color scale
@@ -47,9 +43,10 @@ class GasStudio(Studio):
         cbar_label=None - string that shows up next to colorbar, good for specifying 
             units, otherwise will default to just quantity_name.title()
         take_log_of_quantity=True - should we plot the log of the resulting quantity map?
-        Hsml
-        snapdict
-        use_hsml
+        Hsml=None - Provided, gas smoothing lengths, speeds up projection calculation
+        snapdict=None - Dictionary-like holding gas snapshot data, open from disk if None
+        use_hsml=True - Flag to use the provided Hsml argument (implemented to test speedup)
+        intermediate_file_name = "proj_maps" ##  the name of the file to save maps to
     """
 
     def __init__(
@@ -94,23 +91,7 @@ class GasStudio(Studio):
             frame_depth,
             **kwargs)
 
-        ## open snapshot data if necessary
-        if snapdict is None:
-            self.openSnapshot(
-                keys_to_extract = 
-                    ['Coordinates',
-                    'Masses',
-                    quantity_name,
-                    'SmoothingLength'])
-        else:
-            self.snapdict=snapdict
-
-        """
-        indices = np.logical_and(
-            coords[:,0]**2<self.frame_half_width**2,
-            coords[:,1]**2<(self.frame_half_width*self.aspect_ratio)**2)
-        self.snapdict = filterDictionary
-        """
+        self.snapdict = snapdict
 
 ####### makeOutputDirectories implementation #######
     def makeOutputDirectories(self,datadir):
@@ -133,6 +114,15 @@ class GasStudio(Studio):
 
 ####### projectImage implementation #######
     def projectImage(self,image_names):
+
+        ## open snapshot data if necessary
+        if self.snapdict is None:
+            self.openSnapshot(
+                keys_to_extract = 
+                    ['Coordinates',
+                    'Masses',
+                    self.quantity_name,
+                    'SmoothingLength'])
 
         ## unpack the snapshot data from the snapdict
         Coordinates = self.snapdict['Coordinates']
@@ -189,7 +179,6 @@ class GasStudio(Studio):
         with h5py.File(self.projection_file, "r") as handle:
             this_group=handle[self.this_setup_id]
             columnDensityMap = np.array(this_group['columnDensityMap'])
-            print(this_group.keys())
             massWeightedQuantityMap = np.array(this_group['massWeighted%sMap'%self.quantity_name.title()])
 
         ## make sure that the maps we're loading are the correct shape

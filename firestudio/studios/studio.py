@@ -1,6 +1,14 @@
+from __future__ import print_function
 import os
 import numpy as np 
 import h5py
+
+import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
+
+from abg_python.snapshot_utils import openSnapshot
+from abg_python.cosmo_utils import load_AHF
+from abg_python.cosmoExtractor import diskFilterDictionary
 
 class Studio(object):
     """ 
@@ -49,8 +57,11 @@ class Studio(object):
         noaxis = True, ## turns off axis ticks
         savefig = True, ## save the image as a png
         ahf_path = None, ## path relative to snapdir where the halo files are stored
-        extract_galaxy = False ## uses halo center to extract region around main halo
+        extract_galaxy = False, ## uses halo center to extract region around main halo
+        intermediate_file_name = "proj_maps", ##  the name of the file to save maps to
+        **kwargs
         ):
+        print("extra kwargs:\n",list(kwargs.keys()))
 
         ## IO stuff
         self.snapdir = snapdir
@@ -82,7 +93,7 @@ class Studio(object):
         ##  this could get crowded! sets self.image_dir and self.projection_dir
         self.makeOutputDirectories(datadir)
 
-        h5name=h5prefix+"proj_maps_%03d.hdf5" % snapnum
+        h5name=h5prefix+intermediate_file_name+"_%03d.hdf5"% snapnum
         self.projection_file = os.path.join(self.projection_dir,h5name)
 
         ## determine the edges of our frame so we can cull the rest later
@@ -116,9 +127,10 @@ class Studio(object):
         self.scale_bar = 1
 
         ## set figure size extended for the edgeon view
-        ax.get_figure().set_size_inches(6,9)
+        fig.set_size_inches(6,9)
         self.render(
             axs[1],
+            image_names,
             edgeon=True)
 
         plt.close(fig)
@@ -176,12 +188,6 @@ class Studio(object):
             self.identifyThisSetup()
             self.computeFrameBoundaries()
 
-    def projectImage(self):
-        raise Exception("Studio is a base-class and this method must be implemented in a child.")
-
-    def produceImage(self):
-        raise Exception("Studio is a base-class and this method must be implemented in a child.")
-
     def plotImage(
         self,
         ax,
@@ -214,12 +220,12 @@ class Studio(object):
     def openSnapshot(
         self,
         load_stars = 0,
-        keys_to_extract = None):
+        keys_to_extract = None,
+        star_keys_to_extract = None):
 
-        ## we've already opened this snapshot
-        if ('snapdict' in self.__dict__ and
-            ('star_snapdict' in self.__dict__ or not load_stars)):
-            return 
+        if (self.snapdict is not None and
+            ('star_snapdict' in self.__dict__ and self.star_snapdict is not None)):
+            return
         elif not self.extract_galaxy:
             ## isolated galaxy huh? good choice. 
             ##  don't worry, cosmological will be overwritten in openSnapshot if 
@@ -233,7 +239,7 @@ class Studio(object):
                 star_snapdict = openSnapshot(
                     self.snapdir,self.snapnum,
                     ptype=4,cosmological=0,
-                    keys_to_extract=keys_to_extract)
+                    keys_to_extract=star_keys_to_extract)
 
                 ## could just be a sub-snapshot that's been pre-extracted
                 if not star_snapdict['cosmological']:
@@ -248,28 +254,29 @@ class Studio(object):
                 star_snapdict = openSnapshot(
                     self.snapdir,self.snapnum,
                     ptype=4,cosmological=1,
-                    keys_to_extract=keys_to_extract)
+                    keys_to_extract=star_keys_to_extract)
             else:
                 star_snapdict = None
 
             ## cosmological snapshot it is then... 
-            scom,rvir,vesc,rstar_half = load_AHF(
+            scom,rvir,vesc = load_AHF(
                 self.snapdir,self.snapnum,
                 snapdict['Redshift'],
-                ahf_path=ahf_path)
+                ahf_path=self.ahf_path)
 
             ## filter all the keys in the snapdict as necessary to extract a spherical volume
-            ##  centered on scom (the halo center), using 5*rstar_half  (thanks Zach for galaxy definition)
+            ##  centered on scom (the halo center), using 3*frame_half_width
             diskFilterDictionary(
-                star_snapdict, 
+                star_snapdict if load_stars else None, 
                 snapdict,
-                radius=rstar_half*5,
+                radius=3*self.frame_half_width,
                 scom=scom,
-                orient_stars = 0)
+                orient_stars = load_stars)
 
         ## bind the snapdicts
         self.snapdict = snapdict
-        self.star_snapdict = star_snapdict
+        if load_stars:
+            self.star_snapdict = star_snapdict
 
     def identifyThisSetup(self):
         ## uniquely identify this projection setup
@@ -292,6 +299,10 @@ class Studio(object):
         try:
             with h5py.File(self.projection_file,'r') as handle:
                 for group in handle.keys():
+                    ## this is saving derived information about a particle type
+                    ##  not a projection map...
+                    if 'PartType' in group:
+                        continue
                     this_group = handle[group]
                     flag = True
                     for key in ['npix_x','frame_half_width','frame_depth',
@@ -312,7 +323,7 @@ class Studio(object):
                     ## found the setup one we wanted, does it have all the images we want?
                     if flag:
                         for image_name in image_names:
-                            flag == flag and image_name in this_group.keys()
+                            flag = flag and (image_name in this_group.keys())
                         return flag
             return 0 
         except IOError:
@@ -379,7 +390,7 @@ class Studio(object):
             savefig_args['bbox_inches']='tight'
             savefig_args['pad_inches']=0
 
-        image_name = "%s_%03d_%dkpc.png" % (image_name,self.snapnum, 2*kwargs['frame_half_width'])
+        image_name = "%s_%03d_%dkpc.png" % (image_name,self.snapnum, 2*self.frame_half_width)
 
         ax.get_figure().savefig(
             os.path.join(self.image_dir,image_name),dpi=300,
@@ -528,4 +539,14 @@ class Studio(object):
         ## cast to integer to use as indices for cmap array
         image = image.astype(np.uint16) 
         return image.T
+
+#### FUNCTIONS THAT SHOULD BE OVERWRITTEN IN SUBCLASSES
+    def makeOutputDirectories(self,datadir):
+        raise Exception("Studio is a base-class and this method must be implemented in a child.")
+
+    def projectImage(self):
+        raise Exception("Studio is a base-class and this method must be implemented in a child.")
+
+    def produceImage(self):
+        raise Exception("Studio is a base-class and this method must be implemented in a child.")
 
