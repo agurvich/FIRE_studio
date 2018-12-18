@@ -72,7 +72,7 @@ def renderGalaxy(
         snapdir,snapnum,
         datadir,
         frame_half_width,frame_depth,
-        edgeon,kwargs,ax):
+        edgeon,kwargs,ax)
 
 def renderWrapper(args):
     return render(*args)
@@ -83,11 +83,21 @@ def render(
     frame_half_width,frame_depth,
     edgeon,
     kwargs,
-    ax=None):
+    ax=None,
+    image_names = None):
+
+    ## this is stupid and should change
+    image_names = [
+        'columnDensityMap',
+        'massWeightedTemperatureMap',
+        'two_color']
 
     gasStudio = GasStudio(
         snapdir=snapdir,
         snapnum=snapnum,
+        datadir=datadir,
+        frame_half_width=frame_half_width,
+        frame_depth=frame_depth,
         **kwargs)
 
     if edgeon:
@@ -119,14 +129,20 @@ def main(
             itertools.repeat(frame_half_width),
             itertools.repeat(frame_depth),
             itertools.repeat(edgeon),
-            itertools.repeat(kwargs)
+            itertools.repeat(kwargs),
             itertools.repeat(None))
         my_pool = multiprocessing.Pool(int(kwargs['multiproc']))
         my_pool.map(renderWrapper,argss)
     else:
         ## just do a for loop
         for snapnum in range(snapstart,snapmax+1):
-            render(snapdir,snapnum,edgeon,kwargs,ax)
+            render(
+                snapdir,snapnum,
+                datadir,
+                frame_half_width,frame_depth,
+                edgeon,
+                kwargs,
+                None)
 
 if __name__=='__main__':
     argv = sys.argv[1:]

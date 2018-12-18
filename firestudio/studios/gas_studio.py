@@ -120,7 +120,7 @@ class GasStudio(Studio):
                 keys_to_extract = 
                     ['Coordinates',
                     'Masses',
-                    quantity_name,
+                    self.quantity_name,
                     'SmoothingLength'])
 
         ## unpack the snapshot data from the snapdict
@@ -178,7 +178,6 @@ class GasStudio(Studio):
         with h5py.File(self.projection_file, "r") as handle:
             this_group=handle[self.this_setup_id]
             columnDensityMap = np.array(this_group['columnDensityMap'])
-            print(this_group.keys())
             massWeightedQuantityMap = np.array(this_group['massWeighted%sMap'%self.quantity_name.title()])
 
         ## make sure that the maps we're loading are the correct shape

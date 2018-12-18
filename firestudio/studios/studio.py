@@ -1,6 +1,12 @@
+from __future__ import print_function
 import os
 import numpy as np 
 import h5py
+
+import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
+
+from abg_python.snapshot_utils import openSnapshot
 
 class Studio(object):
     """ 
@@ -50,8 +56,10 @@ class Studio(object):
         savefig = True, ## save the image as a png
         ahf_path = None, ## path relative to snapdir where the halo files are stored
         extract_galaxy = False, ## uses halo center to extract region around main halo
-        intermediate_file_name = "proj_maps" ##  the name of the file to save maps to
+        intermediate_file_name = "proj_maps", ##  the name of the file to save maps to
+        **kwargs
         ):
+        print("extra kwargs:\n",kwargs)
 
         ## IO stuff
         self.snapdir = snapdir
@@ -117,7 +125,7 @@ class Studio(object):
         self.scale_bar = 1
 
         ## set figure size extended for the edgeon view
-        ax.get_figure().set_size_inches(6,9)
+        fig.set_size_inches(6,9)
         self.render(
             axs[1],
             image_names,
@@ -210,13 +218,12 @@ class Studio(object):
     def openSnapshot(
         self,
         load_stars = 0,
-        keys_to_extract = None
+        keys_to_extract = None,
         star_keys_to_extract = None):
 
-        ## we've already opened this snapshot
-        if ('snapdict' in self.__dict__ and
-            ('star_snapdict' in self.__dict__ or not load_stars)):
-            return 
+        if (self.snapdict is not None and
+            ('star_snapdict' in self.__dict__ and self.star_snapdict is not None)):
+            return
         elif not self.extract_galaxy:
             ## isolated galaxy huh? good choice. 
             ##  don't worry, cosmological will be overwritten in openSnapshot if 
@@ -266,7 +273,8 @@ class Studio(object):
 
         ## bind the snapdicts
         self.snapdict = snapdict
-        self.star_snapdict = star_snapdict
+        if load_stars:
+            self.star_snapdict = star_snapdict
 
     def identifyThisSetup(self):
         ## uniquely identify this projection setup
@@ -373,7 +381,7 @@ class Studio(object):
             savefig_args['bbox_inches']='tight'
             savefig_args['pad_inches']=0
 
-        image_name = "%s_%03d_%dkpc.png" % (image_name,self.snapnum, 2*kwargs['frame_half_width'])
+        image_name = "%s_%03d_%dkpc.png" % (image_name,self.snapnum, 2*self.frame_half_width)
 
         ax.get_figure().savefig(
             os.path.join(self.image_dir,image_name),dpi=300,
