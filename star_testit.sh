@@ -1,1 +1,1 @@
-python firestudio/star_movie_maker.py --snapdir="/home/abg6257/projects/snaps/m12i_res7100/output" --snapstart=600 --snapmax=600 --frame_half_width=15 --datadir="/home/abg6257/src/FIRE_studio" --multiproc=0 --noaxis=1
+python firestudio/star_movie_maker.py --snapdir="/home/abg6257/projects/snaps/m12i_res7100/output" --snapstart=600 --snapmax=600 --frame_half_width=15 --frame_depth=15 --datadir="/home/abg6257/src/FIRE_studio" --multiproc=0 --noaxis=1 --extract_galaxy=1

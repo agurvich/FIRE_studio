@@ -1,6 +1,9 @@
 import numpy as np 
 import os,sys,getopt
 import itertools
+import matplotlib
+matplotlib.use('Agg') 
+import matplotlib.pyplot as plt
 
 from firestudio.studios.star_studio import StarStudio
 
@@ -116,14 +119,14 @@ def main(
             itertools.repeat(frame_half_width),
             itertools.repeat(frame_depth),
             itertools.repeat(edgeon),
-            itertools.repeat(kwargs)
+            itertools.repeat(kwargs),
             itertools.repeat(None))
         my_pool = multiprocessing.Pool(int(kwargs['multiproc']))
         my_pool.map(renderWrapper,argss)
     else:
         ## just do a for loop
         for snapnum in range(snapstart,snapmax+1):
-            render(snapdir,snapnum,edgeon,kwargs,ax)
+            render(snapdir,snapnum,datadir,frame_half_width,frame_depth,edgeon,kwargs,None)
 
 if __name__=='__main__':
     argv = sys.argv[1:]

@@ -4,6 +4,7 @@ import sys
 import h5py
 import matplotlib 
 matplotlib.use('Agg') 
+import matplotlib.pyplot as plt
 import numpy as np 
 import ctypes
 
@@ -54,14 +55,15 @@ class StarStudio(Studio):
         frame_half_width, ## half-width of image in x direction
         frame_depth, ## z-depth of image (thickness is 2*frame_depth)
         maxden = 1e-3, ## controls the saturation of the image in a non-obvious way
-        dynrange = 1.001 ## controls the saturation of the image in a non-obvious way
+        dynrange = 1.001, ## controls the saturation of the image in a non-obvious way
         color_scheme_nasa = True, ## flag to use nasa colors (vs. SDSS if false)
         star_snapdict = None, ## provide an open snapshot dictionary to save time opening
         snapdict = None, ## provide an open snapshot dictionary to save time opening
         **kwargs):
 
-        ## image limits
-        self.min_den,self.max_den = min_den,max_den
+        self.maxden = maxden
+        self.dynrange = dynrange
+        self.color_scheme_nasa = color_scheme_nasa
 
         ## call Studio's init
         super(StarStudio,self).__init__(
@@ -73,7 +75,7 @@ class StarStudio(Studio):
 
         ## both are provided, just bind them
         self.snapdict = snapdict
-        self.star_snapdict = snap_dict
+        self.star_snapdict = star_snapdict
 
 ####### makeOutputDirectories implementation #######
     def makeOutputDirectories(self,datadir):
@@ -105,17 +107,20 @@ class StarStudio(Studio):
                 keys_to_extract = 
                     ['Coordinates',
                     'Masses',
-                    'SmoothingLength',
-                    'Metallicity'],
+                    'SmoothingLength', 
+                    'Metallicity']+
+                    ['Velocities','Density']*self.extract_galaxy,
                 star_keys_to_extract = 
                     ['Coordinates',
                     'Masses',
                     'AgeGyr',
-                    'Metallicity'],
+                    'Metallicity']+
+                    ['Velocities']*self.extract_galaxy,
                 )
 
         ## cull the particles outside the frame and cast to float32
         star_ind_box = self.cullFrameIndices(self.star_snapdict['Coordinates'])
+        print(np.sum(star_ind_box),'many stars in volume')
 
         ## unpack the star information
         ## dont' filter star positions just yet
@@ -127,7 +132,7 @@ class StarStudio(Studio):
         try:
             with h5py.File(self.projection_file, "r") as handle:
                 group = handle['PartType4']
-                hstar = group['h_star']
+                h_star = group['h_star'].value
         except KeyError:
             print("Haven't computed stellar smoothing lengths...")
             h_star = load_stellar_hsml.get_particle_hsml(
@@ -135,8 +140,11 @@ class StarStudio(Studio):
 
             ## write the output to an .hdf5 file
             with h5py.File(self.projection_file, "a") as handle:
-                group = handle.create_group('PartType4')
-                group['h_star'] = hstar 
+                try:
+                    group = handle.create_group('PartType4')
+                except ValueError:
+                    group = handle['PartType4']
+                group['h_star'] = h_star 
             print("Done!")
 
         h_star = h_star[star_ind_box]
@@ -153,6 +161,7 @@ class StarStudio(Studio):
 
         ## cull the particles outside the frame and cast to float32
         gas_ind_box = self.cullFrameIndices(self.snapdict['Coordinates'])
+        print(np.sum(star_ind_box),'many gas in volume')
 
         ## unpack the gas information
         gas_pos = self.snapdict['Coordinates'][gas_ind_box]

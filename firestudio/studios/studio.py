@@ -7,6 +7,8 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 
 from abg_python.snapshot_utils import openSnapshot
+from abg_python.cosmo_utils import load_AHF
+from abg_python.cosmoExtractor import diskFilterDictionary
 
 class Studio(object):
     """ 
@@ -257,19 +259,19 @@ class Studio(object):
                 star_snapdict = None
 
             ## cosmological snapshot it is then... 
-            scom,rvir,vesc,rstar_half = load_AHF(
+            scom,rvir,vesc = load_AHF(
                 self.snapdir,self.snapnum,
                 snapdict['Redshift'],
-                ahf_path=ahf_path)
+                ahf_path=self.ahf_path)
 
             ## filter all the keys in the snapdict as necessary to extract a spherical volume
-            ##  centered on scom (the halo center), using 5*rstar_half  (thanks Zach for galaxy definition)
+            ##  centered on scom (the halo center), using 3*frame_half_width
             diskFilterDictionary(
-                star_snapdict, 
+                star_snapdict if load_stars else None, 
                 snapdict,
-                radius=rstar_half*5,
+                radius=3*self.frame_half_width,
                 scom=scom,
-                orient_stars = 0)
+                orient_stars = load_stars)
 
         ## bind the snapdicts
         self.snapdict = snapdict
@@ -297,6 +299,10 @@ class Studio(object):
         try:
             with h5py.File(self.projection_file,'r') as handle:
                 for group in handle.keys():
+                    ## this is saving derived information about a particle type
+                    ##  not a projection map...
+                    if 'PartType' in group:
+                        continue
                     this_group = handle[group]
                     flag = True
                     for key in ['npix_x','frame_half_width','frame_depth',
