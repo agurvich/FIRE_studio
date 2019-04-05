@@ -1,6 +1,6 @@
 import numpy as np
 import colorsys
-import utilities as util
+import firestudio.utils.stellar_utils.utilities as util
 import math
 import matplotlib
 matplotlib.use('Agg') ## this calls matplotlib without a X-windows GUI
@@ -132,7 +132,7 @@ def temperature_map_color_index(mass_pic, temp, set_temp_max=0, set_temp_min=0,
     if (set_temp_max != 0): temp_max=set_temp_max;
     if (set_temp_min != 0): temp_min=set_temp_min;
     tmp_scale=np.log10(temp/temp_min)/np.log10(temp_max/temp_min);
-    print 'Temp. Scale Min/Max = ',np.min(tmp_scale),temp_min,np.max(tmp_scale),temp_max
+    print('Temp. Scale Min/Max = ',np.min(tmp_scale),temp_min,np.max(tmp_scale),temp_max)
     
     N0=temp.shape[0]; image24=np.zeros([N0,N0,3]);
 	## different kernels we can use for the temp weighting
@@ -272,10 +272,10 @@ class CustomLightSource(object):
         imin4 = (np.sin(alt) - np.cos(alt)*vmax) / np.sqrt(1.+vmax*vmax)
         imin = np.min(np.array([imin1,imin2,imin3,imin4]))
         imax = np.max(np.array([imin1,imin2,imin3,imin4]))
-        print ' intensity limits being used in this map == ',\
-            np.min(elevation),np.max(elevation),np.min(intensity),np.max(intensity),\
-            np.min(dx),np.max(dx),np.min(dy),np.max(dy),np.min(slope),np.max(slope),\
-            np.min(aspect),np.max(aspect),imin,imax,az,alt
+        print(' intensity limits being used in this map == ',
+            np.min(elevation),np.max(elevation),np.min(intensity),np.max(intensity),
+            np.min(dx),np.max(dx),np.min(dy),np.max(dy),np.min(slope),np.max(slope),
+            np.min(aspect),np.max(aspect),imin,imax,az,alt)
         
         intensity[intensity<imin] = imin
         intensity[intensity>imax] = imax

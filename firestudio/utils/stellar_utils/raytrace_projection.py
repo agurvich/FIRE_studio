@@ -2,7 +2,7 @@ import os
 import numpy as np
 import math
 import ctypes
-import utilities as util
+import firestudio.utils.stellar_utils.utilities as util
 import scipy
 
 def checklen(x):
@@ -59,7 +59,7 @@ def gas_raytrace_temperature( TEMPERATURE_CUTS, \
     wt1*= wtfn; wt2*=wtfn; wt3*=wtfn;
     kappa = 200. * (1.+np.zeros((3)));
     kappa *= KAPPA_UNITS;
-    print 'KAPPA == ',kappa
+    print('KAPPA == ',kappa)
 
     return raytrace_projection_compute(gas_x,gas_y,gas_z,gas_hsml,gas_mass,\
         wt1,wt2,wt3,kappa[0],kappa[1],kappa[2],\
@@ -86,7 +86,7 @@ def stellar_raytrace( BAND_IDS, \
         ADD_BASE_METALLICITY=0.0, ADD_BASE_AGE=0.0 ):
         
     Nbands=len(np.array(BAND_IDS)); Nstars=len(np.array(stellar_mass)); Ngas=len(np.array(gas_mass));
-    if (Nbands != 3): print "stellar_raytrace needs 3 bands, you gave",Nbands; return -1,-1,-1,-1;
+    if (Nbands != 3): print("stellar_raytrace needs 3 bands, you gave"),Nbands; return -1,-1,-1,-1;
     ## check if stellar metallicity is a matrix
     if (len(stellar_metallicity.shape)>1): stellar_metallicity=stellar_metallicity[:,0];
     if (len(gas_metallicity.shape)>1): gas_metallicity=gas_metallicity[:,0];
@@ -160,7 +160,7 @@ def raytrace_projection_compute( x, y, z, hsml, mass, wt1, wt2, wt3, \
     x=x[ok]; y=y[ok]; z=z[ok]; hsml=hsml[ok]; mass=mass[ok]; wt1=wt1[ok]; wt2=wt2[ok]; wt3=wt3[ok];
     N_p=checklen(x); xmin=-xlen; xmax=xlen; ymin=-ylen; ymax=ylen;
     if(N_p<=1): 
-        print ' UH-OH: EXPECT ERROR NOW, there are no valid source/gas particles to send!'; return -1,-1,-1,-1;
+        print(' UH-OH: EXPECT ERROR NOW, there are no valid source/gas particles to send!'); return -1,-1,-1,-1;
 
     ## now sort these in z (this is critical!)
     s=np.argsort(z);
@@ -188,7 +188,7 @@ def raytrace_projection_compute( x, y, z, hsml, mass, wt1, wt2, wt3, \
         ctypes.c_int(Xpixels), ctypes.c_int(Ypixels), \
         ctypes.byref(out_0), ctypes.byref(out_1), ctypes.byref(out_2), ctypes.byref(out_3) );
 
-    print np.sum(out_1),np.sum(out_2),np.sum(out_3),'outputs'
+    print(np.sum(out_1),np.sum(out_2),np.sum(out_3),'outputs')
     ## now put the output arrays into a useful format 
     out_0 = np.copy(np.ctypeslib.as_array(out_0));
     out_1 = np.copy(np.ctypeslib.as_array(out_1));

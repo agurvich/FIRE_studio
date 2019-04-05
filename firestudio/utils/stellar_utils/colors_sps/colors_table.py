@@ -19,14 +19,14 @@ def colors_table( age_in_Gyr, metallicity_in_solar_units,
     band_standardordering = band
     band = j[band]
     if (band > 13): 
-        print 'BAND_ID must be < 13'; 
+        print('BAND_ID must be < 13'); 
         return 0;
     
     b=['Bolometric', \
     'Sloan u','Sloan g','Sloan r','Sloan i','Sloan z', \
     'Johnsons U','Johnsons B', 'Johnsons V','Johnsons R','Johnsons I', \
     'Cousins J','Cousins H','Cousins K']
-    if (QUIET==0): print 'Calculating M/L in '+str(b[band])+' ('+str(band)+','+str(band_standardordering)+')'
+    if (QUIET==0): print('Calculating M/L in '+str(b[band])+' ('+str(band)+','+str(band_standardordering)+')')
     
     if (RETURN_NU_EFF==1) or (RETURN_LAMBDA_EFF==1):
         lam_eff=np.array([1.e-5, 3541., 4653., 6147., 7461., 8904., 3600., 4400., \

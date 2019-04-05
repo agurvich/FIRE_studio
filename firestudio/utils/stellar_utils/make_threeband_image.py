@@ -1,7 +1,7 @@
 import numpy as np
 import math
-import contour_makepic as cmakepic
-import colors as viscolors
+import firestudio.utils.stellar_utils.contour_makepic as cmakepic
+import firestudio.utils.stellar_utils.colors as viscolors
 import matplotlib
 
 def checklen(x):
@@ -123,7 +123,7 @@ def make_threeband_image_process_bandmaps(r,g,b, \
 
     ## now do the color processing on the maps
     maxnorm=maxden; minnorm=(maxden/dynrange);
-    print 'maxnorm == ',maxnorm,' dynrange == ',dynrange,' minnorm == ',minnorm;
+    print('maxnorm == ',maxnorm,' dynrange == ',dynrange,' minnorm == ',minnorm)
 
     i = (r+g+b)/3.
     f_i = np.log10(i/minnorm) / np.log10(maxnorm/minnorm);
@@ -180,7 +180,7 @@ def make_threeband_image( x, y, lums, hsml=0, xrange=0, yrange=0, \
     color_scheme_nasa=1, color_scheme_sdss=0 ):
 
     if (len(lums[0,:]) != len(x)) or (len(lums[:,0]) != 3):
-        print ' expect error: lums must be an array of (3,n) '
+        print(' expect error: lums must be an array of (3,n) ')
 	
     ## set x/y ranges and clip the particle distribution 
     if checklen(xrange)<=1:

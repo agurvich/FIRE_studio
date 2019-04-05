@@ -6,10 +6,10 @@
 
 import numpy as np
 import math
-import colors_sps.colors_table as ctab
-import colors_sps.lum_mag_conversions as lmag
-import attenuation.attenuate_wrapper as atten
-import attenuation.cross_section as atten_cx
+import firestudio.utils.stellar_utils.colors_sps.colors_table as ctab
+import firestudio.utils.stellar_utils.colors_sps.lum_mag_conversions as lmag
+import firestudio.utils.stellar_utils.attenuation.attenuate_wrapper as atten
+import firestudio.utils.stellar_utils.attenuation.cross_section as atten_cx
 #import agn_spectrum.agn_spectrum_wrapper as agnspec
 
 def return_python_routines_homedir():
@@ -123,15 +123,15 @@ def return_perp_vectors(a, LOUD=0):
     B_out[:]=[bx,by,bz]; C_out[:]=[cx,cy,cz];
     
     if (LOUD==1):
-        print a; 
-        print B_out; 
-        print C_out;
-        print 'a_tot=',ax*ax+ay*ay+az*az
-        print 'b_tot=',bx*bx+by*by+bz*bz
-        print 'c_tot=',cx*cx+cy*cy+cz*cz
-        print 'adotb=',ax*bx+ay*by+az*bz
-        print 'adotc=',ax*cx+ay*cy+az*cz
-        print 'bdotc=',bx*cx+by*cy+bz*cz
+        print(a); 
+        print(B_out); 
+        print(C_out);
+        print('a_tot=',ax*ax+ay*ay+az*az)
+        print('b_tot=',bx*bx+by*by+bz*bz)
+        print('c_tot=',cx*cx+cy*cy+cz*cz)
+        print('adotb=',ax*bx+ay*by+az*bz)
+        print('adotc=',ax*cx+ay*cy+az*cz)
+        print('bdotc=',bx*cx+by*cy+bz*cz)
     
     return B_out, C_out
     
@@ -169,13 +169,13 @@ def lookback_time(z,h=0.71,Omega_M=0.27):
 ## simple moving-window signal smoothing (from scipy cookbook)
 def smooth(x,window_len=11,window='hanning'):
         if x.ndim != 1:
-                raise ValueError, "smooth only accepts 1 dimension arrays."
+                raise ValueError( "smooth only accepts 1 dimension arrays.")
         if x.size < window_len:
-                raise ValueError, "Input vector needs to be bigger than window size."
+                raise ValueError( "Input vector needs to be bigger than window size.")
         if window_len<3:
                 return x
         if not window in ['flat', 'hanning', 'hamming', 'bartlett', 'blackman']:
-                raise ValueError, "Window is on of 'flat', 'hanning', 'hamming', 'bartlett', 'blackman'"
+                raise ValueError( "Window is on of 'flat', 'hanning', 'hamming', 'bartlett', 'blackman'")
         s=np.r_[2*x[0]-x[window_len-1::-1],x,2*x[-1]-x[-1:-window_len:-1]]
         if window == 'flat': #moving average
                 w=np.ones(window_len,'d')

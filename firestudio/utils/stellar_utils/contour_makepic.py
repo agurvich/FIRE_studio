@@ -4,9 +4,9 @@
 import numpy as np
 import ctypes
 import colorsys
-import utilities as util
+import firestudio.utils.stellar_utils.utilities as util
 import math
-import colors as colors
+import firestudio.utils.stellar_utils.colors as colors
 
 def fcor(x):
     return np.array(x,dtype='f',ndmin=1)
@@ -67,9 +67,9 @@ def contour_makepic( x, y, z, hsml, weight,
  
     # set boundaries and do some clipping
     MassMap = np.copy(MassMap1);
-    print "MassMap : max: ", np.max(MassMap), "   min: ", np.min(MassMap)
+    print("MassMap : max: ", np.max(MassMap), "   min: ", np.min(MassMap))
     if (set_percent_maxden !=0) or (set_percent_minden !=0):
-        print 'percent max/min = ',set_percent_maxden,set_percent_minden
+        print('percent max/min = ',set_percent_maxden,set_percent_minden)
         Msort=np.sort(MassMap);
         if (set_percent_maxden != 0): ma=Msort[set_percent_maxden*float(checklen(MassMap)-1)];
         mi=ma/set_dynrng;
@@ -78,7 +78,7 @@ def contour_makepic( x, y, z, hsml, weight,
         ok=(Msort > 0.) & (np.isnan(Msort)==False)
         if (mi <= 0) or (np.isnan(mi)): mi=np.min(Msort[ok]);
         if (ma <= 0) or (np.isnan(ma)): ma=np.max(Msort[ok]);
-    print "Clipping at   ma= ", ma, " mi= ", mi
+    print("Clipping at   ma= ", ma, " mi= ", mi)
     MassMap[MassMap < mi]=mi; MassMap[MassMap > ma]=ma;
 
     # now set colors
@@ -136,7 +136,7 @@ def simple_makepic( x, y,
         tempMap = MassMap_2/MassMap_1
         M2Min=np.min(MassMap_2[MassMap_2 > 0.]); 
         tempMap[bad] = (MassMap_2[bad] + M2Min) / M1Min;
-        print 'MinMax: ',np.min(MassMap_1),np.max(MassMap_1),np.min(MassMap_2),np.max(MassMap_2),np.min(tempMap),np.max(tempMap)
+        print('MinMax: ',np.min(MassMap_1),np.max(MassMap_1),np.min(MassMap_2),np.max(MassMap_2),np.min(tempMap),np.max(tempMap))
         Pic2_RGB = colors.temperature_map_color_index(Pic_1,tempMap, \
             set_temp_max=set_temp_max, set_temp_min=set_temp_min, huem100=0, invertreverse=1);
 
