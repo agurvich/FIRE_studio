@@ -66,7 +66,7 @@ class StarStudio(Studio):
         self.color_scheme_nasa = color_scheme_nasa
 
         ## call Studio's init
-        super(StarStudio,self).__init__(
+        super().__init__(
             snapdir,snapnum,
             datadir,
             frame_half_width,
@@ -133,7 +133,7 @@ class StarStudio(Studio):
             with h5py.File(self.projection_file, "r") as handle:
                 group = handle['PartType4']
                 h_star = group['h_star'].value
-        except KeyError:
+        except (KeyError,OSError):
             print("Haven't computed stellar smoothing lengths...")
             h_star = load_stellar_hsml.get_particle_hsml(
                 star_pos[:,0],star_pos[:,1],star_pos[:,2])

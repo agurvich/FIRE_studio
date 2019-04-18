@@ -41,7 +41,7 @@ def colors_table( age_in_Gyr, metallicity_in_solar_units,
     if (CHABRIER_IMF==1): fname=froot+'colors.chabrier.dat'
     if (SALPETER_IMF==1): fname=froot+'colors.salpeter.dat'
 
-    lut = open(fname,'r');
+    lut = open(fname,'rb');
     lut_dat = lut.read();
     Nl,Na,Nz = struct.unpack('3i',lut_dat[0:12])
     z_grid = np.array(struct.unpack(str(Nz)+'d',lut_dat[12:12+8*Nz]))
