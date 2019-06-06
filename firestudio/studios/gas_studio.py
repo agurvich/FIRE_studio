@@ -120,6 +120,7 @@ class GasStudio(Studio):
                 keys_to_extract = 
                     ['Coordinates',
                     'Masses',
+                    'Velocities',
                     self.quantity_name,
                     'SmoothingLength'])
 
