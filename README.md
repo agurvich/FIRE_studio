@@ -6,25 +6,43 @@ This git repository was lovingly made, the code it contains is largely based off
 requirements:
 [abg_python](https://www.github.com/agurvich/abg_python)
 
-## Features
-The main function will extract the main  galaxy from a cosmological snapshot, project density and temperature maps for face- and edge-on 
-orientations, combine the density/temperature to make an image whose color is the temperature and whose saturation is the density, 
-and output an image to the snapshot directory provided (along with .hdf5 files containing the intermediate density/temperature maps). 
+## Installation
+To install (with ssh) clone the repository and its dependency
+```bash
+git clone git@github.com:agurvich/abg_python.git
+git clone git@github.com:agurvich/FIRE_studio.git
+```
+and add them into your python path. I like to install these things to a single folder located at `${HOME}/python` that I add to my python path by including 
+```bash
+export PYTHONPATH="${HOME}/python:${PYTHONPATH}"
+```
+in my `.bashrc` file.
 
-## Knobs
-* Can loop over snapshots and render many without having to wrap by passing various `snapmax` and `snapstart` arguments
-* Can change the aperature size and location of the image
-* Can change where the images are output to (if you don't have write permissinon to snapshot directory)
-* Can rotate the galaxy to various angles (with respect to face-on by default) using euler angles
-* Can change the image resolution in number of pixels to a side 
-* Can change the minimum/maximum limits for density/temperature colorscales
+Then, if you'd rather install the repositories in a separate folder, you can use a soft link like so:
+```bash
+ln -s /path/to/repository ${HOME}/python/repository_name
+```
+So that you don't have to make your `PYTHONPATH` environment variable very confusing. 
 
-## Installation Instructions
-Installation is as simple as cloning the repository and adding 
-`/path/to/FIRE_studio `
-to your `PYTHONPATH` environment variable. 
+You may have to recompile the C binaries, but usually not (I think). I'll update this with instructions for how to do that at a future date. 
 
-## Running from the command line
+## Using FIRE_studio
+There are two ways to use FIRE_studio
+1) From a Python script / Jupyter notebook
+2) From the command line
+
+Each has its benefits/uses. If you run from within an existing Python context you can avoid having to open and reorient a snapshot (assuming you've already done that) by passing a dictionary with the required arrays. 
+If you run from the command line I have included a simple multiprocessing ability so that you can render a large number of snapshots simultaneously. 
+
+### Running from within a Python context
+Begin by importing the studio class you would like to use, `GasStudio` for making volume renderings of the gas and its properties or `StarStudio` for mock Hubble (or SDSS) images using simulated starlight that is attenuated by dense gas (dust lanes for days!).
+
+```python
+from firestudio.studios.gas_studio import GasStudio
+from firestudio.studios.star_studio import StarStudio
+```
+
+### Running from the command line
 A render-loop can also be started with the command:
 
 `python firestudio/gas_movie_maker.py --snapdir="/home/abg6257/projects/snaps/m12i_res7100/output" --snapstart=555 --snapmax=601 --frame_width=30 --frame_depth=15 --edgeon=1 --datadir="/home/abg6257/src/FIRE_studio" --multiproc=4 --extract_galaxy=1 --noaxis=1`
@@ -44,7 +62,6 @@ A render-loop can also be started with the command:
 * `multiproc` - uses that many multiprocessing threads
 * `extract_galaxy` - flag to use abg_python.cosmoExtractor to extract main halo
 * `ahf_path` - path relative to snapdir where the halo files are stored, defaults to "../ahf/halo"
-
 
 ## Running from within a python script
 With a simple 
@@ -86,7 +103,7 @@ if that name is
 image_names = ['out_u','out_g','out_r','hubble']
 
 
-## Studio kwargs
+## `Studio` kwargs
 ### paths and which snapshot to open
 * `snapdir`,`snapnum` - snapshot directory and snapshot number
 * `datadir` - directory to put intermediate and output files
