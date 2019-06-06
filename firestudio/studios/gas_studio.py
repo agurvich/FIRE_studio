@@ -47,7 +47,7 @@ class GasStudio(Studio):
         snapdict=None - Dictionary-like holding gas snapshot data, open from disk if None
         use_hsml=True - Flag to use the provided Hsml argument (implemented to test speedup)
         intermediate_file_name = "proj_maps" ##  the name of the file to save maps to
-    """
+    """ + "------- Studio\n" + Studio.__doc__
 
     def __init__(
         self,
@@ -64,7 +64,6 @@ class GasStudio(Studio):
         take_log_of_quantity=True, ## take log of mass weighted quantity map?
         cmap='viridis', ## what colormap to use
         use_colorbar = False,
-        Hsml = None, ## provide smoothing lengths to speed up C routine
         use_hsml = True, ## flag to use the smoothing lengths passed
         snapdict = None, ## provide an open snapshot dictionary to save time opening
         **kwargs):
@@ -201,13 +200,13 @@ class GasStudio(Studio):
                 massWeightedQuantityMap,
                 self.min_quantity,self.max_quantity,
                 self.quantity_name)
-        
 
         if self.single_image is None:
             ## Now take the rho and T images, and combine them 
             ##	to produce the final image array. 
             final_image = mcm.produce_cmap_hsv_image(image_Q, image_rho,cmap=self.cmap) 
             self.cbar_label = 'ERROR'
+
         ## make a column density map
         elif self.single_image == 'Density':
             final_image = mcm.produce_cmap_hsv_image(image_rho,None,cmap=self.cmap)

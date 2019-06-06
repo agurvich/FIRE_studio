@@ -1,1 +1,2 @@
-python firestudio/gas_movie_maker.py --snapdir="/home/abg6257/projects/data/m12i_res7100/subsnaps" --snapstart=600 --snapmax=600 --frame_half_width=5 --frame_depth=5 --datadir="/home/abg6257/src/FIRE_studio" --multiproc=0 --extract_galaxy=0 --noaxis=1 --edgeon=1 --pixels=2400
+curdir=`pwd`
+python firestudio/gas_movie_maker.py --snapdir="${HOME}/research/snaps/m12i_res7100/output" --snapstart=600 --snapmax=600 --frame_half_width=5 --frame_depth=5 --datadir=${curdir} --multiproc=0 --extract_galaxy=1 --noaxis=1 --edgeon=0 --pixels=1200

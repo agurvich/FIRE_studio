@@ -35,18 +35,10 @@ class StarStudio(Studio):
         dynrange=100.0 - controls the saturation of the image in a non-obvious way
         color_scheme_nasa=True - flag to use nasa colors (vs. SDSS if false) 
 
-        single_image=None - string, if it's "Density" it will plot a column 
-            density projection, if it's anything else it will be a mass weighted
-            `quantity_name` projection. None will be a "two-colour" projection
-            with hue determined by `quantity_name` and saturation by density
-
-        quantity_name='Temperature' - the name of the quantity that you're mass weighting
-            should match whatever array you're passing in as quantity
-
         snapdict=None - Dictionary-like holding gas snapshot data, open from disk if None
         star_snapdict=None - Dictionary-like holding star snapshot data, open from disk if None
         intermediate_file_name="proj_maps" ##  the name of the file to save maps to
-    """
+    """ + "------- Studio\n" + Studio.__doc__
 
     def __init__(
         self,

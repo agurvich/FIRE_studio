@@ -145,54 +145,26 @@ def main(
                 None)
 
 if __name__=='__main__':
+    import matplotlib.pyplot as plt
+    from firestudio.studios.studio import shared_kwargs
     argv = sys.argv[1:]
     opts,args = getopt.getopt(argv,'',[
-        'snapdir=',
-        'snapstart=','snapmax=',
-        'pixels=','frame_half_width=','frame_depth=',
-        'theta=','phi=','psi=',
-        'edgeon=',
         'min_den=','max_den=',
-        'min_temp=','max_temp=',
-        'datadir=',
-        'noaxis=',
-        'multiproc=',
-        'extract_galaxy=',
-        'ahf_path=',
-        'figure_label=',
-        'cmap=',
+        'min_temp=','max_temp=', 
         'single_image=',
         'use_colorbar=', 
+        'cmap=',
         'cbar_label=',
         'take_log_of_quantity=',
-        'overwrite=',
-    ])
+    ]+shared_kwargs)
 
     #options:
-    #--snapdir: place where snapshots live
-    #--snapstart : which snapshot to start the loop at
-    #--snapmax : which snapshot to end the loop at
-    #--frame_half_width : half width of frame in kpc
-    #--frame_depth : half depth of frame in kpc
-    #--datadir: place to output frames to
-
-    #--theta,phi,psi : euler angles for rotation
-    #--edgeon : flag for sticking a 90 degree edge on rotation underneath 
-    #--pixels : how many pixels in each direction to use, defaults to 1200
     #--min/max_den/temp: bottom/top of color scales for density/temperature
-    #--noaxis : flag for removing axis and whitespace for just the pretty part
-    #--multiproc : how many processes should be run simultaneously, keep in mind memory constraints
-    #--extract_galaxy=False : flag to use abg_python.cosmoExtractor to extract main halo
-    #--ahf_path : path relative to snapdir where the halo files are stored
-    #--figure_label: text to put in the upper right hand corner
-
     #--cmap : string of colormap name to use
     #--single_image : string of quantity name that you want to make a one-color mass weighted map of
     #--use_colorbar : flag to create a colorbar
     #--cbar_label :  flag to label the colorbar
     #--take_log_of_quantity : flag to take the log of the quantity you are making a map of
-
-    #--overwrite: flag to  overwrite the cached projection if it exists
 
     for i,opt in enumerate(opts):
         if opt[1]=='':

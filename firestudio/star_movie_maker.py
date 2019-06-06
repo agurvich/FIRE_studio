@@ -7,7 +7,6 @@ import matplotlib.pyplot as plt
 
 from firestudio.studios.star_studio import StarStudio
 
-
 def renderStarGalaxy(
     ax,
     snapdir,snapnum,
@@ -23,51 +22,10 @@ def renderStarGalaxy(
         frame_half_width - half-width of image in data space
         frame_depth - half-depth of image in data space 
 
-------- StarStudio
-    Optional:
-        overwrite=0 - flag to overwrite the intermediate grid files
-        datadir=None - directory to output the the intermediate grid files and output png
+    """ + "------- StarStudio\n" + StarStudio.__doc__
 
-        maxden=1e-3 - controls the saturation of the image in a non-obvious way
-        dynrange=1.001 - controls the saturation of the image in a non-obvious way
-        color_scheme_nasa=True - flag to use nasa colors (vs. SDSS if false) 
-
-        single_image=None - string, if it's "Density" it will plot a column 
-            density projection, if it's anything else it will be a mass weighted
-            `quantity_name` projection. None will be a "two-colour" projection
-            with hue determined by `quantity_name` and saturation by density
-
-        quantity_name='Temperature' - the name of the quantity that you're mass weighting
-            should match whatever array you're passing in as quantity
-
-        snapdict=None - Dictionary-like holding gas snapshot data, open from disk if None
-        star_snapdict=None - Dictionary-like holding star snapshot data, open from disk if None
-        intermediate_file_name="proj_maps" ##  the name of the file to save maps to
-
-------- Studio
-    Optional:
-
-        theta=0- euler rotation angle
-        phi=0- euler rotation angle
-        psi=0 - euler rotation angle
-        aspect_ratio=1 - the 'shape' of the image (y/x)
-        pixels=1200 - the resolution of image (pixels x pixels)
-        h5prefix='' - a string that you can prepend to the projection filename if desired
-        fontsize=None - fontsize for all text in frame
-        figure_label=None - what string should you put in the top right corner? 
-        scale_bar=1 - should you plot a scale bar in the bottom left corner
-        overwrite=False - flag to overwrite intermediate maps in projection file
-        this_setup_id=None - string that defines the projection setup, None by default means
-            it defaults to a gross combination of frame params + angles
-        noaxis=0 - flag to turn off axis (1=off 0=on)
-        savefig=1 - flag to save figure to datadir (default snapdir, but can be a kwarg)
-        ahf_path=None - path relative to snapdir where the halo files are stored
-            defaults to snapdir/../halo/ahf
-        extract_galaxy=False - flag to extract the main galaxy using abg_python.cosmoExtractor
-    """
     ## make the call to renderWrapper
-    render(snapdir,snapnum,datadir,frame_half_width,frame_depth,edgeon,kwargs,ax)
-
+    return render(snapdir,snapnum,datadir,frame_half_width,frame_depth,edgeon,kwargs,ax)
 
 ######## Meat and Potatoes render looping functions
 def renderWrapper(args):
@@ -100,6 +58,8 @@ def render(
         starStudio.render(ax,image_names)
         if ax is None:
             plt.clf()
+
+    return starStudio
     
 def main(
     snapdir,
@@ -129,45 +89,18 @@ def main(
             render(snapdir,snapnum,datadir,frame_half_width,frame_depth,edgeon,kwargs,None)
 
 if __name__=='__main__':
+    import matplotlib.pyplot as plt
+    from firestudio.studios.studio import shared_kwargs
     argv = sys.argv[1:]
     opts,args = getopt.getopt(argv,'',[
-        'snapdir=',
-        'snapstart=','snapmax=',
-        'pixels=','frame_half_width=','frame_depth=',
-        'theta=','phi=','psi=',
-        'edgeon=',
-        'dynrange=','maxden=',
-        'datadir=',
-        'noaxis=',
-        'multiproc=',
-        'extract_galaxy=',
-        'ahf_path=',
-        'figure_label=',
-        'overwrite=',
-    ])    #options:
-    # -r/s = use readsnap or use single snapshot loader
-    #--snapdir: place where snapshots live
-    #--snapstart : which snapshot to start the loop at
-    #--snapmax : which snapshot to end the loop at
-    #--frame_half_width : half width of frame in kpc
-    #--frame_depth : half depth of frame in kpc
-    #--datadir: place to output frames to
+        'dynrange=','maxden=','color_scheme_nasa='] + shared_kwargs)    
 
-    #--theta,phi,psi : euler angles for rotation
 
-    #--dynrange : TODO unknown
-    #--maxden : TODO unknown
 
-    #--edgeon : flag for sticking a 90 degree edge on rotation underneath 
-    #--pixels : how many pixels in each direction to use, defaults to 1200
-    #--noaxis : flag for removing axis and whitespace for just the pretty part
-    #--multiproc : how many processes should be run simultaneously, keep in mind memory constraints
-    #--extract_galaxy=False : flag to use abg_python.cosmoExtractor to extract main halo
-    #--ahf_path : path relative to snapdir where the halo files are stored
-    #--figure_label: text to put in the upper right hand corner
-
-    #--overwrite: flag to  overwrite the cached projection if it exists
-
+    # options:
+    # --dynrange : TODO unknown
+    # --maxden : TODO unknown
+    # --color_scheme_nasa: True - flag to use nasa colors (vs. SDSS if false) 
 
     for i,opt in enumerate(opts):
         if opt[1]=='':

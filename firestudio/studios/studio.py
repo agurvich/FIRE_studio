@@ -10,6 +10,39 @@ from abg_python.snapshot_utils import openSnapshot
 from abg_python.cosmo_utils import load_AHF
 from abg_python.cosmoExtractor import diskFilterDictionary
 
+shared_kwargs = [
+    'snapdir=', #--snapdir: place where snapshots live
+    'snapstart=', #--snapstart : which snapshot to start the loop at
+    'snapmax=', #--snapmax : which snapshot to end the loop at
+
+    ## snapshot opening and extraction
+    'extract_galaxy=', #--extract_galaxy=False : flag to use abg_python.cosmoExtractor to extract main halo
+    'ahf_path=', #--ahf_path : path relative to snapdir where the halo files are stored
+
+    ## intermediate projection file options
+    'datadir=', #--datadir: place to output frames to
+    'overwrite=', #--overwrite: flag to  overwrite the cached projection if it exists
+    'this_setup_id=', ## None - string that defines the projection setup, None by default means
+    'h5prefix=', ## '' - a string that you can prepend to the projection filename if desired
+
+    ## image orientation and properties
+    'frame_half_width=', #--frame_half_width : half width of frame in kpc
+    'frame_depth=', #--frame_depth : half depth of frame in kpc
+    'theta=','phi=','psi=', #--theta,phi,psi : euler angles for rotation
+    'edgeon=', #--edgeon : flag for sticking a 90 degree edge on rotation underneath 
+    'aspect_ratio=', ## the 'shape' of the image (y/x)
+    'pixels=', #--pixels : how many pixels in each direction to use, defaults to 1200
+
+    ## image annotation
+    'figure_label=', #--figure_label: text to put in the upper right hand corner
+    'noaxis=', #--noaxis : flag for removing axis and whitespace for just the pretty part
+    'fontsize=', ## None - fontsize for all text in frame
+    'scale_bar=', ##1 - should you plot a scale bar in the bottom left corner
+
+    ## parallel multiprocessing 
+    'multiproc=', #--multiproc : how many processes should be run simultaneously, keep in mind memory constraints
+]
+
 class Studio(object):
     """ 
     Input:
