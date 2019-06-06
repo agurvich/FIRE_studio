@@ -6,7 +6,7 @@ This git repository was lovingly made, the code it contains is largely based off
 requirements:
 [abg_python](https://www.github.com/agurvich/abg_python)
 
-![Sample Rendering](src/pretty_m12i.pdf)
+![Sample Rendering](src/sample_image.png)
 
 ## Installation
 To install (with ssh) clone the repository and its dependency
