@@ -73,10 +73,6 @@ class StarStudio(Studio):
             frame_depth,
             **kwargs)
 
-        ## both are provided, just bind them
-        self.snapdict = snapdict
-        self.star_snapdict = star_snapdict
-
 ####### makeOutputDirectories implementation #######
     def makeOutputDirectories(self,datadir):
         print('Drawing %s:%d'%(self.snapdir,self.snapnum)+' to:%s'%self.datadir)

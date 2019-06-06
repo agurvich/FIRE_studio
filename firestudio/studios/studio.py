@@ -44,13 +44,13 @@ class Studio(object):
         datadir, ## directory to put intermediate and output files
         frame_half_width, ## half-width of image in x direction
         frame_depth, ## z-depth of image (thickness is 2*frame_depth)
-        frame_center = np.zeros(3), ## center of frame in data space
+        frame_center = None, ## center of frame in data space
         theta=0,phi=0,psi=0, ## euler rotation angles
         aspect_ratio = 1, ## shape of image, y/x
         pixels=1200, ## pixels in x direction
-        h5prefix='', ## string to prepend to projection file
+        h5prefix=None, ## string to prepend to projection file
         fontsize = 12,  ## font size of scale bar and figure label
-        figure_label = '', ## string to be put in upper right corner
+        figure_label = None, ## string to be put in upper right corner
         scale_bar = True,  ## flag to plot length scale bar in lower left corner
         overwrite = False, ## flag to overwrite intermediate flags
         this_setup_id = None, ## string identifier in the intermediate projection file
@@ -58,9 +58,23 @@ class Studio(object):
         savefig = True, ## save the image as a png
         ahf_path = None, ## path relative to snapdir where the halo files are stored
         extract_galaxy = False, ## uses halo center to extract region around main halo
-        intermediate_file_name = "proj_maps", ##  the name of the file to save maps to
+        intermediate_file_name = None, ##  the name of the file to save maps to
         **kwargs
         ):
+        
+        ## handle defaults
+        if frame_center is None:
+            frame_center = np.zeros(3)
+
+        if intermediate_file_name is None:
+            intermediate_file_name = "proj_maps"
+        
+        if h5prefix is None:
+            h5prefix = ''
+
+        if figure_label is None:
+            figure_label = ''
+
         print("extra kwargs:\n",list(kwargs.keys()))
 
         ## IO stuff
@@ -161,8 +175,6 @@ class Studio(object):
             ##  "1 color" image but wanted to change the name of the
             ##  .png
             image_names,image_name = image_name[:-1],image_name[-1]
-        else:
-            image_names,[image_name]
 
         ## check if we've already projected this setup and saved it to intermediate file
         this_setup_in_projection_file = self.checkProjectionFile(image_names)
@@ -538,11 +550,11 @@ class Studio(object):
 
 #### FUNCTIONS THAT SHOULD BE OVERWRITTEN IN SUBCLASSES
     def makeOutputDirectories(self,datadir):
-        raise Exception("Studio is a base-class and this method must be implemented in a child.")
+        raise NotImplementedError("Studio is a base-class and this method must be implemented in a child.")
 
     def projectImage(self):
-        raise Exception("Studio is a base-class and this method must be implemented in a child.")
+        raise NotImplementedError("Studio is a base-class and this method must be implemented in a child.")
 
     def produceImage(self):
-        raise Exception("Studio is a base-class and this method must be implemented in a child.")
+        raise NotImplementedError("Studio is a base-class and this method must be implemented in a child.")
 
