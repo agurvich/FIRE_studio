@@ -48,25 +48,26 @@ A render-loop can also be started with the command:
 
 ## Running from within a python script
 With a simple 
-`from movie_maker import renderGalaxy`, you can add a rendered galaxy to a matplotlib axis object. 
-The appropriate function call resembles:
+`from firestudio.studios.gas_studio import GasStudio`, you can add a rendered galaxy to a matplotlib axis object. The appropriate function call resembles:
 ```python
-renderGalaxy(
-    ax,
+image_names = [
+    'columnDensityMap',
+    'massWeightedTemperatureMap',
+    'two_color']
+
+gasStudio = GasStudio(
     snapdir,snapnum,
-    frame_width=gal_radius, ## half-width of frame in code units
-    frame_depth=gal_radius, ## half-depth of the frame in code units
-    frame_center=np.zeros(3), ## position to put the center of the frame on
-    extract_galaxy=False, ## flag for whether FIRE_studio should find the main galaxy and extract it
-    snapdict=snapdict, ## dictionary with snapshot info using default snapshot keys
-    datadir=datadir, ## directory to save intermediate files to
-    savefig=savefig, ## flag to save the image to datadir
-    noaxis=noaxis, ## flag for turning off axis (1=off 0=on)
-    **kwargs)
+    datadir=datadir,
+    frame_half_width=radius,
+    extract_galaxy=False, ## already extracted the galaxy
+    snapdict=gas_snapdict,
+    savefig=savefig,noaxis=noaxis,
+    Hsml = gas_snapdict['SmoothingLength'])
+        
+gasStudio.render(ax,image_names)
 ```
 
-Where `snapdict` is a python dictionary holding the snapshot arrays with keys that match the FIRE defaults, 
-`abg_python.snap_utils.openSnapshot` will do this for you. 
+Where `gas_snapdict` is a python dictionary holding the snapshot arrays with keys that match the FIRE defaults, `abg_python.snap_utils.openSnapshot` will do this for you. 
 
 ### additional keywords you can pass
 * `theta/phi/psi` - euler angles to transform your view by
@@ -74,6 +75,77 @@ Where `snapdict` is a python dictionary holding the snapshot arrays with keys th
 * `min/max_den/temp` - colorbar limits for density/temperature
 * `ahf_path` - path relative to snapdir where the halo files are stored, defaults to "../ahf/halo"
 
-## Stellar Movie Maker
----- TODO  ----
-identical functionality to above exists but is not documented nor stable, see `stellar_movie_maker.py`. 
+## using `gas_studio.render`
+### controlling two-color vs. single color
+`image_names` is supposed to control this but it seems to do very little.
+#### passing a single string
+passing a string name will plot an image with that name and save it with that name. 
+if that name is 
+
+## using `star_studio.render`
+image_names = ['out_u','out_g','out_r','hubble']
+
+
+## Studio kwargs
+### paths and which snapshot to open
+* `snapdir`,`snapnum` - snapshot directory and snapshot number
+* `datadir` - directory to put intermediate and output files
+* `overwrite = False` - flag to overwrite intermediate flags
+* `h5prefix=''` - string to prepend to projection file
+* `this_setup_id = None` - string identifier in the intermediate projection file
+* `intermediate_file_name = "proj_maps"` - the name of the file to save maps to
+* `savefig = True` - save the image as a png
+* `extract_galaxy = False` - uses halo center to extract region around main halo
+* `ahf_path = None` - path relative to snapdir where the halo files are stored
+
+### frame setup
+* `frame_half_width`, half-width of image in x direction
+* `frame_depth`, z-depth of image (thickness is 2 * frame_depth)
+* `frame_center = np.zeros(3)`, center of frame in data space
+* `theta=0`,`phi=0`,`psi=0`, euler rotation angles
+
+### image parameters
+* `aspect_ratio = 1` - shape of image, y/x, multiplies frame_half_width for y dimension
+* `pixels = 1200` - pixels in x direction
+
+### image annotation
+* `fontsize = 12` - font size of scale bar and figure label
+* `figure_label = ''` - string to be put in upper right corner
+* `scale_bar = True` - flag to plot length scale bar in lower left corner
+* `noaxis = True` - turns off axis ticks
+
+## `GasStudio` kwargs
+### required positional arguments passed to `Studio`
+* `snapdir`,`snapnum` - snapshot directory and snapshot number
+* `datadir` - directory to put intermediate and output files
+* `frame_half_width` - half-width of image in x direction
+* `frame_depth` - z-depth of image (thickness is 2 * frame_depth)
+### color scale controls
+* `min_den=-0.4` - the minimum of the density color/saturation scale (in log(n/n_units))
+* `max_den=1.6` - the maximum of the density color/saturation scale (in log(n/n_units))
+* `min_quantity=2` - the minimum of the quantity color scale
+* `max_quantity=7` - the maximum of the quantity color scale (in log(Q/Q_units))
+* `cmap='viridis'` - what colormap to use
+### quantity control
+* `single_image = None` - string to determine what sort of 1-color image to make
+* `quantity_name='Temperature'` - quantity to make a mass weighted map/2 color image
+* `take_log_of_quantity=True` - take log of mass weighted quantity map?
+* `use_colorbar = False` - flag to put a colorbar
+### preopened data control
+* `Hsml = None` - provide smoothing lengths to speed up C routine
+* `use_hsml = True` - flag to use the provided smoothing lengths (if passed)
+* `snapdict = None` - provide an open snapshot dictionary to save time opening
+
+## `StarStudio` kwargs
+### required Positional Arguments
+* `snapdir`,`snapnum` - snapshot directory and snapshot number
+* `datadir` - directory to put intermediate and output files
+* `frame_half_width` - half-width of image in x direction
+* `frame_depth` - z-depth of image (thickness is 2 * frame_depth)
+### color scale controls
+* `maxden = 1.0e-2` - controls the saturation of the image in a non-obvious way
+* `dynrange = 100.0` - controls the saturation of the image in a non-obvious way
+* `color_scheme_nasa = True` - flag to use nasa colors (vs. SDSS if false)
+### preopened data control
+* `star_snapdict = None` - provide an open snapshot dictionary to save time opening
+* `snapdict = None` - provide an open snapshot dictionary to save time opening
