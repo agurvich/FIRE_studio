@@ -30,11 +30,22 @@ You may have to recompile the C binaries, but usually not (I think). I'll update
 
 ## Using FIRE_studio
 There are two ways to use FIRE_studio
-1) From a Python script / Jupyter notebook
-2) From the command line
+1) From the command line
+2) From a Python script / Jupyter notebook
 
 Each has its benefits/uses. If you run from within an existing Python context you can avoid having to open and reorient a snapshot (assuming you've already done that) by passing a dictionary with the required arrays. 
 If you run from the command line I have included a simple multiprocessing ability so that you can render a large number of snapshots simultaneously. 
+
+
+### Running from the command line
+A render-loop can also be started by passing any of the keyword arguments listed below as command line arguments with the addition of `snapstart` and `snapmax`, which are the initial and final snapshots that will be rendered. 
+There is also the `mps` flag that determines how many multiprocessing threads should be launched if you'd like to render the snapshots in parallel (1 thread / snapshot), make sure you have enough cores/memory for however many threads you request. 
+
+For a gas density rendering:
+`python firestudio/gas_movie_maker.py --snapdir="/home/abg6257/projects/snaps/m12i_res7100/output" --snapstart=555 --snapmax=600 --frame_width=30 --frame_depth=15 --edgeon=1 --datadir="/home/abg6257/src/FIRE_studio" --multiproc=4 --extract_galaxy=1 --noaxis=1`
+
+or for a mock hubble (or SDSS) rendering:
+`python firestudio/star_movie_maker.py --snapdir="/home/abg6257/projects/snaps/m12i_res7100/output" --snapstart=555 --snapmax=600 --frame_width=30 --frame_depth=15 --edgeon=1 --datadir="/home/abg6257/src/FIRE_studio" --multiproc=4 --extract_galaxy=1 --noaxis=1`
 
 ### Specifying the sort of image you'd like to make  
 #### `gas_studio.render` 
@@ -85,11 +96,6 @@ starStudio.render(ax,image_names)
 Where `gas_snapdict` is a python dictionary holding the snapshot arrays for `PartType0` with keys that match the FIRE defaults, `abg_python.snap_utils.openSnapshot` will do this for you. 
 
 
-### Running from the command line
-A render-loop can also be started by passing any of the keyword arguments listed below as command line arguments with the addition of `snapstart` and `snapmax`, which are the initial and final snapshots that will be rendered. 
-There is also the `mps` flag that determines how many multiprocessing threads should be launched if you'd like to render the snapshots in parallel (1 thread / snapshot), make sure you have enough cores/memory for however many threads you request. 
-
-`python firestudio/gas_movie_maker.py --snapdir="/home/abg6257/projects/snaps/m12i_res7100/output" --snapstart=555 --snapmax=600 --frame_width=30 --frame_depth=15 --edgeon=1 --datadir="/home/abg6257/src/FIRE_studio" --multiproc=4 --extract_galaxy=1 --noaxis=1`
 
 ## Keyword arguments and their explanation 
 
