@@ -24,6 +24,7 @@ shared_kwargs = [
     'overwrite=', #--overwrite: flag to  overwrite the cached projection if it exists
     'this_setup_id=', ## None - string that defines the projection setup, None by default means
     'h5prefix=', ## '' - a string that you can prepend to the projection filename if desired
+    'intermediate_file_name=', ## None, the name of the file to save maps to
 
     ## image orientation and properties
     'frame_half_width=', #--frame_half_width : half width of frame in kpc
@@ -70,6 +71,7 @@ class Studio(object):
         ahf_path=None - path relative to snapdir where the halo files are stored
             defaults to snapdir/../halo/ahf
         extract_galaxy=False - flag to extract the main galaxy using abg_python.cosmoExtractor
+        intermediate_file_name=None - the name of the file to save maps to
     """
     def __init__(
         self,
@@ -408,7 +410,13 @@ class Studio(object):
                     if overwrite:
                         del this_group[image_name]
                     else:
-                        raise IOError("%s already exists."%image_name)
+                        if not np.all(image == this_group[image_name]):
+                            raise IOError(
+                            "%s already exists with overwrite=False."%
+                            image_name)
+                        else:
+                            return
+
 
                 ## save this new quantity
                 this_group[image_name] = image 
