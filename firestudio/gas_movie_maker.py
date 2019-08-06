@@ -13,61 +13,9 @@ def renderGalaxy(
     frame_half_width,frame_depth,
     edgeon = 0,
     **kwargs):
-    """
-    Input:
-        ax - matplotlib axis object to draw to
-        snapdir - location that the snapshots live in
-        snapnum - snapshot number
-        datadir - directory to output the the intermediate grid files and output png
-
-        frame_half_width - half-width of image in data space
-        frame_depth - half-depth of image in data space 
-
-    ------- GasStudio
-    Optional:
-        min_den=-0.4 - the minimum of the density color scale
-        max_den=1.6 - the maximum of the density color scale
-        min_quantity=2 - the minimum of the temperature color scale
-        max_quantity=7 - the maximum of the temperature color scale
-
-        single_image=None - string, if it's "Density" it will plot a column 
-            density projection, if it's anything else it will be a mass weighted
-            `quantity_name` projection. None will be a "two-colour" projection
-            with hue determined by `quantity_name` and saturation by density
-
-        quantity_name='Temperature' - the name of the quantity that you're mass weighting
-            should match whatever array you're passing in as quantity
-
-        cmap='viridis' - string name for cmap to use 
-        use_colorbar=False - flag for whether to plot a colorbar at all
-        cbar_label=None - string that shows up next to colorbar, good for specifying 
-            units, otherwise will default to just quantity_name.title()
-        take_log_of_quantity=True - should we plot the log of the resulting quantity map?
-        Hsml=None - Provided, gas smoothing lengths, speeds up projection calculation
-        snapdict=None - Dictionary-like holding gas snapshot data, open from disk if None
-        use_hsml=True - Flag to use the provided Hsml argument (implemented to test speedup)
-        intermediate_file_name = "proj_maps" ##  the name of the file to save maps to
-
-    ------- Studio
-
-        theta=0- euler rotation angle
-        phi=0- euler rotation angle
-        psi=0 - euler rotation angle
-        aspect_ratio=1 - the 'shape' of the image (y/x)
-        pixels=1200 - the resolution of image (pixels x pixels)
-        h5prefix='' - a string that you can prepend to the projection filename if desired
-        fontsize=None - fontsize for all text in frame
-        figure_label=None - what string should you put in the top right corner? 
-        scale_bar=1 - should you plot a scale bar in the bottom left corner
-        overwrite=False - flag to overwrite intermediate maps in projection file
-        this_setup_id=None - string that defines the projection setup, None by default means
-            it defaults to a gross combination of frame params + angles
-        noaxis=0 - flag to turn off axis (1=off 0=on)
-        savefig=1 - flag to save figure to datadir (default snapdir, but can be a kwarg)
-        ahf_path=None - path relative to snapdir where the halo files are stored
-            defaults to snapdir/../halo/ahf
-        extract_galaxy=False - flag to extract the main galaxy using abg_python.cosmoExtractor
-    """
+    ## copy the docstring
+    GasStudio.__doc__
+    
     return render(
         snapdir,snapnum,
         datadir,

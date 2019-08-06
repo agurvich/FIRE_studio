@@ -316,7 +316,8 @@ class Studio(object):
             diskFilterDictionary(
                 star_snapdict if load_stars else None, 
                 snapdict,
-                radius=3*self.frame_half_width,
+                radius=3*self.frame_half_width, ## particles to mask
+                radius=3*self.frame_half_width, ## particles to orient on (in principle could orient on inner region and want larger region)
                 scom=scom,
                 orient_stars = load_stars)
 

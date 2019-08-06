@@ -14,15 +14,8 @@ def renderStarGalaxy(
     frame_half_width,frame_depth,
     edgeon=False,
     **kwargs):
-    """
-    Input:
-        snapdir - location that the snapshots live in
-        snapnum - snapshot number
-
-        frame_half_width - half-width of image in data space
-        frame_depth - half-depth of image in data space 
-
-    """ + "------- StarStudio\n" + StarStudio.__doc__
+    ## copy the docstring
+    StarStudio.__doc__
 
     ## make the call to renderWrapper
     return render(snapdir,snapnum,datadir,frame_half_width,frame_depth,edgeon,kwargs,ax)
