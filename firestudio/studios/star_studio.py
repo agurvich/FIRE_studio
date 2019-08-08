@@ -57,6 +57,9 @@ class StarStudio(Studio):
         self.dynrange = dynrange
         self.color_scheme_nasa = color_scheme_nasa
 
+        self.star_snapdict=star_snapdict
+        self.snapdict=snapdict
+
         ## call Studio's init
         super().__init__(
             snapdir,snapnum,
