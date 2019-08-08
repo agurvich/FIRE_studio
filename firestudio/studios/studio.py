@@ -188,7 +188,8 @@ class Studio(object):
         self,
         ax,
         image_name,
-        edgeon=0):
+        edgeon=0,
+        assert_cached=False):
         if ax is None:
             fig,ax = plt.figure(),plt.gca()
         else:
@@ -213,6 +214,10 @@ class Studio(object):
 
         ## check if we've already projected this setup and saved it to intermediate file
         this_setup_in_projection_file = self.checkProjectionFile(image_names)
+
+        ## allow the user to require that the setup is cached
+        if assert_cached and not this_setup_in_projection_file:
+            raise AssertionError("User required that setup was cached -- assert_cached=True")
 
         ## project the image using a C routine
         if not this_setup_in_projection_file or self.overwrite:
@@ -317,7 +322,7 @@ class Studio(object):
                 star_snapdict if load_stars else None, 
                 snapdict,
                 radius=3*self.frame_half_width, ## particles to mask
-                radius=3*self.frame_half_width, ## particles to orient on (in principle could orient on inner region and want larger region)
+                orient_radius=3*self.frame_half_width, ## particles to orient on (in principle could orient on inner region and want larger region)
                 scom=scom,
                 orient_stars = load_stars)
 
@@ -575,7 +580,7 @@ class Studio(object):
         print('min_%s = '%quantity_name,min_val)
         print('max_%s = '%quantity_name,max_val)
 
-        print('Image range (%s): '%quantity_name,np.max(image),np.max(image))
+        print('Image range (%s): '%quantity_name,np.min(image),np.max(image))
         image = image - min_val
         image = image / (max_val - min_val)
         
