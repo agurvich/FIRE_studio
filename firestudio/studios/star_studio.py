@@ -152,7 +152,7 @@ class StarStudio(Studio):
 
         ## cull the particles outside the frame and cast to float32
         gas_ind_box = self.cullFrameIndices(self.snapdict['Coordinates'])
-        print(np.sum(star_ind_box),'many gas in volume')
+        print(np.sum(gas_ind_box),'many gas in volume')
 
         ## unpack the gas information
         gas_pos = self.snapdict['Coordinates'][gas_ind_box]
@@ -170,7 +170,8 @@ class StarStudio(Studio):
             mstar,ages,metals,
             h_star,
             gas_pos[:,0],gas_pos[:,1],gas_pos[:,2],
-            mgas,gas_metals,h_gas)
+            mgas,gas_metals,h_gas,
+            pixels=self.pixels)
 
         ## write the output to an .hdf5 file
         self.writeImageGrid(
