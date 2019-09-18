@@ -83,7 +83,7 @@ class GasStudio(Studio):
         self.use_hsml = use_hsml
 
         ## call Studio's init
-        super(GasStudio,self).__init__(
+        super().__init__(
             snapdir,snapnum,
             datadir,
             frame_half_width,
@@ -224,7 +224,7 @@ class GasStudio(Studio):
 ####### plotImage implementation #######
     def plotImage(self,ax,image_names):
         ## run Studio's plotImage method
-        super(GasStudio,self).plotImage(ax,image_names)
+        super().plotImage(ax,image_names)
 
         ## colour bar
         if self.use_colorbar:
