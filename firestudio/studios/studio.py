@@ -573,7 +573,8 @@ class Studio(object):
                 self.scale_label_text,
                 fontweight = 'bold',
                 fontsize=self.fontsize*0.75,
-                transform = ax.transAxes)
+                transform = ax.transAxes,
+                verticalalignment='bottom')
             label2.set_color('white')
 
     def renormalizeTransposeImage(self,image,min_val,max_val,quantity_name):
