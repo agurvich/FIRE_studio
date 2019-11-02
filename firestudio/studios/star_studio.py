@@ -124,21 +124,29 @@ class StarStudio(Studio):
             with h5py.File(self.projection_file, "r") as handle:
                 group = handle['PartType4']
                 h_star = group['h_star'].value
-        except (KeyError,OSError):
+
+            ## attempt to pass these indices along
+            h_star = h_star[star_ind_box]
+        except (KeyError,OSError,IndexError):
             print("Haven't computed stellar smoothing lengths...")
             h_star = load_stellar_hsml.get_particle_hsml(
                 star_pos[:,0],star_pos[:,1],star_pos[:,2])
 
             ## write the output to an .hdf5 file
             with h5py.File(self.projection_file, "a") as handle:
-                try:
+                ## find a nice home in the hdf5 file for it
+                if 'PartType4' not in handle.keys():
                     group = handle.create_group('PartType4')
-                except ValueError:
+                else:
                     group = handle['PartType4']
-                group['h_star'] = h_star 
-            print("Done!")
 
-        h_star = h_star[star_ind_box]
+                ## overwrite existing h_star
+                if 'h_star' in group.keys():
+                    del group['h_star']
+                group['h_star'] = h_star 
+
+            h_star = h_star[star_ind_box]
+            print("Done!")
 
         ## and now filter the positions
         star_pos = star_pos[star_ind_box]
