@@ -211,7 +211,11 @@ class GasStudio(Studio):
         ## make a column density map
         elif self.single_image == 'Density':
             final_image = mcm.produce_cmap_hsv_image(image_rho,None,cmap=self.cmap)
-            self.cbar_label='Column Density'
+            self.cbar_label='Column Density (M$_\odot$/pc$^2$)'
+            ## set the quantity limits to be the density limits for the colorbar...
+            self.min_quantity = self.min_den
+            self.max_quantity = self.max_den
+            self.take_log_of_quantity=True
         ## make a mass weighted quantity map
         else:
             final_image = mcm.produce_cmap_hsv_image(image_Q,None,cmap=self.cmap)
@@ -228,11 +232,11 @@ class GasStudio(Studio):
 
         ## colour bar
         if self.use_colorbar:
-            raise Exception("Almost implemented...")
-            self.addColorbar(
+            addColorbar(
                 ax,mcm.get_cmap(self.cmap),
                 10**self.min_quantity,10**self.max_quantity,
-                self.cbar_label,logflag = self.take_log_of_quantity,
+                self.cbar_label,
+                logflag = self.take_log_of_quantity,
                 fontsize=self.fontsize,cmap_number=0)
 
 def getImageGrid(

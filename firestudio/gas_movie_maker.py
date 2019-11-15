@@ -58,6 +58,7 @@ def render(
         gasStudio.render(ax,image_names)
         if ax is None:
             plt.clf()
+    return ax
     
 def main(
     snapdir,
