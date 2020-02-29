@@ -216,7 +216,8 @@ class GasStudio(Studio):
         ## make a column density map
         elif self.single_image == 'Density':
             final_image = mcm.produce_cmap_hsv_image(image_rho,None,cmap=self.cmap)
-            self.cbar_label='Column Density (M$_\odot$/pc$^2$)'
+            if self.cbar_label is None:
+                self.cbar_label='Column Density (M$_\odot$/pc$^2$)'
             ## set the quantity limits to be the density limits for the colorbar...
             self.min_quantity = self.min_den
             self.max_quantity = self.max_den
