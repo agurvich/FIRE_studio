@@ -232,9 +232,13 @@ class GasStudio(Studio):
 
         ## colour bar
         if self.use_colorbar:
+            cb_min,cb_max = self.min_quantity,self.max_quantity
+            if self.take_log_of_quantity:
+                cb_min,cb_max = 10**cb_min,10**cb_max 
+
             addColorbar(
                 ax,mcm.get_cmap(self.cmap),
-                10**self.min_quantity,10**self.max_quantity,
+                cb_min,cb_max,
                 self.cbar_label,
                 logflag = self.take_log_of_quantity,
                 fontsize=self.fontsize,cmap_number=0)
