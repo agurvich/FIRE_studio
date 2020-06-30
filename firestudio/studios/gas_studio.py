@@ -74,7 +74,7 @@ class GasStudio(Studio):
 
         ## what is the quantity we want to make a 2 color image with?
         ##  (or 1 color mass weighted map)
-        self.quantity_name=quantity_name
+        self.quantity_name = quantity_name.title()
         self.take_log_of_quantity=take_log_of_quantity
         self.single_image = single_image
         self.cmap = cmap
