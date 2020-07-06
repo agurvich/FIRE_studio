@@ -8,92 +8,43 @@ import numpy as np
 import ctypes
 
 ## abg_python imports
-from abg_python.all_utils import filterDictionary
+from abg_python.all_utils import filterDictionary,append_function_docstring
 from abg_python.plot_utils import addColorbar
+from abg_python.galaxy.metadata_utils import metadata_cache
 
 ## firestudio imports
 import firestudio.utils.gas_utils.my_colour_maps as mcm 
 from firestudio.studios.studio import Studio
 
 class GasStudio(Studio):
+    """ FIREstudio class for making gas projection images.
+        Can be used for stars, but you will either have to pass smoothing lengths
+        in or allow FIREstudio to calculate them itself. <--- Not implemented yet.
+
+        Methods:
     """
-    Input:
-        snapdir - location that the snapshots live in
-        snapnum - snapshot number
-        datadir - directory to output the the intermediate grid files and output png
-        frame_half_width - half-width of image in data space
-        frame_depth - half-depth of image in data space 
 
-    Optional:
-        min_den=-0.4 - the minimum of the density color scale
-        max_den=1.6 - the maximum of the density color scale
-        min_quantity=2 - the minimum of the temperature color scale
-        max_quantity=7 - the maximum of the temperature color scale
-
-        single_image=None - string, if it's "Density" it will plot a column 
-            density projection, if it's anything else it will be a mass weighted
-            `quantity_name` projection. None will be a "two-colour" projection
-            with hue determined by `quantity_name` and saturation by density
-
-        quantity_name='Temperature' - the name of the quantity that you're mass weighting
-            should match whatever array you're passing in as quantity
-
-        cmap='viridis' - string name for cmap to use 
-        use_colorbar=False - flag for whether to plot a colorbar at all
-        cbar_label=None - string that shows up next to colorbar, good for specifying 
-            units, otherwise will default to just quantity_name.title()
-        take_log_of_quantity=True - should we plot the log of the resulting quantity map?
-        Hsml=None - Provided, gas smoothing lengths, speeds up projection calculation
-        snapdict=None - Dictionary-like holding gas snapshot data, open from disk if None
-        use_hsml=True - Flag to use the provided Hsml argument (implemented to test speedup)
-        intermediate_file_name = "proj_maps" ##  the name of the file to save maps to
-    """ + "------- Studio\n" + Studio.__doc__
+    def __repr__(self):
+        return 'GasStudio instance'
 
     def __init__(
         self,
-        snapdir,snapnum, ## snapshot directory and snapshot number
-        datadir, ## directory to put intermediate and output files
-        frame_half_width, ## half-width of image in x direction
-        frame_depth, ## z-depth of image (thickness is 2*frame_depth)
-        min_den=-0.4, ## the minimum of the density color/saturation scale
-        max_den=1.6, ## the maximum of the density color/saturation scale
-        min_quantity=2, ## the minimum of the temperature color scale
-        max_quantity=7, ## the maximum of the temperature color scale
-        single_image = None, ## string to determine what sort of 1-color image to make
-        quantity_name='Temperature', ## quantity to make a mass weighted map/2 color image
-        take_log_of_quantity=True, ## take log of mass weighted quantity map?
-        cmap='viridis', ## what colormap to use
-        use_colorbar = False,
-        use_hsml = True, ## flag to use the smoothing lengths passed
-        snapdict = None, ## provide an open snapshot dictionary to save time opening
+        datadir, ## directory to put intermediate and output files 
         **kwargs):
-
-        ## image limits
-        self.min_den,self.max_den = min_den,max_den
-        self.min_quantity,self.max_quantity = min_quantity,max_quantity
-
-        ## what is the quantity we want to make a 2 color image with?
-        ##  (or 1 color mass weighted map)
-        self.quantity_name = quantity_name.title()
-        self.take_log_of_quantity=take_log_of_quantity
-        self.single_image = single_image
-        self.cmap = cmap
-        self.use_colorbar = use_colorbar
-
-        self.use_hsml = use_hsml
+        """"""
 
         ## call Studio's init
         super().__init__(
-            snapdir,snapnum,
             datadir,
-            frame_half_width,
-            frame_depth,
             **kwargs)
 
-        self.snapdict = snapdict
+    ## append the docstring of Studio's init 
+    append_function_docstring(__init__,Studio.__init__)
 
 ####### makeOutputDirectories implementation #######
     def makeOutputDirectories(self,datadir):
+        raise NotImplementedError("rethinking I/O")
+
         print('Drawing %s:%d'%(self.snapdir,self.snapnum)+' to:%s'%self.datadir)
 
         ## make the path to store all plots in the datadir
@@ -112,136 +63,395 @@ class GasStudio(Studio):
             os.mkdir(self.projection_dir)
 
 ####### projectImage implementation #######
-    def projectImage(self,image_names):
+    def set_ImageParams(
+        self,
+        use_defaults=False,
+        **kwargs):
+        """ 
+            Input: 
+                use_colorbar=False
+                cbar_label=''
+                cbar_logspace=False,
+                cbar_min=2
+                cbar_max=7"""
 
-        ## open snapshot data if necessary
-        if self.snapdict is None:
-            self.openSnapshot(
-                keys_to_extract = 
-                    ['Coordinates',
-                    'Masses',
-                    'Velocities',
-                    self.quantity_name,
-                    'SmoothingLength'])
+        default_kwargs = {
+            'use_colorbar':False,
+            'cbar_label':'',
+            'cbar_logspace':True,
+            'cbar_min':2,
+            'cbar_max':7}
 
-        ## unpack the snapshot data from the snapdict
-        Coordinates = self.snapdict['Coordinates']
-        Masses = self.snapdict['Masses']
-        Quantity = self.snapdict[self.quantity_name]
+        for kwarg in kwargs:
+            ## only set it here if it was passed
+            if kwarg in default_kwargs:
+                ## remove it from default_kwargs
+                default_kwargs.pop(kwarg)
 
-        if 'SmoothingLength' in self.snapdict and self.use_hsml:
-            Hsml = self.snapdict['SmoothingLength']
-        else:
-            Hsml = None
+                ## set it to the object
+                setattr(self,kwarg,kwargs[kwarg])
 
-        BoxSize = self.snapdict['BoxSize']
+        if use_defaults:
+            ## if we haven't already set frame center by passed kwarg
+            ##  need to replace None with [0,0,0]
+            if ('frame_center' in default_kwargs and 
+                default_kwargs['frame_center'] is None):
+                default_kwargs['frame_center'] = np.zeros(3)
+             
+            ## set the remaining image parameters to their default values
+            for default_arg in default_kwargs:
+                value = default_kwargs[default_arg]
+                print("setting",default_arg,
+                    'to default value of:',value)
+                setattr(self,default_arg,value)
 
-        ## cull the particles outside the frame and cast to float32
-        ind_box = self.cullFrameIndices(Coordinates)
+        ## set any other image params here
+        super().set_ImageParams(use_defaults=use_defaults,**kwargs)
 
-        pos = Coordinates[ind_box].astype(np.float32)
-        mass = Masses[ind_box].astype(np.float32)
-        quantity = Quantity[ind_box].astype(np.float32)
-        hsml = Hsml[ind_box].astype(np.float32) if Hsml is not None else Hsml
+    append_function_docstring(set_ImageParams,Studio.set_ImageParams)
 
-        frame_center = self.frame_center.astype(np.float32)
 
-        print('-done')
+    def print_ImageParams():
+        """ Prints current image setup to console.
 
-        ## rotate by euler angles if necessary
-        pos = self.rotateEuler(self.theta,self.phi,self.psi,pos)
+            Input:
+                None
 
-        ## make the actual C call
-        columnDensityMap, massWeightedQuantityMap = getImageGrid(
-            BoxSize,
-            self.Xmin,self.Xmax,
-            self.Ymin,self.Ymax,
-            self.Zmin,self.Zmax,
-            self.npix_x,self.npix_y,
-            pos,mass,quantity,
-            self.take_log_of_quantity,
-            hsml = hsml)
+            Output:
 
-        ## write the output to an .hdf5 file
-        self.writeImageGrid(
-            columnDensityMap,
-            'columnDensityMap',
-            overwrite=self.overwrite)
+                None """
 
-        self.writeImageGrid(
-            massWeightedQuantityMap, 
-            "massWeighted%sMap"%self.quantity_name.title(),
-            overwrite=self.overwrite)
+        default_kwargs = {
+            'use_colorbar':False,
+            'cbar_label':'',
+            'cbar_logspace':True,
+            'cbar_min':2,
+            'cbar_max':7}
+
+        ## print the current value, not the default value
+        for arg in default_kwargs:
+            print(arg,'=',getattr(self,arg))
+
+        ## call the super class' print image params
+        super().print_ImageParams()
+
+
+    def weightAvgAlongLOS(
+        self,
+        weights,
+        weight_name,
+        quantities,
+        quantity_name,
+        use_metadata=True,
+        save_meta=True,
+        assert_cached=False,
+        loud=True,
+        **kwargs, 
+        ):
+        """ 
+            Input:
+                weights
+                weight_name
+                quantities
+                quantity_name
+                use_metadata=True
+                save_meta=True
+                assert_cached=False
+                loud=True
+                
+                snapdict_name - 'gas' or 'star', where to load arrays that hasn't 
+                    been passed from
+
+            Output:
+                weightMap - 
+                weightWeightedQuantityMap -"""
+
+        @metadata_cache(
+            self.this_setup_id,  ## hdf5 file group name
+            ['%sMap'%weight_name.lower(),
+                '%sWeighted%sMap'%(
+                weight_name.lower(),
+                quantity_name.title())],
+            use_metadata=use_metadata,
+            save_meta=save_meta,
+            assert_cached=assert_cached,
+            loud=loud)
+        def inner_weight_along_los(
+            self,
+            weights,
+            weight_name,
+            quantities,
+            quantity_name,
+            snapdict_name='gas'):
+
+            ## pick which particle type we're projecting, 
+            if snapdict_name != 'gas' and snapdict_name != 'star':
+                raise ValueError("Choose between 'gas' or 'star' snapdict!")
+            
+            snapdict_name = '%s_snapdict'%snapdict_name
+            
+            ## use the masked version of the snapdict if it was passed
+            if hasattr(self,'masked_'+snapdict_name):
+                print("Used masked_snapdict, delete it if you don't want it anymore")
+                snapdict_name = 'masked_'+snapdict_name
+
+            snapdict = getattr(self,snapdict_name)
+
+            ## unpack the snapshot data from the snapdict
+            Coordinates = snapdict['Coordinates'] ## kpc
+            
+            ## TODO use phil's get star smoothing length thing to 
+            ##  compute smoothing lengths of particles (and cache them) 
+            ##  if they're missing.
+            if "SmoothingLength" not in snapdict:
+                raise NotImplementedError("Need to compute and cache smoothing lengths.")
+
+            Hsml = snapdict['SmoothingLength'] ## kpc
+
+            ## only important if you are neighbor finding and you want a periodic box.
+            ##  for most purposes, you don't. 
+            BoxSize = snapdict['BoxSize'] 
+
+
+            if weights is None:
+                ## account for possibility of volume weighting
+                if weight_name not in snapdict:
+                    if weight_name == 'Volume':
+                        weights = 4/3 * np.pi*Hsml**3 / 32 ## kpc^3
+                    else:
+                        raise KeyError(weight_name,'is not in gas_snapdict')
+
+                weights = snapdict[weight_name]
+
+            if quantities is None:
+                if quantity_name not in snapdict:
+                    raise KeyError(quantity_name,'is not in gas_snapdict')
+                quantities = snapdict[quantity_name]
+
+            
+            ## cull the particles outside the frame and cast to float32
+            ind_box = self.cullFrameIndices(Coordinates) ## TODO is this where I want to rotate?
+
+            pos = Coordinates[ind_box].astype(np.float32)
+            weights = weights[ind_box].astype(np.float32)
+            quantities = quantities[ind_box].astype(np.float32)
+            hsml = Hsml[ind_box].astype(np.float32)
+
+            frame_center = self.frame_center.astype(np.float32)
+
+            ## rotate by euler angles if necessary
+            pos = self.rotateEuler(self.theta,self.phi,self.psi,pos)
+
+            ## make the actual C call
+            weightMap, weightWeightedQuantityMap = getImageGrid(
+                BoxSize,
+                self.Xmin,self.Xmax,
+                self.Ymin,self.Ymax,
+                self.Zmin,self.Zmax,
+                self.npix_x,self.npix_y,
+                pos,weights,quantities,
+                hsml)
+
+            print('-done')
+
+            return weightMap, weightWeightedQuantityMap ## lol
+
+        
+
+        return inner_weight_along_los(
+            self,
+            weights,
+            weight_name,
+            quantities,
+            quantity_name,
+            **kwargs)
+
+    def volumeWeightAlongLOS(
+        self,
+        quantity,
+        quantity_name, 
+        **kwargs):
+        """ Wrapper function for easier API if quantity = None 
+            but quantity_name is in the snapdict then it will be read for you.
+
+            Volume is calculated as 4/3 pi hsml^3 / 32.
+            If you'd like a different volume weight then set self.gas_snapdict['Volume'] = volumes.
+
+            Alternatively, call weightAvgAlongLOS directly with quantity and weights passed.
+
+            Input:
+                quantity
+                quantity_name
+
+                ---
+                
+                kwargs passed:
+                    use_metadata=True
+                    save_meta=True
+                    assert_cached=False
+                    loud=True
+                    snapdict_name='gas'
+
+            Output: 
+                volumeMap - a map of the deposited cell volume along the LOS
+                    in each pixel.
+                volumeWeightedQuantityMap - the volume weighted quantity along the
+                    LOS in each pixel."""
+
+        return self.weightAvgAlongLOS(
+            None, ## read it from the snapdict
+            'Volume',
+            quantity,
+            quantity_name,
+            **kwargs)
+
+    def massWeightAlongLOS(
+        self,
+        quantity,
+        quantity_name,
+        **kwargs):
+        """ Wrapper function for easier API if quantity = None 
+            but quantity_name is in the snapdict then it will be read for you.
+
+            Input:
+                quantity
+                quantity_name
+
+                kwargs passed:
+                    use_metadata=True
+                    save_meta=True
+                    assert_cached=False
+                    loud=True
+                    snapdict_name='gas'
+            
+            Output:
+                massMap"""
+
+        return self.weightAvgAlongLOS(
+            None, ## read it from the snapdict.
+            'Masses',
+            quantity,
+            quantity_name,
+            **kwargs)
 
 ####### produceImage implementation #######
-    def produceImage(self,image_names):
-        ## open the hdf5 file and load the maps
-        with h5py.File(self.projection_file, "r") as handle:
-            this_group=handle[self.this_setup_id]
-            columnDensityMap = np.array(this_group['columnDensityMap'])
-            massWeightedQuantityMap = np.array(this_group['massWeighted%sMap'%self.quantity_name.title()])
+    def produceImage(
+        self,
+        weight_name='Masses',
+        quantity_name='Temperature',
+        min_weight=None,max_weight=None,
+        min_quantity=None,max_quantity=None,
+        weight_adjustment_function=None,
+        quantity_adjustment_function=None,
+        use_colorbar=False,
+        cmap='viridis', ## what colormap to use
+        assert_cached=False
+        ):
 
-        ## make sure that the maps we're loading are the correct shape
-        try:
-            assert columnDensityMap.shape == (self.npix_x,self.npix_y)
-            assert massWeightedQuantityMap.shape == (self.npix_x,self.npix_y)
-        except:
-            raise ValueError("Map (%d,%d) is not the correct shape (%d,%d)"%
-                (columnDensityMap.shape[0],columnDensityMap.shape[1],self.npix_x,self.npix_y))
+        self.cmap = cmap
 
+        ## load the requested maps
+        weightMap, weightWeightedQuantityMap = self.weightAvgAlongLOS(
+            None,
+            weight_name,
+            None,
+            quantity_name,
+            assert_cached=assert_cached)
 
-        image_rho = self.renormalizeTransposeImage(
-            columnDensityMap,
-            self.min_den,self.max_den,
-            'rho')
+        ## apply any unit corrections, take logs, etc...
+        if weight_adjustment_function is not None:
+            weightMap = weight_adjustment_function(weightMap)
 
-        ## only load and renormalize the image_Q if necessary
-        if self.single_image != 'Density':
+        if quantity_adjustment_function is not None: 
+            weightWeightedQuantityMap = quantity_adjustment_function(weightWeightedQuantityMap)
+
+        ## plot a hue-brightness image, convert to 0->1 space
+        if (min_weight is not None and 
+            max_weight is not None and 
+            min_quantity is not None and
+            max_quantity is not None):
+
+            image_W = self.renormalizeTransposeImage(
+                weightMap, 
+                min_weight,max_weight,
+                weight_name)
+
             image_Q = self.renormalizeTransposeImage(
-                massWeightedQuantityMap,
-                self.min_quantity,self.max_quantity,
-                self.quantity_name)
+                weightWeightedQuantityMap,
+                min_quantity,max_quantity,
+                quantity_name)
 
-        if self.single_image is None:
-            ## Now take the rho and T images, and combine them 
-            ##	to produce the final image array. 
-            final_image = mcm.produce_cmap_hsv_image(image_Q, image_rho,cmap=self.cmap) 
-            self.cbar_label = 'ERROR'
+            #self.cbar_label = 'ERROR'
 
-        ## make a column density map
-        elif self.single_image == 'Density':
-            final_image = mcm.produce_cmap_hsv_image(image_rho,None,cmap=self.cmap)
-            self.cbar_label='Column Density (M$_\odot$/pc$^2$)'
-            ## set the quantity limits to be the density limits for the colorbar...
-            self.min_quantity = self.min_den
-            self.max_quantity = self.max_den
-            self.take_log_of_quantity=True
-        ## make a mass weighted quantity map
+        ## plot a weight map, convert to 0->1 space
+        elif (min_weight is not None and 
+            max_weight is not None):
+
+            #self.cbar_label = 'los %s ' % (
+                #self.weight_name,
+                #self.quantity_name.title())
+
+            image_Q = self.renormalizeTransposeImage(
+                weightMap, 
+                min_weight,max_weight,
+                weight_name)
+
+            image_W = None
+        
+        ## plot a quantity map, convert to 0->1 space
+        elif (min_quantity is not None and
+            max_quantity is not None):
+
+            #self.cbar_label = 'los %s-weighted %s' % (
+                #self.weight_name,
+                #self.quantity_name.title())
+
+            image_Q = self.renormalizeTransposeImage(
+                weightWeightedQuantityMap,
+                min_quantity,max_quantity,
+                quantity_name)
+
+            image_W = None
+
         else:
-            final_image = mcm.produce_cmap_hsv_image(image_Q,None,cmap=self.cmap)
-            self.cbar_label = self.quantity_name.title()
+            raise ValueError("Use (min/max)_(weight/quantity) kwargs to set image")
 
-        self.final_image = final_image
+        ## convert the images from 0->1 space to 0-> 255 space
+        final_image = mcm.produce_cmap_hsv_image(image_Q, image_W, cmap=self.cmap) 
 
         return final_image
 
 ####### plotImage implementation #######
-    def plotImage(self,ax,image_names):
+    def plotImage(
+        self,
+        ax,
+        final_image
+        ):
+
         ## run Studio's plotImage method
-        super().plotImage(ax,image_names)
+        super().plotImage(ax,final_image)
 
         ## colour bar
         if self.use_colorbar:
-            cb_min,cb_max = self.min_quantity,self.max_quantity
-            if self.take_log_of_quantity:
-                cb_min,cb_max = 10**cb_min,10**cb_max 
-
+            ## do we need to exponentiate the cbar limits?
+            if self.cbar_logspace:
+                cbar_min,cbar_max = 10**self.cbar_min,10**self.cbar_max 
+            else:
+                cbar_min,cbar_max = self.cbar_min,self.cbar_max 
+        
             addColorbar(
                 ax,mcm.get_cmap(self.cmap),
                 cb_min,cb_max,
                 self.cbar_label,
-                logflag = self.take_log_of_quantity,
-                fontsize=self.fontsize,cmap_number=0)
+                logflag = self.cbar_logspace,
+                fontsize=self.fontsize,
+                cmap_number=0)
+
+append_function_docstring(GasStudio,GasStudio.massWeightAlongLOS)
+append_function_docstring(GasStudio,GasStudio.volumeWeightAlongLOS)
+append_function_docstring(GasStudio,GasStudio.weightAvgAlongLOS)
+append_function_docstring(GasStudio,GasStudio.set_ImageParams)
+append_function_docstring(GasStudio,Studio)
 
 def getImageGrid(
     BoxSize,
@@ -250,8 +460,7 @@ def getImageGrid(
     Zmin,Zmax,
     npix_x,npix_y,
     pos,mass,quantity,
-    take_log_of_quantity,
-    hsml=None):
+    hsml):
 
     ## set c-routine variables
     desngb   = 32
@@ -259,29 +468,35 @@ def getImageGrid(
     Axis2    = 1
     Axis3    = 2
 
-    Hmax     = 0.5*(Xmax-Xmin)
+    Hmax     = 0.5*(Xmax-Xmin) ## ignored if smoothing lengths are passed in
 
     n_smooth = pos.shape[0]
 
     ## output array for sum along the line of sight
-    totalMassMap = np.zeros(shape = (npix_x,npix_y),dtype=np.float32)
+    weightMap = np.zeros(shape = (npix_x,npix_y),dtype=np.float32)
 
     ## output array for average along the line of sight
-    massWeightedQuantityMap = np.zeros(shape = (npix_x,npix_y),dtype=np.float32)
+    weightWeightedQuantityMap = np.zeros(shape = (npix_x,npix_y),dtype=np.float32)
     
     ## create hsml output array
     if hsml is None:
+        raise ValueError("HSML cannot be None and weights != masses.",
+            "We don't check if weights == masses, so we'll just assume",
+            "they're not for ultimate safety.")
         hsml = np.zeros(mass.shape[0],dtype=np.float32)
-    else:
-        print("Using provided smoothing lengths")
+    #else:
+        #print("Using provided smoothing lengths")
     
+    ## make sure everything is in single precision lest we
+    ##  make a swiss-cheese magenta nightmare, #neverforget 6/15/17
     c_f_p      = ctypes.POINTER(ctypes.c_float)
-    pos_p      = pos.ctypes.data_as(c_f_p)
-    hsml_p     = hsml.ctypes.data_as(c_f_p)
-    mass_p     = mass.ctypes.data_as(c_f_p)
-    quantity_p = quantity.ctypes.data_as(c_f_p)
-    w_f_p    = totalMassMap.ctypes.data_as(c_f_p)
-    q_f_p    = massWeightedQuantityMap.ctypes.data_as(c_f_p)
+    pos_p      = pos.astype(np.float32).ctypes.data_as(c_f_p)
+    hsml_p     = hsml.astype(np.float32).ctypes.data_as(c_f_p)
+    mass_p     = mass.astype(np.float32).ctypes.data_as(c_f_p)
+    quantity_p = quantity.astype(np.float32).ctypes.data_as(c_f_p)
+
+    w_f_p    = weightMap.ctypes.data_as(c_f_p)
+    q_f_p    = weightWeightedQuantityMap.ctypes.data_as(c_f_p)
 
     print('------------------------------------------')
     curpath = os.path.realpath(__file__)
@@ -315,31 +530,19 @@ def getImageGrid(
 	ctypes.c_float(Hmax),ctypes.c_double(BoxSize), ## maximum smoothing length and size of box
 	w_f_p,q_f_p) ## pointers to output cell-mass and cell-mass-weighted-quantity
     print('------------------------------------------')
-
-    # normalise by area of each pixel to get SFC density (column density)
-    Acell = (Xmax-Xmin)/npix_x * (Ymax-Ymin)/npix_y
-    columnDensityMap = totalMassMap/(Acell) # 10^10 Msun / kpc^-2 
     
     # convert into Msun/pc^2
-    unitmass_in_g = 1.9890000e+43 
-    solar_mass    = 1.9890000e+33
-    conv_fac = (unitmass_in_g/solar_mass) / (1.0e3)**2 ## Msun/pc^2
-    columnDensityMap *= conv_fac
-    columnDensityMap = np.log10(columnDensityMap)
-    print(
-	'log10 minmax(columnDensityMap)',
-	np.min(columnDensityMap),
-	np.max(columnDensityMap))
+    #unitmass_in_g = 1.9890000e+43 
+    #solar_mass    = 1.9890000e+33
+    #conv_fac = (unitmass_in_g/solar_mass) / (1.0e3)**2 ## Msun/pc^2
+    #columnDensityMap *= conv_fac
+    print('minmax(weightMap)',
+	np.min(weightMap),
+	np.max(weightMap))
 
-    # massWeightedQuantityMap contains the mass-weighted quantity
-    if take_log_of_quantity:
-        massWeightedQuantityMap = np.log10(massWeightedQuantityMap)
-    print(
-	'log10 minmax(massWeightedQuantityMap)',
-	np.min(massWeightedQuantityMap),
-	np.min(massWeightedQuantityMap))
+    # weightWeightedQuantityMap contains the mass-weighted quantity
+    print('minmax(weightWeightedQuantityMap)',
+	np.min(weightWeightedQuantityMap),
+	np.min(weightWeightedQuantityMap))
    
-    return columnDensityMap,massWeightedQuantityMap
-
-
-
+    return weightMap,weightWeightedQuantityMap
