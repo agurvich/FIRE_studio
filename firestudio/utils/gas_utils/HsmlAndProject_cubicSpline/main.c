@@ -316,7 +316,7 @@ void make_map(void)
   for(i = 0; i < Xpixels; i++)
     for(j = 0; j < Ypixels; j++)
       if(Value[i * Ypixels + j]>0)
-        ValueQuantity[i * Ypixels + j] /= Value[i * Ypixels + j];
+        ValueQuantity[i * Ypixels + j] /= Value[i * Ypixels + j]; // divide by deposited mass
 
 
   //printf("\n");

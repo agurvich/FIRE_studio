@@ -93,7 +93,7 @@ class StarStudio(Studio):
         ## open snapshot data if necessary
         if self.snapdict is None or self.star_snapdict is None:
             ## open and bind them in Studio's openSnapshot
-            self.openSnapshot(
+            self.get_snapdict(
                 load_stars = True,
                 keys_to_extract = 
                     ['Coordinates',
