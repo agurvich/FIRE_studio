@@ -13,6 +13,8 @@ from abg_python.all_utils import append_function_docstring
 from abg_python.galaxy.gal_utils import Galaxy
 from abg_python.galaxy.metadata_utils import Metadata,metadata_cache
 
+from firestudio.utils.stellar_utils.load_stellar_hsml import get_particle_hsml
+
 shared_kwargs = [
     'snapdir=', #--snapdir: place where snapshots live
     'snapstart=', #--snapstart : which snapshot to start the loop at
@@ -312,6 +314,11 @@ class Studio(Drawer,Data_Manipulation):
         
         ## IO stuff
         self.datadir = datadir
+
+        ## make the datadirectory if it doesn't exist
+        if not os.path.isdir(self.datadir):
+            os.makedirs(self.datadir)
+
         self.gas_snapdict = gas_snapdict
         self.star_snapdict = star_snapdict
 
@@ -354,6 +361,43 @@ class Studio(Drawer,Data_Manipulation):
         if mask is not None:
             self.masked_gas_snapdict = filterDictionary(self.gas_snapdict,mask)
             self.masked_star_snapdict = filterDictionary(self.star_snapdict,mask)
+
+    def get_HSML(
+        self,
+        snapdict,
+        snapdict_name,
+        use_metadata=True,
+        save_meta=True,
+        assert_cached=False,
+        loud=True,
+        **kwargs, 
+        ):
+        """ Compute smoothing lengths for particles that don't have them,
+            typically collisionless particles (like stars). 
+
+            Input:
+                snapdict
+                snapdict_name
+
+                use_metadata=True
+                save_meta=True
+                assert_cached=False
+                loud=True
+                
+            Output:
+                smoothing_lengths"""
+
+        @metadata_cache(
+            '%s_data'%snapdict_name,  ## hdf5 file group name
+            ['%s_SmoothingLengths']
+            use_metadata=use_metadata,
+            save_meta=save_meta,
+            assert_cached=assert_cached,
+            loud=loud)
+        def compute_HSML(self,snapdict):
+            pos = snapdict['Coordinates']
+            smoothing_lengths = get_particle_hsml(pos[:,0],pos[:,1],pos[:,2])
+            return smoothing_lengths
 
     def __get_snapdicts(
         self,

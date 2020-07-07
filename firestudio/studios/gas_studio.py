@@ -204,7 +204,7 @@ class GasStudio(Studio):
             ##  compute smoothing lengths of particles (and cache them) 
             ##  if they're missing.
             if "SmoothingLength" not in snapdict:
-                raise NotImplementedError("Need to compute and cache smoothing lengths.")
+                self.get_HSML(snapdict)
 
             Hsml = snapdict['SmoothingLength'] ## kpc
 
@@ -220,8 +220,8 @@ class GasStudio(Studio):
                         weights = 4/3 * np.pi*Hsml**3 / 32 ## kpc^3
                     else:
                         raise KeyError(weight_name,'is not in gas_snapdict')
-
-                weights = snapdict[weight_name]
+                else:
+                    weights = snapdict[weight_name]
 
             if quantities is None:
                 if quantity_name not in snapdict:
