@@ -455,10 +455,10 @@ class GasStudio(Studio):
                 fontsize=self.fontsize,
                 cmap_number=0.25)
 
+append_function_docstring(GasStudio,GasStudio.set_ImageParams)
+append_function_docstring(GasStudio,GasStudio.weightAvgAlongLOS)
 append_function_docstring(GasStudio,GasStudio.massWeightAlongLOS)
 append_function_docstring(GasStudio,GasStudio.volumeWeightAlongLOS)
-append_function_docstring(GasStudio,GasStudio.weightAvgAlongLOS)
-append_function_docstring(GasStudio,GasStudio.set_ImageParams)
 append_function_docstring(GasStudio,Studio)
 
 def getImageGrid(

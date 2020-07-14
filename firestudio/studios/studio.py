@@ -696,9 +696,6 @@ class Studio(Drawer,Data_Manipulation):
                 this_group[image_name] = image  
 
     #### FUNCTIONS THAT SHOULD BE OVERWRITTEN IN SUBCLASSES
-    def makeOutputDirectories(self,datadir):
-        raise NotImplementedError("Studio is a base-class and this method must be implemented in a child.")
-
     def produceImage(self):
         raise NotImplementedError("Studio is a base-class and this method must be implemented in a child.")
 

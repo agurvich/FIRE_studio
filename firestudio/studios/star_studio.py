@@ -35,14 +35,12 @@ class StarStudio(Studio):
         **kwargs):
         """ 
             Input: 
-                use_colorbar=False
-                cbar_label=''
-                cbar_logspace=False,
-                cbar_min=2
-                cbar_max=7"""
+                maxden=.01 -  controls the saturation of the image in a non-obvious way
+                dynrange=100  -  controls the saturation of the image in a non-obvious way
+                color_schem_nasa=True - """
 
         default_kwargs = {
-            'maxden' : 1.0e-2, ## controls the saturation of the image in a non-obvious way
+            'maxden' : 1.0e-2, ## 
             'dynrange' : 100.0, ## controls the saturation of the image in a non-obvious way
             'color_scheme_nasa' : True} ## flag to use nasa colors (vs. SDSS if false)
 
@@ -71,6 +69,28 @@ class StarStudio(Studio):
         super().set_ImageParams(use_defaults=use_defaults,**kwargs)
 
     append_function_docstring(set_ImageParams,Studio.set_ImageParams)
+
+    def print_ImageParams():
+        """ Prints current image setup to console.
+
+            Input:
+                None
+
+            Output:
+
+                None """
+
+        default_kwargs = {
+            'maxden' : 1.0e-2, ## 
+            'dynrange' : 100.0, ## controls the saturation of the image in a non-obvious way
+            'color_scheme_nasa' : True} ## flag to use nasa colors (vs. SDSS if false)
+
+        ## print the current value, not the default value
+        for arg in default_kwargs:
+            print(arg,'=',getattr(self,arg))
+
+        ## call the super class' print image params
+        super().print_ImageParams()
 
 ####### projectImage implementation #######
     def get_mockHubbleImage(
@@ -185,6 +205,10 @@ class StarStudio(Studio):
         self.final_image = final_image
 
         return final_image
+
+append_function_docstring(StarStudio,StarStudio.set_ImageParams)
+append_function_docstring(StarStudio,StarStudio.get_mockHubbleImage)
+append_function_docstring(StarStudio,Studio)
 
 ##### Image projection stuff
 ## Stellar light attenuation projection
