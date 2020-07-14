@@ -334,7 +334,8 @@ class Studio(Drawer,Data_Manipulation):
 ####### I/O functions #######
     def load_SnapshotData(
         self,
-        mask=None,
+        gas_mask=None,
+        star_mask=None,
         **kwargs):
         """ Binds simulation output to self.gas_snapdict and self.star_snapdict.
 
@@ -358,13 +359,13 @@ class Studio(Drawer,Data_Manipulation):
     
 
         ## apply a mask to the snapdict if requested to
-        if mask is not None:
-            self.masked_gas_snapdict = filterDictionary(self.gas_snapdict,mask)
+        if gas_mask is not None:
+            self.masked_gas_snapdict = filterDictionary(self.gas_snapdict,gas_mask)
+        if star_mask is not None:
             self.masked_star_snapdict = filterDictionary(self.star_snapdict,mask)
 
     def get_HSML(
         self,
-        snapdict,
         snapdict_name,
         use_metadata=True,
         save_meta=True,
@@ -389,15 +390,22 @@ class Studio(Drawer,Data_Manipulation):
 
         @metadata_cache(
             '%s_data'%snapdict_name,  ## hdf5 file group name
-            ['%s_SmoothingLengths']
+            ['%s_SmoothingLengths'],
             use_metadata=use_metadata,
             save_meta=save_meta,
             assert_cached=assert_cached,
             loud=loud)
-        def compute_HSML(self,snapdict):
+        def compute_HSML(self):
+            snapdict = getattr(self,snapdict_name+'_snapdict')
             pos = snapdict['Coordinates']
             smoothing_lengths = get_particle_hsml(pos[:,0],pos[:,1],pos[:,2])
             return smoothing_lengths
+
+        return_value = compute_HSML(self,**kwargs)
+        ## TODO why am i getting back tuples...?
+        if type(return_value == tuple):
+            return_value  = return_value[0]
+        return return_value
 
     def __get_snapdicts(
         self,
@@ -437,6 +445,7 @@ class Studio(Drawer,Data_Manipulation):
         this_setup_id=None,
         use_defaults=False,
         edgeon=False,
+        loud=True,
         **kwargs):
         """ 
             Input:
@@ -465,6 +474,9 @@ class Studio(Drawer,Data_Manipulation):
                 sim_name - name of simulation (i.e. m12i_res7100)
                 """
 
+        if loud:
+            print(kwargs)
+
         default_kwargs = {
             'frame_half_width':15, ## half-width of image in x direction
             'frame_depth':15, ## z-depth of image (thickness is 2*frame_depth)
@@ -490,8 +502,9 @@ class Studio(Drawer,Data_Manipulation):
                 default_kwargs.pop(kwarg)
 
                 ## set it to the object
-                print("setting",kwarg,
-                    'to value of:',value)
+                if loud:
+                    print("setting",kwarg,
+                        'to value of:',value)
                 setattr(self,kwarg,value)
 
         if use_defaults:
@@ -504,8 +517,9 @@ class Studio(Drawer,Data_Manipulation):
             ## set the remaining image parameters to their default values
             for default_arg in default_kwargs:
                 value = default_kwargs[default_arg]
-                print("setting",default_arg,
-                    'to default value of:',value)
+                if loud:
+                    print("setting",default_arg,
+                        'to default value of:',value)
                 setattr(self,default_arg,value)
 
 
@@ -527,6 +541,16 @@ class Studio(Drawer,Data_Manipulation):
 
         self.this_setup_id = this_setup_id
 
+        self.set_CacheFile()
+
+    def set_CacheFile(self):
+        """ Creates the cache file. Requires self.snapnum be set.
+
+            Input:
+                None
+            Output:
+                cache_file"""
+
         if self.snapnum is not None:
             ## read the snapshot number from the end of the metapath
             if (self.cache_file is None or 
@@ -539,6 +563,10 @@ class Studio(Drawer,Data_Manipulation):
                     h5name = self.sim_name+'_'+h5name
 
                 self.metadata = self.cache_file = Metadata(os.path.join(self.datadir,h5name)) 
+        else:
+            raise IOError("Need to set self.snapnum to disambiguate cache_file")
+
+        return self.metadata
 
     def print_ImageParams():
         """ Prints current image setup to console.
