@@ -31,6 +31,7 @@ class StarStudio(Studio):
     def set_ImageParams(
         self,
         use_defaults=False,
+        loud=True,
         **kwargs):
         """ 
             Input: 
@@ -51,6 +52,9 @@ class StarStudio(Studio):
                 ## remove it from default_kwargs
                 default_kwargs.pop(kwarg)
 
+                if loud:
+                    print("setting",kwarg,
+                        'to user value of:',value)
                 ## set it to the object
                 setattr(self,kwarg,kwargs[kwarg])
 
@@ -58,8 +62,9 @@ class StarStudio(Studio):
             ## set the remaining image parameters to their default values
             for default_arg in default_kwargs:
                 value = default_kwargs[default_arg]
-                print("setting",default_arg,
-                    'to default value of:',value)
+                if loud:
+                    print("setting",default_arg,
+                        'to default value of:',value)
                 setattr(self,default_arg,value)
 
         ## set any other image params here
@@ -89,8 +94,8 @@ class StarStudio(Studio):
         @metadata_cache(
             self.this_setup_id,  ## hdf5 file group name
             ['starMassesMap',
-                'attenUMap'
-                'attenGMap'
+                'attenUMap',
+                'attenGMap',
                 'attenRMap'],
             use_metadata=use_metadata,
             save_meta=save_meta,
@@ -111,7 +116,7 @@ class StarStudio(Studio):
             ##  file
 
             if "SmoothingLength" not in self.star_snapdict:
-                Hsml = self.get_HSML(self.star_snapdict,'star')
+                Hsml = self.get_HSML('star')
             else:
                 Hsml = self.star_snapdict['SmoothingLength'] ## kpc
             ## attempt to pass these indices along
@@ -132,17 +137,18 @@ class StarStudio(Studio):
             print(np.sum(gas_ind_box),'many gas in volume')
 
             ## unpack the gas information
-            gas_pos = self.snapdict['Coordinates'][gas_ind_box]
+            gas_pos = self.gas_snapdict['Coordinates'][gas_ind_box]
 
             ## rotate by euler angles if necessary
             gas_pos = self.rotateEuler(self.theta,self.phi,self.psi,gas_pos).astype(np.float32)
 
-            mgas = self.snapdict['Masses'][gas_ind_box].astype(np.float32)
-            gas_metals = self.snapdict['Metallicity'][:,0][gas_ind_box].astype(np.float32)
+            mgas = self.gas_snapdict['Masses'][gas_ind_box].astype(np.float32)
+            gas_metals = self.gas_snapdict['Metallicity'][:,0][gas_ind_box].astype(np.float32)
 
             if "SmoothingLength" not in self.gas_snapdict:
-                self.get_HSML(self.gas_snapdict,'gas')
-            h_gas = self.snapdict['SmoothingLength'][gas_ind_box].astype(np.float32)
+                h_gas = self.get_HSML('gas')
+            else:
+                h_gas = self.gas_snapdict['SmoothingLength'][gas_ind_box].astype(np.float32)
 
             ## do the actual raytracing
             gas_out,out_u,out_g,out_r = raytrace_ugr_attenuation(
