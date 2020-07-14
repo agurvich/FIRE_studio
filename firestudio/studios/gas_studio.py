@@ -51,21 +51,20 @@ class GasStudio(Studio):
     def set_ImageParams(
         self,
         use_defaults=False,
+        loud=True,
         **kwargs):
         """ 
             Input: 
                 use_colorbar=False
                 cbar_label=''
                 cbar_logspace=False,
-                cbar_min=2
                 cbar_max=7"""
 
         default_kwargs = {
             'use_colorbar':False,
             'cbar_label':'',
             'cbar_logspace':True,
-            'cbar_min':2,
-            'cbar_max':7}
+            }
 
         for kwarg in kwargs:
             ## only set it here if it was passed
@@ -80,12 +79,13 @@ class GasStudio(Studio):
             ## set the remaining image parameters to their default values
             for default_arg in default_kwargs:
                 value = default_kwargs[default_arg]
-                print("setting",default_arg,
-                    'to default value of:',value)
+                if loud:
+                    print("setting",default_arg,
+                        'to default value of:',value)
                 setattr(self,default_arg,value)
 
         ## set any other image params here
-        super().set_ImageParams(use_defaults=use_defaults,**kwargs)
+        super().set_ImageParams(use_defaults=use_defaults,loud=loud,**kwargs)
 
     append_function_docstring(set_ImageParams,Studio.set_ImageParams)
 
@@ -104,8 +104,7 @@ class GasStudio(Studio):
             'use_colorbar':False,
             'cbar_label':'',
             'cbar_logspace':True,
-            'cbar_min':2,
-            'cbar_max':7}
+            }
 
         ## print the current value, not the default value
         for arg in default_kwargs:
@@ -150,7 +149,7 @@ class GasStudio(Studio):
             ['%sMap'%weight_name.lower(),
                 '%sWeighted%sMap'%(
                 weight_name.lower(),
-                quantity_name.title())],
+                quantity_name.title())][:1+(quantity_name!='Ones')],
             use_metadata=use_metadata,
             save_meta=save_meta,
             assert_cached=assert_cached,
@@ -183,14 +182,16 @@ class GasStudio(Studio):
             ##  compute smoothing lengths of particles (and cache them) 
             ##  if they're missing.
             if "SmoothingLength" not in snapdict:
-                Hsml = self.get_HSML(snapdict,snapdict_name)
+                Hsml = self.get_HSML(snapdict_name)
+                assert type(Hsml) == np.ndarray
+                if 'masked_' in full_snapdict_name:
+                    Hsml = Hsml[self.mask]
             else:
                 Hsml = snapdict['SmoothingLength'] ## kpc
 
             ## only important if you are neighbor finding and you want a periodic box.
             ##  for most purposes, you don't. 
             BoxSize = snapdict['BoxSize'] 
-
 
             if weights is None:
                 ## account for possibility of volume weighting
@@ -204,22 +205,31 @@ class GasStudio(Studio):
 
             if quantities is None:
                 if quantity_name not in snapdict:
-                    raise KeyError(quantity_name,'is not in gas_snapdict')
-                quantities = snapdict[quantity_name]
+                    if quantity_name == 'Ones':
+                        quantities = np.ones(weights.size)
+                    else:
+                        raise KeyError(quantity_name,'is not in gas_snapdict')
+
+                else:
+                    quantities = snapdict[quantity_name]
 
             
             ## cull the particles outside the frame and cast to float32
-            ind_box = self.cullFrameIndices(Coordinates) ## TODO is this where I want to rotate?
+            box_mask = self.cullFrameIndices(Coordinates) ## TODO is this where I want to rotate?
 
-            pos = Coordinates[ind_box].astype(np.float32)
-            weights = weights[ind_box].astype(np.float32)
-            quantities = quantities[ind_box].astype(np.float32)
-            hsml = Hsml[ind_box].astype(np.float32)
+            print("projecting %d particles"%np.sum(box_mask))
+
+            pos = Coordinates[box_mask].astype(np.float32)
+            weights = weights[box_mask].astype(np.float32)
+            quantities = quantities[box_mask].astype(np.float32)
+            hsml = Hsml[box_mask].astype(np.float32)
 
             frame_center = self.frame_center.astype(np.float32)
 
             ## rotate by euler angles if necessary
             pos = self.rotateEuler(self.theta,self.phi,self.psi,pos)
+
+
 
             ## make the actual C call
             weightMap, weightWeightedQuantityMap = getImageGrid(
@@ -233,17 +243,22 @@ class GasStudio(Studio):
 
             print('-done')
 
-            return weightMap, weightWeightedQuantityMap ## lol
+            return_list = [weightMap, weightWeightedQuantityMap] ## lol
 
-        
+            return return_list[:1+(quantity_name!='Ones')]
 
-        return inner_weight_along_los(
+        return_value = inner_weight_along_los(
             self,
             weights,
             weight_name,
             quantities,
             quantity_name,
             **kwargs)
+
+        if quantity_name == 'Ones':
+            return return_value[0],return_value[0] ## return the same map twice
+        else:
+            return return_value
 
     def volumeWeightAlongLOS(
         self,
@@ -318,24 +333,25 @@ class GasStudio(Studio):
         self,
         weight_name='Masses',
         quantity_name='Temperature',
+        weights=None,quantities=None,
         min_weight=None,max_weight=None,
         min_quantity=None,max_quantity=None,
         weight_adjustment_function=None,
         quantity_adjustment_function=None,
         use_colorbar=False,
         cmap='viridis', ## what colormap to use
-        assert_cached=False
+        **kwargs
         ):
 
         self.cmap = cmap
 
         ## load the requested maps
         weightMap, weightWeightedQuantityMap = self.weightAvgAlongLOS(
-            None,
+            weights,
             weight_name,
-            None,
+            quantities,
             quantity_name,
-            assert_cached=assert_cached)
+            **kwargs)
 
         ## apply any unit corrections, take logs, etc...
         if weight_adjustment_function is not None:
@@ -361,6 +377,8 @@ class GasStudio(Studio):
                 quantity_name)
 
             #self.cbar_label = 'ERROR'
+            self.cbar_min = min_quantity
+            self.cbar_max = max_quantity
 
         ## plot a weight map, convert to 0->1 space
         elif (min_weight is not None and 
@@ -376,6 +394,9 @@ class GasStudio(Studio):
                 weight_name)
 
             image_W = None
+
+            self.cbar_min = min_weight
+            self.cbar_max = max_weight
         
         ## plot a quantity map, convert to 0->1 space
         elif (min_quantity is not None and
@@ -392,8 +413,12 @@ class GasStudio(Studio):
 
             image_W = None
 
+            self.cbar_min = min_quantity
+            self.cbar_max = max_quantity
+
         else:
             raise ValueError("Use (min/max)_(weight/quantity) kwargs to set image")
+
 
         ## convert the images from 0->1 space to 0-> 255 space
         final_image = mcm.produce_cmap_hsv_image(image_Q, image_W, cmap=self.cmap) 
@@ -420,11 +445,11 @@ class GasStudio(Studio):
         
             addColorbar(
                 ax,mcm.get_cmap(self.cmap),
-                cb_min,cb_max,
+                cbar_min,cbar_max,
                 self.cbar_label,
                 logflag = self.cbar_logspace,
                 fontsize=self.fontsize,
-                cmap_number=0)
+                cmap_number=0.25)
 
 append_function_docstring(GasStudio,GasStudio.massWeightAlongLOS)
 append_function_docstring(GasStudio,GasStudio.volumeWeightAlongLOS)
