@@ -474,9 +474,6 @@ class Studio(Drawer,Data_Manipulation):
                 sim_name - name of simulation (i.e. m12i_res7100)
                 """
 
-        if loud:
-            print(kwargs)
-
         default_kwargs = {
             'frame_half_width':15, ## half-width of image in x direction
             'frame_depth':15, ## z-depth of image (thickness is 2*frame_depth)
