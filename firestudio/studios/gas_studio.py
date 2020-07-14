@@ -71,9 +71,13 @@ class GasStudio(Studio):
             if kwarg in default_kwargs:
                 ## remove it from default_kwargs
                 default_kwargs.pop(kwarg)
+                value = kwargs[kwarg]
 
+                if loud:
+                    print("setting",kwarg,
+                        'to user value of:',value)
                 ## set it to the object
-                setattr(self,kwarg,kwargs[kwarg])
+                setattr(self,kwarg,)
 
         if use_defaults:
             ## set the remaining image parameters to their default values

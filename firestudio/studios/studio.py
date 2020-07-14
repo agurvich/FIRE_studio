@@ -504,7 +504,8 @@ class Studio(Drawer,Data_Manipulation):
                 ## set it to the object
                 if loud:
                     print("setting",kwarg,
-                        'to value of:',value)
+                        'to user value of:',value)
+                ## set it to the object
                 setattr(self,kwarg,value)
 
         if use_defaults:
