@@ -10,6 +10,8 @@ import ctypes
 
 ## abg_python imports
 from abg_python.plot_utils import addColorbar
+from abg_python.all_utils import append_function_docstring
+from abg_python.galaxy.metadata_utils import metadata_cache
 
 ## firestudio imports
 from firestudio.studios.studio import Studio
@@ -19,188 +21,145 @@ import firestudio.utils.stellar_utils.make_threeband_image as makethreepic
 
 
 class StarStudio(Studio):
+    """ FIREstudio class for making mock hubble images with 
+        attenuation along the line of sight. 
+
+        Methods:
     """
-    Input:
-        snapdir - location that the snapshots live in
-        snapnum - snapshot number
-
-        frame_half_width - half-width of image in data space
-        frame_depth - half-depth of image in data space 
-
-    Optional:
-        overwrite=0 - flag to overwrite the intermediate grid files
-        datadir=None - directory to output the the intermediate grid files and output png
-
-        maxden=1e-2 - controls the saturation of the image in a non-obvious way
-        dynrange=100.0 - controls the saturation of the image in a non-obvious way
-        color_scheme_nasa=True - flag to use nasa colors (vs. SDSS if false) 
-
-        snapdict=None - Dictionary-like holding gas snapshot data, open from disk if None
-        star_snapdict=None - Dictionary-like holding star snapshot data, open from disk if None
-        intermediate_file_name="proj_maps" ##  the name of the file to save maps to
-    """ + "------- Studio\n" + Studio.__doc__
-
-    def __init__(
-        self,
-        snapdir,snapnum, ## snapshot directory and snapshot number
-        datadir, ## directory to put intermediate and output files
-        frame_half_width, ## half-width of image in x direction
-        frame_depth, ## z-depth of image (thickness is 2*frame_depth)
-        maxden = 1.0e-2, ## controls the saturation of the image in a non-obvious way
-        dynrange = 100.0, ## controls the saturation of the image in a non-obvious way
-        color_scheme_nasa = True, ## flag to use nasa colors (vs. SDSS if false)
-        star_snapdict = None, ## provide an open snapshot dictionary to save time opening
-        snapdict = None, ## provide an open snapshot dictionary to save time opening
-        **kwargs):
-
-        self.maxden = maxden
-        self.dynrange = dynrange
-        self.color_scheme_nasa = color_scheme_nasa
-
-        self.star_snapdict=star_snapdict
-        self.snapdict=snapdict
-
-        ## call Studio's init
-        super().__init__(
-            snapdir,snapnum,
-            datadir,
-            frame_half_width,
-            frame_depth,
-            **kwargs)
 
 ####### makeOutputDirectories implementation #######
-    def makeOutputDirectories(self,datadir):
-        print('Drawing %s:%d'%(self.snapdir,self.snapnum)+' to:%s'%self.datadir)
+    def set_ImageParams(
+        self,
+        use_defaults=False,
+        **kwargs):
+        """ 
+            Input: 
+                use_colorbar=False
+                cbar_label=''
+                cbar_logspace=False,
+                cbar_min=2
+                cbar_max=7"""
 
-        ## make the path to store all plots in the datadir
-        path = os.path.join(datadir,'Plots')
-        if not os.path.isdir(path):
-            os.mkdir(path)
+        default_kwargs = {
+            'maxden' : 1.0e-2, ## controls the saturation of the image in a non-obvious way
+            'dynrange' : 100.0, ## controls the saturation of the image in a non-obvious way
+            'color_scheme_nasa' : True} ## flag to use nasa colors (vs. SDSS if false)
 
-        ## make the path to store final images
-        self.image_dir = os.path.join(path,'HubbleImages')
-        if not os.path.isdir(self.image_dir):
-            os.mkdir(self.image_dir)
+        for kwarg in kwargs:
+            ## only set it here if it was passed
+            if kwarg in default_kwargs:
+                ## remove it from default_kwargs
+                default_kwargs.pop(kwarg)
 
-        ## make the paths to store projection hdf5 files
-        self.projection_dir = os.path.join(path,'Projections')
-        if not os.path.isdir(self.projection_dir):
-            os.mkdir(self.projection_dir)
+                ## set it to the object
+                setattr(self,kwarg,kwargs[kwarg])
+
+        if use_defaults:
+            ## set the remaining image parameters to their default values
+            for default_arg in default_kwargs:
+                value = default_kwargs[default_arg]
+                print("setting",default_arg,
+                    'to default value of:',value)
+                setattr(self,default_arg,value)
+
+        ## set any other image params here
+        super().set_ImageParams(use_defaults=use_defaults,**kwargs)
+
+    append_function_docstring(set_ImageParams,Studio.set_ImageParams)
 
 ####### projectImage implementation #######
-    def projectImage(self,image_names):
+    def get_mockHubbleImage(
+        self,
+        use_metadata=True,
+        save_meta=True,
+        assert_cached=False,
+        loud=True,
+        **kwargs, 
+        ):
+        """ 
+            Input:
+                None
 
-        ## open snapshot data if necessary
-        if self.snapdict is None or self.star_snapdict is None:
-            ## open and bind them in Studio's openSnapshot
-            self.get_snapdict(
-                load_stars = True,
-                keys_to_extract = 
-                    ['Coordinates',
-                    'Masses',
-                    'SmoothingLength', 
-                    'Metallicity']+
-                    ['Velocities','Density']*self.extract_galaxy,
-                star_keys_to_extract = 
-                    ['Coordinates',
-                    'Masses',
-                    'AgeGyr',
-                    'Metallicity']+
-                    ['Velocities']*self.extract_galaxy,
-                )
+            Output:
+                gas_out
+                out_u
+                out_g
+                out_r"""
 
-        ## cull the particles outside the frame and cast to float32
-        star_ind_box = self.cullFrameIndices(self.star_snapdict['Coordinates'])
-        print(np.sum(star_ind_box),'many stars in volume')
+        @metadata_cache(
+            self.this_setup_id,  ## hdf5 file group name
+            ['starMassesMap',
+                'attenUMap'
+                'attenGMap'
+                'attenRMap'],
+            use_metadata=use_metadata,
+            save_meta=save_meta,
+            assert_cached=assert_cached,
+            loud=loud)
+        def compute_mockHubbleImage(self):
 
-        ## unpack the star information
-        ## dont' filter star positions just yet
-        star_pos = self.star_snapdict['Coordinates']
+            ## cull the particles outside the frame and cast to float32
+            star_ind_box = self.cullFrameIndices(self.star_snapdict['Coordinates'])
+            print(np.sum(star_ind_box),'many stars in volume')
 
-        ## try opening the stellar smoothing lengths, if we fail
-        ##  let's calculate them and save them to the projection 
-        ##  file
-        try:
-            with h5py.File(self.projection_file, "r") as handle:
-                group = handle['PartType4']
-                h_star = group['h_star'].value
+            ## unpack the star information
+            ## dont' filter star positions just yet
+            star_pos = self.star_snapdict['Coordinates']
 
+            ## try opening the stellar smoothing lengths, if we fail
+            ##  let's calculate them and save them to the projection 
+            ##  file
+
+            if "SmoothingLength" not in self.star_snapdict:
+                Hsml = self.get_HSML(self.star_snapdict,'star')
+            else:
+                Hsml = self.star_snapdict['SmoothingLength'] ## kpc
             ## attempt to pass these indices along
-            h_star = h_star[star_ind_box]
-        except (KeyError,OSError,IndexError):
-            print("Haven't computed stellar smoothing lengths...")
-            h_star = load_stellar_hsml.get_particle_hsml(
-                star_pos[:,0],star_pos[:,1],star_pos[:,2])
+            h_star = Hsml[star_ind_box].astype(np.float32)
 
-            ## write the output to an .hdf5 file
-            with h5py.File(self.projection_file, "a") as handle:
-                ## find a nice home in the hdf5 file for it
-                if 'PartType4' not in handle.keys():
-                    group = handle.create_group('PartType4')
-                else:
-                    group = handle['PartType4']
+            ## and now filter the positions
+            star_pos = star_pos[star_ind_box].astype(np.float32)
 
-                ## overwrite existing h_star
-                if 'h_star' in group.keys():
-                    del group['h_star']
-                group['h_star'] = h_star 
+            ## rotate by euler angles if necessary
+            star_pos = self.rotateEuler(self.theta,self.phi,self.psi,star_pos)
 
-            h_star = h_star[star_ind_box]
-            print("Done!")
+            mstar = self.star_snapdict['Masses'][star_ind_box].astype(np.float32)
+            ages = self.star_snapdict['AgeGyr'][star_ind_box].astype(np.float32)
+            metals = self.star_snapdict['Metallicity'][:,0][star_ind_box].astype(np.float32)
 
-        ## and now filter the positions
-        star_pos = star_pos[star_ind_box]
+            ## cull the particles outside the frame and cast to float32
+            gas_ind_box = self.cullFrameIndices(self.gas_snapdict['Coordinates'])
+            print(np.sum(gas_ind_box),'many gas in volume')
 
-        ## rotate by euler angles if necessary
-        star_pos = self.rotateEuler(self.theta,self.phi,self.psi,star_pos)
+            ## unpack the gas information
+            gas_pos = self.snapdict['Coordinates'][gas_ind_box]
 
-        mstar =self.star_snapdict['Masses'][star_ind_box]
-        ages = self.star_snapdict['AgeGyr'][star_ind_box]
-        metals = self.star_snapdict['Metallicity'][:,0][star_ind_box]
+            ## rotate by euler angles if necessary
+            gas_pos = self.rotateEuler(self.theta,self.phi,self.psi,gas_pos).astype(np.float32)
 
-        ## cull the particles outside the frame and cast to float32
-        gas_ind_box = self.cullFrameIndices(self.snapdict['Coordinates'])
-        print(np.sum(gas_ind_box),'many gas in volume')
+            mgas = self.snapdict['Masses'][gas_ind_box].astype(np.float32)
+            gas_metals = self.snapdict['Metallicity'][:,0][gas_ind_box].astype(np.float32)
 
-        ## unpack the gas information
-        gas_pos = self.snapdict['Coordinates'][gas_ind_box]
+            if "SmoothingLength" not in self.gas_snapdict:
+                self.get_HSML(self.gas_snapdict,'gas')
+            h_gas = self.snapdict['SmoothingLength'][gas_ind_box].astype(np.float32)
 
-        ## rotate by euler angles if necessary
-        gas_pos = self.rotateEuler(self.theta,self.phi,self.psi,gas_pos)
+            ## do the actual raytracing
+            gas_out,out_u,out_g,out_r = raytrace_ugr_attenuation(
+                star_pos[:,0],star_pos[:,1],star_pos[:,2],
+                mstar,ages,metals,
+                h_star,
+                gas_pos[:,0],gas_pos[:,1],gas_pos[:,2],
+                mgas,gas_metals,h_gas,
+                pixels=self.pixels)
 
-        mgas = self.snapdict['Masses'][gas_ind_box]
-        gas_metals = self.snapdict['Metallicity'][:,0][gas_ind_box]
-        h_gas = self.snapdict['SmoothingLength'][gas_ind_box]
-
-        ## do the actual raytracing
-        gas_out,out_u,out_g,out_r = raytrace_ugr_attenuation(
-            star_pos[:,0],star_pos[:,1],star_pos[:,2],
-            mstar,ages,metals,
-            h_star,
-            gas_pos[:,0],gas_pos[:,1],gas_pos[:,2],
-            mgas,gas_metals,h_gas,
-            pixels=self.pixels)
-
-        ## write the output to an .hdf5 file
-        self.writeImageGrid(
-            out_u,'out_u',
-            overwrite=self.overwrite)
-
-        self.writeImageGrid(
-            out_g,'out_g',
-            overwrite=self.overwrite)
-
-        self.writeImageGrid(
-            out_r,'out_r',
-            overwrite=self.overwrite)
+            return gas_out,out_u,out_g,out_r
+        return compute_mockHubbleImage(self,**kwargs)
 
 ####### produceImage implementation #######
-    def produceImage(self,image_names):
-        with h5py.File(self.projection_file, "r") as handle:
-            this_group=handle[self.this_setup_id]
-            out_u = this_group['out_u'].value
-            out_g = this_group['out_g'].value
-            out_r = this_group['out_r'].value
+    def produceImage(self,**kwargs):
+
+        gas_out,out_u,out_g,out_r = self.get_mockHubbleImage(**kwargs)
 
         ## open the hdf5 file and load the maps
         image24, massmap = makethreepic.make_threeband_image_process_bandmaps(

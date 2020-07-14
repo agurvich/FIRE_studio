@@ -59,9 +59,6 @@ class Drawer(object):
         else:
             fig = ax.get_figure()
 
-        ## project through the simulation data to get image data in physical coordinates
-        #self.projectImage(**kwargs) ## metadata_cache will only pass good kwargs
- 
         ## remap the C output to RGB space
         final_image = self.produceImage(**kwargs)
 
@@ -285,6 +282,7 @@ class Studio(Drawer,Data_Manipulation):
     def __init__(
         self,
         datadir, ## directory to put intermediate and output files 
+        snapnum, ## snapshot number 
         cache_file_name = None, ##  the name of the file to save maps to
         gas_snapdict=None, ## open galaxy gas snapshot dictionary 
         star_snapdict=None, ## open galaxy star snapshot dictionary
@@ -295,7 +293,9 @@ class Studio(Drawer,Data_Manipulation):
 
             Input:
                 datadir - directory to put intermediate and output files 
-                cache_file_name - None, ##  the name of the file to save maps to
+                snapnum - snapshot number (feel free to lie if you aren't using
+                    FIRE_studio to open a snapshot, it is needed for cache file name though)
+                cache_file_name=None, ##  the name of the file to save maps to
                     defaults to proj_maps_%03d.hdf5, changes when you use set_DataParams
                     to choose a snapshot.
                 gas_snapdict=None - an open galaxy gas snapshot dictionary 
@@ -329,7 +329,7 @@ class Studio(Drawer,Data_Manipulation):
         ## initialize the object with some default image params that will
         ##  make a face-on image of a galaxy, can always set these manually
         ##  with  external calls to set_ImageParams
-        self.set_ImageParams(use_defaults=True,**kwargs)
+        self.set_ImageParams(use_defaults=True,snapnum=snapnum,**kwargs)
 
 ####### I/O functions #######
     def load_SnapshotData(
@@ -389,15 +389,17 @@ class Studio(Drawer,Data_Manipulation):
 
         @metadata_cache(
             '%s_data'%snapdict_name,  ## hdf5 file group name
-            ['%s_SmoothingLengths']
+            ['%s_SmoothingLengths'],
             use_metadata=use_metadata,
             save_meta=save_meta,
             assert_cached=assert_cached,
             loud=loud)
-        def compute_HSML(self,snapdict):
+        def compute_HSML(self):
             pos = snapdict['Coordinates']
             smoothing_lengths = get_particle_hsml(pos[:,0],pos[:,1],pos[:,2])
             return smoothing_lengths
+
+        return compute_HSML(self)
 
     def __get_snapdicts(
         self,
@@ -539,6 +541,8 @@ class Studio(Drawer,Data_Manipulation):
                     h5name = self.sim_name+'_'+h5name
 
                 self.metadata = self.cache_file = Metadata(os.path.join(self.datadir,h5name)) 
+        else:
+            raise IOError("Need to set snapnum to disambiguate cache file name")
 
     def print_ImageParams():
         """ Prints current image setup to console.
@@ -668,9 +672,6 @@ class Studio(Drawer,Data_Manipulation):
 
     #### FUNCTIONS THAT SHOULD BE OVERWRITTEN IN SUBCLASSES
     def makeOutputDirectories(self,datadir):
-        raise NotImplementedError("Studio is a base-class and this method must be implemented in a child.")
-
-    def projectImage(self):
         raise NotImplementedError("Studio is a base-class and this method must be implemented in a child.")
 
     def produceImage(self):

@@ -19,27 +19,13 @@ from firestudio.studios.studio import Studio
 class GasStudio(Studio):
     """ FIREstudio class for making gas projection images.
         Can be used for stars, but you will either have to pass smoothing lengths
-        in or allow FIREstudio to calculate them itself. <--- Not implemented yet.
+        in or allow FIREstudio to calculate them itself, which  can take a long time. 
 
         Methods:
     """
 
     def __repr__(self):
         return 'GasStudio instance'
-
-    def __init__(
-        self,
-        datadir, ## directory to put intermediate and output files 
-        **kwargs):
-        """"""
-
-        ## call Studio's init
-        super().__init__(
-            datadir,
-            **kwargs)
-
-    ## append the docstring of Studio's init 
-    append_function_docstring(__init__,Studio.__init__)
 
 ####### makeOutputDirectories implementation #######
     def makeOutputDirectories(self,datadir):
@@ -62,7 +48,6 @@ class GasStudio(Studio):
         if not os.path.isdir(self.projection_dir):
             os.mkdir(self.projection_dir)
 
-####### projectImage implementation #######
     def set_ImageParams(
         self,
         use_defaults=False,
@@ -92,12 +77,6 @@ class GasStudio(Studio):
                 setattr(self,kwarg,kwargs[kwarg])
 
         if use_defaults:
-            ## if we haven't already set frame center by passed kwarg
-            ##  need to replace None with [0,0,0]
-            if ('frame_center' in default_kwargs and 
-                default_kwargs['frame_center'] is None):
-                default_kwargs['frame_center'] = np.zeros(3)
-             
             ## set the remaining image parameters to their default values
             for default_arg in default_kwargs:
                 value = default_kwargs[default_arg]
@@ -188,14 +167,14 @@ class GasStudio(Studio):
             if snapdict_name != 'gas' and snapdict_name != 'star':
                 raise ValueError("Choose between 'gas' or 'star' snapdict!")
             
-            snapdict_name = '%s_snapdict'%snapdict_name
+            full_snapdict_name = '%s_snapdict'%snapdict_name
             
             ## use the masked version of the snapdict if it was passed
-            if hasattr(self,'masked_'+snapdict_name):
+            if hasattr(self,'masked_'+full_snapdict_name):
                 print("Used masked_snapdict, delete it if you don't want it anymore")
-                snapdict_name = 'masked_'+snapdict_name
+                full_snapdict_name = 'masked_'+full_snapdict_name
 
-            snapdict = getattr(self,snapdict_name)
+            snapdict = getattr(self,full_snapdict_name)
 
             ## unpack the snapshot data from the snapdict
             Coordinates = snapdict['Coordinates'] ## kpc
@@ -204,9 +183,9 @@ class GasStudio(Studio):
             ##  compute smoothing lengths of particles (and cache them) 
             ##  if they're missing.
             if "SmoothingLength" not in snapdict:
-                self.get_HSML(snapdict)
-
-            Hsml = snapdict['SmoothingLength'] ## kpc
+                Hsml = self.get_HSML(snapdict,snapdict_name)
+            else:
+                Hsml = snapdict['SmoothingLength'] ## kpc
 
             ## only important if you are neighbor finding and you want a periodic box.
             ##  for most purposes, you don't. 
