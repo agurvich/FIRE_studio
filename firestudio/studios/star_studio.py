@@ -27,6 +27,9 @@ class StarStudio(Studio):
         Methods:
     """
 
+    def __repr__(self):
+        return 'StarStudio instance'
+
 ####### makeOutputDirectories implementation #######
     def set_ImageParams(
         self,
@@ -49,12 +52,12 @@ class StarStudio(Studio):
             if kwarg in default_kwargs:
                 ## remove it from default_kwargs
                 default_kwargs.pop(kwarg)
-
+                value = kwargs[kwarg]
                 if loud:
                     print("setting",kwarg,
                         'to user value of:',value)
                 ## set it to the object
-                setattr(self,kwarg,kwargs[kwarg])
+                setattr(self,kwarg,value)
 
         if use_defaults:
             ## set the remaining image parameters to their default values
@@ -201,7 +204,6 @@ class StarStudio(Studio):
         ##  for now... 
         #image24=np.rot90(image24,k=1,axes=(0,1))
         final_image = np.transpose(image24,axes=(1,0,2))
-            
         self.final_image = final_image
 
         return final_image
