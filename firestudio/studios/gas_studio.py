@@ -248,8 +248,7 @@ class GasStudio(Studio):
             print('-done')
 
             return_list = [weightMap, weightWeightedQuantityMap] ## lol
-
-            return return_list[:1+(quantity_name!='Ones')]
+            return tuple(return_list[:1+(quantity_name!='Ones')])
 
         return_value = inner_weight_along_los(
             self,
