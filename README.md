@@ -26,11 +26,12 @@ ln -s /path/to/repository ${HOME}/python/repository_name
 ```
 So that you don't have to make your `PYTHONPATH` environment variable very confusing. 
 
-You may have to recompile the C binaries, but usually not (I think). I'll update this with instructions for how to do that at a future date. 
+You will have to compile the C file that does the actual projection, this is done by going to 
+`FIRE_studio/firestudio/utils/gas_utils/HsmlAndProject_cubicSpline/` and typing: `make`, you'll know if it works if `HsmlAndProject_cubicSpline.so` appears in the same directory. If that doesn't work, please raise an issue here on the Github!
 
 ## Using FIRE_studio
 There are two ways to use FIRE_studio
-1) From the command line
+1) From the command line (currently broken)
 2) From a Python script / Jupyter notebook
 
 Each has its benefits/uses. If you run from within an existing Python context you can avoid having to open and reorient a snapshot (assuming you've already done that) by passing a dictionary with the required arrays. 
@@ -38,7 +39,8 @@ If you run from the command line I have included a simple multiprocessing abilit
 
 
 ### Running from the command line
-A render-loop can also be started by passing any of the keyword arguments listed below as command line arguments with the addition of `snapstart` and `snapmax`, which are the initial and final snapshots that will be rendered. 
+(Note that this is currently not working)
+A render-loop can be started by passing any of the keyword arguments listed on the [wiki](https://github.com/agurvich/FIRE_studio/wiki) as command line arguments with the addition of `snapstart` and `snapmax`, which are the initial and final snapshots that will be rendered. 
 There is also the `mps` flag that determines how many multiprocessing threads should be launched if you'd like to render the snapshots in parallel (1 thread / snapshot), make sure you have enough cores/memory for however many threads you request. 
 
 For a gas density rendering:
@@ -47,34 +49,36 @@ For a gas density rendering:
 or for a mock hubble (or SDSS) rendering:
 `python firestudio/star_movie_maker.py --snapdir="/home/abg6257/projects/snaps/m12i_res7100/output" --snapstart=555 --snapmax=600 --frame_width=30 --frame_depth=15 --edgeon=1 --datadir="/home/abg6257/src/FIRE_studio" --multiproc=4 --extract_galaxy=1 --noaxis=1`
 
-### Specifying the sort of image you'd like to make  
-#### `gas_studio.render` 
-##### controlling two-color vs. single color
-`image_names` is supposed to control this but it seems to do very little.
-passing a string name will plot an image with that name and save it with that name. 
-if that name is 
-
 ### Running from within a Python context
 Begin by importing the studio class you would like to use, `GasStudio` for making volume renderings of the gas and its properties or `StarStudio` for mock Hubble (or SDSS) images using simulated starlight that is attenuated by dense gas (dust lanes for days!).
 
 ```python
 from firestudio.studios.gas_studio import GasStudio
 
-image_names = [
-    'columnDensityMap',
-    'massWeightedTemperatureMap',
-    'two_color']
 
 gasStudio = GasStudio(
-    snapdir,snapnum,
-    datadir=datadir,
-    frame_half_width=radius,
-    extract_galaxy=False, ## already extracted the galaxy
-    snapdict=gas_snapdict,
-    savefig=savefig,noaxis=noaxis)
+    datadir,
+    snapnum,
+    sim_name,
+    frame_half_width=15, ## kpc
+    gas_snapdict=gas_snapdict,
+    )
         
-gasStudio.render(ax,image_names)
+gasStudio.render(
+    ax,
+    weight_name='Masses',
+    quantity_name='Temperature',
+    min_weight=-0.1,
+    max_weight=1.5,
+    weight_adjustment_function=lambda x: np.log10(x/gasStudio.Acell)+10-6) ## msun/pc^2
+    min_quantity=2,
+    max_quantity=7,
+    quantity_adjustment_function=np.log10)
 ```
+
+Where `gas_snapdict` is a python dictionary holding the snapshot arrays for `PartType0` with keys that match the FIRE defaults. `abg_python.snap_utils.openSnapshot` will do this for you. 
+
+For more information on the functionality and the different keyword arguments, see the corresponding [wiki page](https://github.com/agurvich/FIRE_studio/wiki/gas_studio).
 
 ```python
 from firestudio.studios.star_studio import StarStudio
@@ -82,86 +86,17 @@ from firestudio.studios.star_studio import StarStudio
 image_names = ['out_u','out_g','out_r','hubble']
 
 starStudio = StarStudio(
-    snapdir,snapnum,
-    datadir=datadir,
-    frame_half_width=radius,
-    extract_galaxy=False, ## already extracted the galaxy
-    snapdict=gas_snapdict,
+    datadir,
+    snapnum,
+    sim_name,
+    frame_half_width=15, ## kpc
+    gas_snapdict=gas_snapdict,
     star_snapdict=star_snapdict,
     savefig=savefig,noaxis=noaxis)
     
 starStudio.render(ax,image_names)
 ```
 
-Where `gas_snapdict` is a python dictionary holding the snapshot arrays for `PartType0` with keys that match the FIRE defaults, `abg_python.snap_utils.openSnapshot` will do this for you. 
+Where `star_snapdict` is a python dictionary holding the snapshot arrays for `PartType4` with keys that match the FIRE defaults. `abg_python.snap_utils.openSnapshot` will do this for you. If you are making an image of an isolated galaxy, you should remember to merge the dictionaries of `PartType2`, `PartType3`, and `PartType4`.
 
-
-
-## Keyword arguments and their explanation 
-
-
-### `Studio` kwargs
----
-#### paths and which snapshot to open
-* `snapdir`,`snapnum` - snapshot directory and snapshot number
-* `datadir` - directory to put intermediate and output files
-* `overwrite = False` - flag to overwrite intermediate flags
-* `h5prefix=''` - string to prepend to projection file
-* `this_setup_id = None` - string identifier in the intermediate projection file
-* `intermediate_file_name = "proj_maps"` - the name of the file to save maps to
-* `savefig = True` - save the image as a png
-* `extract_galaxy = False` - uses halo center to extract region around main halo
-* `ahf_path = None` - path relative to snapdir where the halo files are stored
-
-#### frame setup
-* `frame_half_width`, half-width of image in x direction
-* `frame_depth`, z-depth of image (thickness is 2 * frame_depth)
-* `frame_center = np.zeros(3)`, center of frame in data space
-* `theta=0`,`phi=0`,`psi=0`, euler rotation angles
-
-#### image parameters
-* `aspect_ratio = 1` - shape of image, y/x, multiplies frame_half_width for y dimension
-* `pixels = 1200` - pixels in x direction
-
-#### image annotation
-* `fontsize = 12` - font size of scale bar and figure label
-* `figure_label = ''` - string to be put in upper right corner
-* `scale_bar = True` - flag to plot length scale bar in lower left corner
-* `noaxis = True` - turns off axis ticks
-
-### `GasStudio` kwargs
----
-#### required positional arguments passed to `Studio`
-* `snapdir`,`snapnum` - snapshot directory and snapshot number
-* `datadir` - directory to put intermediate and output files
-* `frame_half_width` - half-width of image in x direction
-* `frame_depth` - z-depth of image (thickness is 2 * frame_depth)
-#### color scale controls
-* `min_den=-0.4` - the minimum of the density color/saturation scale (in log(n/n_units))
-* `max_den=1.6` - the maximum of the density color/saturation scale (in log(n/n_units))
-* `min_quantity=2` - the minimum of the quantity color scale
-* `max_quantity=7` - the maximum of the quantity color scale (in log(Q/Q_units))
-* `cmap='viridis'` - what colormap to use
-#### quantity control
-* `single_image = None` - string to determine what sort of 1-color image to make
-* `quantity_name='Temperature'` - quantity to make a mass weighted map/2 color image
-* `take_log_of_quantity=True` - take log of mass weighted quantity map?
-* `use_colorbar = False` - flag to put a colorbar
-#### preopened data control
-* `use_hsml = True` - flag to use the provided smoothing lengths (if in the snapdict has `SmoothingLength`)
-* `snapdict = None` - provide an open snapshot dictionary to save time opening
-
-### `StarStudio` kwargs
----
-#### required Positional Arguments
-* `snapdir`,`snapnum` - snapshot directory and snapshot number
-* `datadir` - directory to put intermediate and output files
-* `frame_half_width` - half-width of image in x direction
-* `frame_depth` - z-depth of image (thickness is 2 * frame_depth)
-#### color scale controls
-* `maxden = 1.0e-2` - controls the saturation of the image in a non-obvious way
-* `dynrange = 100.0` - controls the saturation of the image in a non-obvious way
-* `color_scheme_nasa = True` - flag to use nasa colors (vs. SDSS if false)
-#### preopened data control
-* `star_snapdict = None` - provide an open snapshot dictionary to save time opening
-* `snapdict = None` - provide an open snapshot dictionary to save time opening
+For more information on the functionality and the different keyword arguments, see the corresponding [wiki page](https://github.com/agurvich/FIRE_studio/wiki/star_studio).
