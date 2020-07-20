@@ -10,7 +10,7 @@ import ctypes
 
 ## abg_python imports
 from abg_python.plot_utils import addColorbar
-from abg_python.all_utils import append_function_docstring
+from abg_python.all_utils import append_function_docstring,append_string_docstring
 from abg_python.galaxy.metadata_utils import metadata_cache
 
 ## firestudio imports
@@ -21,11 +21,13 @@ import firestudio.utils.stellar_utils.make_threeband_image as makethreepic
 
 
 class StarStudio(Studio):
-    """ FIREstudio class for making mock hubble images with 
+    """ `FIREstudio` class for making mock hubble images with 
         attenuation along the line of sight. 
 
-        Methods:
-    """
+* [`StarStudio.get_mockHubbleImage`](#starstudioget_mockhubbleimage) 
+* [`StarStudio.render`](#starstudiorender) 
+* [`Studio.__init__`](#studio__init__) 
+* [`Studio.set_ImageParams`](#studioset_imageparams)"""
 
     def __repr__(self):
         return 'StarStudio instance'
@@ -36,11 +38,28 @@ class StarStudio(Studio):
         use_defaults=False,
         loud=True,
         **kwargs):
-        """ 
+        """Changes the parameters of the image. If `use_defaults=True` then 
+            default values of the parameters will be set. Leave `use_defaults=False`
+            to adjust only the keywords passed. 
+
             Input: 
-                maxden=.01 -  controls the saturation of the image in a non-obvious way
-                dynrange=100  -  controls the saturation of the image in a non-obvious way
-                color_schem_nasa=True - """
+
+                maxden = 0.01 --  controls the saturation of the image in a non-obvious way
+                dynrange = 100  --  controls the saturation of the image in a non-obvious way
+                color_schem_nasa = True -- 
+                loud -- 
+            
+            Output: 
+
+                None
+
+Example usage:
+```python
+starStudio.set_ImageParams(
+    maxden=0.1,
+    dynrange=10,
+    figure_label='Hubble')
+```"""
 
         default_kwargs = {
             'maxden' : 1.0e-2, ## 
@@ -71,17 +90,18 @@ class StarStudio(Studio):
         ## set any other image params here
         super().set_ImageParams(use_defaults=use_defaults,**kwargs)
 
-    append_function_docstring(set_ImageParams,Studio.set_ImageParams)
+    append_function_docstring(set_ImageParams,Studio.set_ImageParams,prepend_string='passes `kwargs` to:\n')
 
     def print_ImageParams():
         """ Prints current image setup to console.
 
             Input:
+
                 None
 
             Output:
 
-                None """
+                None"""
 
         default_kwargs = {
             'maxden' : 1.0e-2, ## 
@@ -104,15 +124,26 @@ class StarStudio(Studio):
         loud=True,
         **kwargs, 
         ):
-        """ 
+        """Projects starlight and approximates attenuatation along line of sight
+            into SDSS u, g, and r bands. 
+
             Input:
-                None
+
+                use_metadata = True -- flag to search cache for result
+                save_meta = True -- flag to cache the result
+                assert_cached = False -- flag to require a cache hit
+                loud = True -- whether cache hits/misses should be announced
+                    to the console.
 
             Output:
-                gas_out
-                out_u
-                out_g
-                out_r"""
+
+                gas_out -- total mass along LOS in pixel, in unknown units
+                out_u -- total attenuated luminosity along LOS in pixel
+                    in u band, in unknown units
+                out_g -- total attenuated luminosity along LOS in pixel
+                    in g band, in unknown units
+                out_r -- total attenuated luminosity along LOS in pixel
+                    in r band, in unknown units"""
 
         @metadata_cache(
             self.this_setup_id,  ## hdf5 file group name
@@ -128,7 +159,7 @@ class StarStudio(Studio):
 
             ## cull the particles outside the frame and cast to float32
             star_ind_box = self.cullFrameIndices(self.star_snapdict['Coordinates'])
-            print(np.sum(star_ind_box),'many stars in volume')
+            print(np.sum(star_ind_box),'many star particles in volume')
 
             ## unpack the star information
             ## dont' filter star positions just yet
@@ -157,7 +188,7 @@ class StarStudio(Studio):
 
             ## cull the particles outside the frame and cast to float32
             gas_ind_box = self.cullFrameIndices(self.gas_snapdict['Coordinates'])
-            print(np.sum(gas_ind_box),'many gas in volume')
+            print(np.sum(gas_ind_box),'many gas particles in volume')
 
             ## unpack the gas information
             gas_pos = self.gas_snapdict['Coordinates'][gas_ind_box]
@@ -186,7 +217,47 @@ class StarStudio(Studio):
         return compute_mockHubbleImage(self,**kwargs)
 
 ####### produceImage implementation #######
-    def produceImage(self,**kwargs):
+    def render(
+        self,
+        ax=None,
+        **kwargs):
+        """Plots a mock hubble image, along with any annotations/scale bars,
+            using the stored image parameters.
+
+            Input: 
+
+                ax = None -- axis to plot image to, if None will create a new figure
+
+            Output:
+
+                ax -- the axis the image was plotted to
+                final_image -- 2x2x3 RGB pixel array
+
+Example usage:
+```python
+starStudio.render(plt.gca())
+```"""
+
+        if ax is None:
+            fig,ax = plt.figure(),plt.gca()
+        else:
+            fig = ax.get_figure()
+
+        ## remap the C output to RGB space
+        final_image = self.__produceImage(**kwargs)
+
+        ## plot that RGB image and overlay scale bars/text
+        self.plotImage(ax,final_image)
+
+        ## save the image
+        if self.savefig is not None:
+            self.saveFigure(ax,self.savefig)
+
+        return ax,final_image
+
+    def __produceImage(
+        self,
+        **kwargs):
 
         gas_out,out_u,out_g,out_r = self.get_mockHubbleImage(**kwargs)
 
@@ -210,6 +281,7 @@ class StarStudio(Studio):
 
 append_function_docstring(StarStudio,StarStudio.set_ImageParams)
 append_function_docstring(StarStudio,StarStudio.get_mockHubbleImage)
+append_function_docstring(StarStudio,StarStudio.render)
 append_function_docstring(StarStudio,Studio)
 
 ##### Image projection stuff
@@ -263,3 +335,6 @@ def raytrace_ugr_attenuation(
         ADD_BASE_METALLICITY=0.001*0.02,ADD_BASE_AGE=0.0003,
         IMF_SALPETER=0,IMF_CHABRIER=1
     )
+
+__doc__  = ''
+__doc__ = append_string_docstring(__doc__,StarStudio)
