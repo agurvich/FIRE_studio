@@ -156,9 +156,11 @@ class Studio(Drawer):
         self,
         datadir, ## directory to put intermediate and output files 
         snapnum, ## snapshot number 
-        cache_file_name = None, ##  the name of the file to save maps to
+        sim_name,
+        cache_file_name=None, ##  the name of the file to save maps to
         gas_snapdict=None, ## open galaxy gas snapshot dictionary 
         star_snapdict=None, ## open galaxy star snapshot dictionary
+        galaxy_kwargs=None,
         **kwargs
         ):
         """Initializes a cache file to be read from and sets any image parameters
@@ -188,14 +190,21 @@ star_snapdict['AgeGyr'] ## masses of the particles in 1e10 solar masses
 
             Input:
 
-                datadir - directory to put intermediate and output files 
-                snapnum - snapshot number (feel free to lie if you aren't using
+                datadir -- directory to put intermediate and output files 
+                snapnum -- snapshot number (feel free to lie if you aren't using
                     FIRE_studio to open a snapshot, it is needed for cache file name though)
-                cache_file_name=None, ##  the name of the file to save maps to
+                sim_name -- name of the simulation, i.e. m12i_res7100. prepends the cache_file_name
+                    if the sim_name isn't already in the path to disambiguate caches.  
+                cache_file_name = None -- the name of the file to save maps to
                     defaults to proj_maps_%03d.hdf5, changes when you use set_DataParams
                     to choose a snapshot.
-                gas_snapdict=None - an open galaxy gas snapshot dictionary 
-                star_snapdict=None - an open galaxy star snapshot dictionary 
+
+                gas_snapdict = None -- an open galaxy gas snapshot dictionary, opens from snapdir/snapnum if None
+                    (must then also provide snapdir)
+                star_snapdict = None -- an open galaxy star snapshot dictionary, opens from snapdir/snapnum if None 
+                    (must then also provide snapdir)
+                galaxy_kwargs = None -- dictionary that contains kwargs that should be passed to the opened
+                    abg_python.galaxy.Galaxy instance that is used to load snapshot data from disk. 
 
                 **set_ImageParams_kwargs -- keyword arguments that will be passed to
                     set_ImageParams
@@ -220,6 +229,9 @@ star_snapdict['AgeGyr'] ## masses of the particles in 1e10 solar masses
         self.gas_snapdict = gas_snapdict
         self.star_snapdict = star_snapdict
 
+        ## {}.update enforces that galaxy_kwargs is a dictionary, lol...
+        self.galaxy_kwargs = {} if galaxy_kwargs is None else {}.update(galaxy_kwargs)
+
         ## create, if necessary, directories to store intermediate and output files,
         ##  this could get crowded! sets self.image_dir and self.projection_dir
         #self.makeOutputDirectories(datadir)
@@ -239,16 +251,21 @@ star_snapdict['AgeGyr'] ## masses of the particles in 1e10 solar masses
 
             Input:
 
-                None
+                use_saved_subsnapshots = False -- save/load subsnapshots, uncompressed copies of the snapshot
+                    oriented on the main disk with particles within the virial radius. This can 
+                    take up lots of disk space. 
+                del_galaxy = True -- whether the abg_python.galaxy.Galaxy object should be deleted after 
+                    being used to get the snapshot dictionaries.
 
             Output:
 
-                None"""
+                None/abg_python.galaxy.Galaxy object -- if del_galaxy == False then returns the galaxy object, 
+                    otherwise returns None. """
 
         ## determine if we need to open any snapshot data
         if (self.gas_snapdict is None or 
             self.gas_snapdict['snapnum'] != snapnum ): ## haven't loaded this data yet, or we are replacing it
-            self.__get_snapdicts(
+            return_value = self.__get_snapdicts(
                 self.sim_name,
                 self.snapdir,self.snapnum,**kwargs)
 
@@ -264,6 +281,8 @@ star_snapdict['AgeGyr'] ## masses of the particles in 1e10 solar masses
             self.masked_gas_snapdict = filterDictionary(self.gas_snapdict,gas_mask)
         if star_mask is not None:
             self.masked_star_snapdict = filterDictionary(self.star_snapdict,mask)
+
+        return return_value
 
     def get_HSML(
         self,
@@ -315,12 +334,12 @@ star_snapdict['AgeGyr'] ## masses of the particles in 1e10 solar masses
         self,
         sim_name,
         snapdir,snapnum,
-        load_stars = 0,
-        keys_to_extract = None,
-        star_keys_to_extract = None,
         use_saved_subsnapshots=False,
-        del_stars = False,
+        del_galaxy=True,
         **kwargs):
+
+        these_kwargs = self.galaxy_kwargs.copy()
+        these_kwargs.update(kwargs)
 
         galaxy = Galaxy(
             sim_name,
@@ -329,20 +348,26 @@ star_snapdict['AgeGyr'] ## masses of the particles in 1e10 solar masses
             datadir=self.datadir, ## not the same as where the FIREstudio cache is, I think... TODO
             loud_metadata=False, ## shh don't let them know
             save_header_to_table=False,
-            **kwargs)
+            **these_kwargs)
+
+        ## add use_saved_subsnapshots into these kwargs to be passed to extract
+        ##  main halo to allow users to use cached snapshot data
+        these_kwargs.update({'use_saved_subsnapshots':use_saved_subsnapshots})
 
         ## handles opening the snapshot, centering it, and rotating it to be face-on.
         galaxy.extractMainHalo(
-            use_saved_subsnapshots=use_saved_subsnapshots,
             save_meta=False,
-            **kwargs) ## metadata cache will pull only the good keys out
+            **these_kwargs) ## metadata cache will pull only the good keys out
 
         ## bind the snapshot dictionaries
         self.gas_snapdict = galaxy.sub_snap
         self.star_snapdict = galaxy.sub_star_snap
 
         ## just get rid of it now that we've opened it
-        del galaxy
+        if del_galaxy:
+            del galaxy
+        else:
+            return galaxy
 
     def set_ImageParams(
         self,

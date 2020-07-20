@@ -609,8 +609,19 @@ def getImageGrid(
     curpath = os.path.realpath(__file__)
     curpath = os.path.split(curpath)[0] #split off this filename
     curpath = os.path.split(curpath)[0] #split off studios direcotry
-    c_obj = ctypes.CDLL(os.path.join(
-        curpath,'utils','gas_utils','HsmlAndProject_cubicSpline/HsmlAndProject.so'))
+    c_obj_path = os.path.join(
+        curpath,
+        'utils',
+        'gas_utils',
+        'HsmlAndProject_cubicSpline/HsmlAndProject.so')
+
+    if not os.path.isfile(c_obj_path):
+        raise IOError(
+            'Missing',
+            c_obj_file,
+            'compile the missing file and restart.')
+
+    c_obj = ctypes.CDLL(c_obj_path)
 
     #print(n_smooth)
     #print(pos_p)
