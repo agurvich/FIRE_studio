@@ -92,7 +92,7 @@ starStudio.set_ImageParams(
 
     append_function_docstring(set_ImageParams,Studio.set_ImageParams,prepend_string='passes `kwargs` to:\n')
 
-    def print_ImageParams():
+    def print_ImageParams(self):
         """ Prints current image setup to console.
 
             Input:
@@ -154,7 +154,8 @@ starStudio.set_ImageParams(
             use_metadata=use_metadata,
             save_meta=save_meta,
             assert_cached=assert_cached,
-            loud=loud)
+            loud=loud,
+            force_from_file=True)  ## read from cache file, not attribute of object
         def compute_mockHubbleImage(self):
 
             ## cull the particles outside the frame and cast to float32

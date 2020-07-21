@@ -7,6 +7,8 @@ matplotlib.use('Agg')
 import numpy as np 
 import ctypes
 
+import matplotlib.pyplot as plt
+
 ## abg_python imports
 from abg_python.all_utils import filterDictionary,append_function_docstring,append_string_docstring
 from abg_python.plot_utils import addColorbar
@@ -79,7 +81,7 @@ gasStudio.set_ImageParams(
                     print("setting",kwarg,
                         'to user value of:',value)
                 ## set it to the object
-                setattr(self,kwarg,)
+                setattr(self,kwarg,value)
 
         if use_defaults:
             ## set the remaining image parameters to their default values
@@ -96,7 +98,7 @@ gasStudio.set_ImageParams(
     append_function_docstring(set_ImageParams,Studio.set_ImageParams,prepend_string='passes `kwargs` to:\n')
 
 
-    def print_ImageParams():
+    def print_ImageParams(self):
         """ Prints current image setup to console.
 
             Input:
@@ -177,7 +179,8 @@ The maps computed in pixel j are then:
             use_metadata=use_metadata,
             save_meta=save_meta,
             assert_cached=assert_cached,
-            loud=loud)
+            loud=loud,
+            force_from_file=True) ## read from cache file, not attribute of object
         def inner_weight_along_los(
             self,
             weights,
@@ -219,6 +222,8 @@ The maps computed in pixel j are then:
                 if weight_name not in snapdict:
                     if weight_name == 'Volume':
                         weights = 4/3 * np.pi*Hsml**3 / 32 ## kpc^3
+                    elif weight_name == 'Ones':
+                        weights = np.ones(weights.size)
                     else:
                         raise KeyError(weight_name,'is not in gas_snapdict')
                 else:
@@ -226,11 +231,7 @@ The maps computed in pixel j are then:
 
             if quantities is None:
                 if quantity_name not in snapdict:
-                    if quantity_name == 'Ones':
-                        quantities = np.ones(weights.size)
-                    else:
-                        raise KeyError(quantity_name,'is not in gas_snapdict')
-
+                    raise KeyError(quantity_name,'is not in gas_snapdict')
                 else:
                     quantities = snapdict[quantity_name]
 
@@ -428,7 +429,7 @@ gasStudio.render(
         if self.savefig is not None:
             self.saveFigure(ax,self.savefig)
 
-        return final_image
+        return ax,final_image
 
     def __produceImage(
         self,
@@ -480,6 +481,8 @@ gasStudio.render(
             #self.cbar_label = 'ERROR'
             self.cbar_min = min_quantity
             self.cbar_max = max_quantity
+
+            print("TODO:Need to create a 2-axis colorbar.")
 
         ## plot a weight map, convert to 0->1 space
         elif (min_weight is not None and 
