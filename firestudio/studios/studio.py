@@ -51,24 +51,15 @@ class Drawer(object):
         image_length =2*self.frame_half_width # kpc
         ## set scale bar length
         if image_length > 15 : 
-            scale_line_length = 5
-            self.scale_label_text = r"$\mathbf{5 \, \rm{kpc}}$"
-
-        elif image_length > 1.5 : 
-            scale_line_length = 1.0 
-            self.scale_label_text = r"$\mathbf{1 \, \rm{kpc}}$"
-
-        else:
-            scale_line_length = .1
-            self.scale_label_text = r"$\mathbf{100 \, \rm{pc}}$"
+            self.scale_label_text = r"$\mathbf{%1g \, \rm{kpc}}$"%self.scale_line_length
 
         # Convert to pixel space
         length_per_pixel = (self.Xmax - self.Xmin) / self.npix_x
-        scale_line_length_px = int(scale_line_length / length_per_pixel)
+        self.scale_line_length_px = int(self.scale_line_length / length_per_pixel)
 
         # Position in terms of image array indices
         scale_line_x_start = int(0.05 * self.npix_x)
-        scale_line_x_end = min(scale_line_x_start + scale_line_length_px,self.npix_x)
+        scale_line_x_end = min(scale_line_x_start + self.scale_line_length_px,self.npix_x)
         scale_line_y = int(0.02 * self.npix_y)
 
         # Go through pixels for scale bar, setting them to white
@@ -182,8 +173,8 @@ gas_snapdict['Masses'] ## masses of the particles in 1e10 solar masses
 
 star_snapdict['Coordinates'] ## coordinates of the particles
 star_snapdict['Metallicity'] ## metallicity (mass fractions) of the particles 
-star_snapdict['Masses']
-star_snapdict['AgeGyr'] ## masses of the particles in 1e10 solar masses
+star_snapdict['Masses'] ## masses of the particles in 1e10 solar masses
+star_snapdict['AgeGyr'] ## age of particles in Gyr
 ```
 
 (and ideally `'SmoothingLengths'`, in the same units as coordinates for both, but these can be calculated). 
@@ -239,7 +230,7 @@ star_snapdict['AgeGyr'] ## masses of the particles in 1e10 solar masses
         ## initialize the object with some default image params that will
         ##  make a face-on image of a galaxy, can always set these manually
         ##  with  external calls to set_ImageParams
-        self.set_ImageParams(use_defaults=True,snapnum=snapnum,**kwargs)
+        self.set_ImageParams(use_defaults=True,snapnum=snapnum,sim_name=sim_name,**kwargs)
 
 ####### I/O functions #######
     def load_SnapshotData(
@@ -317,7 +308,8 @@ star_snapdict['AgeGyr'] ## masses of the particles in 1e10 solar masses
             use_metadata=use_metadata,
             save_meta=save_meta,
             assert_cached=assert_cached,
-            loud=loud)
+            loud=loud,
+            force_from_file=True) ## read from cache file, not attribute of object
         def compute_HSML(self):
             snapdict = getattr(self,snapdict_name+'_snapdict')
             pos = snapdict['Coordinates']
@@ -391,7 +383,7 @@ star_snapdict['AgeGyr'] ## masses of the particles in 1e10 solar masses
                 loud = True -- 
 
                 frame_half_width = 15 --  half-width of image in x direction
-                frame_depth = 15 -- z-depth of image (thickness is 2*frame_depth)
+                frame_half_thickness = 15 -- half-thickness of image in z direction
                 frame_center = None -- center of frame in data space
 
                 theta = 0,phi = 0,psi = 0 -- euler rotation angles in degrees
@@ -399,7 +391,10 @@ star_snapdict['AgeGyr'] ## masses of the particles in 1e10 solar masses
                 aspect_ratio = 1 -- shape of image, y/x TODO figure out if this is necessary to pass?
                 pixels = 1200 -- pixels in x direction, resolution of image
                 figure_label = '' -- string to be put in upper right corner
+
                 scale_bar = True -- flag to plot length scale bar in lower left corner
+                scale_line_length = 5 -- length of the scale bar in kpc
+
                 noaxis = True -- turns off axis ticks
                 savefig = None -- save the image as a png if passed a string
                 fontsize = 12 
@@ -423,13 +418,14 @@ studio.set_ImageParams(
 
         default_kwargs = {
             'frame_half_width':15, ## half-width of image in x direction
-            'frame_depth':None, ## z-depth of image (thickness is 2*frame_depth)
+            'frame_half_thickness':None, ## half-thickness of image in z direction
             'frame_center':None, ## center of frame in data space
             'theta':0,'phi':0,'psi':0, ## euler rotation angles
             'aspect_ratio':1, ## shape of image, y/x TODO figure out if this is necessary to pass?
             'pixels':1200, ## pixels in x direction, resolution of image
             'figure_label':'', ## string to be put in upper right corner
             'scale_bar':True,  ## flag to plot length scale bar in lower left corner
+            'scale_line_length':5, ## length of the scale line in kpc
             'noaxis':True, ## turns off axis ticks
             'savefig':None, ## save the image as a png if passed a string
             'fontsize':12,  ## font size of scale bar and figure label
@@ -459,16 +455,16 @@ studio.set_ImageParams(
                 default_kwargs['frame_center'] is None):
                 default_kwargs['frame_center'] = np.zeros(3)
 
-            ##  need to replace frame_depth with frame_half_width
-            if ('frame_depth' in default_kwargs and 
-                default_kwargs['frame_depth'] is None):
+            ##  need to replace frame_half_thickness with frame_half_width
+            if ('frame_half_thickness' in default_kwargs and 
+                default_kwargs['frame_half_thickness'] is None):
 
                 ## take the default value
                 if 'frame_center' in default_kwargs:
-                    default_kwargs['frame_depth'] = default_kwargs['frame_half_width']
+                    default_kwargs['frame_half_thickness'] = default_kwargs['frame_half_width']
                 ## take the value that was passed and set above
                 else:
-                    default_kwargs['frame_depth'] = self.frame_half_width
+                    default_kwargs['frame_half_thickness'] = self.frame_half_width
              
             ## set the remaining image parameters to their default values
             for default_arg in default_kwargs:
@@ -527,7 +523,7 @@ studio.set_ImageParams(
 
         return self.metadata
 
-    def print_ImageParams():
+    def print_ImageParams(self):
         """ Prints current image setup to console.
 
             Input:
@@ -538,17 +534,17 @@ studio.set_ImageParams(
 
                 None"""
         default_kwargs = [
-            'frame_half_width'
-            'frame_depth'
-            'frame_center'
+            'frame_half_width',
+            'frame_half_thickness',
+            'frame_center',
             'theta','phi','psi',
             'aspect_ratio',
             'pixels', 
             'figure_label', 
             'scale_bar',  
-            'noaxis'
-            'savefig'
-            'fontsize'
+            'noaxis',
+            'savefig',
+            'fontsize',
             'snapdir',
             'snapnum']
 
@@ -562,7 +558,7 @@ studio.set_ImageParams(
 	"npix%d_width%.2fkpc_depth%.2fkpc_x%.2f_y%.2f_z%.2f_theta%.2f_phi%.2f_psi%.2f_aspect%.2f"%(
 	    self.pixels, 
             np.round(2*self.frame_half_width,decimals=2),
-            np.round(self.frame_depth,decimals=2),
+            np.round(self.frame_half_thickness,decimals=2),
 	    np.round(self.frame_center[0],decimals=2),
             np.round(self.frame_center[1],decimals=2),
             np.round(self.frame_center[2],decimals=2),
@@ -600,7 +596,7 @@ studio.set_ImageParams(
             [-self.frame_half_width,self.frame_half_width])*self.aspect_ratio
 
         self.Zmin,self.Zmax = self.frame_center[2] + np.array(
-            [-self.frame_depth,self.frame_depth])
+            [-self.frame_half_thickness,self.frame_half_thickness])
 
         ## Set image size 
         self.npix_x   = self.pixels #1200 by default
