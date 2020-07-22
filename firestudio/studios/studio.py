@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 from abg_python.snapshot_utils import openSnapshot
 from abg_python.cosmo_utils import load_AHF
 from abg_python.all_utils import append_function_docstring
+from abg_python.plot_utils import nameAxes
 
 from abg_python.galaxy.gal_utils import Galaxy
 from abg_python.galaxy.metadata_utils import Metadata,metadata_cache
@@ -38,12 +39,12 @@ class Drawer(object):
         ##  is being skewed. UNRELATED to self.aspect_ratio
         ax.set_aspect(1)
 
-        ## will check relevant flags internally
-        self.addText(ax)
-
         ## turn off the axis if asked
         if self.noaxis:
             ax.axis('off')
+
+        ## will check relevant flags internally
+        self.addText(ax)
 
 ####### image utilities #######
     def addScaleBar(self,image):
@@ -71,13 +72,11 @@ class Drawer(object):
         ## handle any text additions
         if self.figure_label is not None:
         ## plot the  figure label in the top right corner
-            label = ax.text(
-                0.95, 0.92,
-                self.figure_label,
-                fontsize = self.fontsize,
-                transform = ax.transAxes,
-                ha='right')
-            label.set_color('white')
+            nameAxes(ax,None,None,None,
+                supertitle=self.figure_label,
+                subfontsize=self.fontsize,
+                font_color='white',
+                swap_annotate_side=True)
 
         ## Set parameters
 

@@ -223,7 +223,7 @@ The maps computed in pixel j are then:
                     if weight_name == 'Volume':
                         weights = 4/3 * np.pi*Hsml**3 / 32 ## kpc^3
                     elif weight_name == 'Ones':
-                        weights = np.ones(weights.size)
+                        weights = np.ones(Coordinates.shape[0])
                     else:
                         raise KeyError(weight_name,'is not in gas_snapdict')
                 else:
