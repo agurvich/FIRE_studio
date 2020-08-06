@@ -265,21 +265,15 @@ The maps computed in pixel j are then:
 
             print('-done')
 
-            return_list = [weightMap, weightWeightedQuantityMap] ## lol
-            return tuple(return_list[:1+(quantity_name!='Ones')])
+            return weightMap, weightWeightedQuantityMap
 
-        return_value = inner_weight_along_los(
+        return inner_weight_along_los(
             self,
             weights,
             weight_name,
             quantities,
             quantity_name,
             **kwargs)
-
-        if quantity_name == 'Ones':
-            return return_value[0],return_value[0] ## return the same map twice
-        else:
-            return return_value
 
     def volumeWeightAlongLOS(
         self,

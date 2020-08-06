@@ -315,11 +315,7 @@ star_snapdict['AgeGyr'] ## age of particles in Gyr
             smoothing_lengths = get_particle_hsml(pos[:,0],pos[:,1],pos[:,2])
             return smoothing_lengths
 
-        return_value = compute_HSML(self,**kwargs)
-        ## TODO why am i getting back tuples...?
-        if type(return_value == tuple):
-            return_value  = return_value[0]
-        return return_value
+        return compute_HSML(self,**kwargs)
 
     def __get_snapdicts(
         self,
