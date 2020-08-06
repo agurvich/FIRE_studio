@@ -7,10 +7,11 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np 
 import ctypes
+import copy
 
 ## abg_python imports
-from abg_python.plot_utils import addColorbar
-from abg_python.all_utils import append_function_docstring,append_string_docstring
+from abg_python.plot_utils import addColorbar,nameAxes
+from abg_python.all_utils import append_function_docstring,append_string_docstring,findIntersection
 from abg_python.galaxy.metadata_utils import metadata_cache
 
 ## firestudio imports
@@ -44,10 +45,15 @@ class StarStudio(Studio):
 
             Input: 
 
-                maxden = 0.01 --  controls the saturation of the image in a non-obvious way
-                dynrange = 100  --  controls the saturation of the image in a non-obvious way
-                color_schem_nasa = True -- 
-                loud -- 
+                maxden = None --  controls the saturation of the image,
+                    sets the upper limit of the "colorbar," defaults to 
+                    the 99 %'ile of the image surface brightness
+                dynrange = None  --  controls the saturation of the image,
+                    sets the lower limit of the "colorbar" with respect to maxden,
+                    defaults to the dynamic range between maxden and the 10th %'ile
+                    of the image surface brightness
+                color_scheme_nasa = True -- flag for switching between Hubble vs. SDSS images
+                loud = True -- flagwhether print statements should show up on console.
             
             Output: 
 
@@ -62,8 +68,8 @@ starStudio.set_ImageParams(
 ```"""
 
         default_kwargs = {
-            'maxden' : 1.0e-2, ## 
-            'dynrange' : 100.0, ## controls the saturation of the image in a non-obvious way
+            'maxden' : None, ## 
+            'dynrange' : None, ## controls the saturation of the image in a non-obvious way
             'color_scheme_nasa' : True} ## flag to use nasa colors (vs. SDSS if false)
 
         for kwarg in kwargs:
@@ -264,7 +270,7 @@ starStudio.render(plt.gca())
 
         ## open the hdf5 file and load the maps
         image24, massmap = makethreepic.make_threeband_image_process_bandmaps(
-            out_r,out_g,out_u,
+            copy.copy(out_r),copy.copy(out_g),copy.copy(out_u),
             maxden=self.maxden,
             dynrange=self.dynrange,
             pixels=self.pixels,
@@ -280,9 +286,158 @@ starStudio.render(plt.gca())
 
         return final_image
 
+    def predictParameters(
+        self,
+        left_percentile=0.1,
+        right_percentile=0.99,
+        ax=None):
+        """ Guesses what the "best" values for maxden and dynrange are from
+            the distribution of surface brightnesses in the current image. 
+            Looks for the left_percentile and right_percentile and returns
+            right_percentile and the distance between it and left_percentile
+            (in log space). 
+            
+            Input:
+
+                left_percentile = 0.1 -- lower bound on image surface brightness percentile
+                right_percentile = 0.99 --  upper bound on image surface brightness percentile
+                ax = None -- optionally plots distribution of surface brightnesses
+                    (in some units...) with overlay of percentiles and such.
+            
+            Output:
+                
+                maxden -- maximum surface brightness of the image
+                dynrange -- distance between maximum and minimum surface brightness
+                     in log space. 
+"""
+
+        ## read the luminosity maps
+        gas_out,out_u,out_g,out_r = self.get_mockHubbleImage()
+
+        ## concatenate the luminosity maps and take the log of the non-empty ones
+        all_bands = np.concatenate([out_u,out_g,out_r])
+        rats = np.log10(all_bands.flatten())
+        rats = rats[np.isfinite(rats)]
+        h,edges = np.histogram(rats,bins=1000)
+    
+        ## take the CDF to find left and right percentiles
+        cumulative = np.array(np.cumsum(h))
+        cumulative=cumulative/cumulative[-1]
+
+        ## find left and right percentiles
+        bottom,y = findIntersection(
+            edges[1:],
+            cumulative,
+            left_percentile)
+
+        top,y = findIntersection(
+            edges[1:],
+            cumulative,
+            right_percentile)
+
+        top = 10**top
+        bottom = 10**bottom
+
+        maxden = top
+        dynrange = top/bottom
+
+        if ax is not None:
+            ax.step(10**edges[1:],h/h.sum()/(edges[1]-edges[0]))
+            ax.text(top*1.05,0.5,'maxden',rotation=90,va='center')
+            ax.plot([bottom,top],[0.5,0.5])
+            ax.axvline(bottom,c='C1',ls='--',alpha=0.25)
+            ax.axvline(top,c='C1')
+            ax.text(np.sqrt(bottom*top),0.5/1.1,'dynrange',ha='center')
+            nameAxes(ax,None,"'den'","1/N dN/d('den')",logflag=(1,0),
+                supertitle="maxden=%.2g\ndynrange=%2d"%(maxden,dynrange))
+            ax.get_figure().set_dpi(120)
+
+        return maxden,dynrange
+
+    def plotParameterGrid(
+        self,
+        dynrange_init=100,
+        maxden_init=1e-2,
+        dynrange_step=None,
+        maxden_step=None,
+        nsteps=4,
+        loud=False,
+        **kwargs):
+        """ Plots a grid of images that steps in maxden and dynrange to help the user decide
+            what values to use, based on their aesthetic preference. Step is applied
+            multiplicatively. 
+
+            Input:
+
+                dynrange_init = 100 -- initial value in top left corner of grid
+                maxden_init = 1e-2 -- initial value in top left corner of grid
+                dynrange_step = None -- step between grid thumbnails, defaults to sqrt(10)
+                maxden_step = None -- step between grid thumbnails, defaults to sqrt(10)
+                nsteps = 4 -- number of steps in (square) thumbnail grid
+                loud = False -- flag for set_ImageParams
+                **kwargs -- kwargs passed to set_ImageParams
+            
+            Ouput:
+                
+                fig - the matplotlib figure drawn to
+                axs - the matplotlib axes in the grid
+
+Example usage:
+```python
+starStudio.plotParameterGrid(
+    dynrange_init=1e3,
+    maxden_init=1,
+    dynrange_step=.1,
+    maxden_step=.1,
+    nsteps=2,
+    use_colorscheme_nasa=False)
+```"""
+        
+        ## initialize the steps for each thumbnail in the grid
+        dynrange_step = 1/np.sqrt(10) if dynrange_step is None else dynrange_step
+        maxden_step = 1/np.sqrt(10) if maxden_step is None else maxden_step
+
+        ## initialize the figure and axes
+        fig,axs = plt.subplots(nrows=nsteps,ncols=nsteps)
+
+        ## loop through the grid and set the parameters according to the initial
+        ##  parameters and their steps
+        for i in range(axs.shape[0]):
+            for j in range(axs.shape[1]):
+                ax = axs[i,j]
+
+                ## compute this step's parameters
+                dynrange = dynrange_init * dynrange_step**i
+                maxden = maxden_init * maxden_step**j
+
+                ## set parameters
+                self.set_ImageParams(
+                    dynrange=dynrange,
+                    maxden=maxden,
+                    loud=loud,
+                    **kwargs)
+
+                ## actual call to render
+                pixels = self.render(ax)
+
+                ## annotate the parameters on top of the thumbnail
+                nameAxes(
+                    ax,None,None,None,
+                    supertitle='maxden=$%1gx%.2g^{%d}$\ndynrange=$%1gx%.2g^{%d}$'%(
+                        maxden_init,maxden_step,j,
+                        dynrange_init,dynrange_step,i),
+                    subtextkwargs={'color':'white'},subfontsize=20)
+
+        fig.set_size_inches(4*nsteps,4*nsteps)
+        fig.subplots_adjust(wspace=0,hspace=0,left=0,right=1,bottom=0,top=1)
+        return fig,axs
+        #fig.savefig('../src/hubble_grid.pdf',pad_inches=0,bbox_inches='tight')
+
 append_function_docstring(StarStudio,StarStudio.set_ImageParams)
 append_function_docstring(StarStudio,StarStudio.get_mockHubbleImage)
 append_function_docstring(StarStudio,StarStudio.render)
+append_function_docstring(StarStudio,StarStudio.predictParameters)
+append_function_docstring(StarStudio,StarStudio.plotParameterGrid)
 append_function_docstring(StarStudio,Studio)
 
 ##### Image projection stuff

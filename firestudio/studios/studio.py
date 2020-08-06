@@ -17,7 +17,7 @@ from abg_python.galaxy.metadata_utils import Metadata,metadata_cache
 from firestudio.utils.stellar_utils.load_stellar_hsml import get_particle_hsml
 
 class Drawer(object):
-    
+
     def plotImage(
         self,
         ax,
