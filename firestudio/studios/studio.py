@@ -360,7 +360,6 @@ star_snapdict['AgeGyr'] ## age of particles in Gyr
         self,
         this_setup_id=None,
         use_defaults=False,
-        edgeon=False,
         loud=True,
         **kwargs):
         """Changes the parameters of the image. If `use_defaults=True` then 
@@ -374,7 +373,6 @@ star_snapdict['AgeGyr'] ## age of particles in Gyr
                     be overwritten.
                 use_defaults = False -- flag to overwrite any kwargs that *aren't* passed in
                     this call to their default value. 
-                edgeon = False -- currently not implemented
                 loud = True -- 
 
                 frame_half_width = 15 --  half-width of image in x direction
@@ -469,15 +467,6 @@ studio.set_ImageParams(
                         'to default value of:',value)
                 setattr(self,default_arg,value)
 
-
-        if edgeon:
-            raise NotImplementedError("need to fix this")
-            print("Drawing an edgeon view, rotating theta = 90")
-            self.theta+=90
-            self.aspect_ratio*=0.5
-            self.__identifyThisSetup()
-            self.computeFrameBoundaries()
-         
         ## determine the edges of our frame so we can cull the rest later,
         ##  also set cell area info
         self.computeFrameBoundaries()

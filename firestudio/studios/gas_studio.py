@@ -236,22 +236,21 @@ The maps computed in pixel j are then:
                     quantities = snapdict[quantity_name]
 
             
+            
+            ## rotate by euler angles if necessary
+            pos = self.rotateEuler(self.theta,self.phi,self.psi,Coordinates)
+
             ## cull the particles outside the frame and cast to float32
-            box_mask = self.cullFrameIndices(Coordinates) ## TODO is this where I want to rotate?
+            box_mask = self.cullFrameIndices(pos)
 
             print("projecting %d particles"%np.sum(box_mask))
 
-            pos = Coordinates[box_mask].astype(np.float32)
+            pos = pos[box_mask].astype(np.float32)
             weights = weights[box_mask].astype(np.float32)
             quantities = quantities[box_mask].astype(np.float32)
             hsml = Hsml[box_mask].astype(np.float32)
 
             frame_center = self.frame_center.astype(np.float32)
-
-            ## rotate by euler angles if necessary
-            pos = self.rotateEuler(self.theta,self.phi,self.psi,pos)
-
-
 
             ## make the actual C call
             weightMap, weightWeightedQuantityMap = getImageGrid(

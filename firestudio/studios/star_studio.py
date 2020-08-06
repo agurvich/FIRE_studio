@@ -83,6 +83,9 @@ starStudio.set_ImageParams(
                         'to user value of:',value)
                 ## set it to the object
                 setattr(self,kwarg,value)
+            else:
+                print(kwarg,'ignored. Did you mean something else?',
+                    default_kwargs.keys())
 
         if use_defaults:
             ## set the remaining image parameters to their default values
@@ -164,13 +167,18 @@ starStudio.set_ImageParams(
             force_from_file=True)  ## read from cache file, not attribute of object
         def compute_mockHubbleImage(self):
 
-            ## cull the particles outside the frame and cast to float32
-            star_ind_box = self.cullFrameIndices(self.star_snapdict['Coordinates'])
-            print(np.sum(star_ind_box),'many star particles in volume')
 
             ## unpack the star information
             ## dont' filter star positions just yet
             star_pos = self.star_snapdict['Coordinates']
+
+            ## rotate by euler angles if necessary
+            star_pos = self.rotateEuler(self.theta,self.phi,self.psi,star_pos)
+
+            ## cull the particles outside the frame and cast to float32
+            star_ind_box = self.cullFrameIndices(star_pos)
+            print(np.sum(star_ind_box),'many star particles in volume')
+
 
             ## try opening the stellar smoothing lengths, if we fail
             ##  let's calculate them and save them to the projection 
@@ -186,22 +194,19 @@ starStudio.set_ImageParams(
             ## and now filter the positions
             star_pos = star_pos[star_ind_box].astype(np.float32)
 
-            ## rotate by euler angles if necessary
-            star_pos = self.rotateEuler(self.theta,self.phi,self.psi,star_pos)
-
             mstar = self.star_snapdict['Masses'][star_ind_box].astype(np.float32)
             ages = self.star_snapdict['AgeGyr'][star_ind_box].astype(np.float32)
             metals = self.star_snapdict['Metallicity'][:,0][star_ind_box].astype(np.float32)
 
+            ## rotate by euler angles if necessary
+            gas_pos = self.rotateEuler(self.theta,self.phi,self.psi,self.gas_snapdict['Coordinates'])
+
             ## cull the particles outside the frame and cast to float32
-            gas_ind_box = self.cullFrameIndices(self.gas_snapdict['Coordinates'])
+            gas_ind_box = self.cullFrameIndices(gas_pos)
             print(np.sum(gas_ind_box),'many gas particles in volume')
 
             ## unpack the gas information
-            gas_pos = self.gas_snapdict['Coordinates'][gas_ind_box]
-
-            ## rotate by euler angles if necessary
-            gas_pos = self.rotateEuler(self.theta,self.phi,self.psi,gas_pos).astype(np.float32)
+            gas_pos = gas_pos[gas_ind_box].axstype(np.float32)
 
             mgas = self.gas_snapdict['Masses'][gas_ind_box].astype(np.float32)
             gas_metals = self.gas_snapdict['Metallicity'][:,0][gas_ind_box].astype(np.float32)
@@ -268,11 +273,12 @@ starStudio.render(plt.gca())
 
         gas_out,out_u,out_g,out_r = self.get_mockHubbleImage(**kwargs)
 
+        maxden_guess,dynrange_guess = self.predictParameters()
         ## open the hdf5 file and load the maps
         image24, massmap = makethreepic.make_threeband_image_process_bandmaps(
             copy.copy(out_r),copy.copy(out_g),copy.copy(out_u),
-            maxden=self.maxden,
-            dynrange=self.dynrange,
+            maxden=self.maxden if self.maxden is not None else maxden_guess,
+            dynrange=self.dynrange if self.dynrange is not None else dynrange_guess,
             pixels=self.pixels,
             color_scheme_nasa=self.color_scheme_nasa,
             color_scheme_sdss=not self.color_scheme_nasa)
@@ -414,7 +420,7 @@ starStudio.plotParameterGrid(
                 self.set_ImageParams(
                     dynrange=dynrange,
                     maxden=maxden,
-                    loud=loud,
+                    loud=True,
                     **kwargs)
 
                 ## actual call to render
