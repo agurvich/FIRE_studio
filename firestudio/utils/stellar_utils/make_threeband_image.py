@@ -123,7 +123,7 @@ def make_threeband_image_process_bandmaps(r,g,b, \
 
     ## now do the color processing on the maps
     maxnorm=maxden; minnorm=(maxden/dynrange);
-    print('maxnorm == ',maxnorm,' dynrange == ',dynrange,' minnorm == ',minnorm)
+    print('maxden == ',maxnorm,' dynrange == ',dynrange,' minden == ',minnorm)
 
     i = (r+g+b)/3.
     f_i = np.log10(i/minnorm) / np.log10(maxnorm/minnorm);
