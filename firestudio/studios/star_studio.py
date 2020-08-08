@@ -206,7 +206,7 @@ starStudio.set_ImageParams(
             print(np.sum(gas_ind_box),'many gas particles in volume')
 
             ## unpack the gas information
-            gas_pos = gas_pos[gas_ind_box].axstype(np.float32)
+            gas_pos = gas_pos[gas_ind_box].astype(np.float32)
 
             mgas = self.gas_snapdict['Masses'][gas_ind_box].astype(np.float32)
             gas_metals = self.gas_snapdict['Metallicity'][:,0][gas_ind_box].astype(np.float32)

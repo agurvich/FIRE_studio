@@ -82,6 +82,9 @@ gasStudio.set_ImageParams(
                         'to user value of:',value)
                 ## set it to the object
                 setattr(self,kwarg,value)
+            else:
+                print(kwarg,'ignored. Did you mean something else?',
+                    default_kwargs.keys())
 
         if use_defaults:
             ## set the remaining image parameters to their default values
