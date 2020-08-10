@@ -125,6 +125,45 @@ gasStudio.set_ImageParams(
         ## call the super class' print image params
         super().print_ImageParams()
 
+    def __quick_weightAvgAlongLOS(
+        self,
+        weights,
+        weight_name,
+        quantities,
+        quantity_name,
+        snapdict_name='gas',
+        **kwargs):
+
+        (BoxSize,
+        Xmin,Xmax,
+        Ymin,Ymax,
+        Zmin,Zmax,
+        npix_x,npix_y,
+        prep_pos,prep_weights,prep_quantities,
+        prep_hsml) = self.__prepareCoordinates(
+            snapdict_name,
+            weights,
+            weight_name,
+            quantities,
+            quantity_name,
+            **kwargs)
+
+        xedges = np.linspace(Xmin,Xmax,npix_x,endpoint=True)
+        yedges = np.linspace(Ymin,Ymax,npix_y,endpoint=True)
+
+        xs,ys,zs = prep_pos.T
+        weightMap,xedges,yedges = np.histogram2d(
+            xs,ys,
+            bins=[xedges,yedges],
+            weights=prep_weights)
+
+        weightWeightedQuantityMap,xedges,yedges = np.histogram2d(
+            xs,ys,
+            bins=[xedges,yedges],
+            weights=prep_weights*prep_quantities)
+
+        return weightMap, weightWeightedQuantityMap/weightMap
+
 
     def weightAvgAlongLOS(
         self,
@@ -192,78 +231,15 @@ The maps computed in pixel j are then:
             quantity_name,
             snapdict_name='gas'):
 
-            ## pick which particle type we're projecting, 
-            if snapdict_name != 'gas' and snapdict_name != 'star':
-                raise ValueError("Choose between 'gas' or 'star' snapdict!")
-            
-            full_snapdict_name = '%s_snapdict'%snapdict_name
-            
-            ## use the masked version of the snapdict if it was passed
-            if hasattr(self,'masked_'+full_snapdict_name):
-                print("Used masked_snapdict, delete it if you don't want it anymore")
-                full_snapdict_name = 'masked_'+full_snapdict_name
-
-            snapdict = getattr(self,full_snapdict_name)
-
-            ## unpack the snapshot data from the snapdict
-            Coordinates = snapdict['Coordinates'] ## kpc
-
-            if "SmoothingLength" not in snapdict:
-                Hsml = self.get_HSML(snapdict_name)
-                assert type(Hsml) == np.ndarray
-                if 'masked_' in full_snapdict_name:
-                    Hsml = Hsml[self.mask]
-            else:
-                Hsml = snapdict['SmoothingLength'] ## kpc
-
-            ## only important if you are neighbor finding and you want a periodic box.
-            ##  for most purposes, you don't. 
-            BoxSize = 1000 #snapdict['BoxSize'] 
-
-            if weights is None:
-                ## account for possibility of volume weighting
-                if weight_name not in snapdict:
-                    if weight_name == 'Volume':
-                        weights = 4/3 * np.pi*Hsml**3 / 32 ## kpc^3
-                    elif weight_name == 'Ones':
-                        weights = np.ones(Coordinates.shape[0])
-                    else:
-                        raise KeyError(weight_name,'is not in gas_snapdict')
-                else:
-                    weights = snapdict[weight_name]
-
-            if quantities is None:
-                if quantity_name not in snapdict:
-                    raise KeyError(quantity_name,'is not in gas_snapdict')
-                else:
-                    quantities = snapdict[quantity_name]
-
-            
-            
-            ## rotate by euler angles if necessary
-            pos = self.rotateEuler(self.theta,self.phi,self.psi,Coordinates)
-
-            ## cull the particles outside the frame and cast to float32
-            box_mask = self.cullFrameIndices(pos)
-
-            print("projecting %d particles"%np.sum(box_mask))
-
-            pos = pos[box_mask].astype(np.float32)
-            weights = weights[box_mask].astype(np.float32)
-            quantities = quantities[box_mask].astype(np.float32)
-            hsml = Hsml[box_mask].astype(np.float32)
-
-            frame_center = self.frame_center.astype(np.float32)
-
             ## make the actual C call
             weightMap, weightWeightedQuantityMap = getImageGrid(
-                BoxSize,
-                self.Xmin,self.Xmax,
-                self.Ymin,self.Ymax,
-                self.Zmin,self.Zmax,
-                self.npix_x,self.npix_y,
-                pos,weights,quantities,
-                hsml)
+                *self.__prepareCoordinates( ## extract coordinates, weights, quantities from snapdict
+                    snapdict_name,
+                    weights,
+                    weight_name,
+                    quantities,
+                    quantity_name,
+                    **kwargs))
 
             print('-done')
 
@@ -276,6 +252,87 @@ The maps computed in pixel j are then:
             quantities,
             quantity_name,
             **kwargs)
+
+    def __prepareCoordinates(
+        self,
+        snapdict_name,
+        weights,
+        weight_name,
+        quantities,
+        quantity_name,
+        **kwargs):
+
+        ## pick which particle type we're projecting, 
+        if snapdict_name != 'gas' and snapdict_name != 'star':
+            raise ValueError("Choose between 'gas' or 'star' snapdict!")
+        
+        full_snapdict_name = '%s_snapdict'%snapdict_name
+        
+        ## use the masked version of the snapdict if it was passed
+        if hasattr(self,'masked_'+full_snapdict_name):
+            print("Used masked_snapdict, delete it if you don't want it anymore")
+            full_snapdict_name = 'masked_'+full_snapdict_name
+
+        snapdict = getattr(self,full_snapdict_name)
+
+        ## unpack the snapshot data from the snapdict
+        Coordinates = snapdict['Coordinates'] ## kpc
+
+        if "SmoothingLength" not in snapdict:
+            Hsml = self.get_HSML(snapdict_name)
+            assert type(Hsml) == np.ndarray
+            if 'masked_' in full_snapdict_name:
+                Hsml = Hsml[self.mask]
+        else:
+            Hsml = snapdict['SmoothingLength'] ## kpc
+
+        ## only important if you are neighbor finding and you want a periodic box.
+        ##  for most purposes, you don't. 
+        BoxSize = 1000 #snapdict['BoxSize'] 
+
+        if weights is None:
+            ## account for possibility of volume weighting
+            if weight_name not in snapdict:
+                if weight_name == 'Volume':
+                    weights = 4/3 * np.pi*Hsml**3 / 32 ## kpc^3
+                elif weight_name == 'Ones':
+                    weights = np.ones(Coordinates.shape[0])
+                else:
+                    raise KeyError(weight_name,'is not in gas_snapdict')
+            else:
+                weights = snapdict[weight_name]
+
+        if quantities is None:
+            if quantity_name not in snapdict:
+                raise KeyError(quantity_name,'is not in gas_snapdict')
+            else:
+                quantities = snapdict[quantity_name]
+
+        ## rotate by euler angles if necessary
+        pos = self.rotateEuler(self.theta,self.phi,self.psi,Coordinates)
+
+        ## cull the particles outside the frame and cast to float32
+        box_mask = self.cullFrameIndices(pos)
+
+        print("projecting %d particles"%np.sum(box_mask))
+
+        pos = pos[box_mask].astype(np.float32)
+        weights = weights[box_mask].astype(np.float32)
+        quantities = quantities[box_mask].astype(np.float32)
+        hsml = Hsml[box_mask].astype(np.float32)
+
+        frame_center = self.frame_center.astype(np.float32)
+
+        return (
+            BoxSize,
+            self.Xmin,self.Xmax,
+            self.Ymin,self.Ymax,
+            self.Zmin,self.Zmax,
+            self.npix_x,self.npix_y,
+            pos,weights,quantities,
+            hsml)
+
+        print('-done')
 
     def volumeWeightAlongLOS(
         self,
@@ -371,6 +428,8 @@ The maps computed in pixel j are then:
                 quantity_adjustment_function = None --
                 use_colorbar = False --
                 cmap = 'viridis' -- what colormap to use
+                quick = False -- flag to use a simple 2d histogram (for comparison or
+                    for quick iteration as the user defines the image parameters)
 
             Output:
 
@@ -438,18 +497,28 @@ gasStudio.render(
         quantity_adjustment_function=None,
         use_colorbar=False,
         cmap='viridis', ## what colormap to use
+        quick=False,
         **kwargs
         ):
 
         self.cmap = cmap
 
+
         ## load the requested maps
-        weightMap, weightWeightedQuantityMap = self.weightAvgAlongLOS(
-            weights,
-            weight_name,
-            quantities,
-            quantity_name,
-            **kwargs)
+        if not quick:
+            weightMap, weightWeightedQuantityMap = self.weightAvgAlongLOS(
+                weights,
+                weight_name,
+                quantities,
+                quantity_name,
+                **kwargs)
+        else:
+            weightMap, weightWeightedQuantityMap = self.__quick_weightAvgAlongLOS(
+                weights,
+                weight_name,
+                quantities,
+                quantity_name,
+                **kwargs)
 
         ## apply any unit corrections, take logs, etc...
         if weight_adjustment_function is not None:

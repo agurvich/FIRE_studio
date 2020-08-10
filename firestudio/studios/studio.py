@@ -97,7 +97,7 @@ class Drawer(object):
         print('min_%s = '%quantity_name,min_val)
         print('max_%s = '%quantity_name,max_val)
 
-        print('Image range (%s): '%quantity_name,np.min(image),np.max(image))
+        print('Image range (%s): '%quantity_name,np.nanmin(image),np.nanmax(image))
         image = image - min_val
         image = image / (max_val - min_val)
         
@@ -106,7 +106,7 @@ class Drawer(object):
         image[image > 1.0] = 1.0
         image = image*255.0
 
-        print('Image range (8bit): ',np.min(image),np.max(image))
+        print('Image range (8bit): ',np.nanmin(image),np.nanmax(image))
 
         ## cast to integer to use as indices for cmap array
         image = image.astype(np.uint16) 
