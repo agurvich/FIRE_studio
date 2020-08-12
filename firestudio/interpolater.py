@@ -109,17 +109,24 @@ class Interpolater(object):
         #for li in range(len(nstepss)):
         nstepss[0]+=1
 
-    def interpolateAndRender(self):
-        snapdir = "/scratch/projects/xsede/GalaxiesOnFIRE/metal_diffusion/m12i_res7100/output"
-        snapnum = 600 
-        galaxy = Galaxy(
-            'm12i_res7100',
-            snapdir,
-            600,
-            datadir='/scratch/04210/tg835099/data/metal_diffusion')
+    def interpolateAndRender(self,galaxy=None,nproc=None):
+
+        if nproc is None:
+            nproc = multiprocessing.cpu_count()-1
+
+        if galaxy is None:
+            snapdir = "/scratch/projects/xsede/GalaxiesOnFIRE/metal_diffusion/m12i_res7100/output"
+            snapnum = 600 
+            galaxy = Galaxy(
+                'm12i_res7100',
+                snapdir,
+                600,
+                datadir='/scratch/04210/tg835099/data/metal_diffusion')
 
 
-        galaxy.extractMainHalo()
+            galaxy.extractMainHalo()
+        else:
+            snapnum = galaxy.snapnum
 
         ## let's put the FIREstudio projections into a sub-directory of our Galaxy class instance
         studio_datadir = os.path.join(os.path.dirname(galaxy.datadir),'firestudio')
@@ -134,7 +141,7 @@ class Interpolater(object):
             'quick':True,
             'min_weight':-0.5,
             'max_weight':3,
-            'weight_adjustment_function':lambda x: np.log10(x/(15**2/1200**2)) + 10 - 6, ## msun/pc^2,
+            'weight_adjustment_function':lambda x: np.log10(x/(30**2/1200**2)) + 10 - 6, ## msun/pc^2,
             'cmap':'afmhot'}
 
  ## pass in snapshot dictionary
@@ -160,8 +167,7 @@ class Interpolater(object):
 
             for obj in gc.get_objects():
                 if isinstance(obj,Galaxy):
-                    print(obj)
-                    raise Exception("too much memory will be copied")
+                    print(obj,'will be copied to child processes and is probably large.')
             
             frame_num = 0
             for interp_i,nsteps in enumerate(self.nstepss):
@@ -182,7 +188,7 @@ class Interpolater(object):
                     itertools.repeat(global_this_snapdict_name), ## what to look up in globals() for gas
                     im_param_kwargs) ##
 
-                with Pool(80) as my_pool:
+                with Pool(nproc) as my_pool:
                     these_axs = my_pool.starmap(worker_function,args)
         except:
             raise
@@ -236,9 +242,9 @@ def worker_function(
 
     ax.axis('on')
     fig = ax.get_figure()
-    fig.savefig('frame_%03d'%frame_num)
-    plt.close(fig)
-    return 
+    #fig.savefig('frame_%03d'%frame_num)
+    #plt.close(fig)
+    return fig
 
 
 def main():
