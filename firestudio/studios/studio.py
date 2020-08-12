@@ -53,6 +53,8 @@ class Drawer(object):
         ## set scale bar length
         if image_length > 15 : 
             self.scale_label_text = r"$\mathbf{%1g \, \rm{kpc}}$"%self.scale_line_length
+        else:
+            self.scale_label_text = ''
 
         # Convert to pixel space
         length_per_pixel = (self.Xmax - self.Xmin) / self.npix_x
@@ -482,6 +484,23 @@ studio.set_ImageParams(
 
         self.set_CacheFile()
 
+    set_ImageParams.default_kwargs = {
+            'frame_half_width':15, ## half-width of image in x direction
+            'frame_half_thickness':None, ## half-thickness of image in z direction
+            'frame_center':None, ## center of frame in data space
+            'theta':0,'phi':0,'psi':0, ## euler rotation angles
+            'aspect_ratio':1, ## shape of image, y/x TODO figure out if this is necessary to pass?
+            'pixels':1200, ## pixels in x direction, resolution of image
+            'figure_label':'', ## string to be put in upper right corner
+            'scale_bar':True,  ## flag to plot length scale bar in lower left corner
+            'scale_line_length':5, ## length of the scale line in kpc
+            'noaxis':True, ## turns off axis ticks
+            'savefig':None, ## save the image as a png if passed a string
+            'fontsize':12,  ## font size of scale bar and figure label
+            'snapdir':None,
+            'snapnum':None,
+            'sim_name':None}
+
     def set_CacheFile(self):
         """ Creates the cache hdf5 file. Requires self.snapnum and sim_name be set.
 
@@ -493,7 +512,8 @@ studio.set_ImageParams(
 
                 cache_file -- abg_python.galaxy.metadata_utils.Metadata object"""
 
-        if self.snapnum is not None:
+        if (self.snapnum is not None and 
+            self.sim_name is not None):
             ## read the snapshot number from the end of the metapath
             if (self.cache_file is None or 
                 int(self.cache_file.metapath.split('_')[-1].split('.hdf5')[0]) != self.snapnum):
@@ -506,7 +526,7 @@ studio.set_ImageParams(
 
                 self.metadata = self.cache_file = Metadata(os.path.join(self.datadir,h5name)) 
         else:
-            raise IOError("Need to set self.snapnum to disambiguate cache_file")
+            raise IOError("Need to set self.snapnum and self.sim_name to disambiguate cache_file")
 
         return self.metadata
 
@@ -604,7 +624,7 @@ studio.set_ImageParams(
         return ind_box
 
     def rotateEuler(self,theta,phi,psi,pos):
-        pos-=self.frame_center
+        pos=pos-self.frame_center
         ## if need to rotate at all really -__-
         if theta==0 and phi==0 and psi==0:
             return pos
@@ -638,8 +658,8 @@ studio.set_ImageParams(
         ##  this line and see what garbage you get. ridiculous.
         pos_rot = np.array(pos_rot,order='C')
         
-        ## add the frame_center back
-        pos_rot+=self.frame_center
+        ### add the frame_center back
+        #pos_rot+=self.frame_center
 
         ## can never be too careful that we're float32
         return pos_rot.astype(np.float32)

@@ -83,8 +83,9 @@ gasStudio.set_ImageParams(
                 ## set it to the object
                 setattr(self,kwarg,value)
             else:
-                print(kwarg,'ignored. Did you mean something else?',
-                    default_kwargs.keys())
+                if kwarg not in Studio.set_ImageParams.default_kwargs:
+                    print(kwarg,'ignored. Did you mean something else?',
+                        default_kwargs.keys())
 
         if use_defaults:
             ## set the remaining image parameters to their default values
@@ -217,7 +218,7 @@ The maps computed in pixel j are then:
             ['%sMap'%weight_name.lower(),
                 '%sWeighted%sMap'%(
                 weight_name.lower(),
-                quantity_name.title())][:1+(quantity_name!='Ones')],
+                quantity_name.title())],
             use_metadata=use_metadata,
             save_meta=save_meta,
             assert_cached=assert_cached,
@@ -261,6 +262,12 @@ The maps computed in pixel j are then:
         quantities,
         quantity_name,
         **kwargs):
+        """ keys required to function:
+            Coordinates
+            SmoothingLength (optional, will compute though otherwise)
+            weight_name (unless it's Ones or passed in as weights)
+            quantity_name (unless it's passed in as quantities)
+        """
 
         ## pick which particle type we're projecting, 
         if snapdict_name != 'gas' and snapdict_name != 'star':

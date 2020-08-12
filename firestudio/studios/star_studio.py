@@ -84,8 +84,9 @@ starStudio.set_ImageParams(
                 ## set it to the object
                 setattr(self,kwarg,value)
             else:
-                print(kwarg,'ignored. Did you mean something else?',
-                    default_kwargs.keys())
+                if kwarg not in Studio.set_ImageParams.default_kwargs:
+                    print(kwarg,'ignored. Did you mean something else?',
+                        default_kwargs.keys())
 
         if use_defaults:
             ## set the remaining image parameters to their default values
