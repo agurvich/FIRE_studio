@@ -1,7 +1,6 @@
 import itertools 
 
 import abg_python.all_utils as all_utils
-from gal_utils import Galaxy
 
 import matplotlib.pyplot as plt
 import numpy as np 
@@ -10,365 +9,249 @@ import os
 from multiprocessing.pool import ThreadPool
 from multiprocessing import Pool
 
-from firestudio.gas_movie_maker import renderGalaxy
+import itertools
 
-def fauxrenderPatch(sub_res,ax,
-    frame_center,frame_half_width,
-    frame_depth=None,savefig=0,noaxis=0,
-    theta=0,phi=0,psi=0,**kwargs):
+from abg_python.multiproc_utils import copySnapshotNamesToMPSharedMemory
 
-    indices = extractRectangularVolumeIndices(sub_res['p'],
-        frame_center,frame_half_width,frame_half_width if frame_depth is None else frame_depth)
 
-    pos = sub_res['p'] - frame_center # want to rotate about frame_center
-    pos_rot = rotateEuler(theta,phi,psi,pos) +frame_center # add back the offset post rotation...?
 
-    xs,ys = pos_rot[:,:2][indices].T
+from firestudio.studios.gas_studio import GasStudio
+from abg_python.galaxy.gal_utils import Galaxy
+import time
+import gc
 
-    twoDHist(ax,xs,ys,bins=300)
-
-    ax.set_ylim(frame_center[1]-frame_half_width,frame_center[1]+frame_half_width)
-    ax.set_xlim(frame_center[0]-frame_half_width,frame_center[0]+frame_half_width)
-
-    if noaxis:
-        ax.axis('off')
-    return ax
-
-def twoDHist(ax,xs,ys,bins,weights=None,norm='',cbar=0):
-    if norm=='':
-        from matplotlib.colors import LogNorm
-        norm=LogNorm()
-    cmap=plt.get_cmap('afmhot')
-    h,xedges,yedges=np.histogram2d(xs,ys,weights=weights,bins=bins)
-    ax.imshow(h.T,cmap=cmap,origin='lower',
-    norm=norm,extent=[min(xedges),max(xedges),min(yedges),max(yedges)])
-    if cbar:
-        plt.colorbar()
-    return h,xedges,yedges
+class Interpolater(object):
     
-def rotateEuler(theta,phi,psi,pos):
-    ## if need to rotate at all really -__-
-    if theta==0 and phi==0 and psi==0:
-        return pos
-    # rotate particles by angle derived from frame number
-    pi        = 3.14159265e0
-    theta_rad = pi*theta/ 1.8e2
-    phi_rad   = pi*phi  / 1.8e2
-    psi_rad   = pi*psi  / 1.8e2
-
-    # construct rotation matrix
-    rot_matrix      = new_matrix(3,3)
-    #print 'theta = ',theta_rad
-    #print 'phi   = ',phi_rad
-    #print 'psi   = ',psi_rad
-    rot_matrix[0][0] =  np.cos(phi_rad)*np.cos(psi_rad)
-    rot_matrix[0][1] = -np.cos(phi_rad)*np.sin(psi_rad)
-    rot_matrix[0][2] =  np.sin(phi_rad)
-    rot_matrix[1][0] =  np.cos(theta_rad)*np.sin(psi_rad) + np.sin(theta_rad)*np.sin(phi_rad)*np.cos(psi_rad)
-    rot_matrix[1][1] =  np.cos(theta_rad)*np.cos(psi_rad) - np.sin(theta_rad)*np.sin(phi_rad)*np.sin(psi_rad)
-    rot_matrix[1][2] = -np.sin(theta_rad)*np.cos(phi_rad)
-    rot_matrix[2][0] =  np.sin(theta_rad)*np.sin(psi_rad) - np.cos(theta_rad)*np.sin(phi_rad)*np.cos(psi_rad)
-    rot_matrix[2][1] =  np.sin(theta_rad)*np.cos(psi_rad) - np.cos(theta_rad)*np.sin(phi_rad)*np.sin(psi_rad)
-    rot_matrix[2][2] =  np.cos(theta_rad)*np.cos(phi_rad)
-    #print rot_matrix
-
-    ## this needs to be done before passing to rotateeuler
-    # translate particles so centre = origin
-    #pos[:,0] -= (Xmin + (L_x/2.))
-    #pos[:,1] -= (Ymin + (L_y/2.))
-    #pos[:,2] -= (Zmin + (L_z/2.))
-
-    ## global variable inside real render 
-    n_box = pos.shape[0]
-
-    # rotate about each axis with a matrix operation
-    pos_rot = np.ndarray((n_box, 3), dtype=np.float32)
-    for ipart in range(n_box):
-        pos_matrix = new_matrix(3,1)
-        pos_matrix[0][0] = pos[ipart,0]
-        pos_matrix[1][0] = pos[ipart,1]
-        pos_matrix[2][0] = pos[ipart,2]
-        rotated = np.matmul(rot_matrix,pos_matrix)
-        pos_rot[ipart,0] = rotated[0][0]
-        pos_rot[ipart,1] = rotated[1][0]
-        pos_rot[ipart,2] = rotated[2][0]
-    
-    ## occurs outside rotateeuler
-    # translate particles back
-    #pos[:,0] += (Xmin + (L_x/2.))
-    #pos[:,1] += (Ymin + (L_y/2.))
-    #pos[:,2] += (Zmin + (L_z/2.))
-    
-    return pos_rot
-
-def new_matrix(m,n):
-    # Create zero matrix
-    matrix = [[0 for row in range(n)] for col in range(m)]
-    return matrix
-
-###### BEGIN MOVIE PERSPECTIVE+TIME INTERPOLATION CODE
-def drawTimeChangingPath(
-    frame_half_width, # fixed frame width, like FoV
-    frame_centers,zooms, # position and how far zoomed in am i? 
-    thetas, phis, psis, # rotation angles
-    nstepss, # how many interpolation frames should there be between each keyframe?
-    steps_per_snap,
-    start_snap,
-    faux_frame=1,
-    mps = 0,
-    offset=0
-    ):
-    """ if you want to fly around just a single snapshot,
-        just pass steps_per_snap very large"""
-
-    ## cast to arrays
-    zooms = np.array(zooms)
-
-    ## exclusive prefix sum
-    nframe_offsets = [offset]
-    for nsteps in nstepss[:-1]:
-        nframe_offsets+=[nframe_offsets[-1]+nsteps]
-
-    finsnap = start_snap + (nframe_offsets[-1]+nstepss[-1])/steps_per_snap + 1
-
-    ## setup interpolation bounds between keyframes
-    dkeyframes = itertools.izip(
+    def __init__(
+        self,
         nstepss,
-        frame_centers[:-1],frame_centers[1:],
-        frame_half_width/zooms[:-1],frame_half_width/zooms[1:],
-        thetas[:-1],thetas[1:],
-        phis[:-1],phis[1:],
-        psis[:-1],psis[1:],
-        itertools.repeat(steps_per_snap),
-        itertools.repeat(start_snap),
-        nframe_offsets, # offsets to calculate frame numbers
-        itertools.repeat(mps), # multiprocessing flag 
-        itertools.repeat(faux_frame)
-        )
+        **kwargs):
 
-    for dkeyframe in dkeyframes:
-        interpolateKeyFrames(*dkeyframe)
-    return nframe_offsets[-1]+nstepss[-1]# frame where we left off, offset
+
+        self.interp_kwargs = [
+            'frame_half_widths',
+            'frame_half_thicknesss',
+            'frame_centers',
+            'thetas',
+            'phis',
+            'psis',
+            'aspect_ratios',
+            'snapnums']
+
+
+        self.nstepss = nstepss
+
+        for kwarg in kwargs.keys():
+            if kwarg == 'aspect_ratios':
+                raise NotImplementedError(
+                    "not sure aspect_ratios should be allowed (yet)")
+            elif kwarg == 'snapnums':
+                raise NotImplementedError(
+                    "need to sort lists by snapnum and connect to"+
+                    " a time interpolater class")
+            elif kwarg not in self.interp_kwargs:
+                raise KeyError(kwarg+" not allowed",self.interp_kwargs)
+            else:
+                value = kwargs[kwarg]
+
+                ## passes quality checks?
+                if len(value) != (len(nstepss)+1):
+                    raise ValueError(
+                        kwarg+
+                        " has wrong length this: %d req: %d"%(len(value),len(nstepss)+1))
+
+                interpds = []
+                if kwarg != 'frame_centers':
+                    for li in range(len(nstepss)):
+                        ri = li+1
+                        interpds.append(np.linspace(
+                            kwargs[kwarg][li],
+                            kwargs[kwarg][ri],
+                            nstepss[li]+1,
+                            endpoint=True))  
+                else:
+                    frame_centers = kwargs[kwarg]
+                    for li in range(len(nstepss)):
+                        ri = li+1
+                        xs = np.linspace(
+                            frame_centers[li][0],
+                            frame_centers[ri][0],
+                            nstepss[li]+1,
+                            endpoint=True)  
+                        ys = np.linspace(
+                            frame_centers[li][1],
+                            frame_centers[ri][1],
+                            nstepss[li]+1,
+                            endpoint=True)  
+                        zs = np.linspace(
+                            frame_centers[li][2],
+                            frame_centers[ri][2],
+                            nstepss[li]+1,
+                            endpoint=True)
+                        interpds.append(np.array([xs,ys,zs]).T)
+
+                for li in range(len(nstepss)):
+                    ## li > 0 business is to avoid repeating
+                    ##  edges
+                    ## i.e. frame_half_widths = [30,5,30]
+                    ##  should go as [30,20,10,5,10,20,30]
+                    ##  not [30,20,10,5,5,10,20,30]
+                    if li > 0 :
+                        interpds[li]=interpds[li][1:]
+
+            ## bind to the object
+            setattr(
+                self,
+                kwarg,
+                interpds)
+
+        ## see above comment for li > 0 business
+        #for li in range(len(nstepss)):
+        nstepss[0]+=1
+
+    def interpolateAndRender(self):
+        snapdir = "/scratch/projects/xsede/GalaxiesOnFIRE/metal_diffusion/m12i_res7100/output"
+        snapnum = 600 
+        galaxy = Galaxy(
+            'm12i_res7100',
+            snapdir,
+            600,
+            datadir='/scratch/04210/tg835099/data/metal_diffusion')
+
+
+        galaxy.extractMainHalo()
+
+        ## let's put the FIREstudio projections into a sub-directory of our Galaxy class instance
+        studio_datadir = os.path.join(os.path.dirname(galaxy.datadir),'firestudio')
+
+        global render_kwargs
+        render_kwargs = {
+            'weight_name':'Masses',
+            'quantity_name':'Temperature',
+            #min_quantity=2,
+            #max_quantity=7,
+            'quantity_adjustment_function':np.log10,
+            'quick':True,
+            'min_weight':-0.5,
+            'max_weight':3,
+            'weight_adjustment_function':lambda x: np.log10(x/(15**2/1200**2)) + 10 - 6, ## msun/pc^2,
+            'cmap':'afmhot'}
+
+ ## pass in snapshot dictionary
+        wrapper_dict = {}
+        try:
+            global_this_snapdict_name = 'gas_snapshot_%03d'%snapnum
+            ## use as few references so i have to clean up fewer below lol
+            wrapper_dict,shm_buffers = copySnapshotNamesToMPSharedMemory(
+                ['Coordinates',
+                'Masses',
+                'Temperature',
+                'SmoothingLength'],
+                galaxy.sub_snap,
+                finally_flag=True,
+                loud=True)
+            del galaxy
+            globals()[global_this_snapdict_name] = wrapper_dict
+            ## don't remove these lines, they perform some form of dark arts
+            ##  that helps the garbage collector its due
+            locals().keys()
+            globals().keys()
+            gc.collect()
+
+            for obj in gc.get_objects():
+                if isinstance(obj,Galaxy):
+                    print(obj)
+                    raise Exception("too much memory will be copied")
             
-def interpolateKeyFrames(
-    nsteps,
-    r0,rf,
-    frame_half_width0,frame_half_widthf,
-    thetamin,thetamax,
-    phimin,phimax,
-    psimin,psimax,
-    steps_per_snap,
-    start_snap,
-    nframe_offset=0,
-    mps=0 ,
-    faux_frame=1
-    ):
-    """ in general nframe_offset will be nkey * nsteps but
-        want to let key frame interpolation go at different speeds..."""
+            frame_num = 0
+            for interp_i,nsteps in enumerate(self.nstepss):
+                im_param_kwargs = []
+                for step in range(nsteps):
+                    this_im_param_kwargs = {'frame_num':frame_num}
+                    frame_num+=1
+                    ## load the kwargs for this interpolation frame
+                    for interp_kwarg in self.interp_kwargs:
+                        if hasattr(self,interp_kwarg):
+                            this_im_param_kwargs[interp_kwarg[:-1]] = getattr(self,interp_kwarg)[interp_i][step]
+                    im_param_kwargs.append(this_im_param_kwargs)
 
-    ## the starting snapshot for this key frame interpolation
-    start_snap += nframe_offset/steps_per_snap
-    nsnaps_this_interpolation = int(np.ceil(1.0*nsteps/steps_per_snap))
+                args = zip(
+                    itertools.repeat(GasStudio), ## this class,gas studio or star studio
+                    itertools.repeat(studio_datadir), ## datadir
+                    itertools.repeat(snapnum), ## snapnum for projection file to be saved to
+                    itertools.repeat(global_this_snapdict_name), ## what to look up in globals() for gas
+                    im_param_kwargs) ##
 
-    ## figure out how many frames of the interpolation each snapshot should be getting
-    ## correct for frames this snapshot has contributed to as part of the previous
-    ## key frame interpolation
-    frames_to_do = np.array([ 
-        steps_per_snap-(nframe_offset%steps_per_snap)*(i==0) for i in xrange(nsnaps_this_interpolation)])
-    
+                with Pool(80) as my_pool:
+                    these_axs = my_pool.starmap(worker_function,args)
+        except:
+            raise
+        finally:
+            ## TODO clean up anything that contains a reference to a shared
+            ##  memory object. globals() must be purged before the shm_buffers
+            ##  are unlinked or python will crash.
+            globals().pop(global_this_snapdict_name)
+            del wrapper_dict
+            for shm_buffer in shm_buffers:
+                ## handle case where multiprocessing isn't used
+                if shm_buffer is not None:
+                    shm_buffer.close()
+                    shm_buffer.unlink()
 
-    ## clamp the right edge to make sure we don't step too far
-    frames_to_do[-1]=nsteps-sum(frames_to_do[:-1])
-    
-    ## i feel like there's a smarter way to correct for this edge case
-    if frames_to_do[-1]>steps_per_snap:
-        frames_to_do=np.append(frames_to_do[:-1],[steps_per_snap,frames_to_do[-1]-steps_per_snap])
-        nsnaps_this_interpolation+=1
+            del shm_buffers
 
-    ## make sure we haven't accidentally done too many frames
-    assert sum(frames_to_do) == nsteps
+        return these_axs
 
-    snapnums = start_snap+np.arange(nsnaps_this_interpolation)
-    print frames_to_do
-    sub_step_boundss = sub_interpolate_values(0,23,frames_to_do)
+def worker_function(
+    this_class,
+    datadir,
+    snapnum,
+    global_this_snapdict_name,
+    im_param_kwargs):
 
-    
-    xmin,ymin,zmin = r0
-    xmax,ymax,zmax = rf
+    ## read the unique global name for the relevant snapshot dictionary
+    ##  TODO: could I handle time interpolation right here by checking if 
+    ##  if I was passed multiple snapdict names... then I could compute
+    ##  current_time_gyr and make a new combination snapshotdictionary 
+    ##  that was interpolated.
+    ##  TODO: think more about if this is how I want to do this if multiprocessing 
+    ##  is turned off which should be the default mode tbh.
+    this_snapdict = globals()[global_this_snapdict_name]
 
-    ## split up the interpolation into bins
-    sub_interp_valsss = [
-        sub_interpolate_values(lval,rval,frames_to_do) for lval,rval in 
-            [(xmin,xmax),
-            (ymin,ymax),
-            (zmin,zmax),
-            (frame_half_width0,frame_half_widthf),
-            (thetamin,thetamax),
-            (phimin,phimax),
-            (psimin,psimax),
-            ]
-        ] 
-
-    ## exclusive prefix sum
-    nframe_offsets = [nframe_offset]
-    for nsteps in frames_to_do[:-1]:
-        nframe_offsets+=[nframe_offsets[-1]+nsteps]
-
-
-    ## group arguments together to be passed to multiprocess frame drawing
-    argss = itertools.izip(
-        snapnums, 
-        frames_to_do,
-        nframe_offsets, ## so we know what to save the frame number as
-        itertools.repeat(mps), ## multiprocessing flag
-        itertools.repeat(faux_frame),
-        *sub_interp_valsss ## two dimensions are unwrapped here, one by zip and one by *
-    )
-
-    ## check that my arguments are being split correctly...
-    """
-    for i,args in enumerate(argss):
-        print '------'
-        print i,args
-        print '------'
-
-    print
-    """
-
-
-    if mps: 
-        my_thread_pool = ThreadPool(min(len(snapnums),5)) 
-        my_thread_pool.map(multiProcessFrameDrawingWrapper,argss)
-        my_thread_pool.close()
-    else:
-        for args in argss:
-            multiProcessFrameDrawingWrapper(args)
-
-def sub_interpolate_values(beg,fin,stepss):
-    """helper function to split interpolation up into binned sub-steps"""
-    interpolation_steps = np.linspace(beg,fin,np.sum(stepss))
-    sub_interpolation_bounds = []
-    for i,steps in enumerate(stepss):
-        place = sum(stepss[:i])
-        relevant_steps = interpolation_steps[place:place+steps]
-        sub_interpolation_bounds += [relevant_steps]#[(relevant_steps[0],relevant_steps[-1])]
-    return sub_interpolation_bounds
-
-def multiProcessFrameDrawingWrapper(args):
-    """wrapper function to pass to multiprocess.pool.map"""
-    return multiProcessFrameDrawing(*args)
-
-def multiProcessFrameDrawing(
-    snapnum,nsteps_this_snap,
-    nframe_offset,
-    mps,
-    faux_frame,
-    xs,ys,zs,
-    frame_half_widths,
-    thetas,phis,psis):
-    """ Loads snapshot and draws 'relevant' (see above) interpolated frames from it"""
-
-    ## repack coordinates into vector
-    frame_centers = np.array([xs,ys,zs]).T
-
-    ## load the galaxy
-    snapdir = "/home/abg6257/projects/isoDisk/makeNewDisk_tests/rescaled_snonly/rescaled_fiducial/output"
-    galaxy = Galaxy(
-        'isogal_snonly',
-        snapdir,
+    frame_num = im_param_kwargs.pop('frame_num')
+    ## initialize the GasStudio instance
+    my_studio = this_class(
+        datadir,
         snapnum,
-        cosmological=0,
-        datadir='/projects/b1026/agurvich/data',easy_load=0)
+        datadir,
+        gas_snapdict=this_snapdict, ## pass in snapshot dictionary
+        star_snapdict=None, ## TODO: have a flag to pass in snapshot dictionary
+        **im_param_kwargs,
+        loud=False)
 
-    try:
-        if not os.path.isdir(os.path.join(galaxy.datadir,'frame_infos')):
-            os.mkdir(os.path.join(galaxy.datadir,'frame_infos'))
-    except:
-        ## it's parallel, one of them probably made the directory
-        pass
+    ax, pixel_map =  my_studio.render(
+        **render_kwargs) 
 
-    ## let's assume that we're only loading the gas particles here
-    galaxy.load_gas()
+    del my_studio
 
-    ##  for an isolated galaxy, not doing much
-    galaxy.extractMainHalo()
+    ax.axis('on')
+    fig = ax.get_figure()
+    fig.savefig('frame_%03d'%frame_num)
+    plt.close(fig)
+    return 
 
-    ## load galaxy information into the subres
-    galaxy.sub_res['datadir']=galaxy.datadir
-    galaxy.sub_res['snapnum']=galaxy.snapnum
-    galaxy.sub_res['snapdir']=galaxy.snapdir
 
-    drawFrames(
-        faux_frame,
-        galaxy,frame_centers,frame_half_widths,
-        thetas,phis,psis,mps=mps,offset=nframe_offset) 
+def main():
     
-def drawFrames(faux_frame,galaxy,frame_centers,frame_half_widths,thetas,phis,psis,offset=0,mps=0):
-    nframes = len(frame_centers)
-    argss = itertools.izip(
-            itertools.repeat(faux_frame),
-            range(nframes),
-            itertools.repeat(galaxy.sub_res),
-            frame_centers,frame_half_widths,
-            thetas,phis,psis,
-            itertools.repeat(offset))
+    init = time.time()
+    my_interp = Interpolater(
+        [40,20,40],
+        frame_half_widths=[30,5,5,30],
+        frame_centers = [[0,0,0],[5,5,0],[5,0,0],[0,0,0]],
+        thetas=[0,90,90,0],
+        frame_half_thicknesss=[15,5,5,15])
+    my_interp.interpolateAndRender()
+    print(time.time()-init,'s elapsed')
 
-    if mps: 
-        my_pool = Pool(25)
-        my_pool.map(multiWrapper,argss)
-        my_pool.close()
-            
-    else:
-        for args in argss:
-            multiWrapper(args)
-
-def multiWrapper(args):
-    multidrawFrame(*args)
-
-def renderGalaxyWrapper(**kwargs):
-    return renderGalaxy(**kwargs)
-
-def multidrawFrame(faux_frame,i,sub_res,frame_center,frame_half_width,theta,phi,psi,offset):
-    """ uses fauxrenderPatch for testing purposes, or full 'render galaxy' 
-        if you want to spend the time on it..."""
-
-    ax = plt.gca()
-
-    ## write-out frame info
-    with file(
-        os.path.join(
-            sub_res['datadir'],
-            'frame_infos/frame_info_%04d.txt'%(i+offset))
-        ,'w') as handle:
-
-        handle.write("snapnum=%d\n"%sub_res['snapnum'])
-        handle.write("theta=%.2f phi=%.2f psi=%.2f\n"%(theta,phi,psi))
-        handle.write("fc=%s\n"%(str(frame_center)))
-        handle.write("fw=%.2f fd=%.2f\n"%(frame_half_width,frame_half_width))
-
-    if not faux_frame:
-        renderGalaxyWrapper(
-            ax=ax,
-            snapdir=sub_res['snapdir']+'bad', ## where does the data live, ideally we don't open it, hence the bad
-            snapnum=sub_res['snapnum'], ## which snapshot we're doing now
-            overwrite=1, ## overwrite any existing projections for each snapshot
-            noaxis=1, ## don't have axis ticks
-            edgeon=0, ## don't make a 90 degree rotated version
-            frame_center=frame_center, ## center of frame
-            frame_half_width=frame_half_width, ## half width of frame
-            frame_depth = frame_half_width, ## half depth, make a cube
-            theta=theta,phi=phi,psi=psi, ## euler angles
-            datadir = sub_res['datadir'], ## where to save projections to
-            subres=sub_res,## pass along the already extracted data
-            h5filename='frame_%04d_'%(i+offset) ## make sure we don't overwrite projections
-            ) 
-
-        plt.savefig(os.path.join(sub_res['datadir'],'frame_%04d.png'%(i+offset)))
-    else:
-        fauxrenderPatch(sub_res,
-            ax,frame_center,frame_half_width,
-            theta=theta,phi=phi,psi=psi,noaxis=1)
-
-        plt.savefig(os.path.join(sub_res['datadir'],'faux_frame_%04d.png'%(i+offset)))
-
-    plt.clf()
+if __name__ == '__main__':
+    main()
