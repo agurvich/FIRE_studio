@@ -70,7 +70,7 @@ gasStudio.set_ImageParams(
             'cbar_logspace':True,
             }
 
-        for kwarg in kwargs:
+        for kwarg in list(kwargs):
             ## only set it here if it was passed
             if kwarg in default_kwargs:
                 ## remove it from default_kwargs
@@ -82,6 +82,10 @@ gasStudio.set_ImageParams(
                         'to user value of:',value)
                 ## set it to the object
                 setattr(self,kwarg,value)
+
+                ## remove this kwarg to prevent a confusing print message
+                ##  suggesting they are being ignored in the parent class
+                kwargs.pop(kwarg)
             else:
                 if kwarg not in Studio.set_ImageParams.default_kwargs:
                     print(kwarg,'ignored. Did you mean something else?',
@@ -96,8 +100,16 @@ gasStudio.set_ImageParams(
                         'to default value of:',value)
                 setattr(self,default_arg,value)
 
+
         ## set any other image params here
         super().set_ImageParams(use_defaults=use_defaults,loud=loud,**kwargs)
+
+    set_ImageParams.default_kwargs = {
+            'use_colorbar':False,
+            'cbar_label':'',
+            'cbar_logspace':True}
+    set_ImageParams.default_kwargs.update(
+        Studio.set_ImageParams.default_kwargs)
 
     append_function_docstring(set_ImageParams,Studio.set_ImageParams,prepend_string='passes `kwargs` to:\n')
 
@@ -146,8 +158,7 @@ gasStudio.set_ImageParams(
             weights,
             weight_name,
             quantities,
-            quantity_name,
-            **kwargs)
+            quantity_name)
 
         xedges = np.linspace(Xmin,Xmax,npix_x,endpoint=True)
         yedges = np.linspace(Ymin,Ymax,npix_y,endpoint=True)
@@ -239,10 +250,11 @@ The maps computed in pixel j are then:
                     weights,
                     weight_name,
                     quantities,
-                    quantity_name,
-                    **kwargs))
+                    quantity_name),
+                    loud=self.master_loud)
 
-            print('-done')
+            if self.master_loud:
+                print('-done')
 
             return weightMap, weightWeightedQuantityMap
 
@@ -260,8 +272,7 @@ The maps computed in pixel j are then:
         weights,
         weight_name,
         quantities,
-        quantity_name,
-        **kwargs):
+        quantity_name):
         """ keys required to function:
             Coordinates
             SmoothingLength (optional, will compute though otherwise)
@@ -277,7 +288,8 @@ The maps computed in pixel j are then:
         
         ## use the masked version of the snapdict if it was passed
         if hasattr(self,'masked_'+full_snapdict_name):
-            print("Used masked_snapdict, delete it if you don't want it anymore")
+            if self.master_loud:
+                print("Used masked_snapdict, delete it if you don't want it anymore")
             full_snapdict_name = 'masked_'+full_snapdict_name
 
         snapdict = getattr(self,full_snapdict_name)
@@ -321,7 +333,8 @@ The maps computed in pixel j are then:
         ## cull the particles outside the frame and cast to float32
         box_mask = self.cullFrameIndices(pos)
 
-        print("projecting %d particles"%np.sum(box_mask))
+        if self.master_loud:
+            print("projecting %d particles"%np.sum(box_mask))
 
         pos = pos[box_mask].astype(np.float32)
         weights = weights[box_mask].astype(np.float32)
@@ -339,7 +352,8 @@ The maps computed in pixel j are then:
             pos,weights,quantities,
             hsml)
 
-        print('-done')
+        if self.master_loud:
+            print('-done')
 
     def volumeWeightAlongLOS(
         self,
@@ -554,7 +568,8 @@ gasStudio.render(
             self.cbar_min = min_quantity
             self.cbar_max = max_quantity
 
-            print("TODO:Need to create a 2-axis colorbar.")
+            if self.master_loud:
+                print("TODO:Need to create a 2-axis colorbar.")
 
         ## plot a weight map, convert to 0->1 space
         elif (min_weight is not None and 
@@ -642,7 +657,8 @@ def getImageGrid(
     Zmin,Zmax,
     npix_x,npix_y,
     pos,mass,quantity,
-    hsml):
+    hsml,
+    loud=True):
 
     ## set c-routine variables
     desngb   = 32
@@ -680,7 +696,8 @@ def getImageGrid(
     w_f_p    = weightMap.ctypes.data_as(c_f_p)
     q_f_p    = weightWeightedQuantityMap.ctypes.data_as(c_f_p)
 
-    print('------------------------------------------')
+    if loud:
+        print('------------------------------------------')
     curpath = os.path.realpath(__file__)
     curpath = os.path.split(curpath)[0] #split off this filename
     curpath = os.path.split(curpath)[0] #split off studios direcotry
@@ -722,21 +739,24 @@ def getImageGrid(
         ctypes.c_int(Axis1),ctypes.c_int(Axis2),ctypes.c_int(Axis3), ## axes...?
 	ctypes.c_float(Hmax),ctypes.c_double(BoxSize), ## maximum smoothing length and size of box
 	w_f_p,q_f_p) ## pointers to output cell-mass and cell-mass-weighted-quantity
-    print('------------------------------------------')
+    if loud:
+        print('------------------------------------------')
     
     # convert into Msun/pc^2
     #unitmass_in_g = 1.9890000e+43 
     #solar_mass    = 1.9890000e+33
     #conv_fac = (unitmass_in_g/solar_mass) / (1.0e3)**2 ## Msun/pc^2
     #columnDensityMap *= conv_fac
-    print('minmax(weightMap)',
-	np.min(weightMap),
-	np.max(weightMap))
+    if loud:
+        print('minmax(weightMap)',
+            np.min(weightMap),
+            np.max(weightMap))
 
     # weightWeightedQuantityMap contains the mass-weighted quantity
-    print('minmax(weightWeightedQuantityMap)',
-	np.min(weightWeightedQuantityMap),
-	np.min(weightWeightedQuantityMap))
+    if loud:
+        print('minmax(weightWeightedQuantityMap)',
+            np.min(weightWeightedQuantityMap),
+            np.min(weightWeightedQuantityMap))
    
     return weightMap,weightWeightedQuantityMap
 

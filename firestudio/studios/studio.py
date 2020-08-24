@@ -1,4 +1,3 @@
-from __future__ import print_function
 import os
 import numpy as np 
 import h5py
@@ -17,6 +16,41 @@ from abg_python.galaxy.metadata_utils import Metadata,metadata_cache
 from firestudio.utils.stellar_utils.load_stellar_hsml import get_particle_hsml
 
 class Drawer(object):
+
+    def drawCoordinateAxes(
+        self,
+        ax,
+        spacing=1,
+        length=10,
+        colors=None):
+
+        if colors is None:
+            colors = ['red','blue','green']
+        
+        ## create the axis lines
+        points = np.arange(spacing,length+spacing,spacing)
+        
+        ## initialize the coordinate array, + 1 for the origin
+        coordinates = np.zeros((3*points.size + 1,3))
+
+        ## for each direction, fill one axis with the points
+        for i in range(3):
+            coordinates[points.size*i:points.size*(i+1),i] = points 
+        
+        ## perform the rotation
+        coordinates = self.rotateEuler(self.theta,self.phi,self.psi,coordinates)
+
+        ## plot the new x-y coordiantes
+        for i in range(3):
+            these_coords = coordinates[points.size*i:points.size*(i+1)]
+            ax.plot(these_coords[:,0],these_coords[:,1],'.',color=colors[i])
+
+        ax.plot(0,0,'.',c=colors[-1])
+        for i,label in enumerate(['x','y','z']):
+            x,y,z = coordinates[points.size*(i+1)-1]
+            ax.text(x,y,label)
+
+        return ax
 
     def plotImage(
         self,
@@ -96,10 +130,11 @@ class Drawer(object):
             label2.set_color('white')
 
     def renormalizeTransposeImage(self,image,min_val,max_val,quantity_name):
-        print('min_%s = '%quantity_name,min_val)
-        print('max_%s = '%quantity_name,max_val)
+        if self.master_loud:
+            print('min_%s = '%quantity_name,min_val)
+            print('max_%s = '%quantity_name,max_val)
 
-        print('Image range (%s): '%quantity_name,np.nanmin(image),np.nanmax(image))
+            print('Image range (%s): '%quantity_name,np.nanmin(image),np.nanmax(image))
         image = image - min_val
         image = image / (max_val - min_val)
         
@@ -108,7 +143,8 @@ class Drawer(object):
         image[image > 1.0] = 1.0
         image = image*255.0
 
-        print('Image range (8bit): ',np.nanmin(image),np.nanmax(image))
+        if self.master_loud:
+            print('Image range (8bit): ',np.nanmin(image),np.nanmax(image))
 
         ## cast to integer to use as indices for cmap array
         image = image.astype(np.uint16) 
@@ -153,6 +189,7 @@ class Studio(Drawer):
         gas_snapdict=None, ## open galaxy gas snapshot dictionary 
         star_snapdict=None, ## open galaxy star snapshot dictionary
         galaxy_kwargs=None,
+        master_loud=True,
         **kwargs
         ):
         """Initializes a cache file to be read from and sets any image parameters
@@ -197,6 +234,7 @@ star_snapdict['AgeGyr'] ## age of particles in Gyr
                     (must then also provide snapdir)
                 galaxy_kwargs = None -- dictionary that contains kwargs that should be passed to the opened
                     abg_python.galaxy.Galaxy instance that is used to load snapshot data from disk. 
+                master_loud = True -- flag for turning off *all* print statements
 
                 **set_ImageParams_kwargs -- keyword arguments that will be passed to
                     set_ImageParams
@@ -205,6 +243,9 @@ star_snapdict['AgeGyr'] ## age of particles in Gyr
 
                 None"""
         
+        ## bind loud flag
+        self.master_loud = master_loud
+
         if cache_file_name is None:
             cache_file_name = "proj_maps"
 
@@ -220,7 +261,7 @@ star_snapdict['AgeGyr'] ## age of particles in Gyr
 
         self.gas_snapdict = gas_snapdict
         self.star_snapdict = star_snapdict
-
+        
         ## {}.update enforces that galaxy_kwargs is a dictionary, lol...
         self.galaxy_kwargs = {} if galaxy_kwargs is None else {}.update(galaxy_kwargs)
 
@@ -437,14 +478,15 @@ studio.set_ImageParams(
                 default_kwargs.pop(kwarg)
 
                 ## set it to the object
-                if loud:
+                if loud and self.master_loud:
                     print("setting",kwarg,
                         'to user value of:',value)
                 ## set it to the object
                 setattr(self,kwarg,value)
             else:
-                print(kwarg,'ignored. Did you mean something else?',
-                    default_kwargs.keys())
+                if self.master_loud:
+                    print(kwarg,'ignored. Did you mean something else?',
+                        default_kwargs.keys())
 
         if use_defaults:
             ## if we haven't already set frame center by passed kwarg
@@ -467,7 +509,7 @@ studio.set_ImageParams(
             ## set the remaining image parameters to their default values
             for default_arg in default_kwargs:
                 value = default_kwargs[default_arg]
-                if loud:
+                if loud and self.master_loud:
                     print("setting",default_arg,
                         'to default value of:',value)
                 setattr(self,default_arg,value)
@@ -615,7 +657,6 @@ studio.set_ImageParams(
         self,
         Coordinates):
 
-        print("TODO:Need to decide if  we want to rotate before or after culling...")
         ## extract a cube of particles that are in relevant area
         ind_box = ((Coordinates[:,0] > self.Xmin) & (Coordinates[:,0] < self.Xmax) &
                    (Coordinates[:,1] > self.Ymin) & (Coordinates[:,1] < self.Ymax) &
@@ -623,7 +664,8 @@ studio.set_ImageParams(
 
         return ind_box
 
-    def rotateEuler(self,theta,phi,psi,pos):
+    def rotateEuler(self,theta,phi,psi,pos,
+        order = 'xyz'):
         pos=pos-self.frame_center
         ## if need to rotate at all really -__-
         if theta==0 and phi==0 and psi==0:
@@ -634,18 +676,31 @@ studio.set_ImageParams(
         phi_rad   = pi*phi  / 1.8e2
         psi_rad   = pi*psi  / 1.8e2
 
+        c1 = np.cos(theta_rad)
+        s1 = np.sin(theta_rad)
+        c2 = np.cos(phi_rad)
+        s2 = np.sin(phi_rad)
+        c3 = np.cos(psi_rad)
+        s3 = np.sin(psi_rad)
+
         # construct rotation matrix
-        rot_matrix = np.array([
-            [np.cos(phi_rad)*np.cos(psi_rad), #xx
-                -np.cos(phi_rad)*np.sin(psi_rad), #xy
-                np.sin(phi_rad)], #xz
-            [np.cos(theta_rad)*np.sin(psi_rad) + np.sin(theta_rad)*np.sin(phi_rad)*np.cos(psi_rad),#yx
-                np.cos(theta_rad)*np.cos(psi_rad) - np.sin(theta_rad)*np.sin(phi_rad)*np.sin(psi_rad),#yy
-                -np.sin(theta_rad)*np.cos(phi_rad)],#yz
-            [np.sin(theta_rad)*np.sin(psi_rad) - np.cos(theta_rad)*np.sin(phi_rad)*np.cos(psi_rad),#zx
-                np.sin(theta_rad)*np.cos(psi_rad) - np.cos(theta_rad)*np.sin(phi_rad)*np.sin(psi_rad),#zy
-                np.cos(theta_rad)*np.cos(phi_rad)]#zz
-            ]).astype(np.float32)
+        ##  Tait-Bryan angles
+        if order == 'xyz':
+            rot_matrix = np.array([
+                [c2*c3           , - c2*s3         , s2    ],
+                [c1*s3 + s1*s2*c3, c1*c3 - s1*s2*s3, -s1*c2],
+                [s1*s3 - c1*s2*c3, s1*c3 + c1*s2*s3, c1*c2 ]],
+                dtype = np.float32)
+
+        ##  classic Euler angles
+        elif order == 'zxz':
+            rot_matrix = np.array([
+                [c1*c3 - c2*s1*s3, -c1*s3 - c2*c3*s1, s1*s2 ],
+                [c3*s1 + c1*c2*s3, c1*c2*c3 - s1*s3 , -c1*s2],
+                [s2*s3           , c3*s2            , c2    ]],
+                dtype=np.float32)
+        else:
+            raise Exception("Bad order")
 
         n_box = pos.shape[0]
 
@@ -656,6 +711,7 @@ studio.set_ImageParams(
         ##  numpy will change to column major order or something if you
         ##  take the transpose of a transpose, as above. Try commenting out
         ##  this line and see what garbage you get. ridiculous.
+        ##  also, C -> "C standard" i.e. row major order. lmfao
         pos_rot = np.array(pos_rot,order='C')
         
         ### add the frame_center back
