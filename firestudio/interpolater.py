@@ -1,30 +1,65 @@
 import itertools 
 
-import abg_python.all_utils as all_utils
-
 import matplotlib.pyplot as plt
 import numpy as np 
 import os
 
-from multiprocessing.pool import ThreadPool
-from multiprocessing import Pool
-
-import itertools
-
-from abg_python.multiproc_utils import copySnapshotNamesToMPSharedMemory
-
-
-
-from firestudio.studios.gas_studio import GasStudio
-from abg_python.galaxy.gal_utils import Galaxy
 import time
 import gc
 
+import multiprocessing
+import itertools
+
+from abg_python.multiproc_utils import copySnapshotNamesToMPSharedMemory
+from abg_python.galaxy.gal_utils import Galaxy
+import abg_python.all_utils as all_utils
+
+from firestudio.studios.gas_studio import GasStudio
+from firestudio.studios.studio import Studio
+from firestudio.studios.star_studio import StarStudio
+
+def interpolationHelper(duration,previous_chain=None,framerate=15,this_class=None,**kwargs):
+    if this_class is None:
+        this_class = Studio
+        
+    if previous_chain is None:
+        previous_chain = {'nsteps_tot':0,'nlinks':0,'nstepss':[]}
+    
+    nsteps = duration*framerate
+    for kwarg in kwargs:
+        if kwarg+'s' not in previous_chain:
+            if previous_chain['nlinks'] > 0:
+                try:
+                    previous_chain[kwarg+'s'] = ([
+                        this_class.set_ImageParams.default_kwargs[kwarg]] *
+                        (previous_chain['nlinks']+1))
+                except KeyError:
+                    print("Looked in",
+                        this_class,
+                        "pass the class you'd like to look in"+
+                        " using the this_class kwarg")
+            else:
+                previous_chain[kwarg+'s'] = [kwargs[kwarg][0]]
+                kwargs[kwarg]=kwargs[kwarg][1]
+                
+        previous_chain[kwarg+'s']+=[kwargs[kwarg]]
+    
+    for pkwarg in previous_chain:
+        if pkwarg[:-1] in kwargs or pkwarg in ['nlinks','nsteps_tot','nstepss']:
+            continue
+        previous_chain[pkwarg]+=[previous_chain[pkwarg][-1]]
+    
+    previous_chain['nstepss']+=[nsteps]
+    previous_chain['nlinks']+=1
+    previous_chain['nsteps_tot']+=nsteps
+    return previous_chain
+    
 class Interpolater(object):
     
     def __init__(
         self,
         nstepss,
+        keyframes_only=False,
         **kwargs):
 
 
@@ -38,6 +73,11 @@ class Interpolater(object):
             'aspect_ratios',
             'snapnums']
 
+
+        ## perform each interpolation in a single step
+        ##  producing only the interpolation key frames
+        if keyframes_only:
+            nstepss = [[1] for i in range(len(nstepss))]
 
         self.nstepss = nstepss
 
@@ -109,7 +149,70 @@ class Interpolater(object):
         #for li in range(len(nstepss)):
         nstepss[0]+=1
 
-    def interpolateAndRender(self,galaxy=None,nproc=None):
+    def interpolateAndRender(self,frame_offset=0,galaxy=None):
+
+        if galaxy is None:
+            snapdir = "/scratch/projects/xsede/GalaxiesOnFIRE/metal_diffusion/m12i_res7100/output"
+            snapnum = 600 
+            galaxy = Galaxy(
+                'm12i_res7100',
+                snapdir,
+                600,
+                datadir='/scratch/04210/tg835099/data/metal_diffusion')
+            galaxy.extractMainHalo()
+        else:
+            snapnum = galaxy.snapnum
+
+        ## let's put the FIREstudio projections into a sub-directory of our Galaxy class instance
+        studio_datadir = os.path.join(os.path.dirname(galaxy.datadir),'firestudio')
+
+        global render_kwargs
+        render_kwargs = {
+            'weight_name':'Masses',
+            'quantity_name':'Temperature',
+            #min_quantity=2,
+            #max_quantity=7,
+            'quantity_adjustment_function':np.log10,
+            'quick':True,
+            'min_weight':-0.5,
+            'max_weight':3,
+            'weight_adjustment_function':lambda x: np.log10(x/(30**2/1200**2)) + 10 - 6, ## msun/pc^2,
+            'cmap':'afmhot'}
+
+         ## pass in snapshot dictionary
+        wrapper_dict = {}
+        global_this_snapdict_name = 'gas_snapshot_%03d'%snapnum
+        ## use as few references so i have to clean up fewer below lol
+        wrapper_dict = galaxy.sub_snap
+        globals()[global_this_snapdict_name] = wrapper_dict
+        ## don't remove these lines, they perform some form of dark arts
+        ##  that helps the garbage collector its due
+
+        frame_num = frame_offset
+        for interp_i,nsteps in enumerate(self.nstepss):
+            im_param_kwargs = []
+            for step in range(nsteps):
+                this_im_param_kwargs = {'frame_num':frame_num}
+                frame_num+=1
+                ## load the kwargs for this interpolation frame
+                for interp_kwarg in self.interp_kwargs:
+                    if hasattr(self,interp_kwarg):
+                        this_im_param_kwargs[interp_kwarg[:-1]] = getattr(self,interp_kwarg)[interp_i][step]
+                im_param_kwargs.append(this_im_param_kwargs)
+
+            args = zip(
+                itertools.repeat(GasStudio), ## this class,gas studio or star studio
+                itertools.repeat(studio_datadir), ## datadir
+                itertools.repeat(snapnum), ## snapnum for projection file to be saved to
+                itertools.repeat(global_this_snapdict_name), ## what to look up in globals() for gas
+                im_param_kwargs) ##
+
+            these_axs = [worker_function(*arg) for arg in args]
+
+
+        return these_axs
+
+    def interpolateAndRenderMultiprocessing(self,frame_offset=0,galaxy=None,nproc=None):
 
         if nproc is None:
             nproc = multiprocessing.cpu_count()-1
@@ -144,7 +247,7 @@ class Interpolater(object):
             'weight_adjustment_function':lambda x: np.log10(x/(30**2/1200**2)) + 10 - 6, ## msun/pc^2,
             'cmap':'afmhot'}
 
- ## pass in snapshot dictionary
+        ## pass in snapshot dictionary
         wrapper_dict = {}
         try:
             global_this_snapdict_name = 'gas_snapshot_%03d'%snapnum
@@ -169,7 +272,7 @@ class Interpolater(object):
                 if isinstance(obj,Galaxy):
                     print(obj,'will be copied to child processes and is probably large.')
             
-            frame_num = 0
+            frame_num = frame_offset
             for interp_i,nsteps in enumerate(self.nstepss):
                 im_param_kwargs = []
                 for step in range(nsteps):
@@ -188,8 +291,17 @@ class Interpolater(object):
                     itertools.repeat(global_this_snapdict_name), ## what to look up in globals() for gas
                     im_param_kwargs) ##
 
-                with Pool(nproc) as my_pool:
-                    these_axs = my_pool.starmap(worker_function,args)
+                this_nprocs = min(nproc,len(im_param_kwargs))
+                print("Starting a pool of %d processes..."%this_nprocs)
+                with multiprocessing.Pool(this_nprocs) as my_pool:
+                    my_pool.starmap(worker_function,args)
+                print("pool finished.")
+                del my_pool
+                del args
+                del im_param_kwargs
+                locals().keys()
+                globals().keys()
+                gc.collect()
         except:
             raise
         finally:
@@ -206,7 +318,7 @@ class Interpolater(object):
 
             del shm_buffers
 
-        return these_axs
+        return None 
 
 def worker_function(
     this_class,
@@ -233,7 +345,8 @@ def worker_function(
         gas_snapdict=this_snapdict, ## pass in snapshot dictionary
         star_snapdict=None, ## TODO: have a flag to pass in snapshot dictionary
         **im_param_kwargs,
-        loud=False)
+        loud=False,
+        master_loud=False)
 
     ax, pixel_map =  my_studio.render(
         **render_kwargs) 
@@ -242,21 +355,27 @@ def worker_function(
 
     ax.axis('on')
     fig = ax.get_figure()
-    #fig.savefig('frame_%03d'%frame_num)
-    #plt.close(fig)
-    return fig
+    fig.savefig('frame_%03d'%frame_num)
+    plt.close(fig)
+    del fig
+    del ax
+    return None
 
 
 def main():
     
     init = time.time()
+    #my_interp = Interpolater(
+        #[40,20,40],
+        #frame_half_widths=[30,5,5,30],
+        #frame_centers = [[0,0,0],[5,5,0],[5,0,0],[0,0,0]],
+        #thetas=[0,90,90,0],
+        #frame_half_thicknesss=[15,5,5,15])
     my_interp = Interpolater(
-        [40,20,40],
-        frame_half_widths=[30,5,5,30],
-        frame_centers = [[0,0,0],[5,5,0],[5,0,0],[0,0,0]],
-        thetas=[0,90,90,0],
-        frame_half_thicknesss=[15,5,5,15])
-    my_interp.interpolateAndRender()
+        [300,150,300],
+        thetas=[0,-90,-60,-60],
+        psis=[0,720,720+360,720+360+720])
+    my_interp.interpolateAndRenderMultiprocessing()
     print(time.time()-init,'s elapsed')
 
 if __name__ == '__main__':
