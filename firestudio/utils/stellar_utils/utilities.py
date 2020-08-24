@@ -29,6 +29,7 @@ def return_python_routines_cdir():
 def colors_table( age_in_Gyr, metallicity_in_solar_units, 
     BAND_ID=0, SALPETER_IMF=0, CHABRIER_IMF=1, QUIET=0, CRUDE=0, 
     RETURN_NU_EFF=0, RETURN_LAMBDA_EFF=0, UNITS_SOLAR_IN_BAND=0 ):
+    raise Exception("Import directly from colors_sps.colors_table for clarity's sake.")
     return ctab.colors_table( age_in_Gyr, metallicity_in_solar_units, 
         BAND_ID=BAND_ID, SALPETER_IMF=SALPETER_IMF, CHABRIER_IMF=CHABRIER_IMF, QUIET=QUIET, CRUDE=CRUDE, 
         RETURN_NU_EFF=RETURN_NU_EFF, RETURN_LAMBDA_EFF=RETURN_LAMBDA_EFF, UNITS_SOLAR_IN_BAND=UNITS_SOLAR_IN_BAND )
@@ -82,9 +83,11 @@ def attenuate( nu_in_Hz, log_NH, metallicity_in_solar, \
         SMC=SMC, LMC=LMC, MW=MW, BB=BB, IR=IR, SX=SX, HX=HX)
         
 def cross_section( f0, METALLICITY_OVER_SOLAR=1.0 ):
+    raise Exception("Import directly from attenuation.cross_section for clarity's sake.")
     return atten_cx.cross_section( f0, METALLICITY_OVER_SOLAR=METALLICITY_OVER_SOLAR);
        
 def opacity_per_solar_metallicity( f0 ):
+    raise Exception("Import directly from attenuation.cross_section for clarity's sake.")
     return atten_cx.opacity_per_solar_metallicity( f0 );
        
 ## routines from agn_spectrum module
