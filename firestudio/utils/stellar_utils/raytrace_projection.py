@@ -2,7 +2,10 @@ import os
 import numpy as np
 import math
 import ctypes
-import firestudio.utils.stellar_utils.utilities as util
+
+from firestudio.utils.stellar_utils.colors_sps.colors_table import colors_table
+from firestudio.utils.stellar_utils.attenuation.cross_section import opacity_per_solar_metallicity
+
 import scipy
 
 def checklen(x):
@@ -76,51 +79,119 @@ def gas_raytrace_temperature( TEMPERATURE_CUTS, \
 ##   the bands of interest in cgs (cm^2/g), must be converted to match units of input 
 ##   mass and size. the default it to assume gadget units (M=10^10 M_sun, l=kpc)
 ##
-def stellar_raytrace( BAND_IDS, \
-        stellar_x, stellar_y, stellar_z, \
-        stellar_mass, stellar_age, stellar_metallicity, stellar_hsml, \
-        gas_x, gas_y, gas_z, gas_mass, gas_metallicity, gas_hsml, \
-        xlim=0, ylim=0, zlim=0, pixels=720, 
-        KAPPA_UNITS=2.08854068444, \
-        IMF_CHABRIER=1, IMF_SALPETER=0 , \
-        ADD_BASE_METALLICITY=0.0, ADD_BASE_AGE=0.0 ):
+def stellar_raytrace(
+        BAND_IDS, 
+        stellar_x,stellar_y,stellar_z, 
+        stellar_mass,stellar_age,stellar_metallicity,
+        stellar_hsml, 
+        gas_x,gas_y,gas_z,
+        gas_mass,gas_metallicity,
+        gas_hsml, 
+        xlim=0,
+        ylim=0,
+        zlim=0,
+        pixels=720, 
+        KAPPA_UNITS=2.08854068444, ## cm^2/g -> kpc^2/mcode
+        IMF_CHABRIER=1,
+        IMF_SALPETER=0 , 
+        ADD_BASE_METALLICITY=0.0,
+        ADD_BASE_AGE=0.0 ):
         
-    Nbands=len(np.array(BAND_IDS)); Nstars=len(np.array(stellar_mass)); Ngas=len(np.array(gas_mass));
-    if (Nbands != 3): print("stellar_raytrace needs 3 bands, you gave"),Nbands; return -1,-1,-1,-1;
-    ## check if stellar metallicity is a matrix
-    if (len(stellar_metallicity.shape)>1): stellar_metallicity=stellar_metallicity[:,0];
-    if (len(gas_metallicity.shape)>1): gas_metallicity=gas_metallicity[:,0];
 
-    ## get opacities and luminosities at frequencies we need:
-    stellar_metallicity[stellar_metallicity>0] += ADD_BASE_METALLICITY;
+
+    ## count particles we're using
+    Nstars=len(np.array(stellar_mass))
+    Ngas=len(np.array(gas_mass))
+
+    ## count how many bands we're attenuating
+    Nbands=len(np.array(BAND_IDS))
+
+    ## require that we attenuate 3 bands to combine since attenuation
+    ##  routine is hardcoded to accept 3 weights
+    if (Nbands != 3): 
+        print("stellar_raytrace needs 3 bands, you gave"Nbands)
+        return -1,-1,-1,-1;
+
+    ## check if stellar metallicity is a matrix
+    ##  i.e. mass fraction of many species. If so,
+    ##  take the total metallicity 
+    if (len(stellar_metallicity.shape)>1): 
+        stellar_metallicity=stellar_metallicity[:,0];
+    if (len(gas_metallicity.shape)>1): 
+        gas_metallicity=gas_metallicity[:,0];
+
+    ## apply minimum metallicity and ages
+    stellar_metallicity[stellar_metallicity>0] += ADD_BASE_METALLICITY; ## TODO why >0?
     gas_metallicity[gas_metallicity>0] += ADD_BASE_METALLICITY;
     stellar_age += ADD_BASE_AGE;
-    kappa=np.zeros([Nbands]); lums=np.zeros([Nbands,Nstars]);
+
+    ## get opacities and luminosities at frequencies we need:
+    kappa=np.zeros([Nbands])
+    lums=np.zeros([Nbands,Nstars])
     for i_band in range(Nbands):
-        nu_eff = util.colors_table(np.array([1.0]),np.array([1.0]), \
-            BAND_ID=BAND_IDS[i_band],RETURN_NU_EFF=1);
-        kappa[i_band] = util.opacity_per_solar_metallicity(nu_eff);
-        l_m_ssp = util.colors_table( stellar_age, stellar_metallicity/0.02, \
-            BAND_ID=BAND_IDS[i_band], CHABRIER_IMF=IMF_CHABRIER, SALPETER_IMF=IMF_SALPETER, CRUDE=1, \
-            UNITS_SOLAR_IN_BAND=1); ## this is such that solar-type colors appear white
+        ## find the frequency associated with this band
+        nu_eff = colors_table(
+            np.array([1.0]), ## dummy value
+            np.array([1.0]), ## dummy value
+            BAND_ID=BAND_IDS[i_band], ## band index
+            RETURN_NU_EFF=1) ## flag to return effective NU in this band
+
+        ## calculate the kappa in this band using:
+        ##  Thompson scattering + 
+        ##  Pei (1992) + -- 304 < lambda[Angstroms] < 2e7
+        ##  Morrison & McCammon (1983) -- 1.2 < lambda[Angstroms] < 413
+        kappa[i_band] = opacity_per_solar_metallicity(nu_eff)
+
+        ## lookup the luminosity/mass in this band
+        ##  given stellar ages and metallicities
+        l_m_ssp = colors_table(
+            stellar_age, ## ages in Gyr
+            stellar_metallicity/0.02,  ## metallicity in solar
+            BAND_ID=BAND_IDS[i_band], ## band index
+            CHABRIER_IMF=IMF_CHABRIER, ## imf flags
+            SALPETER_IMF=IMF_SALPETER, ## imf flags
+            CRUDE=1, ## map particles to nearest table entry rather than interpolate
+            UNITS_SOLAR_IN_BAND=1) ## this is such that solar-type colors appear white
+
         l_m_ssp[l_m_ssp >= 300.] = 300. ## just to prevent crazy values here 
         l_m_ssp[l_m_ssp <= 0.] = 0. ## just to prevent crazy values here 
         lums[i_band,:] = stellar_mass * l_m_ssp
-    gas_lum=np.zeros(Ngas); ## gas has no 'source term' for this calculation
-    stellar_mass_attenuation = np.zeros(Nstars); ## stars have no 'attenuation term'
-    gas_mass_metal = gas_mass * (gas_metallicity/0.02);
-    kappa *= KAPPA_UNITS;
+
+    ## dummy values to use for source and attenuation terms 
+    gas_lum=np.zeros(Ngas) ## gas has no 'source term' for this calculation
+    stellar_mass_attenuation = np.zeros(Nstars) ## stars have no 'attenuation term'
+
+    ## convert units
+    gas_mass_metal = gas_mass * (gas_metallicity/0.02)
+    kappa *= KAPPA_UNITS
     
     ## combine the relevant arrays so it can all be fed into the ray-tracing
-    x=np.concatenate([stellar_x,gas_x]); y=np.concatenate([stellar_y,gas_y]); z=np.concatenate([stellar_z,gas_z]);
-    mass=np.concatenate([stellar_mass_attenuation,gas_mass_metal]);
-    hsml=np.concatenate([stellar_hsml,gas_hsml]);
-    wt1=np.concatenate([lums[0,:],gas_lum]); wt2=np.concatenate([lums[1,:],gas_lum]); wt3=np.concatenate([lums[2,:],gas_lum]);
-    k1=kappa[0]; k2=kappa[1]; k3=kappa[2];
-        
-    return raytrace_projection_compute(x,y,z,hsml,mass,wt1,wt2,wt3,k1,k2,k3,\
-        xlim=xlim,ylim=ylim,zlim=zlim,pixels=pixels,TRIM_PARTICLES=1);
+    ##  positions
+    x=np.concatenate([stellar_x,gas_x])
+    y=np.concatenate([stellar_y,gas_y])
+    z=np.concatenate([stellar_z,gas_z])
+    
+    ##  masses for attenuation purposes
+    mass=np.concatenate([stellar_mass_attenuation,gas_mass_metal])
+    ##  smoothing lengths 
+    hsml=np.concatenate([stellar_hsml,gas_hsml])
 
+    ##  source terms in each band
+    wt1=np.concatenate([lums[0,:],gas_lum])
+    wt2=np.concatenate([lums[1,:],gas_lum])
+    wt3=np.concatenate([lums[2,:],gas_lum])
+
+    ## opacity in each band
+    k1,k2,k3=kappa
+        
+    return raytrace_projection_compute(
+        x,y,z,
+        hsml,mass,
+        wt1,wt2,wt3,
+        k1,k2,k3,
+        xlim=xlim,ylim=ylim,zlim=zlim,
+        pixels=pixels,
+        TRIM_PARTICLES=1)
 
 ##
 ##  Wrapper for raytrace_rgb, program which does a simply line-of-sight projection 
@@ -138,35 +209,93 @@ def stellar_raytrace( BAND_IDS, \
 ##    int Xpixels, int Ypixels, // dimensions of grid
 ##    float *OUT0, float *OUT1, float *OUT2, float*OUT3 ) // output vectors with final weights
 ##
-def raytrace_projection_compute( x, y, z, hsml, mass, wt1, wt2, wt3, \
-    kappa_1, kappa_2, kappa_3, xlim=0, ylim=0, zlim=0, pixels=720, \
-    TRIM_PARTICLES=1 ):
+def raytrace_projection_compute(
+    x,y,z,
+    hsml,mass,
+    wt1,wt2,wt3,
+    kappa_1,kappa_2,kappa_3,
+    xlim=0,ylim=0,zlim=0,
+    pixels=720,
+    TRIM_PARTICLES=1):
 
     ## define bounaries
-    if(checklen(xlim)<=1): xlim=[np.min(x),np.max(x)];
-    if(checklen(ylim)<=1): ylim=[np.min(y),np.max(y)];
-    if(checklen(zlim)<=1): zlim=[np.min(z),np.max(z)];
-    xr=xlim; yr=ylim; zr=zlim;
-    x00=0.5*(xr[1]+xr[0]); y00=0.5*(yr[1]+yr[0]); z00=0.5*(zr[1]+zr[0]); 
-    tolfac = 1.0e10;
-    if (TRIM_PARTICLES==1): tolfac = 0.05; 
+    if(checklen(xlim)<=1): 
+        xlim=[np.min(x),np.max(x)]
+    if(checklen(ylim)<=1): 
+        ylim=[np.min(y),np.max(y)]
+    if(checklen(zlim)<=1): 
+        zlim=[np.min(z),np.max(z)]
 
-    ## clip to particles inside those
-    xlen=0.5*(xr[1]-xr[0]); ylen=0.5*(yr[1]-yr[0]); zlen=0.5*(zr[1]-zr[0]);
-    x-=x00; y-=y00; z-=z00; dx=xlen*(1.+tolfac*2.); dy=ylen*(1.+tolfac*2.); dz=zlen*(1.+tolfac*2.);
-    ok=ok_scan(x,xmax=dx) & ok_scan(y,xmax=dy) & ok_scan(z,xmax=dz) & \
-        ok_scan(hsml,pos=1) & ok_scan(mass+wt1+wt2+wt3,pos=1)
-        #& ok_scan(mass) & ok_scan(wt1) & ok_scan(wt2) & ok_scan(wt3);
-    x=x[ok]; y=y[ok]; z=z[ok]; hsml=hsml[ok]; mass=mass[ok]; wt1=wt1[ok]; wt2=wt2[ok]; wt3=wt3[ok];
-    N_p=checklen(x); xmin=-xlen; xmax=xlen; ymin=-ylen; ymax=ylen;
+    ## midpoint of box
+    x00=0.5*(xlim[1]+xlim[0])
+    y00=0.5*(ylim[1]+ylim[0])
+    z00=0.5*(zlim[1]+zlim[0])
+
+    ## re-center particles
+    x-=x00
+    y-=y00
+    z-=z00
+
+    ## half-width of box
+    xlen=0.5*(xlim[1]-xlim[0])
+    ylen=0.5*(ylim[1]-ylim[0])
+    zlen=0.5*(zlim[1]-zlim[0])
+
+    tolfac = 1.0e10 ## dummy, all particles will be in box
+    if (TRIM_PARTICLES==1): 
+        tolfac = 0.05
+
+    ## determine which particles are in box
+    dx=xlen*(1.+tolfac*2.)
+    dy=ylen*(1.+tolfac*2.)
+    dz=zlen*(1.+tolfac*2.)
+
+    ## produce an 'in-box' "ok" mask
+    ok=(ok_scan(x,xmax=dx) & 
+        ok_scan(y,xmax=dy) & 
+        ok_scan(z,xmax=dz) & 
+        ok_scan(hsml,pos=1) & 
+        ok_scan(mass+wt1+wt2+wt3,pos=1))
+
+    ## apply "ok" mask
+    x=x[ok]
+    y=y[ok]
+    z=z[ok]
+    hsml=hsml[ok]
+    mass=mass[ok]
+    wt1=wt1[ok]
+    wt2=wt2[ok]
+    wt3=wt3[ok]
+
+    ## limits of box
+    xmin=-xlen
+    xmax=xlen
+    ymin=-ylen
+    ymax=ylen
+
+    N_p=checklen(x)
     if(N_p<=1): 
-        print(' UH-OH: EXPECT ERROR NOW, there are no valid source/gas particles to send!'); return -1,-1,-1,-1;
+        print(
+            'UH-OH: EXPECT ERROR NOW',
+            'there are no valid source/gas particles to send!')
+        return -1,-1,-1,-1;
 
     ## now sort these in z (this is critical!)
+    ##  get sort indices
     s=np.argsort(z);
-    x=x[s]; y=y[s]; z=z[s]; hsml=hsml[s]; mass=mass[s]; wt1=wt1[s]; wt2=wt2[s]; wt3=wt3[s];
+
+    ##  apply sort indices
+    x,y,z=x[s],y[s],z[s]
+    mass=mass[s]
+    hsml=hsml[s]
+    wt1,wt2,wt3=wt1[s],wt2[s],wt3[s]
+
     ## cast new copies to ensure the correct formatting when fed to the c-routine:
-    x=fcor(x); y=fcor(y); z=fcor(z); hsml=fcor(hsml); mass=fcor(mass); wt1=fcor(wt1); wt2=fcor(wt2); wt3=fcor(wt3);
+    ##  cast to single precision
+    x,y,z=fcor(x),fcor(y),fcor(z)
+    mass=fcor(mass)
+    hsml=fcor(hsml)
+    wt1,wt2,wt3=fcor(wt1),fcor(wt2),fcor(wt3)
 
     ## load the routine we need
     curpath = os.path.realpath(__file__)
@@ -175,18 +304,33 @@ def raytrace_projection_compute( x, y, z, hsml, mass, wt1, wt2, wt3, \
     routine=ctypes.cdll[exec_call];
     
     ## cast the variables to store the results
-    aspect_ratio=ylen/xlen; Xpixels=int_round(pixels); Ypixels=int_round(aspect_ratio*np.float(Xpixels));
-    N_pixels=Xpixels*Ypixels; out_cast=ctypes.c_float*N_pixels; 
-    out_0=out_cast(); out_1=out_cast(); out_2=out_cast(); out_3=out_cast();
+    aspect_ratio=ylen/xlen
+    Xpixels=int_round(pixels)
+    Ypixels=int_round(aspect_ratio*np.float(Xpixels))
+    N_pixels=Xpixels*Ypixels
 
-    ## main call to the calculation routine
-    routine.raytrace_rgb( ctypes.c_int(N_p), \
-        vfloat(x), vfloat(y), vfloat(hsml), vfloat(mass), \
-        vfloat(wt1), vfloat(wt2), vfloat(wt3), \
-        ctypes.c_float(kappa_1), ctypes.c_float(kappa_2), ctypes.c_float(kappa_3), \
-        ctypes.c_float(xmin), ctypes.c_float(xmax), ctypes.c_float(ymin), ctypes.c_float(ymax), \
-        ctypes.c_int(Xpixels), ctypes.c_int(Ypixels), \
-        ctypes.byref(out_0), ctypes.byref(out_1), ctypes.byref(out_2), ctypes.byref(out_3) );
+    ## create output array pointers
+    out_cast=ctypes.c_float*N_pixels
+    out_0=out_cast() ## mass map
+    out_1=out_cast() ## band 1 
+    out_2=out_cast() ## band 2
+    out_3=out_cast() ## band 3
+
+    ## main call to the attenuation routine in C
+    routine.raytrace_rgb( 
+        ctypes.c_int(N_p), ## number of star + gas particles
+        vfloat(x),vfloat(y), ## x-y positions of star + gas particles
+        vfloat(hsml),  ## smoothing lengths of star + gas particles
+        vfloat(mass), ## attenuation masses of star + gas particles, stars are 0 
+        ## emission in each band of star+gas particles, gas is 0 
+        vfloat(wt1),vfloat(wt2),vfloat(wt3),  
+        ## opacity in each band
+        ctypes.c_float(kappa_1),ctypes.c_float(kappa_2),ctypes.c_float(kappa_3), 
+        ## x-y limits of the image
+        ctypes.c_float(xmin),ctypes.c_float(xmax),ctypes.c_float(ymin),ctypes.c_float(ymax), 
+        ctypes.c_int(Xpixels),ctypes.c_int(Ypixels), ## output shape
+        ctypes.byref(out_0), ## mass map
+        ctypes.byref(out_1),ctypes.byref(out_2),ctypes.byref(out_3) ) ## band maps
 
     print(np.sum(out_1),np.sum(out_2),np.sum(out_3),'outputs')
     ## now put the output arrays into a useful format 
