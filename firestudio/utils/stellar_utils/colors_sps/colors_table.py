@@ -5,7 +5,7 @@ import scipy.ndimage.interpolation as interpolate
 import struct
 
 def colors_table( age_in_Gyr, metallicity_in_solar_units, 
-    BAND_ID=0, SALPETER_IMF=0, CHABRIER_IMF=1, QUIET=0, CRUDE=0, 
+    BAND_ID=0, SALPETER_IMF=0, CHABRIER_IMF=1, QUIET=1, CRUDE=0, 
     RETURN_NU_EFF=0, RETURN_LAMBDA_EFF=0, UNITS_SOLAR_IN_BAND=0 ):
 
     
