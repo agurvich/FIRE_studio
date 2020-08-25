@@ -95,7 +95,8 @@ def stellar_raytrace(
         IMF_CHABRIER=1,
         IMF_SALPETER=0 , 
         ADD_BASE_METALLICITY=0.0,
-        ADD_BASE_AGE=0.0 ):
+        ADD_BASE_AGE=0.0,
+        COMPUTE_BANDS_ONLY=False):
         
 
 
@@ -109,7 +110,7 @@ def stellar_raytrace(
     ## require that we attenuate 3 bands to combine since attenuation
     ##  routine is hardcoded to accept 3 weights
     if (Nbands != 3): 
-        print("stellar_raytrace needs 3 bands, you gave"Nbands)
+        print("stellar_raytrace needs 3 bands, you gave",Nbands)
         return -1,-1,-1,-1;
 
     ## check if stellar metallicity is a matrix
@@ -151,11 +152,15 @@ def stellar_raytrace(
             CHABRIER_IMF=IMF_CHABRIER, ## imf flags
             SALPETER_IMF=IMF_SALPETER, ## imf flags
             CRUDE=1, ## map particles to nearest table entry rather than interpolate
-            UNITS_SOLAR_IN_BAND=1) ## this is such that solar-type colors appear white
+            UNITS_SOLAR_IN_BAND=1, ## this is such that solar-type colors appear white (?)
+            QUIET=True) 
 
         l_m_ssp[l_m_ssp >= 300.] = 300. ## just to prevent crazy values here 
         l_m_ssp[l_m_ssp <= 0.] = 0. ## just to prevent crazy values here 
         lums[i_band,:] = stellar_mass * l_m_ssp
+
+    if COMPUTE_BANDS_ONLY:
+        return np.zeros(Nstars),lums[0],lums[1],lums[2]
 
     ## dummy values to use for source and attenuation terms 
     gas_lum=np.zeros(Ngas) ## gas has no 'source term' for this calculation
