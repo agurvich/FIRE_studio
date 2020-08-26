@@ -127,7 +127,7 @@ def colors_table(
     # at this point, output is currently L/M in L_sun_IN_THE_BAND_OF_INTEREST/M_sun, 
     # but we want our default to be L/M in units of L_bolometric/M_sun = 3.9e33/2.0e33, so 
     #   need to get rid fo the L_sun_IN_THE_BAND_OF_INTEREST/L_bolometric
-    if (UNITS_SOLAR_IN_BAND==0):
+    if not UNITS_SOLAR_IN_BAND:
         l_b = renormalize_band_luminosity(l_b,BAND_ID)
 
     return l_b
