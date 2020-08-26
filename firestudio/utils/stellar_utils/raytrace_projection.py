@@ -96,9 +96,13 @@ def stellar_raytrace(
         IMF_SALPETER=0 , 
         ADD_BASE_METALLICITY=0.0,
         ADD_BASE_AGE=0.0,
-        COMPUTE_BANDS_ONLY=False):
+        ## flag to return luminosity in each band requested without projecting
+        COMPUTE_BANDS_ONLY=False, 
+        nu_effs=None,
+        lums = None):
         
-
+    if nu_effs is None:
+        nu_effs = [None,None,None]
 
     ## count particles we're using
     Nstars=len(np.array(stellar_mass))
@@ -128,36 +132,55 @@ def stellar_raytrace(
 
     ## get opacities and luminosities at frequencies we need:
     kappa=np.zeros([Nbands])
-    lums=np.zeros([Nbands,Nstars])
+    if lums is None:
+        lums=np.zeros([Nbands,Nstars])
+    else:
+        ## verify shape of lums is correct
+        if lums.shape != (Nbands,Nstars):
+            raise ValueError(
+                "Shape (%d,%d) of lums does not match (3,%d)"%(
+                lums.shape[0],lums.shape[1],Nstars))
+
     for i_band in range(Nbands):
-        ## find the frequency associated with this band
-        nu_eff = colors_table(
-            np.array([1.0]), ## dummy value
-            np.array([1.0]), ## dummy value
-            BAND_ID=BAND_IDS[i_band], ## band index
-            RETURN_NU_EFF=1) ## flag to return effective NU in this band
+        if nu_effs[i_band] is None:
+            if not np.all(lums[i_band]==0):
+                raise ValueError(
+                    "Non-zero lums passed in axis %d"%i_band+
+                    " without corresponding nu_eff")
+            ## find the frequency associated with this band
+            nu_effs[i_band] = colors_table(
+                np.array([1.0]), ## dummy value
+                np.array([1.0]), ## dummy value
+                BAND_ID=BAND_IDS[i_band], ## band index
+                RETURN_NU_EFF=1,
+                QUIET=True) ## flag to return effective NU in this band
+
 
         ## calculate the kappa in this band using:
         ##  Thompson scattering + 
         ##  Pei (1992) + -- 304 < lambda[Angstroms] < 2e7
         ##  Morrison & McCammon (1983) -- 1.2 < lambda[Angstroms] < 413
-        kappa[i_band] = opacity_per_solar_metallicity(nu_eff)
+        kappa[i_band] = opacity_per_solar_metallicity(
+            nu_effs[i_band])
 
-        ## lookup the luminosity/mass in this band
-        ##  given stellar ages and metallicities
-        l_m_ssp = colors_table(
-            stellar_age, ## ages in Gyr
-            stellar_metallicity/0.02,  ## metallicity in solar
-            BAND_ID=BAND_IDS[i_band], ## band index
-            CHABRIER_IMF=IMF_CHABRIER, ## imf flags
-            SALPETER_IMF=IMF_SALPETER, ## imf flags
-            CRUDE=1, ## map particles to nearest table entry rather than interpolate
-            UNITS_SOLAR_IN_BAND=1, ## this is such that solar-type colors appear white (?)
-            QUIET=True) 
+        these_lums = lums[i_band]
+        ## if lums were not passed in for this band
+        if np.all( these_lums == 0):
+            ## lookup the luminosity/mass in this band
+            ##  given stellar ages and metallicities
+            these_lums[:] = colors_table(
+                stellar_age, ## ages in Gyr
+                stellar_metallicity/0.02,  ## metallicity in solar
+                BAND_ID=BAND_IDS[i_band], ## band index
+                CHABRIER_IMF=IMF_CHABRIER, ## imf flags
+                SALPETER_IMF=IMF_SALPETER, ## imf flags
+                CRUDE=1, ## map particles to nearest table entry rather than interpolate
+                UNITS_SOLAR_IN_BAND=1, ## return ((L_star)_band / L_sun) / M_sun
+                ) 
 
-        l_m_ssp[l_m_ssp >= 300.] = 300. ## just to prevent crazy values here 
-        l_m_ssp[l_m_ssp <= 0.] = 0. ## just to prevent crazy values here 
-        lums[i_band,:] = stellar_mass * l_m_ssp
+        these_lums[these_lums >= 300.] = 300. ## just to prevent crazy values here 
+        these_lums[these_lums <= 0.] = 0. ## just to prevent crazy values here 
+        lums[i_band] = stellar_mass * these_lums 
 
     if COMPUTE_BANDS_ONLY:
         return np.zeros(Nstars),lums[0],lums[1],lums[2]
@@ -189,6 +212,9 @@ def stellar_raytrace(
     ## opacity in each band
     k1,k2,k3=kappa
         
+    #print('total lum before attenuation in each band:',np.sum(lums,axis=1))
+    #print('opacity in each band:',kappa)
+    #print('total gas mass:',np.sum(gas_mass_metal))
     return raytrace_projection_compute(
         x,y,z,
         hsml,mass,
@@ -197,7 +223,6 @@ def stellar_raytrace(
         xlim=xlim,ylim=ylim,zlim=zlim,
         pixels=pixels,
         TRIM_PARTICLES=1)
-
 ##
 ##  Wrapper for raytrace_rgb, program which does a simply line-of-sight projection 
 ##    with multi-color source and self-extinction along the sightline: here called 
