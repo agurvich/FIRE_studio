@@ -103,7 +103,8 @@ int raytrace_rgb(
     d_ij=h*dx_i; imin=(long)(i_x_flt-d_ij); imax=(long)(i_x_flt+d_ij)+1; if(imin<0) imin=0; if(imax>Xpixels-1) imax=Xpixels-1;
     d_ij=h*dy_i; jmin=(long)(i_y_flt-d_ij); jmax=(long)(i_y_flt+d_ij)+1; if(jmin<0) jmin=0; if(jmax>Ypixels-1) jmax=Ypixels-1;
     
-    //wt_sum = 0.;
+    wt_sum = 0.;
+    // ABG do initial loop to count total weight deposited
     for(i=imin;i<imax;i++)
     {
      dx_n = x[n]-x_i[i]; 
@@ -123,16 +124,42 @@ int raytrace_rgb(
         wk = h2_i * (Kernel[k] + (Kernel[k+1]-Kernel[k])*(r2_n-k)); // ok that's the weighted result
 
         k = j + Ypixels*i; // j runs 0-Ypixels-1, so this provides the necessary indexing //
-        //wt_sum += wk;
+        wt_sum += wk;
+       }
+     }
+     }
+    }
+    for(i=imin;i<imax;i++)
+        {
+         dx_n = x[n]-x_i[i]; 
+         if (fabs(dx_n) < h)
+         {
+         x2_n = dx_n*dx_n;
+         for(j=jmin;j<jmax;j++)
+         {
+           dy_n = y[n]-y_j[j]; 
+           y2_n = dy_n*dy_n;
+           r2_n = x2_n + y2_n; 
+           if (r2_n < h2) 
+           {
+            // use the kernel lookup table compiled above for the weighting //
+            r2_n *= h2_i*kernel_spacing_inv; // ok now have the separation in units of hsml, then kernel_table // 
+            k = (long)r2_n;
+            wk = h2_i * (Kernel[k] + (Kernel[k+1]-Kernel[k])*(r2_n-k)); // ok that's the weighted result
+
+            // ABG: renormalize by sum of wk
+            wk = wk/wt_sum;
+
+            k = j + Ypixels*i; // j runs 0-Ypixels-1, so this provides the necessary indexing //
         
         // first 'extinct' the background
         if(Mass[n]>0.)
         {
             d_ij = Mass[n]*wk;
             OUT0[k] += d_ij;
-            OUT1[k] *= exp(-KAPPA1 * d_ij);
-            OUT2[k] *= exp(-KAPPA2 * d_ij);
-            OUT3[k] *= exp(-KAPPA3 * d_ij);
+            OUT1[k] *= exp(-KAPPA1 * d_ij * wt_sum);
+            OUT2[k] *= exp(-KAPPA2 * d_ij * wt_sum);
+            OUT3[k] *= exp(-KAPPA3 * d_ij * wt_sum);
             // here the surface density extinct the background sources, 
             //   with effective 'opacities' KAPPA1/2/3 in each channel
         }
