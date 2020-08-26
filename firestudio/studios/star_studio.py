@@ -84,7 +84,8 @@ starStudio.set_ImageParams(
                 ## set it to the object
                 setattr(self,kwarg,value)
             else:
-                if kwarg not in Studio.set_ImageParams.default_kwargs:
+                if (kwarg not in Studio.set_ImageParams.default_kwargs 
+                    and kwarg != 'this_setup_id'):
                     print(kwarg,'ignored. Did you mean something else?',
                         default_kwargs.keys())
 
@@ -166,9 +167,7 @@ starStudio.set_ImageParams(
             assert_cached=assert_cached,
             loud=loud,
             force_from_file=True)  ## read from cache file, not attribute of object
-        def compute_mockHubbleImage(self):
-
-
+        def compute_mockHubbleImage(self,lums=None,nu_effs=None):
             ## unpack the star information
             ## dont' filter star positions just yet
             star_pos = self.star_snapdict['Coordinates']
@@ -179,7 +178,10 @@ starStudio.set_ImageParams(
             ## cull the particles outside the frame and cast to float32
             star_ind_box = self.cullFrameIndices(star_pos)
             print(np.sum(star_ind_box),'many star particles in volume')
-
+            
+            ## apply frame mask to passed band luminosities
+            if lums is not None:
+                lums = lums[:,star_ind_box]
 
             ## try opening the stellar smoothing lengths, if we fail
             ##  let's calculate them and save them to the projection 
@@ -224,7 +226,9 @@ starStudio.set_ImageParams(
                 h_star,
                 gas_pos[:,0],gas_pos[:,1],gas_pos[:,2],
                 mgas,gas_metals,h_gas,
-                pixels=self.pixels)
+                pixels=self.pixels,
+                lums=lums,
+                nu_effs=nu_effs)
 
             return gas_out,out_u,out_g,out_r
         return compute_mockHubbleImage(self,**kwargs)
@@ -457,7 +461,9 @@ def raytrace_ugr_attenuation(
     mgas, gas_metals,
     h_gas,
     pixels = 1200,
-    xlim = None, ylim = None, zlim = None
+    xlim = None, ylim = None, zlim = None,
+    lums=None,
+    nu_effs=None,
     ):
 
     ## setup boundaries to cut-out gas particles that lay outside
@@ -469,35 +475,28 @@ def raytrace_ugr_attenuation(
     if zlim is None:
         zlim = [np.min(z),np.max(z)]
 
-#   band=BAND_ID; # default=bolometric
-#   j = [  0,  6,  7,  8,  9, 10, 11, 12, 13,  1,   2,   3,   4,   5] # ordering I'm used to
-#   i = [  0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10,  11,  12,  13] # ordering of this
-#   band_standardordering = band
-#   band = j[band]
-#   if (band > 13): 
-#       print 'BAND_ID must be < 13'; 
-#       return 0;
-#   
-#   b=['Bolometric', \
-#   'Sloan u','Sloan g','Sloan r','Sloan i','Sloan z', \
-#   'Johnsons U','Johnsons B', 'Johnsons V','Johnsons R','Johnsons I', \
-#   'Cousins J','Cousins H','Cousins K']
+    #band_names=['Bolometric',
+    #'Sloan u','Sloan g','Sloan r','Sloan i','Sloan z', 
+    #'Johnsons U','Johnsons B', 'Johnsons V','Johnsons R','Johnsons I', 
+    #'Cousins J','Cousins H','Cousins K']
     ## pick color bands by their IDs, see above
-    BAND_IDS=[9,10,11]
-    #gas_out,out_u,out_g,out_r = stellar_raytrace(
+    BAND_IDS=[1,2,3] ## used if corresponding column of lums is all 0s
     return raytrace_projection.stellar_raytrace(
         BAND_IDS,
         x,y,z,
         mstar,ages,metals,
         h_star,
         gx,gy,gz,
-        mgas, gas_metals,
+        mgas,gas_metals,
         h_gas,
-        pixels=pixels,
         xlim=xlim,ylim=ylim,zlim=zlim,
-        ADD_BASE_METALLICITY=0.001*0.02,ADD_BASE_AGE=0.0003,
-        IMF_SALPETER=0,IMF_CHABRIER=1
-    )
+        pixels=pixels,
+        IMF_SALPETER=0,
+        IMF_CHABRIER=1,
+        ADD_BASE_METALLICITY=0.001*0.02, ## 1e-3 solar minimum metallicity
+        ADD_BASE_AGE=0.0003,## .3 Myr minimum age
+        lums=lums,
+        nu_effs=nu_effs) 
 
 __doc__  = ''
 __doc__ = append_string_docstring(__doc__,StarStudio)
