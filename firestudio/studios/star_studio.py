@@ -78,7 +78,7 @@ starStudio.set_ImageParams(
                 ## remove it from default_kwargs
                 default_kwargs.pop(kwarg)
                 value = kwargs[kwarg]
-                if loud:
+                if loud and self.master_loud:
                     print("setting",kwarg,
                         'to user value of:',value)
                 ## set it to the object
@@ -93,7 +93,7 @@ starStudio.set_ImageParams(
             ## set the remaining image parameters to their default values
             for default_arg in default_kwargs:
                 value = default_kwargs[default_arg]
-                if loud:
+                if loud and self.master_loud:
                     print("setting",default_arg,
                         'to default value of:',value)
                 setattr(self,default_arg,value)
@@ -214,6 +214,10 @@ starStudio.set_ImageParams(
             mgas = self.gas_snapdict['Masses'][gas_ind_box].astype(np.float32)
             gas_metals = self.gas_snapdict['Metallicity'][:,0][gas_ind_box].astype(np.float32)
 
+            ## set metallicity of hot gas to 0 so there is no dust extinction
+            temperatures = self.gas_snapdict['Temperature'][gas_ind_box]
+            gas_metals[temperatures>1e5] = 0
+
             if "SmoothingLength" not in self.gas_snapdict:
                 h_gas = self.get_HSML('gas')
             else:
@@ -228,7 +232,8 @@ starStudio.set_ImageParams(
                 mgas,gas_metals,h_gas,
                 pixels=self.pixels,
                 lums=lums,
-                nu_effs=nu_effs)
+                nu_effs=nu_effs,
+                QUIET=not self.master_loud)
 
             return gas_out,out_u,out_g,out_r
         return compute_mockHubbleImage(self,**kwargs)
@@ -464,6 +469,7 @@ def raytrace_ugr_attenuation(
     xlim = None, ylim = None, zlim = None,
     lums=None,
     nu_effs=None,
+    QUIET=False
     ):
 
     ## setup boundaries to cut-out gas particles that lay outside
@@ -496,7 +502,8 @@ def raytrace_ugr_attenuation(
         ADD_BASE_METALLICITY=0.001*0.02, ## 1e-3 solar minimum metallicity
         ADD_BASE_AGE=0.0003,## .3 Myr minimum age
         lums=lums,
-        nu_effs=nu_effs) 
+        nu_effs=nu_effs,
+        QUIET=QUIET) 
 
 __doc__  = ''
 __doc__ = append_string_docstring(__doc__,StarStudio)
