@@ -6,6 +6,7 @@ import matplotlib
 matplotlib.use('Agg') 
 import numpy as np 
 import ctypes
+import copy
 
 import matplotlib.pyplot as plt
 
@@ -17,6 +18,11 @@ from abg_python.galaxy.metadata_utils import metadata_cache
 ## firestudio imports
 import firestudio.utils.gas_utils.my_colour_maps as mcm 
 from firestudio.studios.studio import Studio
+
+
+
+def vfloat(x):
+    return x.ctypes.data_as(ctypes.POINTER(ctypes.c_float));
 
 class GasStudio(Studio):
     """`FIREstudio` class for making gas projection images.
@@ -77,7 +83,7 @@ gasStudio.set_ImageParams(
                 default_kwargs.pop(kwarg)
                 value = kwargs[kwarg]
 
-                if loud:
+                if loud and self.master_loud:
                     print("setting",kwarg,
                         'to user value of:',value)
                 ## set it to the object
@@ -96,7 +102,7 @@ gasStudio.set_ImageParams(
             ## set the remaining image parameters to their default values
             for default_arg in default_kwargs:
                 value = default_kwargs[default_arg]
-                if loud:
+                if loud and self.master_loud:
                     print("setting",default_arg,
                         'to default value of:',value)
                 setattr(self,default_arg,value)
@@ -657,7 +663,7 @@ def getImageGrid(
     Ymin,Ymax,
     Zmin,Zmax,
     npix_x,npix_y,
-    pos,mass,quantity,
+    pos,weight,quantity,
     hsml,
     loud=True):
 
@@ -682,17 +688,13 @@ def getImageGrid(
         raise ValueError("HSML cannot be None and weights != masses.",
             "We don't check if weights == masses, so we'll just assume",
             "they're not for ultimate safety.")
-        hsml = np.zeros(mass.shape[0],dtype=np.float32)
+        hsml = np.zeros(weight.shape[0],dtype=np.float32)
     #else:
         #print("Using provided smoothing lengths")
     
     ## make sure everything is in single precision lest we
     ##  make a swiss-cheese magenta nightmare, #neverforget 6/15/17
     c_f_p      = ctypes.POINTER(ctypes.c_float)
-    pos_p      = pos.astype(np.float32).ctypes.data_as(c_f_p)
-    hsml_p     = hsml.astype(np.float32).ctypes.data_as(c_f_p)
-    mass_p     = mass.astype(np.float32).ctypes.data_as(c_f_p)
-    quantity_p = quantity.astype(np.float32).ctypes.data_as(c_f_p)
 
     w_f_p    = weightMap.ctypes.data_as(c_f_p)
     q_f_p    = weightWeightedQuantityMap.ctypes.data_as(c_f_p)
@@ -706,7 +708,7 @@ def getImageGrid(
         curpath,
         'utils',
         'gas_utils',
-        'HsmlAndProject_cubicSpline/HsmlAndProject.so')
+        'HsmlAndProject_cubicSpline/hsml_project.so')
 
     if not os.path.isfile(c_obj_path):
         raise IOError(
@@ -729,17 +731,20 @@ def getImageGrid(
     #print(Axis1,Axis2,Axis3)
     #print(Hmax,BoxSize)
 
-    c_obj.findHsmlAndProject(
-	ctypes.c_int(n_smooth), ## number of particles
-	pos_p,hsml_p,mass_p,quantity_p, ## position, mass, and "quantity" of particles
-        ctypes.c_float(Xmin.astype(np.float32)),ctypes.c_float(Xmax.astype(np.float32)), ## xmin/xmax
-	ctypes.c_float(Ymin.astype(np.float32)),ctypes.c_float(Ymax.astype(np.float32)), ## ymin/ymax
-	ctypes.c_float(Zmin.astype(np.float32)),ctypes.c_float(Zmax.astype(np.float32)), ## zmin/zmax
-        ctypes.c_int(npix_x),ctypes.c_int(npix_y), ## npixels
-	ctypes.c_int(desngb), ## neighbor depth
-        ctypes.c_int(Axis1),ctypes.c_int(Axis2),ctypes.c_int(Axis3), ## axes...?
-	ctypes.c_float(Hmax),ctypes.c_double(BoxSize), ## maximum smoothing length and size of box
-	w_f_p,q_f_p) ## pointers to output cell-mass and cell-mass-weighted-quantity
+    c_obj.hsml_project( 
+        ctypes.c_int(n_smooth), ## number of particles
+        vfloat(copy.copy(pos[:,0])),vfloat(copy.copy(pos[:,1])), ## x-y positions of particles
+        vfloat(hsml),  ## smoothing lengths of star + gas particles
+        vfloat(weight), ## attenuation masses of star + gas particles, stars are 0 
+        ## emission in each band of star+gas particles, gas is 0 
+        vfloat(quantity),  
+        ## x-y limits of the image
+        ctypes.c_float(Xmin),ctypes.c_float(Xmax),
+        ctypes.c_float(Ymin),ctypes.c_float(Ymax), 
+        ctypes.c_int(npix_x),ctypes.c_int(npix_y), ## output shape
+        weightMap.ctypes.data_as(c_f_p), ## mass map
+        weightWeightedQuantityMap.ctypes.data_as(c_f_p))
+
     if loud:
         print('------------------------------------------')
     
@@ -752,6 +757,7 @@ def getImageGrid(
         print('minmax(weightMap)',
             np.min(weightMap),
             np.max(weightMap))
+        print('Fraction deposited:',np.sum(weightMap)/np.sum(weight))
 
     # weightWeightedQuantityMap contains the mass-weighted quantity
     if loud:
