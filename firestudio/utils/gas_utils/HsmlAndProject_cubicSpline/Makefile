@@ -1,26 +1,35 @@
-# Need to make this file twice. Once like this and once with the two
-# comments removed.
 
-EXEC  = HsmlAndProject.so
-#EXEC  = HsmlAndProject_perbc.so
+EXEC   = hsml_project.so
 
-OBJS   = main.o tree.o peano.o allvars.o
+SRCS   = main.c 
 
-#OPTIONS += -DPERIODIC
+OBJS   = $(SRCS:.c=.o)
+INCL   = 
 
-INCL   = proto.h allvars.h Makefile
-
-CFLAGS =  $(OPTIONS) -fPIC -Wall -O2 
-LNKCMD =  ld -shared
+CFLAGS =  -shared -fPIC -O3 #-g  #  -Wall
+LNKCMD =  ld -L/usr/lib -L/usr/local/lib  -shared
 
 LIBS   =  -lm 
 
-CC     = cc#clang 
+CC     =  gcc 
 
-$(EXEC): $(OBJS)
-	 $(LNKCMD)  $(OBJS) $(LIBS)  -o $(EXEC)
+$(EXEC): $(OBJS) 
+	$(CC) -L/usr/lib -L/usr/local/lib  -shared $(OBJS) $(LIBS) $(CFLAGS)  -o $(EXEC)
 
-$(OBJS): $(INCL)
+
+$(OBJS): $(INCL) 
+
+
 
 clean:
-	 rm -f $(OBJS) $(EXEC)
+	rm $(OBJS) $(EXEC)
+
+
+
+
+
+
+
+
+
+
