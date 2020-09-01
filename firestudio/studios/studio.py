@@ -499,8 +499,8 @@ studio.set_ImageParams(
             if ('frame_half_thickness' in default_kwargs and 
                 default_kwargs['frame_half_thickness'] is None):
 
-                ## take the default value
-                if 'frame_center' in default_kwargs:
+                ## take the frame_half_width
+                if 'frame_half_width' in default_kwargs:
                     default_kwargs['frame_half_thickness'] = default_kwargs['frame_half_width']
                 ## take the value that was passed and set above
                 else:
