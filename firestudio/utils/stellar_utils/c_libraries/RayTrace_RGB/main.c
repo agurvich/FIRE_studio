@@ -61,7 +61,7 @@ int raytrace_rgb(
   double y_j[Ypixels]; for(i=0;i<Ypixels;i++) y_j[i]=Ymin+dy*((double)i+0.5);
   
   // build a kernel lookup table to save on the calculation below // 
-  hkernel_over_hsml_to_use = 1.4; 
+  hkernel_over_hsml_to_use = 1.0; 
   //hkernel_over_hsml_to_use = 2.0; 
   // default = 1 (integrate out to kernel), but low-density regions are represented 
   //   more accurately if this is larger (~2); code expense increases though!
@@ -73,13 +73,13 @@ int raytrace_rgb(
   {
    h = sqrt(r2_n); // radius (to save sqrt operation we're interpolating in r^2 //
    // approximate gaussian for projected, integrate kernel: //
-        wk = (135./(14.*dpi)) * exp(-(135./14.)*h*h); // quintic spline we're using now   
+        //wk = (135./(14.*dpi)) * exp(-(135./14.)*h*h); // quintic spline we're using now   
         //wk = (135./(14.*dpi)) * exp(-(135./14.)*h*h/(1.+h)); 
         // this has more extended tails, designed to reduce artifacts in low-density regions
         //  (where we would really want to use a proper volume-render)
         // wk = 1.91 * exp(-5.56*h*h); // cubic spline 
    // cubic spline kernel
-        //h2=(1.-h); if(h<=0.5) {wk=(1.-6.*h*h*h2);} else {wk=2.*h2*h2*h2;} wk*=40./(7.0*dpi);
+        h2=(1.-h); if(h<=0.5) {wk=(1.-6.*h*h*h2);} else {wk=2.*h2*h2*h2;} wk*=8/dpi; //wk*=40./(7.0*dpi);
    Kernel[n] = wk;
    r2_n += dx_n; // radius at this point in the table
   }
@@ -174,8 +174,8 @@ int raytrace_rgb(
 
     if(!(n%10000))
     {
-    printf("%ld..  xy=%g|%g  mass=%g wt(1|2|3)=%g|%g|%g  h=%g  imin/max=%ld|%ld  jmin/max=%ld|%ld  \n",
-        n,x[n],y[n],Mass[n],wt1[n],wt2[n],wt3[n],h,imin,imax,jmin,jmax); fflush(stdout);
+    //printf("%ld..  xy=%g|%g  mass=%g wt(1|2|3)=%g|%g|%g  h=%g  imin/max=%ld|%ld  jmin/max=%ld|%ld  \n",
+     //   n,x[n],y[n],Mass[n],wt1[n],wt2[n],wt3[n],h,imin,imax,jmin,jmax); fflush(stdout);
 //    printf("%ld..  xy=%g|%g  mass(1|2|3)=%g|%g|%g  h=%g  imin/max=%ld|%ld  jmin/max=%ld|%ld  wt_sum=%g \n",
 //        n,x[n],y[n],Mass1[n],Mass2[n],Mass3[n],h,imin,imax,jmin,jmax,wt_sum); fflush(stdout);
     }
