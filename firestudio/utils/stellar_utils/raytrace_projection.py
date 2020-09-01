@@ -99,7 +99,8 @@ def stellar_raytrace(
         ## flag to return luminosity in each band requested without projecting
         COMPUTE_BANDS_ONLY=False, 
         nu_effs=None,
-        lums = None):
+        lums=None,
+        QUIET=False):
         
     if nu_effs is None:
         nu_effs = [None,None,None]
@@ -176,10 +177,11 @@ def stellar_raytrace(
                 SALPETER_IMF=IMF_SALPETER, ## imf flags
                 CRUDE=1, ## map particles to nearest table entry rather than interpolate
                 UNITS_SOLAR_IN_BAND=1, ## return ((L_star)_band / L_sun) / M_sun
+                QUIET=QUIET
                 ) 
 
-        these_lums[these_lums >= 300.] = 300. ## just to prevent crazy values here 
-        these_lums[these_lums <= 0.] = 0. ## just to prevent crazy values here 
+        #these_lums[these_lums >= 300.] = 300. ## just to prevent crazy values here 
+        #these_lums[these_lums <= 0.] = 0. ## just to prevent crazy values here 
         lums[i_band] = stellar_mass * these_lums 
 
     if COMPUTE_BANDS_ONLY:
@@ -212,9 +214,11 @@ def stellar_raytrace(
     ## opacity in each band
     k1,k2,k3=kappa
         
-    #print('total lum before attenuation in each band:',np.sum(lums,axis=1))
-    #print('opacity in each band:',kappa)
-    #print('total gas mass:',np.sum(gas_mass_metal))
+    if not QUIET:
+        print("Projecting with attenuation...")
+        print('total lum before attenuation in each band:',np.sum(lums,axis=1))
+        print('opacity in each band:',kappa)
+        print('total gas mass:',np.sum(gas_mass_metal))
     return raytrace_projection_compute(
         x,y,z,
         hsml,mass,
