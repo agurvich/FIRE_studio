@@ -6,7 +6,7 @@ SRCS   = main.c
 OBJS   = $(SRCS:.c=.o)
 INCL   = 
 
-CFLAGS =  -shared -fPIC -O3 -g  #  -Wall
+CFLAGS =  -shared -fPIC -O3 #-g  #  -Wall
 LNKCMD =  ld -L/usr/lib -L/usr/local/lib  -shared
 
 LIBS   =  -lm 
