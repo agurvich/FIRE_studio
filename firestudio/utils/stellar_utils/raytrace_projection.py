@@ -68,9 +68,6 @@ def gas_raytrace_temperature( TEMPERATURE_CUTS, \
         wt1,wt2,wt3,kappa[0],kappa[1],kappa[2],\
         xlim=xlim,ylim=ylim,zlim=zlim,pixels=pixels,TRIM_PARTICLES=1);
 
-
-
-
 ## 
 ## routine to use 'raytrace_projection_compute' to make mock stellar images, 
 ##   treating the starlight as sources and accounting for gas extinction via ray-tracing
@@ -79,35 +76,21 @@ def gas_raytrace_temperature( TEMPERATURE_CUTS, \
 ##   the bands of interest in cgs (cm^2/g), must be converted to match units of input 
 ##   mass and size. the default it to assume gadget units (M=10^10 M_sun, l=kpc)
 ##
-def stellar_raytrace(
-        BAND_IDS, 
-        stellar_x,stellar_y,stellar_z, 
-        stellar_mass,stellar_age,stellar_metallicity,
-        stellar_hsml, 
-        gas_x,gas_y,gas_z,
-        gas_mass,gas_metallicity,
-        gas_hsml, 
-        xlim=0,
-        ylim=0,
-        zlim=0,
-        pixels=720, 
-        KAPPA_UNITS=2.08854068444, ## cm^2/g -> kpc^2/mcode
-        IMF_CHABRIER=1,
-        IMF_SALPETER=0 , 
-        ADD_BASE_METALLICITY=0.0,
-        ADD_BASE_AGE=0.0,
-        ## flag to return luminosity in each band requested without projecting
-        COMPUTE_BANDS_ONLY=False, 
-        nu_effs=None,
-        lums=None,
-        QUIET=False):
+def read_band_lums_from_tables(
+    BAND_IDS, 
+    stellar_mass,stellar_age,stellar_metallicity,
+    ## flag to return luminosity in each band requested without projecting
+    nu_effs=None,
+    lums=None,
+    QUIET=False,
+    IMF_CHABRIER=1,
+    IMF_SALPETER=0):
         
     if nu_effs is None:
         nu_effs = [None,None,None]
 
     ## count particles we're using
     Nstars=len(np.array(stellar_mass))
-    Ngas=len(np.array(gas_mass))
 
     ## count how many bands we're attenuating
     Nbands=len(np.array(BAND_IDS))
@@ -116,20 +99,13 @@ def stellar_raytrace(
     ##  routine is hardcoded to accept 3 weights
     if (Nbands != 3): 
         print("stellar_raytrace needs 3 bands, you gave",Nbands)
-        return -1,-1,-1,-1;
+        return -1,-1,-1;
 
     ## check if stellar metallicity is a matrix
     ##  i.e. mass fraction of many species. If so,
     ##  take the total metallicity 
     if (len(stellar_metallicity.shape)>1): 
         stellar_metallicity=stellar_metallicity[:,0];
-    if (len(gas_metallicity.shape)>1): 
-        gas_metallicity=gas_metallicity[:,0];
-
-    ## apply minimum metallicity and ages
-    stellar_metallicity[stellar_metallicity>0] += ADD_BASE_METALLICITY; ## TODO why >0?
-    gas_metallicity[gas_metallicity>0] += ADD_BASE_METALLICITY;
-    stellar_age += ADD_BASE_AGE;
 
     ## get opacities and luminosities at frequencies we need:
     kappa=np.zeros([Nbands])
@@ -184,8 +160,40 @@ def stellar_raytrace(
         #these_lums[these_lums <= 0.] = 0. ## just to prevent crazy values here 
         lums[i_band] = stellar_mass * these_lums 
 
-    if COMPUTE_BANDS_ONLY:
-        return np.zeros(Nstars),lums[0],lums[1],lums[2]
+    return kappa,lums
+
+def stellar_raytrace(
+    stellar_x,stellar_y,stellar_z, 
+    stellar_mass,stellar_age,stellar_metallicity,
+    stellar_hsml, 
+    gas_x,gas_y,gas_z,
+    gas_mass,gas_metallicity,
+    gas_hsml, 
+    kappa,
+    lums,
+    xlim=0,
+    ylim=0,
+    zlim=0,
+    pixels=720, 
+    KAPPA_UNITS=2.08854068444, ## cm^2/g -> kpc^2/mcode
+    QUIET=False):
+
+    ## check if stellar metallicity is a matrix
+    ##  i.e. mass fraction of many species. If so,
+    ##  take the total metallicity 
+    if (len(stellar_metallicity.shape)>1): 
+        stellar_metallicity=stellar_metallicity[:,0];
+    if (len(gas_metallicity.shape)>1): 
+        gas_metallicity=gas_metallicity[:,0];
+
+    ## apply minimum metallicity and ages
+    #stellar_metallicity[stellar_metallicity>0] += ADD_BASE_METALLICITY; ## TODO why >0?
+    #gas_metallicity[gas_metallicity>0] += ADD_BASE_METALLICITY;
+    #stellar_age += ADD_BASE_AGE;
+
+    ## count particles we're using
+    Nstars=len(np.array(stellar_mass))
+    Ngas=len(np.array(gas_mass))
 
     ## dummy values to use for source and attenuation terms 
     gas_lum=np.zeros(Ngas) ## gas has no 'source term' for this calculation
