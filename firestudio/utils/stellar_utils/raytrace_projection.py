@@ -366,7 +366,6 @@ def raytrace_projection_compute(
         ctypes.byref(out_0), ## mass map
         ctypes.byref(out_1),ctypes.byref(out_2),ctypes.byref(out_3) ) ## band maps
 
-    print(np.sum(out_1),np.sum(out_2),np.sum(out_3),'outputs')
     ## now put the output arrays into a useful format 
     out_0 = np.copy(np.ctypeslib.as_array(out_0));
     out_1 = np.copy(np.ctypeslib.as_array(out_1));
