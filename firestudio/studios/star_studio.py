@@ -146,6 +146,22 @@ starStudio.set_ImageParams(
                 loud = True -- whether cache hits/misses should be announced
                     to the console.
 
+                lums = None -- manual input for luminosities
+                nu_effs = None -- manual input for effective frequency of input luminosity band
+
+                BAND_IDS = None -- index for luminosity band to project.
+                    lambda_eff=np.array([
+                        ## Bolometric (?)
+                                1.e-5,  
+                        ## SDSS u       g       r      i      z
+                                3551. , 4686. , 6165., 7481., 8931.,
+                        ##      U       B       V      R
+                                3600. , 4400. , 5556., 6940., 
+                        ##      I      J       H       K
+                                8700., 12150., 16540., 21790.])
+
+                    BAND_IDS[i] is ignored if nu_effs[i] is not None
+
             Output:
 
                 gas_out -- total mass along LOS in pixel, in unknown units
@@ -159,7 +175,7 @@ starStudio.set_ImageParams(
         @metadata_cache(
             self.this_setup_id,  ## hdf5 file group name
             ['starMassesMap',
-                'attenUMap',
+                'attenUMap', ## TODO naming it this could be confusing if BAND_IDS is different...
                 'attenGMap',
                 'attenRMap'],
             use_metadata=use_metadata,
@@ -167,7 +183,7 @@ starStudio.set_ImageParams(
             assert_cached=assert_cached,
             loud=loud,
             force_from_file=True)  ## read from cache file, not attribute of object
-        def compute_mockHubbleImage(self,lums=None,nu_effs=None):
+        def compute_mockHubbleImage(self,lums=None,nu_effs=None,BAND_IDS=None):
             ## unpack the star information
             ## dont' filter star positions just yet
             star_pos = self.star_snapdict['Coordinates']
@@ -233,7 +249,8 @@ starStudio.set_ImageParams(
                 pixels=self.pixels,
                 lums=lums,
                 nu_effs=nu_effs,
-                QUIET=not self.master_loud)
+                QUIET=not self.master_loud,
+                BAND_IDS=BAND_IDS)
 
             return gas_out,out_u,out_g,out_r
         return compute_mockHubbleImage(self,**kwargs)
@@ -469,7 +486,8 @@ def raytrace_ugr_attenuation(
     xlim = None, ylim = None, zlim = None,
     lums=None,
     nu_effs=None,
-    QUIET=False
+    QUIET=False,
+    BAND_IDS=None,
     ):
 
     ## setup boundaries to cut-out gas particles that lay outside
@@ -485,8 +503,18 @@ def raytrace_ugr_attenuation(
     #'Sloan u','Sloan g','Sloan r','Sloan i','Sloan z', 
     #'Johnsons U','Johnsons B', 'Johnsons V','Johnsons R','Johnsons I', 
     #'Cousins J','Cousins H','Cousins K']
+    #lambda_eff=np.array([
+        ## Bolometric (?)
+                #1.e-5,  
+        ## SDSS u       g       r      i      z
+                #3551. , 4686. , 6165., 7481., 8931.,
+        ##      U       B       V      R
+                #3600. , 4400. , 5556., 6940., 
+        ##      I      J       H       K
+                #8700., 12150., 16540., 21790.])
     ## pick color bands by their IDs, see above
-    BAND_IDS=[1,2,3] ## used if corresponding column of lums is all 0s
+    if BAND_IDS is None:
+        BAND_IDS=[1,2,3] ## used if corresponding column of lums is all 0s
     return raytrace_projection.stellar_raytrace(
         BAND_IDS,
         x,y,z,
