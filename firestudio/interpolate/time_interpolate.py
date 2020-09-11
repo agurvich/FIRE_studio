@@ -139,6 +139,9 @@ def index_match_snapshots_with_dataframes(
     prev_sub_snap,
     next_sub_snap,
     extra_keys_to_extract=None):
+    """
+    keys_to_extract = ['Coordinates','Masses','SmoothingLength','ParticleIDs','ParticleChildIDsNumber']
+    """
     
     init=time.time()
     print('Creating a merged DF')
