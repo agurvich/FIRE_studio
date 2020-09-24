@@ -26,9 +26,6 @@ ln -s /path/to/repository ${HOME}/python/repository_name
 ```
 So that you don't have to make your `PYTHONPATH` environment variable very confusing. 
 
-You will have to compile the C file that does the actual projection, this is done by going to 
-`FIRE_studio/firestudio/utils/gas_utils/HsmlAndProject_cubicSpline/` and typing: `make`, you'll know if it works if `HsmlAndProject_cubicSpline.so` appears in the same directory. If that doesn't work, please raise an issue here on the Github!
-
 ## Using FIRE_studio
 There are two ways to use FIRE_studio
 1) From the command line (currently broken)
