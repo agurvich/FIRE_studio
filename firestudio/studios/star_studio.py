@@ -126,7 +126,57 @@ starStudio.set_ImageParams(
         ## call the super class' print image params
         super().print_ImageParams()
 
-####### projectImage implementation #######
+    def quick_get_mockHubbleImage(
+        self,
+        use_metadata=True,
+        save_meta=True,
+        assert_cached=False,
+        loud=True,
+        lums=None,
+        nu_effs=None,
+        BAND_IDS=None
+        ):
+
+        if BAND_IDS is None:
+            BAND_IDS=[1,2,3] ## used if corresponding column of lums is all 0s
+       
+        # apply filters, rotations, unpack snapshot data, etc...
+        (kappas, lums,
+            star_pos, mstar, ages, metals, h_star,
+            gas_pos , mgas , gas_metals ,  h_gas) = self.__prepareCoordinates(lums,nu_effs,BAND_IDS)
+
+        KAPPA_UNITS=2.08854068444 ## cm^2/g -> kpc^2/mcode
+        kappas*=KAPPA_UNITS
+
+        star_xs,star_ys,star_zs = star_pos.T
+        gas_xs,gas_ys,gas_zs = gas_pos.T
+
+        xedges = np.linspace(self.Xmin,self.Xmax,self.npix_x,endpoint=True)
+        yedges = np.linspace(self.Ymin,self.Ymax,self.npix_y,endpoint=True)
+
+        ## area of cell
+        dA = xedges[1] - xedges[0]
+        dA*=dA
+
+        outs = np.zeros((3,xedges.size-1,yedges.size-1))
+
+        metal_mass_map,xedges,yedges = np.histogram2d(
+            gas_xs,gas_ys,
+            bins=[xedges,yedges],
+            weights=mgas*gas_metals)
+
+        for i,lum in enumerate(lums):
+            outs[i],xedges,yedges = np.histogram2d(
+                star_xs,star_ys,
+                bins=[xedges,yedges],
+                weights=lum)
+        
+            outs[i]*=np.exp(-kappas[i]*metal_mass_map/dA*5)
+
+        unit_factor = 1e10/self.Acell
+
+        return metal_mass_map*unit_factor,outs[0]*unit_factor,outs[1]*unit_factor,outs[2]*unit_factor
+
     def get_mockHubbleImage(
         self,
         use_metadata=True,
@@ -184,60 +234,14 @@ starStudio.set_ImageParams(
             loud=loud,
             force_from_file=True)  ## read from cache file, not attribute of object
         def compute_mockHubbleImage(self,lums=None,nu_effs=None,BAND_IDS=None):
-            ## unpack the star information
-            ## dont' filter star positions just yet
-            star_pos = self.star_snapdict['Coordinates']
 
-            ## rotate by euler angles if necessary
-            star_pos = self.rotateEuler(self.theta,self.phi,self.psi,star_pos)
-
-            ## cull the particles outside the frame and cast to float32
-            star_ind_box = self.cullFrameIndices(star_pos)
-            print(np.sum(star_ind_box),'many star particles in volume')
+            if BAND_IDS is None:
+                BAND_IDS=[1,2,3] ## used if corresponding column of lums is all 0s
             
-            ## apply frame mask to passed band luminosities
-            if lums is not None:
-                lums = lums[:,star_ind_box]
-
-            ## try opening the stellar smoothing lengths, if we fail
-            ##  let's calculate them and save them to the projection 
-            ##  file
-
-            if "SmoothingLength" not in self.star_snapdict:
-                Hsml = self.get_HSML('star')
-            else:
-                Hsml = self.star_snapdict['SmoothingLength'] ## kpc
-            ## attempt to pass these indices along
-            h_star = Hsml[star_ind_box].astype(np.float32)
-
-            ## and now filter the positions
-            star_pos = star_pos[star_ind_box].astype(np.float32)
-
-            mstar = self.star_snapdict['Masses'][star_ind_box].astype(np.float32)
-            ages = self.star_snapdict['AgeGyr'][star_ind_box].astype(np.float32)
-            metals = self.star_snapdict['Metallicity'][:,0][star_ind_box].astype(np.float32)
-
-            ## rotate by euler angles if necessary
-            gas_pos = self.rotateEuler(self.theta,self.phi,self.psi,self.gas_snapdict['Coordinates'])
-
-            ## cull the particles outside the frame and cast to float32
-            gas_ind_box = self.cullFrameIndices(gas_pos)
-            print(np.sum(gas_ind_box),'many gas particles in volume')
-
-            ## unpack the gas information
-            gas_pos = gas_pos[gas_ind_box].astype(np.float32)
-
-            mgas = self.gas_snapdict['Masses'][gas_ind_box].astype(np.float32)
-            gas_metals = self.gas_snapdict['Metallicity'][:,0][gas_ind_box].astype(np.float32)
-
-            ## set metallicity of hot gas to 0 so there is no dust extinction
-            temperatures = self.gas_snapdict['Temperature'][gas_ind_box]
-            gas_metals[temperatures>1e5] = 0
-
-            if "SmoothingLength" not in self.gas_snapdict:
-                h_gas = self.get_HSML('gas')
-            else:
-                h_gas = self.gas_snapdict['SmoothingLength'][gas_ind_box].astype(np.float32)
+            # apply filters, rotations, unpack snapshot data, etc...
+            (kappas, lums,
+                star_pos, mstar, ages, metals, h_star,
+                gas_pos , mgas , gas_metals ,  h_gas) = self.__prepareCoordinates(lums,nu_effs,BAND_IDS)
 
             ## do the actual raytracing
             gas_out,out_u,out_g,out_r = raytrace_ugr_attenuation(
@@ -246,14 +250,91 @@ starStudio.set_ImageParams(
                 h_star,
                 gas_pos[:,0],gas_pos[:,1],gas_pos[:,2],
                 mgas,gas_metals,h_gas,
+                kappas,lums,
                 pixels=self.pixels,
-                lums=lums,
-                nu_effs=nu_effs,
-                QUIET=not self.master_loud,
-                BAND_IDS=BAND_IDS)
+                QUIET=not self.master_loud)
 
-            return gas_out,out_u,out_g,out_r
+            ## unit factor, output is in Lsun/kpc^2
+            unit_factor = 1e10/self.Acell
+            return gas_out*unit_factor, out_u*unit_factor, out_g*unit_factor, out_r*unit_factor
         return compute_mockHubbleImage(self,**kwargs)
+
+
+    def __prepareCoordinates(self,
+        lums=None,
+        nu_effs=None,
+        BAND_IDS=None):
+        
+        ## unpack the star information
+        ## dont' filter star positions just yet
+        star_pos = self.star_snapdict['Coordinates']
+
+        ## rotate by euler angles if necessary
+        star_pos = self.rotateEuler(self.theta,self.phi,self.psi,star_pos)
+
+        ## cull the particles outside the frame and cast to float32
+        star_ind_box = self.cullFrameIndices(star_pos)
+        if self.master_loud:
+            print(np.sum(star_ind_box),'many star particles in volume')
+        
+        ## try opening the stellar smoothing lengths, if we fail
+        ##  let's calculate them and save them to the projection 
+        ##  file
+
+        if "SmoothingLength" not in self.star_snapdict:
+            Hsml = self.get_HSML('star')
+        else:
+            Hsml = self.star_snapdict['SmoothingLength'] ## kpc
+        ## attempt to pass these indices along
+        h_star = Hsml[star_ind_box].astype(np.float32)
+
+        ## and now filter the positions
+        star_pos = star_pos[star_ind_box].astype(np.float32)
+
+        mstar = self.star_snapdict['Masses'][star_ind_box].astype(np.float32)
+        ages = self.star_snapdict['AgeGyr'][star_ind_box].astype(np.float32)
+        metals = self.star_snapdict['Metallicity'][:,0][star_ind_box].astype(np.float32)
+
+        ## apply frame mask to band luminosities
+        if lums is not None:
+            lums = lums[:,star_ind_box]
+
+        ## will fill any columns of lums with appropriate BAND_ID 
+        ##  if nu_eff for that column is not None
+        kappas,lums = raytrace_projection.read_band_lums_from_tables(
+            BAND_IDS, 
+            mstar,ages,metals,
+            ## flag to return luminosity in each band requested without projecting
+            nu_effs=nu_effs,
+            lums=lums,
+            QUIET=not self.master_loud)
+
+        ## rotate by euler angles if necessary
+        gas_pos = self.rotateEuler(self.theta,self.phi,self.psi,self.gas_snapdict['Coordinates'])
+
+        ## cull the particles outside the frame and cast to float32
+        gas_ind_box = self.cullFrameIndices(gas_pos)
+        if self.master_loud:
+            print(np.sum(gas_ind_box),'many gas particles in volume')
+
+        ## unpack the gas information
+        gas_pos = gas_pos[gas_ind_box].astype(np.float32)
+
+        mgas = self.gas_snapdict['Masses'][gas_ind_box].astype(np.float32)
+        gas_metals = self.gas_snapdict['Metallicity'][:,0][gas_ind_box].astype(np.float32)
+
+        ## set metallicity of hot gas to 0 so there is no dust extinction
+        temperatures = self.gas_snapdict['Temperature'][gas_ind_box]
+        gas_metals[temperatures>1e5] = 0
+
+        if "SmoothingLength" not in self.gas_snapdict:
+            h_gas = self.get_HSML('gas')
+        else:
+            h_gas = self.gas_snapdict['SmoothingLength'][gas_ind_box].astype(np.float32)
+
+        return (kappas, lums,
+                star_pos, mstar, ages, metals, h_star,
+                gas_pos , mgas , gas_metals ,  h_gas)
 
 ####### produceImage implementation #######
     def render(
@@ -266,6 +347,8 @@ starStudio.set_ImageParams(
             Input: 
 
                 ax = None -- axis to plot image to, if None will create a new figure
+                quick = False -- flag to use a simple 2d histogram (for comparison or
+                    for quick iteration as the user defines the image parameters)
 
             Output:
 
@@ -296,11 +379,16 @@ starStudio.render(plt.gca())
 
     def __produceImage(
         self,
+        quick=False,
         **kwargs):
 
-        gas_out,out_u,out_g,out_r = self.get_mockHubbleImage(**kwargs)
+        if not quick:
+            gas_out,out_u,out_g,out_r = self.get_mockHubbleImage(**kwargs)
+        else:
+            gas_out,out_u,out_g,out_r = self.quick_get_mockHubbleImage(**kwargs)
 
-        maxden_guess,dynrange_guess = self.predictParameters()
+        all_bands = np.concatenate([out_u,out_g,out_r])
+        maxden_guess,dynrange_guess = self.predictParameters(all_bands=all_bands)
         ## open the hdf5 file and load the maps
         image24, massmap = makethreepic.make_threeband_image_process_bandmaps(
             copy.copy(out_r),copy.copy(out_g),copy.copy(out_u),
@@ -323,7 +411,9 @@ starStudio.render(plt.gca())
         self,
         left_percentile=0.1,
         right_percentile=0.99,
-        ax=None):
+        all_bands=None,
+        ax=None,
+        quick=False):
         """ Guesses what the "best" values for maxden and dynrange are from
             the distribution of surface brightnesses in the current image. 
             Looks for the left_percentile and right_percentile and returns
@@ -336,6 +426,8 @@ starStudio.render(plt.gca())
                 right_percentile = 0.99 --  upper bound on image surface brightness percentile
                 ax = None -- optionally plots distribution of surface brightnesses
                     (in some units...) with overlay of percentiles and such.
+                quick = False -- flag to use a simple 2d histogram (for comparison or
+                    for quick iteration as the user defines the image parameters)
             
             Output:
                 
@@ -344,11 +436,16 @@ starStudio.render(plt.gca())
                      in log space. 
 """
 
-        ## read the luminosity maps
-        gas_out,out_u,out_g,out_r = self.get_mockHubbleImage()
+        if (all_bands is None):
+            ## read the luminosity maps
+            if not quick:
+                gas_out,out_u,out_g,out_r = self.get_mockHubbleImage()
+            else:
+                gas_out,out_u,out_g,out_r = self.quick_get_mockHubbleImage()
+
+            all_bands = np.concatenate([out_u,out_g,out_r])
 
         ## concatenate the luminosity maps and take the log of the non-empty ones
-        all_bands = np.concatenate([out_u,out_g,out_r])
         rats = np.log10(all_bands.flatten())
         rats = rats[np.isfinite(rats)]
         h,edges = np.histogram(rats,bins=1000)
@@ -381,7 +478,7 @@ starStudio.render(plt.gca())
             ax.axvline(bottom,c='C1',ls='--',alpha=0.25)
             ax.axvline(top,c='C1')
             ax.text(np.sqrt(bottom*top),0.5/1.1,'dynrange',ha='center')
-            nameAxes(ax,None,"'den'","1/N dN/d('den')",logflag=(1,0),
+            nameAxes(ax,None,"'den' (L$_\odot$ kpc$^{-2}$)","1/N dN/d('den')",logflag=(1,0),
                 supertitle="maxden=%.2g\ndynrange=%2d"%(maxden,dynrange))
             ax.get_figure().set_dpi(120)
 
@@ -482,12 +579,10 @@ def raytrace_ugr_attenuation(
     gx,gy,gz,
     mgas, gas_metals,
     h_gas,
+    kappas,lums,
     pixels = 1200,
     xlim = None, ylim = None, zlim = None,
-    lums=None,
-    nu_effs=None,
     QUIET=False,
-    BAND_IDS=None,
     ):
 
     ## setup boundaries to cut-out gas particles that lay outside
@@ -499,38 +594,16 @@ def raytrace_ugr_attenuation(
     if zlim is None:
         zlim = [np.min(z),np.max(z)]
 
-    #band_names=['Bolometric',
-    #'Sloan u','Sloan g','Sloan r','Sloan i','Sloan z', 
-    #'Johnsons U','Johnsons B', 'Johnsons V','Johnsons R','Johnsons I', 
-    #'Cousins J','Cousins H','Cousins K']
-    #lambda_eff=np.array([
-        ## Bolometric (?)
-                #1.e-5,  
-        ## SDSS u       g       r      i      z
-                #3551. , 4686. , 6165., 7481., 8931.,
-        ##      U       B       V      R
-                #3600. , 4400. , 5556., 6940., 
-        ##      I      J       H       K
-                #8700., 12150., 16540., 21790.])
-    ## pick color bands by their IDs, see above
-    if BAND_IDS is None:
-        BAND_IDS=[1,2,3] ## used if corresponding column of lums is all 0s
     return raytrace_projection.stellar_raytrace(
-        BAND_IDS,
         x,y,z,
         mstar,ages,metals,
         h_star,
         gx,gy,gz,
         mgas,gas_metals,
         h_gas,
+        kappas,lums,
         xlim=xlim,ylim=ylim,zlim=zlim,
         pixels=pixels,
-        IMF_SALPETER=0,
-        IMF_CHABRIER=1,
-        ADD_BASE_METALLICITY=0.001*0.02, ## 1e-3 solar minimum metallicity
-        ADD_BASE_AGE=0.0003,## .3 Myr minimum age
-        lums=lums,
-        nu_effs=nu_effs,
         QUIET=QUIET) 
 
 __doc__  = ''
