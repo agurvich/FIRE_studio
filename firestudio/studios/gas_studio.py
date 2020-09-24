@@ -617,7 +617,6 @@ gasStudio.render(
         else:
             raise ValueError("Use (min/max)_(weight/quantity) kwargs to set image")
 
-
         ## convert the images from 0->1 space to 0-> 255 space
         final_image = mcm.produce_cmap_hsv_image(image_Q, image_W, cmap=self.cmap) 
 
@@ -765,6 +764,8 @@ def getImageGrid(
             np.min(weightWeightedQuantityMap),
             np.min(weightWeightedQuantityMap))
    
+    weightWeightedQuantityMap = weightWeightedQuantityMap/weightMap
+
     return weightMap,weightWeightedQuantityMap
 
 __doc__  = ''
