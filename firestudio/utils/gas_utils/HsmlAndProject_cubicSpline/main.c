@@ -36,7 +36,7 @@ int hsml_project(
     Xmin,Xmax,Ymin,Ymax,Xpixels,Ypixels);
   printf("quantity=%f...\n",quantity);
 
-  double dx, dy, dx_i, dy_i, dx_n, dy_n, i_x_flt, i_y_flt, d_ij, h, hmax, hmin;
+  double dx, dy, dx_i, dy_i, dx_n, dy_n, i_x_flt, i_y_flt, d_ij, h, hmin;
   double h2, x2_n, y2_n, r2_n, h2_i, wk, wt_sum, hkernel_over_hsml_to_use, *Kernel; 
   double dpi=3.1415926535897932384626433832795;
   long n,i,j,k,imin,imax,jmin,jmax,N_KERNEL_TABLE;
@@ -44,7 +44,6 @@ int hsml_project(
   dx = (Xmax - Xmin)/((double)Xpixels);
   dy = (Ymax - Ymin)/((double)Ypixels);
   dx_i = 1./dx; dy_i = 1./dy;
-  hmax = 100.*sqrt(dx*dx+dy*dy); // set this purely to prevent going over too many cells //
   hmin = 0.5*sqrt(dx*dx+dy*dy); // ensures at least one cell 'sees' the particle // 
   
   // pre-define cell positions so we save a step in the loop //
@@ -90,7 +89,6 @@ int hsml_project(
     h = hsml[n]; if(h<hmin) h=hmin; // assume 'intrinsic' h is smeared by some fraction of pixel
     h2_i = 1./(h*h); // here we need the 'real' h (not the expanded search) // 
     h *= hkernel_over_hsml_to_use; // make search area larger for kernel //
-    if(h > hmax) h=hmax; h2 = h*h; // this uses the expanded search radius // 
     d_ij=h*dx_i; imin=(long)(i_x_flt-d_ij); imax=(long)(i_x_flt+d_ij)+1; if(imin<0) imin=0; if(imax>Xpixels-1) imax=Xpixels-1;
     d_ij=h*dy_i; jmin=(long)(i_y_flt-d_ij); jmax=(long)(i_y_flt+d_ij)+1; if(jmin<0) jmin=0; if(jmax>Ypixels-1) jmax=Ypixels-1;
     
