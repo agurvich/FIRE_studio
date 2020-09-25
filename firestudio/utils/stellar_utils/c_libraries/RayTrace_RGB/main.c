@@ -96,6 +96,7 @@ int raytrace_rgb(
     i_x_flt = (x[n] - Xmin) * dx_i;
     i_y_flt = (y[n] - Ymin) * dy_i;
     h = hsml[n]; if(h<hmin) h=hmin; // assume 'intrinsic' h is smeared by some fraction of pixel
+    h2 = h*h;
     h2_i = 1./(h*h); // here we need the 'real' h (not the expanded search) // 
     h *= hkernel_over_hsml_to_use; // make search area larger for kernel //
     d_ij=h*dx_i; imin=(long)(i_x_flt-d_ij); imax=(long)(i_x_flt+d_ij)+1; if(imin<0) imin=0; if(imax>Xpixels-1) imax=Xpixels-1;
