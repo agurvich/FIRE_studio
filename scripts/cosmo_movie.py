@@ -1,3 +1,4 @@
+import time
 import numpy as np
 import os
 import matplotlib.pyplot as plt
@@ -56,8 +57,11 @@ def main():
 
     ## TODO wrap in multiprocessing
 
-    for snapnum in snaps[-1:]:
-        makeMovieFrame(snapnum,phi_TB,theta_TB)
+    with open('timing.txt','w') as handle:
+        init_time = time.time()
+        for snapnum in snaps[-1:]:
+            makeMovieFrame(snapnum,phi_TB,theta_TB)
+            handle.write("%d \t %.5f"%(snapnum,time.time()-init_time))
 
 def makeMovieFrame(
     snapnum,
