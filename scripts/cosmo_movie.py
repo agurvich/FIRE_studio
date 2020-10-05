@@ -4,6 +4,8 @@ import os
 import matplotlib.pyplot as plt
 import matplotlib
 import gc
+import multiprocessing
+import itertools
 
 from abg_python.galaxy.gal_utils import Galaxy
 from abg_python.all_utils import filterDictionary
@@ -55,18 +57,30 @@ def main():
     globals()
     gc.collect()
 
-    ## TODO wrap in multiprocessing
 
-    with open('timing.txt','w') as handle:
-        init_time = time.time()
-        for snapnum in snaps[-1:]:
-            makeMovieFrame(snapnum,phi_TB,theta_TB)
-            handle.write("%d \t %.5f"%(snapnum,time.time()-init_time))
+    cpu_count = multiprocessing.cpu_count()
+
+    mps = cpu_count
+    mps = 10 
+
+    ## TODO wrap in multiprocessing
+    #for snapnum in snaps[:]:
+        #makeMovieFrame(snapnum,phi_TB,theta_TB)
+
+    argss = list(zip(
+        snaps,
+        itertools.repeat(phi_TB),
+        itertools.repeat(theta_TB)))
+
+    with multiprocessing.Pool(mps) as my_pool:
+        my_pool.starmap(makeMovieFrame,argss)
 
 def makeMovieFrame(
     snapnum,
     phi_TB,
     theta_TB):
+
+    init_time = time.time()
 
     galaxy = Galaxy(
         'm12i_res7100',
@@ -82,7 +96,7 @@ def makeMovieFrame(
     fig = plt.figure()
     fig.subplots_adjust(wspace=0,hspace=0,left=0,right=1,bottom=0,top=1)
 
-    galaxy.render(plt.gca(),loud=False)
+    galaxy.render(plt.gca(),loud=False,use_metadata=False)
 
     fig.set_size_inches(4,4)
     fig.savefig(
@@ -90,6 +104,10 @@ def makeMovieFrame(
         pad_inches=0,
         bbox_inches='tight',
         dpi=120)
+
+    ## save the timing
+    with open('parallel_timing_%d.txt'%snapnum,'w') as handle:
+        handle.write("%d \t %.5f"%(snapnum,time.time()-init_time))
 
 if __name__ == '__main__':
     main()
