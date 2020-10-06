@@ -61,7 +61,7 @@ def main():
     cpu_count = multiprocessing.cpu_count()
 
     mps = cpu_count
-    mps = 10 
+    mps = 30 
 
     ## TODO wrap in multiprocessing
     #for snapnum in snaps[:]:
@@ -72,8 +72,13 @@ def main():
         itertools.repeat(phi_TB),
         itertools.repeat(theta_TB)))
 
+    init_time = time.time()
+
     with multiprocessing.Pool(mps) as my_pool:
         my_pool.starmap(makeMovieFrame,argss)
+
+    with open('parallel_timing_total.txt','w') as handle:
+        handle.write("total \t %.5f"%(time.time()-init_time))
 
 def makeMovieFrame(
     snapnum,
