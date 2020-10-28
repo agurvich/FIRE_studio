@@ -380,3 +380,14 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+
+#chain = interpolationHelper(2,theta=(0,90))
+#chain = interpolationHelper(2,chain,theta=45,psi=720)
+#interpolationHelper(2,chain,frame_half_width=10)
+#{'nsteps_tot': 90,
+ #'nlinks': 3,
+ #'nstepss': [30, 30, 30],
+ #'thetas': [0, 90, 45, 45],
+ #'psis': [0, 0, 720, 720],
+ #'frame_half_widths': [15, 15, 15, 10]}
