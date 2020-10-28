@@ -143,7 +143,7 @@ starStudio.set_ImageParams(
         # apply filters, rotations, unpack snapshot data, etc...
         (kappas, lums,
             star_pos, mstar, ages, metals, h_star,
-            gas_pos , mgas , gas_metals ,  h_gas) = self.__prepareCoordinates(lums,nu_effs,BAND_IDS)
+            gas_pos , mgas , gas_metals ,  h_gas) = self.prepareCoordinates(lums,nu_effs,BAND_IDS)
 
         KAPPA_UNITS=2.08854068444 ## cm^2/g -> kpc^2/mcode
         kappas*=KAPPA_UNITS
@@ -241,7 +241,7 @@ starStudio.set_ImageParams(
             # apply filters, rotations, unpack snapshot data, etc...
             (kappas, lums,
                 star_pos, mstar, ages, metals, h_star,
-                gas_pos , mgas , gas_metals ,  h_gas) = self.__prepareCoordinates(lums,nu_effs,BAND_IDS)
+                gas_pos , mgas , gas_metals ,  h_gas) = self.prepareCoordinates(lums,nu_effs,BAND_IDS)
 
             ## do the actual raytracing
             gas_out,out_u,out_g,out_r = raytrace_ugr_attenuation(
@@ -252,7 +252,11 @@ starStudio.set_ImageParams(
                 mgas,gas_metals,h_gas,
                 kappas,lums,
                 pixels=self.pixels,
-                QUIET=not self.master_loud)
+                QUIET=not self.master_loud,
+                xlim = (self.Xmin, self.Xmax),
+                ylim = (self.Ymin, self.Ymax),
+                zlim = (self.Zmin, self.Zmax)
+                )
 
             ## unit factor, output is in Lsun/kpc^2
             unit_factor = 1e10/self.Acell
@@ -260,7 +264,7 @@ starStudio.set_ImageParams(
         return compute_mockHubbleImage(self,**kwargs)
 
 
-    def __prepareCoordinates(self,
+    def prepareCoordinates(self,
         lums=None,
         nu_effs=None,
         BAND_IDS=None):
@@ -283,6 +287,8 @@ starStudio.set_ImageParams(
 
         if "SmoothingLength" not in self.star_snapdict:
             Hsml = self.get_HSML('star')
+            if Hsml.size != star_pos.shape[0]:
+                Hsml = self.get_HSML('star',use_metadata=False,save_meta=True)
         else:
             Hsml = self.star_snapdict['SmoothingLength'] ## kpc
         ## attempt to pass these indices along
