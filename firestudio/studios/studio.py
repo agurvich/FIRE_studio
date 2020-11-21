@@ -85,10 +85,7 @@ class Drawer(object):
 
         image_length =2*self.frame_half_width # kpc
         ## set scale bar length
-        if image_length > 15 : 
-            self.scale_label_text = r"$\mathbf{%1g \, \rm{kpc}}$"%self.scale_line_length
-        else:
-            self.scale_label_text = ''
+        self.scale_label_text = r"$\mathbf{%1g \, \rm{kpc}}$"%self.scale_line_length
 
         # Convert to pixel space
         length_per_pixel = (self.Xmax - self.Xmin) / self.npix_x

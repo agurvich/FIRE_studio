@@ -72,7 +72,7 @@ starStudio.set_ImageParams(
             'dynrange' : None, ## controls the saturation of the image in a non-obvious way
             'color_scheme_nasa' : True} ## flag to use nasa colors (vs. SDSS if false)
 
-        for kwarg in kwargs:
+        for kwarg in list(kwargs.keys()):
             ## only set it here if it was passed
             if kwarg in default_kwargs:
                 ## remove it from default_kwargs
@@ -83,6 +83,9 @@ starStudio.set_ImageParams(
                         'to user value of:',value)
                 ## set it to the object
                 setattr(self,kwarg,value)
+                ## remove this kwarg to prevent a confusing print message
+                ##  suggesting they are being ignored in the parent class
+                kwargs.pop(kwarg)
             else:
                 if (kwarg not in Studio.set_ImageParams.default_kwargs 
                     and kwarg != 'this_setup_id'):
