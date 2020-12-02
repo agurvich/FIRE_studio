@@ -156,9 +156,9 @@ int raytrace_rgb(
         {
             d_ij = Mass[n]*wk;
             OUT0[k] += d_ij;
-            OUT1[k] *= exp(-KAPPA1 * d_ij * wt_sum);
-            OUT2[k] *= exp(-KAPPA2 * d_ij * wt_sum);
-            OUT3[k] *= exp(-KAPPA3 * d_ij * wt_sum);
+            OUT1[k] *= exp(-KAPPA1 * d_ij);
+            OUT2[k] *= exp(-KAPPA2 * d_ij);
+            OUT3[k] *= exp(-KAPPA3 * d_ij);
             // here the surface density extinct the background sources, 
             //   with effective 'opacities' KAPPA1/2/3 in each channel
         }
