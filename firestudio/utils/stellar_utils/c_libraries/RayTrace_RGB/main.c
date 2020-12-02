@@ -45,7 +45,7 @@ int raytrace_rgb(
   printf("Kappa_1=%f...Kappa_2=%f...Kappa_3=%f...\n",KAPPA1,KAPPA2,KAPPA3);
   printf("wt_1=%f...wt_2=%f...wt_3=%f...\n",wt1,wt2,wt3);
 
-  double dx, dy, dx_i, dy_i, dx_n, dy_n, i_x_flt, i_y_flt, d_ij, h, hmin;
+  double dx, dy, dx_i, dy_i, dx_dy_i, dx_n, dy_n, i_x_flt, i_y_flt, d_ij, h, hmin;
   double h2, x2_n, y2_n, r2_n, h2_i, wk, wt_sum, hkernel_over_hsml_to_use, *Kernel; 
   double dpi=3.1415926535897932384626433832795;
   long n,i,j,k,imin,imax,jmin,jmax,N_KERNEL_TABLE;
@@ -53,6 +53,7 @@ int raytrace_rgb(
   dx = (Xmax - Xmin)/((double)Xpixels);
   dy = (Ymax - Ymin)/((double)Ypixels);
   dx_i = 1./dx; dy_i = 1./dy;
+  dx_dy_i = dx_i*dy_i;
   hmin = 0.5*sqrt(dx*dx+dy*dy); // ensures at least one cell 'sees' the particle // 
   
   // pre-define cell positions so we save a step in the loop //
@@ -98,6 +99,7 @@ int raytrace_rgb(
     h = hsml[n]; if(h<hmin) h=hmin; // assume 'intrinsic' h is smeared by some fraction of pixel
     h2 = h*h;
     h2_i = 1./(h*h); // here we need the 'real' h (not the expanded search) // 
+
     h *= hkernel_over_hsml_to_use; // make search area larger for kernel //
     d_ij=h*dx_i; imin=(long)(i_x_flt-d_ij); imax=(long)(i_x_flt+d_ij)+1; if(imin<0) imin=0; if(imax>Xpixels-1) imax=Xpixels-1;
     d_ij=h*dy_i; jmin=(long)(i_y_flt-d_ij); jmax=(long)(i_y_flt+d_ij)+1; if(jmin<0) jmin=0; if(jmax>Ypixels-1) jmax=Ypixels-1;
@@ -120,7 +122,11 @@ int raytrace_rgb(
         // use the kernel lookup table compiled above for the weighting //
         r2_n *= h2_i*kernel_spacing_inv; // ok now have the separation in units of hsml, then kernel_table // 
         k = (long)r2_n;
-        wk = h2_i * (Kernel[k] + (Kernel[k+1]-Kernel[k])*(r2_n-k)); // ok that's the weighted result
+        // ABG: used to be h2_i * below here
+        wk = (
+            Kernel[k] + 
+            (Kernel[k+1]-Kernel[k])*(r2_n-k)
+            ); // ok that's the weighted result
 
         k = j + Ypixels*i; // j runs 0-Ypixels-1, so this provides the necessary indexing //
         wt_sum += wk;
@@ -144,7 +150,8 @@ int raytrace_rgb(
             // use the kernel lookup table compiled above for the weighting //
             r2_n *= h2_i*kernel_spacing_inv; // ok now have the separation in units of hsml, then kernel_table // 
             k = (long)r2_n;
-            wk = h2_i * (Kernel[k] + (Kernel[k+1]-Kernel[k])*(r2_n-k)); // ok that's the weighted result
+            // ABG: used to be h2_i * below here
+            wk = (Kernel[k] + (Kernel[k+1]-Kernel[k])*(r2_n-k)); // ok that's the weighted result
 
             // ABG: renormalize by sum of wk
             wk = wk/wt_sum;
@@ -154,8 +161,9 @@ int raytrace_rgb(
         // first 'extinct' the background
         if(Mass[n]>0.)
         {
-            d_ij = Mass[n]*wk;
+            d_ij = Mass[n]*wk; // actual mass deposited into the cell
             OUT0[k] += d_ij;
+            d_ij *= dx_dy_i; // surface density, m/(L_xcell*L_ycell)
             OUT1[k] *= exp(-KAPPA1 * d_ij);
             OUT2[k] *= exp(-KAPPA2 * d_ij);
             OUT3[k] *= exp(-KAPPA3 * d_ij);
