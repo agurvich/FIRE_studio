@@ -3,6 +3,7 @@ import os,sys,getopt
 import copy
 import multiprocessing
 import itertools
+import gc
 
 from firestudio.studios.gas_studio import GasStudio
 
@@ -10,7 +11,7 @@ def renderGalaxy(
     ax,
     snapdir,snapnum,
     datadir,
-    frame_half_width,frame_depth,
+    frame_half_width,frame_half_thickness,
     edgeon = 0,
     **kwargs):
     ## copy the docstring
@@ -19,85 +20,142 @@ def renderGalaxy(
     return render(
         snapdir,snapnum,
         datadir,
-        frame_half_width,frame_depth,
+        frame_half_width,frame_half_thickness,
         edgeon,kwargs,ax)
 
-def renderWrapper(args):
-    return render(*args)
-
 def render(
-    snapdir,snapnum,
+    snapdir,
+    snapnum,
     datadir,
-    frame_half_width,frame_depth,
+    frame_half_width,
+    frame_half_thickness,
     edgeon,
-    kwargs,
-    ax=None,
-    image_names = None):
+    min_weight,
+    max_weight,
+    min_quantity,
+    max_quantity,
+    ax,
+    kwargs):
 
-    ## this is stupid and should change
-    image_names = [
-        'columnDensityMap',
-        'massWeightedTemperatureMap',
-        'two_color']
+    firestudio_datadir = os.path.join(datadir,'firestudio')
+
+    ## assumes that the simulation name immediately precedes "output"
+    sim_name = snapdir.split(os.path.sep)[-2]
+
+    fname = 'snapshot_%03d.png'%snapnum
+    if edgeon:
+        fname = 'edgeon_'+fname
+
+    fname = os.path.join(
+            firestudio_datadir,
+            'plots',
+            fname)
+
+    if os.path.isfile(fname):
+        return
+
+    if ax is None:
+        ax = plt.gca()
+    fig = ax.get_figure()
 
     gasStudio = GasStudio(
+        sim_name=sim_name,
         snapdir=snapdir,
         snapnum=snapnum,
-        datadir=datadir,
+        datadir=firestudio_datadir,
         frame_half_width=frame_half_width,
-        frame_depth=frame_depth,
+        frame_half_thickness=frame_half_thickness,
         **kwargs)
 
     if edgeon:
-        gasStudio.renderFaceAppendEdgeViews(image_names)
-    else:
-        if ax is None:
-            ax = plt.gca()
-            ## set figure size to square
-            ax.get_figure().set_size_inches(6,6)
-        gasStudio.render(ax,image_names)
-        if ax is None:
-            plt.clf()
+        gasStudio.set_ImageParams(
+            theta = 90,
+            aspect_ratio = frame_half_thickness/frame_half_width)
+
+    try:
+        gasStudio.render(
+            ax,
+            min_weight=min_weight,
+            max_weight=max_weight,
+            min_quantity=min_quantity,
+            max_quantity=max_quantity,
+            weight_adjustment_function= lambda x: np.log10(x/gasStudio.Acell)+10-6, ## log10(msun/pc^2)
+            quantity_adjustment_function=np.log10)
+    except:
+        gasStudio.load_SnapshotData(use_saved_subsnapshots=True)
+        gasStudio.render(
+            ax,
+            min_weight=min_weight,
+            max_weight=max_weight,
+            min_quantity=min_quantity,
+            max_quantity=max_quantity,
+            weight_adjustment_function= lambda x: np.log10(x/gasStudio.Acell)+10-6, ## log10(msun/pc^2)
+            quantity_adjustment_function=np.log10)
+
+    fig.savefig(
+        fname,
+        dpi=150,
+        pad_inches=0,
+        bbox_inches='tight')
+
+    ## don't remove these lines, they perform
+    ##  some kind of dark arts that helps the
+    ##  garbage collecter collect
+    del gasStudio
+    locals().keys()
+    globals().keys()
+    gc.collect()
+
     return ax
     
 def main(
     snapdir,
-    snapstart,snapmax,
+    snapstart,
+    snapmax,
     datadir,
     frame_half_width,
-    frame_depth,
+    frame_half_thickness,
     edgeon=0,
+    min_weight=-0.5,
+    max_weight=1.6,
+    min_quantity=2,
+    max_quantity=7, 
+    multiproc=1,
     **kwargs):
 
-    if 'multiproc' in kwargs and kwargs['multiproc']:
+    argss = zip(
+        itertools.repeat(snapdir),
+        range(snapstart,snapmax+1),
+        itertools.repeat(datadir),
+        itertools.repeat(frame_half_width),
+        itertools.repeat(frame_half_thickness),
+        itertools.repeat(edgeon),
+        itertools.repeat(min_weight),
+        itertools.repeat(max_weight),
+        itertools.repeat(min_quantity),
+        itertools.repeat(max_quantity),
+        itertools.repeat(None),
+        itertools.repeat(kwargs))
+
+    if multiproc > 1:
         ## map a wrapper to a pool of processes
-        argss = itertools.izip(
-            itertools.repeat(snapdir),
-            range(snapstart,snapmax+1),
-            itertools.repeat(datadir),
-            itertools.repeat(frame_half_width),
-            itertools.repeat(frame_depth),
-            itertools.repeat(edgeon),
-            itertools.repeat(kwargs),
-            itertools.repeat(None))
-        my_pool = multiprocessing.Pool(int(kwargs['multiproc']))
-        my_pool.map(renderWrapper,argss)
+        with multiprocessing.Pool(multiproc) as my_pool:
+            my_pool.starmap(render,argss)
     else:
         ## just do a for loop
-        for snapnum in range(snapstart,snapmax+1):
-            render(
-                snapdir,snapnum,
-                datadir,
-                frame_half_width,frame_depth,
-                edgeon,
-                kwargs,
-                None)
+        for args in argss:
+            render(*args)
 
 if __name__=='__main__':
     import matplotlib.pyplot as plt
-    from firestudio.studios.studio import shared_kwargs
     argv = sys.argv[1:]
     opts,args = getopt.getopt(argv,'',[
+        'frame_half_width=',
+        'frame_half_thickness=',
+        'pixels=',
+        'edgeon=',
+        'noaxis=',
+
         'min_den=','max_den=',
         'min_temp=','max_temp=', 
         'single_image=',
@@ -105,7 +163,12 @@ if __name__=='__main__':
         'cmap=',
         'cbar_label=',
         'take_log_of_quantity=',
-    ]+shared_kwargs)
+
+        'snapdir=',
+        'datadir=',
+        'snapstart=',
+        'snapmax=',
+        'multiproc=',])
 
     #options:
     #--min/max_den/temp: bottom/top of color scales for density/temperature
