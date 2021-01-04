@@ -372,7 +372,7 @@ star_snapdict['AgeGyr'] ## age of particles in Gyr
             sim_name,
             snapdir,
             snapnum,
-            datadir=self.datadir, ## not the same as where the FIREstudio cache is, I think... TODO
+            datadir=os.path.dirname(self.datadir), 
             loud_metadata=False, ## shh don't let them know
             save_header_to_table=False,
             **these_kwargs)
