@@ -343,7 +343,7 @@ star_snapdict['AgeGyr'] ## age of particles in Gyr
 
         @metadata_cache(
             '%s_data'%snapdict_name,  ## hdf5 file group name
-            ['%s_SmoothingLengths'],
+            ['%s_SmoothingLengths'%snapdict_name],
             use_metadata=use_metadata,
             save_meta=save_meta,
             assert_cached=assert_cached,
