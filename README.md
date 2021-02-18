@@ -96,8 +96,7 @@ my_starStudio = StarStudio(
     sim_name, ## what simulation name, used to name cache files
     frame_half_width=15, ## kpc, half width of image in x- and y-directions
     frame_half_thickness=15, ## kpc, half thickness of image in z-direction
-    gas_snapdict=gas_snapdict, ## dictionary containing gas particle data
-    star_snapdict=star_snapdict) ## dictionary containing star particle data
+    gas_snapdict=gas_snapdict) ## dictionary containing gas particle data
     
 my_starStudio.render(plt.gca())
 ```
