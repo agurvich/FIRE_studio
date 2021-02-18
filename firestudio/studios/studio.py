@@ -96,9 +96,10 @@ class Drawer(object):
         scale_line_x_end = min(scale_line_x_start + self.scale_line_length_px,self.npix_x)
         scale_line_y = int(0.02 * self.npix_y)
 
+        npix_thick = 12
         # Go through pixels for scale bar, setting them to white
         for x_index in range(scale_line_x_start, scale_line_x_end):
-            image[scale_line_y:scale_line_y+6, x_index,:3] = 1
+            image[scale_line_y:scale_line_y+npix_thick, x_index,:3] = 1
         return image
 
     def addText(self,ax):
@@ -109,7 +110,7 @@ class Drawer(object):
                 supertitle=self.figure_label,
                 subfontsize=self.fontsize,
                 font_color='white',
-                swap_annotate_side=True)
+                swap_annotate_side=self.figure_label_side=='right')
 
         ## Set parameters
 
@@ -205,14 +206,14 @@ class Studio(Drawer):
 gas_snapdict['Coordinates'] ## coordinates of the particles
 gas_snapdict['Metallicity'] ## metallicity (mass fractions) of the particles 
 gas_snapdict['Masses'] ## masses of the particles in 1e10 solar masses
+gas_snapdict['Temperature'] ## temperature of the gas in K
 
 star_snapdict['Coordinates'] ## coordinates of the particles
 star_snapdict['Metallicity'] ## metallicity (mass fractions) of the particles 
 star_snapdict['Masses'] ## masses of the particles in 1e10 solar masses
 star_snapdict['AgeGyr'] ## age of particles in Gyr
 ```
-
-(and ideally `'SmoothingLengths'`, in the same units as coordinates for both, but these can be calculated). 
+(and ideally `'SmoothingLengths'` for both, in the same units as coordinates for both, but these can be calculated). 
 
             Input:
 
@@ -424,6 +425,7 @@ star_snapdict['AgeGyr'] ## age of particles in Gyr
                 aspect_ratio = 1 -- shape of image, y/x TODO figure out if this is necessary to pass?
                 pixels = 1200 -- pixels in x direction, resolution of image
                 figure_label = '' -- string to be put in upper right corner
+                'figure_label_side' = 'right' --  corner to put label in
 
                 scale_bar = True -- flag to plot length scale bar in lower left corner
                 scale_line_length = 5 -- length of the scale bar in kpc
@@ -457,6 +459,7 @@ studio.set_ImageParams(
             'aspect_ratio':1, ## shape of image, y/x TODO figure out if this is necessary to pass?
             'pixels':1200, ## pixels in x direction, resolution of image
             'figure_label':'', ## string to be put in upper right corner
+            'figure_label_side':'right', ## corner to put label in
             'scale_bar':True,  ## flag to plot length scale bar in lower left corner
             'scale_line_length':5, ## length of the scale line in kpc
             'noaxis':True, ## turns off axis ticks
@@ -530,7 +533,8 @@ studio.set_ImageParams(
             'theta':0,'phi':0,'psi':0, ## euler rotation angles
             'aspect_ratio':1, ## shape of image, y/x TODO figure out if this is necessary to pass?
             'pixels':1200, ## pixels in x direction, resolution of image
-            'figure_label':'', ## string to be put in upper right corner
+            'figure_label':'', ## string to be put in upper right/left corner
+            'figure_label_side':'right', ## corner to put label in
             'scale_bar':True,  ## flag to plot length scale bar in lower left corner
             'scale_line_length':5, ## length of the scale line in kpc
             'noaxis':True, ## turns off axis ticks
@@ -587,6 +591,7 @@ studio.set_ImageParams(
             'aspect_ratio',
             'pixels', 
             'figure_label', 
+            'figure_label_side',
             'scale_bar',  
             'noaxis',
             'savefig',
