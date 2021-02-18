@@ -329,6 +329,7 @@ starStudio.set_ImageParams(
         ## unpack the gas information
         gas_pos = gas_pos[gas_ind_box].astype(np.float32)
 
+
         mgas = self.gas_snapdict['Masses'][gas_ind_box].astype(np.float32)
         gas_metals = self.gas_snapdict['Metallicity'][:,0][gas_ind_box].astype(np.float32)
 
@@ -340,6 +341,7 @@ starStudio.set_ImageParams(
             h_gas = self.get_HSML('gas')
         else:
             h_gas = self.gas_snapdict['SmoothingLength'][gas_ind_box].astype(np.float32)
+
 
         return (kappas, lums,
                 star_pos, mstar, ages, metals, h_star,
@@ -398,11 +400,21 @@ starStudio.render(plt.gca())
 
         all_bands = np.concatenate([out_u,out_g,out_r])
         maxden_guess,dynrange_guess = self.predictParameters(all_bands=all_bands)
+        if self.maxden is None:
+            print("setting maxden to best guess")
+            self.set_ImageParams(
+                maxden=maxden_guess)
+
+        if self.dynrange is None:
+            print("setting dynrange to best guess")
+            self.set_ImageParams(
+                dynrange=dynrange_guess)
+
         ## open the hdf5 file and load the maps
         image24, massmap = makethreepic.make_threeband_image_process_bandmaps(
             copy.copy(out_r),copy.copy(out_g),copy.copy(out_u),
-            maxden=self.maxden if self.maxden is not None else maxden_guess,
-            dynrange=self.dynrange if self.dynrange is not None else dynrange_guess,
+            maxden=self.maxden,
+            dynrange=self.dynrange,
             pixels=self.pixels,
             color_scheme_nasa=self.color_scheme_nasa,
             color_scheme_sdss=not self.color_scheme_nasa)
