@@ -88,8 +88,6 @@ For more information on the functionality and the different keyword arguments, s
 ```python
 from firestudio.studios.star_studio import StarStudio
 
-image_names = ['out_u','out_g','out_r','hubble']
-
 my_starStudio = StarStudio(
     datadir, ## where cache files are written out to, not the simulation directory
     snapnum, ## what snapshot number, used to name cache files
