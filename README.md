@@ -59,16 +59,18 @@ Begin by importing the studio class you would like to use, `GasStudio` for makin
 from firestudio.studios.gas_studio import GasStudio
 
 
-gasStudio = GasStudio(
-    datadir,
-    snapnum,
-    sim_name,
-    frame_half_width=15, ## kpc
-    gas_snapdict=gas_snapdict,
-    )
+
+my_gasStudio = GasStudio(
+    datadir, ## where cache files are written out to, not the simulation directory
+    snapnum, ## what snapshot number, used to name cache files
+    sim_name, ## what simulation name, used to name cache files
+    frame_half_width=15, ## kpc, half width of image in x- and y-directions
+    frame_half_thickness=15, ## kpc, half thickness of image in z-direction
+    gas_snapdict=gas_snapdict, ## dictionary containing gas particle data
+    star_snapdict=star_snapdict) ## dictionary containing star particle data
         
-gasStudio.render(
-    ax,
+my_gasStudio.render(
+    plt.gca(),
     weight_name='Masses',
     quantity_name='Temperature',
     min_weight=-0.1,
@@ -86,18 +88,15 @@ For more information on the functionality and the different keyword arguments, s
 ```python
 from firestudio.studios.star_studio import StarStudio
 
-image_names = ['out_u','out_g','out_r','hubble']
-
-starStudio = StarStudio(
-    datadir,
-    snapnum,
-    sim_name,
-    frame_half_width=15, ## kpc
-    gas_snapdict=gas_snapdict,
-    star_snapdict=star_snapdict,
-    savefig=savefig,noaxis=noaxis)
+my_starStudio = StarStudio(
+    datadir, ## where cache files are written out to, not the simulation directory
+    snapnum, ## what snapshot number, used to name cache files
+    sim_name, ## what simulation name, used to name cache files
+    frame_half_width=15, ## kpc, half width of image in x- and y-directions
+    frame_half_thickness=15, ## kpc, half thickness of image in z-direction
+    gas_snapdict=gas_snapdict) ## dictionary containing gas particle data
     
-starStudio.render(ax,image_names)
+my_starStudio.render(plt.gca())
 ```
 
 Where `star_snapdict` is a python dictionary holding the snapshot arrays for `PartType4` with keys that match the FIRE defaults. `abg_python.snap_utils.openSnapshot` will do this for you. If you are making an image of an isolated galaxy, you should remember to merge the dictionaries of `PartType2`, `PartType3`, and `PartType4`.
