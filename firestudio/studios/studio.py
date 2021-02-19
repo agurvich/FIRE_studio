@@ -149,10 +149,10 @@ class Drawer(object):
 
         return image.T
 
-    def __saveFigure(
+    def saveFigure(
         self,
         ax,
-        image_name,
+        image_name=None,
         ):
 
         ## save the figure if asked
@@ -167,10 +167,15 @@ class Drawer(object):
             savefig_args['bbox_inches']='tight'
             savefig_args['pad_inches']=0
 
-        image_name = "%s_%03d_%dkpc.png" % (image_name,self.snapnum, 2*self.frame_half_width)
+        
+        if image_name is None:
+            image_name = "%03d_%dkpc.pdf" % (self.snapnum, 2*self.frame_half_width)
+
+        if 'png' not in image_name and 'pdf' not in image_name:
+            image_name+='.pdf'
 
         ax.get_figure().savefig(
-            os.path.join(self.image_dir,image_name),dpi=300,
+            os.path.join(self.datadir,image_name),dpi=300,
             **savefig_args)
 
 class Studio(Drawer):
