@@ -338,10 +338,9 @@ starStudio.set_ImageParams(
         gas_metals[temperatures>1e5] = 0
 
         if "SmoothingLength" not in self.gas_snapdict:
-            h_gas = self.get_HSML('gas')
+            h_gas = self.get_HSML('gas')[gas_ind_box]
         else:
             h_gas = self.gas_snapdict['SmoothingLength'][gas_ind_box].astype(np.float32)
-
 
         return (kappas, lums,
                 star_pos, mstar, ages, metals, h_star,
