@@ -34,7 +34,11 @@ Then, if you'd rather install the repositories in a separate folder, you can use
 ```bash
 ln -s /path/to/repository ${HOME}/python/repository_name
 ```
-So that you don't have to make your `PYTHONPATH` environment variable very confusing. 
+So that you don't have to make your `PYTHONPATH` environment variable very confusing.
+### Mac-OS / Windows
+You will have to recompile the C routines in `FIRE_studio/firestudio/utils/gas_utils/HsmlAndProject_cubicSpline/` and `FIRE_studio/firestudio/utils/stellar_utils/c_libraries/`. 
+My only advice is to `cd` into the directories and use `make`, if you don't know how to compile C code or end up with an error then you should focus your Google-fu efforts on intalling "Homebrew" and then use `brew install gcc` if you're on Mac-OS.
+If you're on Windows then your best bet is to install Windows Subsystem for Linux (WSL) and run a virtual Linux kernel on your computer (and then you can just use `apt-get install gcc` if necessary). 
 
 ## Using FIRE_studio
 There are two ways to use FIRE_studio
