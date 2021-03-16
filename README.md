@@ -9,6 +9,7 @@ If you use FIRE studio in a talk or paper, please acknowledge it in a footnote o
 
 Thanks, and enjoy!
 
+## Help Policy
 To receive support please fill out the issue template in the [github issues tab](https://github.com/agurvich/FIRE_studio/issues). 
 Note that I only support the most recent version of FIRE studio by default and you will be required to upload a full stack trace and printed output along with the python script/pdf printout of the jupyter notebook.
 
