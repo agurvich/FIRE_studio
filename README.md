@@ -3,11 +3,15 @@ Movie Making Utilities for FIRE simulations
 
 This git repository was lovingly made, the code it contains is largely based off two separate (but related) visualization codes built by Volker Springel and Phil Hopkins. This is not the greatest song in the world, this is just a tribute.
 
-If you use FIRE studio in a talk or paper, please consider acknowledging it in a footnote or acknowledgements section. Some example language might look like: 
+If you use FIRE studio in a talk or paper, please acknowledge it in a footnote or acknowledgements section. Some example language might look like: 
 
 "[Some of the images presented in this work were]/[This image was] produced using FIRE studio ([github.com/agurvich/FIRE_studio](github.com/agurvich/FIRE_studio)), an open source Python visualization package designed with the FIRE simulations in mind."
 
 Thanks, and enjoy!
+
+## Help Policy
+To receive support please fill out the issue template in the [github issues tab](https://github.com/agurvich/FIRE_studio/issues). 
+Note that I only support the most recent version of FIRE studio by default and you will be required to upload a full stack trace and printed output along with the python script/pdf printout of the jupyter notebook.
 
 requirements:
 [abg_python](https://www.github.com/agurvich/abg_python)
@@ -30,7 +34,15 @@ Then, if you'd rather install the repositories in a separate folder, you can use
 ```bash
 ln -s /path/to/repository ${HOME}/python/repository_name
 ```
-So that you don't have to make your `PYTHONPATH` environment variable very confusing. 
+So that you don't have to make your `PYTHONPATH` environment variable very confusing.
+
+### Linux
+You're done, congratulate yourself!
+
+### Mac-OS / Windows
+You will have to recompile the C routines in `FIRE_studio/firestudio/utils/gas_utils/HsmlAndProject_cubicSpline/` and `FIRE_studio/firestudio/utils/stellar_utils/c_libraries/`. 
+My only advice is to `cd` into the directories and use `make`, if you don't know how to compile C code or end up with an error then you should focus your Google-fu efforts on intalling "Homebrew" and then use `brew install gcc` if you're on Mac-OS.
+If you're on Windows then your best bet is to install Windows Subsystem for Linux (WSL) and run a virtual Linux kernel on your computer (and then you can just use `apt-get install gcc` if necessary). 
 
 ## Using FIRE_studio
 There are two ways to use FIRE_studio
