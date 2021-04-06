@@ -330,7 +330,13 @@ The maps computed in pixel j are then:
 
         if quantities is None:
             if quantity_name not in snapdict:
-                raise KeyError(quantity_name,'is not in gas_snapdict')
+                ## need to rotate the velocities in here
+                if quantity_name in ['Vx','Vy','Vz']:
+                    vels = self.rotateEuler(self.theta,self.phi,self.psi,snapdict['Velocities'])
+                    quantities = vels[:,['Vx','Vy','Vz'].index(quantity_name)]
+                ## was passed something that we don't know what to do with
+                else:
+                    raise KeyError(quantity_name,'is not in gas_snapdict')
             else:
                 quantities = snapdict[quantity_name]
 
