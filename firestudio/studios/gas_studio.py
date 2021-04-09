@@ -335,6 +335,15 @@ The maps computed in pixel j are then:
                     vels = self.rotateEuler(self.theta,self.phi,self.psi,snapdict['Velocities'])
                     quantities = vels[:,['Vx','Vy','Vz'].index(quantity_name)]
                 ## was passed something that we don't know what to do with
+                elif 'Log' in quantity_name or 'log' in quantity_name:
+                    upper = quantity_name.replace('Log','')
+                    lower = quantity_name.replace('log','')
+                    if upper in snapdict:
+                        quantities = np.log10(snapdict[upper])
+                    elif lower in snapdict:
+                        quantities = np.log10(snapdict[lower])
+                    else:
+                        raise KeyError(quantity_name,'is not in gas_snapdict')
                 else:
                     raise KeyError(quantity_name,'is not in gas_snapdict')
             else:
