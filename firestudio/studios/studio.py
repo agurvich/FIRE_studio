@@ -99,7 +99,7 @@ class Drawer(object):
         npix_thick = 12
         # Go through pixels for scale bar, setting them to white
         for x_index in range(scale_line_x_start, scale_line_x_end):
-            image[scale_line_y:scale_line_y+npix_thick, x_index,:3] = 1
+            image[scale_line_y:scale_line_y+npix_thick, x_index,:3] = 1 if self.font_color in ['w','white'] else 0
         return image
 
     def addText(self,ax):
@@ -109,7 +109,7 @@ class Drawer(object):
             nameAxes(ax,None,None,None,
                 supertitle=self.figure_label,
                 subfontsize=self.fontsize,
-                font_color='white',
+                font_color=self.font_color,
                 swap_annotate_side=self.figure_label_side=='right')
 
         ## Set parameters
@@ -125,7 +125,7 @@ class Drawer(object):
                 fontsize=self.fontsize*0.75,
                 transform = ax.transAxes,
                 verticalalignment='bottom')
-            label2.set_color('white')
+            label2.set_color(self.font_color)
 
     def renormalizeTransposeImage(self,image,min_val,max_val,quantity_name):
         if self.master_loud:
@@ -437,7 +437,8 @@ star_snapdict['AgeGyr'] ## age of particles in Gyr
 
                 noaxis = True -- turns off axis ticks
                 savefig = None -- save the image as a png if passed a string
-                fontsize = 12 
+                fontsize = 12  -- fontsize of figure label and scale bar text
+                font_color = 'white' -- color of the subtitle font
                 
                 snapdir - path to simulation output
                 snapnum -  which snapshot to open
@@ -470,6 +471,7 @@ studio.set_ImageParams(
             'noaxis':True, ## turns off axis ticks
             'savefig':None, ## save the image as a png if passed a string
             'fontsize':12,  ## font size of scale bar and figure label
+            'font_color':'w', ## font color of scale bar and figure label
             'snapdir':None,
             'snapnum':None,
             'sim_name':None
@@ -545,6 +547,7 @@ studio.set_ImageParams(
             'noaxis':True, ## turns off axis ticks
             'savefig':None, ## save the image as a png if passed a string
             'fontsize':12,  ## font size of scale bar and figure label
+            'font_color':'w',
             'snapdir':None,
             'snapnum':None,
             'sim_name':None}
