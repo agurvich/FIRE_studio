@@ -217,13 +217,13 @@ starStudio.set_ImageParams(
 
             Output:
 
-                gas_out -- total mass along LOS in pixel, in unknown units
+                gas_out -- total mass along LOS in pixel, in msun/kpc^2
                 out_u -- total attenuated luminosity along LOS in pixel
-                    in u band, in unknown units
+                    in u band, in Lsun/kpc^2
                 out_g -- total attenuated luminosity along LOS in pixel
-                    in g band, in unknown units
+                    in g band, in Lsun/kpc^2
                 out_r -- total attenuated luminosity along LOS in pixel
-                    in r band, in unknown units"""
+                    in r band, in Lsun/kpc^2"""
 
         @metadata_cache(
             self.this_setup_id,  ## hdf5 file group name
