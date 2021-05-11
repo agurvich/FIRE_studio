@@ -731,7 +731,7 @@ def getImageGrid(
     if not os.path.isfile(c_obj_path):
         raise IOError(
             'Missing',
-            c_obj_file,
+            c_obj_path,
             'compile the missing file and restart.')
 
     c_obj = ctypes.CDLL(c_obj_path)

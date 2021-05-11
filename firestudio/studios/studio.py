@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 
 from abg_python.snapshot_utils import openSnapshot
 from abg_python.cosmo_utils import load_AHF
-from abg_python.all_utils import append_function_docstring
+from abg_python.all_utils import append_function_docstring,getThetasTaitBryan,filterDictionary
 from abg_python.plot_utils import nameAxes
 
 from abg_python.galaxy.gal_utils import Galaxy
@@ -300,7 +300,7 @@ star_snapdict['AgeGyr'] ## age of particles in Gyr
 
         ## determine if we need to open any snapshot data
         if (self.gas_snapdict is None or 
-            self.gas_snapdict['snapnum'] != snapnum ): ## haven't loaded this data yet, or we are replacing it
+            self.gas_snapdict['snapnum'] != self.snapnum ): ## haven't loaded this data yet, or we are replacing it
             return_value = self.__get_snapdicts(
                 self.sim_name,
                 self.snapdir,self.snapnum,**kwargs)
@@ -316,7 +316,7 @@ star_snapdict['AgeGyr'] ## age of particles in Gyr
         if gas_mask is not None:
             self.masked_gas_snapdict = filterDictionary(self.gas_snapdict,gas_mask)
         if star_mask is not None:
-            self.masked_star_snapdict = filterDictionary(self.star_snapdict,mask)
+            self.masked_star_snapdict = filterDictionary(self.star_snapdict,star_mask)
 
         return return_value
 
@@ -379,13 +379,13 @@ star_snapdict['AgeGyr'] ## age of particles in Gyr
             ## rotate the coordinates, 
             ##  subtract out the offset introduced by rotating to camera_orientation
             ##  translate by the new camera position
-            coords = (rotateEuler(
+            coords = (self.rotateEuler(
                 theta,phi,0,
-                coords) + self.camera_position
+                coords) + self.camera_position)
 
             ## mask particles that are behind the camera, camera looks
             ##  to negative z from positive z post-rotation
-            behind_mask = coords[:,-1] < rotateEuler(theta,phi,0,self.camera_position[None,:])[-1]
+            behind_mask = coords[:,-1] < self.rotateEuler(theta,phi,0,self.camera_position[None,:])[-1]
 
         else:
 
