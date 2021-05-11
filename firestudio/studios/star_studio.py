@@ -279,8 +279,12 @@ starStudio.set_ImageParams(
         ## rotate by euler angles if necessary
         star_pos = self.rotateEuler(self.theta,self.phi,self.psi,star_pos)
 
+        ## move (if necessary) the camera to project along arbitrary LOS
+        star_pos,behind_mask = self.applyCameraPositionOrientation(star_pos)
+
         ## cull the particles outside the frame and cast to float32
-        star_ind_box = self.cullFrameIndices(star_pos)
+        star_ind_box = np.logical_and(self.cullFrameIndices(star_pos),behind_mask)
+
         if self.master_loud:
             print(np.sum(star_ind_box),'many star particles in volume')
         
@@ -299,6 +303,7 @@ starStudio.set_ImageParams(
 
         ## and now filter the positions
         star_pos = star_pos[star_ind_box].astype(np.float32)
+
 
         mstar = self.star_snapdict['Masses'][star_ind_box].astype(np.float32)
         ages = self.star_snapdict['AgeGyr'][star_ind_box].astype(np.float32)
@@ -321,8 +326,11 @@ starStudio.set_ImageParams(
         ## rotate by euler angles if necessary
         gas_pos = self.rotateEuler(self.theta,self.phi,self.psi,self.gas_snapdict['Coordinates'])
 
+        ## move (if necessary) the camera to project along arbitrary LOS
+        gas_pos,behind_mask = self.applyCameraPositionOrientation(gas_pos)
+
         ## cull the particles outside the frame and cast to float32
-        gas_ind_box = self.cullFrameIndices(gas_pos)
+        gas_ind_box = np.logical_and(self.cullFrameIndices(gas_pos),behind_mask)
         if self.master_loud:
             print(np.sum(gas_ind_box),'many gas particles in volume')
 
