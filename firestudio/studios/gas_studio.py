@@ -305,8 +305,7 @@ The maps computed in pixel j are then:
         Coordinates = snapdict['Coordinates'] ## kpc
 
         if "SmoothingLength" not in snapdict:
-            print('ignoring saved hsmls')
-            Hsml = self.get_HSML(snapdict_name,use_metadata=False,save_meta=False)
+            Hsml = self.get_HSML(snapdict_name)
             assert type(Hsml) == np.ndarray
             if 'masked_' in full_snapdict_name:
                 Hsml = Hsml[self.mask]
@@ -353,11 +352,8 @@ The maps computed in pixel j are then:
         ## rotate by euler angles if necessary
         pos = self.rotateEuler(self.theta,self.phi,self.psi,Coordinates)
 
-        ## move (if necessary) the camera to project along arbitrary LOS
-        pos,behind_mask = self.applyCameraPositionOrientation(pos)
-
         ## cull the particles outside the frame and cast to float32
-        box_mask = np.logical_and(self.cullFrameIndices(pos),behind_mask)
+        box_mask = self.cullFrameIndices(pos)
 
         if self.master_loud:
             print("projecting %d particles"%np.sum(box_mask))

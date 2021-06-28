@@ -363,44 +363,6 @@ star_snapdict['AgeGyr'] ## age of particles in Gyr
 
         return compute_HSML(self,**kwargs)
 
-    def applyCameraPositionOrientation(self,coords):
-
-        if self.camera_position is not None:
-            if self.camera_orientation is None:
-                ## default to pointing at the origin
-                camera_orientation = -self.camera_position
-            else:
-                camera_orientation = self.camera_orientation
-
-            camera_orientation = camera_orientation/np.linalg.norm(camera_orientation)
-
-            theta,phi = getThetasTaitBryan(-self.camera_orientation)
- 
-            ## rotate the coordinates, 
-            ##  subtract out the offset introduced by rotating to camera_orientation
-            ##  translate by the new camera position
-            coords = (self.rotateEuler(
-                theta,phi,0,
-                coords) + self.camera_position)
-
-            ## mask particles that are behind the camera, camera looks
-            ##  to negative z from positive z post-rotation
-            behind_mask = coords[:,-1] < self.rotateEuler(theta,phi,0,self.camera_position[None,:])[-1]
-
-        else:
-
-            if self.camera_orientation is not None or self.camera_roll is not None:
-                ## raise error if not passed a camera position 
-                ##  but was passed a camera orientation
-                raise ValueError("Can't have camera_orientation!=None"+
-                    "or camera_roll!=None but camera_position=None")
-
-            ## default, camera is at infinity
-            behind_mask = np.ones(coords.shape[0],dtype=bool)
-
-        return coords,behind_mask
-
-
     def __get_snapdicts(
         self,
         sim_name,
@@ -482,11 +444,6 @@ star_snapdict['AgeGyr'] ## age of particles in Gyr
                 snapnum -  which snapshot to open
                 sim_name - name of simulation (i.e. m12i_res7100)
 
-                camera_position = None - vector from origin of unrotated frame to camera location
-                camera_orientation = None - (unit) vector from camera_location pointing to focus
-                    if None, defaults to [0,0,-1]
-                camera_roll_degrees = 0 - rotate the north vector to spin
-
             Output:
 
                 None
@@ -517,10 +474,7 @@ studio.set_ImageParams(
             'font_color':'w', ## font color of scale bar and figure label
             'snapdir':None,
             'snapnum':None,
-            'sim_name':None,
-            'camera_position':None,
-            'camera_orientation':None,
-            'camera_roll':0,
+            'sim_name':None
             }
 
         for kwarg in kwargs:
