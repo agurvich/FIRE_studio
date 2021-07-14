@@ -40,8 +40,10 @@ void neighborloop(
   double x2_n, r2_n, wk;
   long i,j,k;
   int accumulate;
-
   accumulate = (*wt_sum > 0);
+
+  // avoid re-computing background alpha inside the loop
+  float bkg_alpha=(1-alphas[n]);
 
   // loop through all pixels this particle covers
   for(i=imin;i<imax;i++){
@@ -56,20 +58,21 @@ void neighborloop(
           // use the kernel lookup table compiled above for the weighting //
           r2_n *= h2_i*kernel_spacing_inv; // ok now have the separation in units of hsml, then kernel_table // 
           k = (long)r2_n;
+
+          wk = 1; // initialize wk assuming we will not use the kernel
           if (use_kernel) wk = h2_i * (Kernel[k] + (Kernel[k+1]-Kernel[k])*(r2_n-k)); // ok that's the weighted result
-          else wk = 1;
 
           k = j + Ypixels*i; // j runs 0-Ypixels-1, so this provides the necessary indexing //
 
           if (!accumulate) *wt_sum += wk;
           else{
-            // ABG: renormalize by sum of wk
+            // renormalize by sum of wk
             wk = wk / *wt_sum;
 
             // pre-multiply alpha blend in 3 bands
-            OUT0[k] += R[n]*wk + (1-alphas[n])*OUT0[k];
-            OUT1[k] += G[n]*wk + (1-alphas[n])*OUT1[k];
-            OUT2[k] += B[n]*wk + (1-alphas[n])*OUT2[k];
+            OUT0[k] = R[n]*wk + bkg_alpha*OUT0[k];
+            OUT1[k] = G[n]*wk + bkg_alpha*OUT1[k];
+            OUT2[k] = B[n]*wk + bkg_alpha*OUT2[k];
 
           }// if accumulate... else
         }// if r2_n < h2
