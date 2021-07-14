@@ -26,6 +26,7 @@ void neighborloop(
   double * x_i, double * y_j, // cell positions
   // pass-through scalars
   long n, // particle index
+  int use_kernel,
   double h, double h2, double h2_i,
   double dx_n, double dy_n,
   double * Kernel,
@@ -33,8 +34,8 @@ void neighborloop(
   long Ypixels,
   // output
   double * wt_sum,
-  float * weight, float * quantity,
-  float * OUT0, float * OUT1){
+  float * R, float * G, float * B, float * alphas,
+  float * OUT0, float * OUT1, float * OUT2){
 
   double x2_n, r2_n, wk;
   long i,j,k;
@@ -55,7 +56,8 @@ void neighborloop(
           // use the kernel lookup table compiled above for the weighting //
           r2_n *= h2_i*kernel_spacing_inv; // ok now have the separation in units of hsml, then kernel_table // 
           k = (long)r2_n;
-          wk = h2_i * (Kernel[k] + (Kernel[k+1]-Kernel[k])*(r2_n-k)); // ok that's the weighted result
+          if (use_kernel) wk = h2_i * (Kernel[k] + (Kernel[k+1]-Kernel[k])*(r2_n-k)); // ok that's the weighted result
+          else wk = 1;
 
           k = j + Ypixels*i; // j runs 0-Ypixels-1, so this provides the necessary indexing //
 
@@ -64,8 +66,10 @@ void neighborloop(
             // ABG: renormalize by sum of wk
             wk = wk / *wt_sum;
 
-            OUT0[k] += weight[n]*wk;
-            OUT1[k] += weight[n]*wk*quantity[n];
+            // pre-multiply alpha blend in 3 bands
+            OUT0[k] += R[n]*wk + (1-alphas[n])*OUT0[k];
+            OUT1[k] += G[n]*wk + (1-alphas[n])*OUT1[k];
+            OUT2[k] += B[n]*wk + (1-alphas[n])*OUT2[k];
 
           }// if accumulate... else
         }// if r2_n < h2
@@ -75,21 +79,20 @@ void neighborloop(
 }// void neighborloop
 
 // changed to better fit python wrapper, not IDL //
-int hsml_project(
+int triband_alphablend(
     int N_xy, // number of input particles/positions
+    int use_kernel,
     float* x, float* y, // positions (assumed already sorted in z)
     float* hsml, // smoothing lengths for each
-    float* weight, // weight 
-    float* quantity, // quantity
+    float* R, float* G, float* B, float* alphas,
     float Xmin, float Xmax, float Ymin, float Ymax, // boundaries of output grid
     int Xpixels, int Ypixels, // dimensions of grid
-    float* OUT0, float* OUT1) // output vectors for weightMap and weightWeightedQuantityMap
+    float* OUT0, float* OUT1, float* OUT2) // output vectors for weightMap and weightWeightedQuantityMap
 {
   // print out the input parameters // 
   printf("N_xy=%d...",N_xy); 
   printf("Xmin=%f...Xmax=%f...Ymin=%f...Ymax=%f...Xpixels=%d...Ypixels=%d\n",
     Xmin,Xmax,Ymin,Ymax,Xpixels,Ypixels);
-  printf("quantity=%f...\n",quantity);
 
   double dx, dy, dx_i, dy_i, dx_n, dy_n, i_x_flt, i_y_flt, d_ij, h, hmin;
   double h2, x2_n, y2_n, r2_n, h2_i, wk, hkernel_over_hsml_to_use, *Kernel; 
@@ -151,25 +154,31 @@ int hsml_project(
     d_ij=h*dx_i; imin=(long)(i_x_flt-d_ij); imax=(long)(i_x_flt+d_ij)+1; if(imin<0) imin=0; if(imax>Xpixels-1) imax=Xpixels-1;
     d_ij=h*dy_i; jmin=(long)(i_y_flt-d_ij); jmax=(long)(i_y_flt+d_ij)+1; if(jmin<0) jmin=0; if(jmax>Ypixels-1) jmax=Ypixels-1;
     
+    // initialize wt_sum assuming we won't use the kernel and want
+    //  flat opacities over the surface
+    *wt_sum = 1;
 
-    *wt_sum = 0.;
-    // accumulate the total weight that will be deposited in order to renormalize
-    neighborloop(
-      imin, imax,
-      jmin, jmax,
-      x, y,
-      x_i, y_j,
-  // pass-through scalars
-      n,
-      h, h2, h2_i,
-      dx_n, dy_n,
-      Kernel,
-      kernel_spacing_inv,
-      Ypixels,
-  // output
-      wt_sum, // = 0 initially -> accumulate = True
-      NULL, NULL,
-      NULL, NULL);
+    if (use_kernel){
+      // need to accumulate the total weight that will be deposited in order to renormalize
+      *wt_sum = 0.;
+      neighborloop(
+        imin, imax,
+        jmin, jmax,
+        x, y,
+        x_i, y_j,
+    // pass-through scalars
+        n,
+        use_kernel,
+        h, h2, h2_i,
+        dx_n, dy_n,
+        Kernel,
+        kernel_spacing_inv,
+        Ypixels,
+    // output
+        wt_sum, // = 0 initially -> accumulate = True
+        NULL, NULL, NULL,NULL,
+        NULL, NULL, NULL);
+    }
 
     // now that wt_sum is set, actually deposit the mass
     neighborloop(
@@ -179,6 +188,7 @@ int hsml_project(
       x_i, y_j,
   // pass-through scalars
       n,
+      use_kernel,
       h, h2, h2_i,
       dx_n, dy_n,
       Kernel,
@@ -186,8 +196,8 @@ int hsml_project(
       Ypixels,
   // output
       wt_sum, // != 0 initially -> accumulate = False
-      weight, quantity,
-      OUT0, OUT1);
+      R, G, B, alphas,
+      OUT0, OUT1, OUT2);
 
   } // for(n=0;n<N_xy;n++)
   return 1;
