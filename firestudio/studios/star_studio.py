@@ -11,7 +11,7 @@ import copy
 
 ## abg_python imports
 from abg_python.plot_utils import addColorbar,nameAxes
-from abg_python.all_utils import append_function_docstring,append_string_docstring,findIntersection
+from abg_python import append_function_docstring,append_string_docstring,findIntersection
 from abg_python.galaxy.metadata_utils import metadata_cache
 
 ## firestudio imports

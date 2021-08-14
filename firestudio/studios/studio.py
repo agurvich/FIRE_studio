@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 
 from abg_python.snapshot_utils import openSnapshot
 from abg_python.cosmo_utils import load_AHF
-from abg_python.all_utils import append_function_docstring,getThetasTaitBryan,filterDictionary
+from abg_python import append_function_docstring,getThetasTaitBryan,filterDictionary
 from abg_python.plot_utils import nameAxes
 
 from abg_python.galaxy.gal_utils import Galaxy

@@ -11,7 +11,7 @@ import copy
 import matplotlib.pyplot as plt
 
 ## abg_python imports
-from abg_python.all_utils import filterDictionary,append_function_docstring,append_string_docstring
+from abg_python import filterDictionary,append_function_docstring,append_string_docstring
 from abg_python.plot_utils import addColorbar
 from abg_python.galaxy.metadata_utils import metadata_cache
 
