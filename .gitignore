@@ -2,3 +2,5 @@
 *.sw*
 *.pyc
 *.o
+src/*egg*/*
+dist/*
