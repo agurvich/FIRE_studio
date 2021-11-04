@@ -8,7 +8,7 @@ import numpy as np
 import ctypes
 
 ## abg_python imports
-from abg_python.all_utils import filterDictionary
+from abg_python import filterDictionary,append_function_docstring,append_string_docstring
 from abg_python.plot_utils import addColorbar
 
 ## firestudio imports
@@ -136,7 +136,44 @@ class GasStudio(Studio):
         if 'SmoothingLength' in self.snapdict and self.use_hsml:
             Hsml = self.snapdict['SmoothingLength']
         else:
-            Hsml = None
+            Hsml = snapdict['SmoothingLength'] ## kpc
+
+        ## only important if you are neighbor finding and you want a periodic box.
+        ##  for most purposes, you don't. 
+        BoxSize = 1000 #snapdict['BoxSize'] 
+
+        if weights is None:
+            ## account for possibility of volume weighting
+            if weight_name not in snapdict:
+                if weight_name == 'Volume':
+                    weights = 4/3 * np.pi*Hsml**3 / 32 ## kpc^3
+                elif weight_name == 'Ones':
+                    weights = np.ones(Coordinates.shape[0])
+                else:
+                    raise KeyError(weight_name,'is not in gas_snapdict')
+            else:
+                weights = snapdict[weight_name]
+
+        if quantities is None:
+            if quantity_name not in snapdict:
+                ## need to rotate the velocities in here
+                if quantity_name in ['Vx','Vy','Vz']:
+                    vels = self.rotateEuler(self.theta,self.phi,self.psi,snapdict['Velocities'])
+                    quantities = vels[:,['Vx','Vy','Vz'].index(quantity_name)]
+                ## was passed something that we don't know what to do with
+                elif 'Log' in quantity_name or 'log' in quantity_name:
+                    upper = quantity_name.replace('Log','')
+                    lower = quantity_name.replace('log','')
+                    if upper in snapdict:
+                        quantities = np.log10(snapdict[upper])
+                    elif lower in snapdict:
+                        quantities = np.log10(snapdict[lower])
+                    else:
+                        raise KeyError(quantity_name,'is not in gas_snapdict')
+                else:
+                    raise KeyError(quantity_name,'is not in gas_snapdict')
+            else:
+                quantities = snapdict[quantity_name]
 
         BoxSize = self.snapdict['BoxSize']
 
@@ -294,8 +331,19 @@ def getImageGrid(
     curpath = os.path.realpath(__file__)
     curpath = os.path.split(curpath)[0] #split off this filename
     curpath = os.path.split(curpath)[0] #split off studios direcotry
-    c_obj = ctypes.CDLL(os.path.join(
-        curpath,'utils','gas_utils','HsmlAndProject_cubicSpline/HsmlAndProject.so'))
+    c_obj_path = os.path.join(
+        curpath,
+        'utils',
+        'gas_utils',
+        'HsmlAndProject_cubicSpline/hsml_project.so')
+
+    if not os.path.isfile(c_obj_path):
+        raise IOError(
+            'Missing',
+            c_obj_path,
+            'compile the missing file and restart.')
+
+    c_obj = ctypes.CDLL(c_obj_path)
 
     #print(n_smooth)
     #print(pos_p)

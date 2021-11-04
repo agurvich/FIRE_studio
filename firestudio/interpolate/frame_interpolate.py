@@ -10,9 +10,8 @@ import gc
 import multiprocessing
 import itertools
 
-from abg_python.multiproc_utils import copySnapshotNamesToMPSharedMemory
+from abg_python.parallel.multiproc_utils import copySnapshotNamesToMPSharedMemory
 from abg_python.galaxy.gal_utils import Galaxy
-import abg_python.all_utils as all_utils
 
 from firestudio.studios.gas_studio import GasStudio
 from firestudio.studios.studio import Studio

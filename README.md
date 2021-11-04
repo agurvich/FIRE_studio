@@ -3,11 +3,15 @@ Movie Making Utilities for FIRE simulations
 
 This git repository was lovingly made, the code it contains is largely based off two separate (but related) visualization codes built by Volker Springel and Phil Hopkins. This is not the greatest song in the world, this is just a tribute.
 
-If you use FIRE studio in a talk or paper, please consider acknowledging it in a footnote or acknowledgements section. Some example language might look like: 
+If you use FIRE studio in a talk or paper, please acknowledge it in a footnote or acknowledgements section. Some example language might look like: 
 
 "[Some of the images presented in this work were]/[This image was] produced using FIRE studio ([github.com/agurvich/FIRE_studio](github.com/agurvich/FIRE_studio)), an open source Python visualization package designed with the FIRE simulations in mind."
 
 Thanks, and enjoy!
+
+## Help Policy
+To receive support please fill out the issue template in the [github issues tab](https://github.com/agurvich/FIRE_studio/issues). 
+Note that I only support the most recent version of FIRE studio by default and you will be required to upload a full stack trace and printed output along with the python script/pdf printout of the jupyter notebook.
 
 requirements:
 [abg_python](https://www.github.com/agurvich/abg_python)
@@ -30,7 +34,15 @@ Then, if you'd rather install the repositories in a separate folder, you can use
 ```bash
 ln -s /path/to/repository ${HOME}/python/repository_name
 ```
-So that you don't have to make your `PYTHONPATH` environment variable very confusing. 
+So that you don't have to make your `PYTHONPATH` environment variable very confusing.
+
+### Linux
+You're done, congratulate yourself!
+
+### Mac-OS / Windows
+You will have to recompile the C routines in `FIRE_studio/firestudio/utils/gas_utils/HsmlAndProject_cubicSpline/` and `FIRE_studio/firestudio/utils/stellar_utils/c_libraries/`. 
+My only advice is to `cd` into the directories and use `make`, if you don't know how to compile C code or end up with an error then you should focus your Google-fu efforts on intalling "Homebrew" and then use `brew install gcc` if you're on Mac-OS.
+If you're on Windows then your best bet is to install Windows Subsystem for Linux (WSL) and run a virtual Linux kernel on your computer (and then you can just use `apt-get install gcc` if necessary). 
 
 ## Using FIRE_studio
 There are two ways to use FIRE_studio
@@ -59,16 +71,18 @@ Begin by importing the studio class you would like to use, `GasStudio` for makin
 from firestudio.studios.gas_studio import GasStudio
 
 
-gasStudio = GasStudio(
-    datadir,
-    snapnum,
-    sim_name,
-    frame_half_width=15, ## kpc
-    gas_snapdict=gas_snapdict,
-    )
+
+my_gasStudio = GasStudio(
+    datadir, ## where cache files are written out to, not the simulation directory
+    snapnum, ## what snapshot number, used to name cache files
+    sim_name, ## what simulation name, used to name cache files
+    frame_half_width=15, ## kpc, half width of image in x- and y-directions
+    frame_half_thickness=15, ## kpc, half thickness of image in z-direction
+    gas_snapdict=gas_snapdict, ## dictionary containing gas particle data
+    star_snapdict=star_snapdict) ## dictionary containing star particle data
         
-gasStudio.render(
-    ax,
+my_gasStudio.render(
+    plt.gca(),
     weight_name='Masses',
     quantity_name='Temperature',
     min_weight=-0.1,
@@ -86,18 +100,15 @@ For more information on the functionality and the different keyword arguments, s
 ```python
 from firestudio.studios.star_studio import StarStudio
 
-image_names = ['out_u','out_g','out_r','hubble']
-
-starStudio = StarStudio(
-    datadir,
-    snapnum,
-    sim_name,
-    frame_half_width=15, ## kpc
-    gas_snapdict=gas_snapdict,
-    star_snapdict=star_snapdict,
-    savefig=savefig,noaxis=noaxis)
+my_starStudio = StarStudio(
+    datadir, ## where cache files are written out to, not the simulation directory
+    snapnum, ## what snapshot number, used to name cache files
+    sim_name, ## what simulation name, used to name cache files
+    frame_half_width=15, ## kpc, half width of image in x- and y-directions
+    frame_half_thickness=15, ## kpc, half thickness of image in z-direction
+    gas_snapdict=gas_snapdict) ## dictionary containing gas particle data
     
-starStudio.render(ax,image_names)
+my_starStudio.render(plt.gca())
 ```
 
 Where `star_snapdict` is a python dictionary holding the snapshot arrays for `PartType4` with keys that match the FIRE defaults. `abg_python.snap_utils.openSnapshot` will do this for you. If you are making an image of an isolated galaxy, you should remember to merge the dictionaries of `PartType2`, `PartType3`, and `PartType4`.

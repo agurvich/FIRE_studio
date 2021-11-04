@@ -11,7 +11,7 @@ import copy
 
 ## abg_python imports
 from abg_python.plot_utils import addColorbar,nameAxes
-from abg_python.all_utils import append_function_docstring,append_string_docstring,findIntersection
+from abg_python import append_function_docstring,append_string_docstring,findIntersection
 from abg_python.galaxy.metadata_utils import metadata_cache
 
 ## firestudio imports
@@ -217,13 +217,13 @@ starStudio.set_ImageParams(
 
             Output:
 
-                gas_out -- total mass along LOS in pixel, in unknown units
+                gas_out -- total mass along LOS in pixel, in msun/kpc^2
                 out_u -- total attenuated luminosity along LOS in pixel
-                    in u band, in unknown units
+                    in u band, in Lsun/kpc^2
                 out_g -- total attenuated luminosity along LOS in pixel
-                    in g band, in unknown units
+                    in g band, in Lsun/kpc^2
                 out_r -- total attenuated luminosity along LOS in pixel
-                    in r band, in unknown units"""
+                    in r band, in Lsun/kpc^2"""
 
         @metadata_cache(
             self.this_setup_id,  ## hdf5 file group name
@@ -329,6 +329,7 @@ starStudio.set_ImageParams(
         ## unpack the gas information
         gas_pos = gas_pos[gas_ind_box].astype(np.float32)
 
+
         mgas = self.gas_snapdict['Masses'][gas_ind_box].astype(np.float32)
         gas_metals = self.gas_snapdict['Metallicity'][:,0][gas_ind_box].astype(np.float32)
 
@@ -337,7 +338,7 @@ starStudio.set_ImageParams(
         gas_metals[temperatures>1e5] = 0
 
         if "SmoothingLength" not in self.gas_snapdict:
-            h_gas = self.get_HSML('gas')
+            h_gas = self.get_HSML('gas')[gas_ind_box]
         else:
             h_gas = self.gas_snapdict['SmoothingLength'][gas_ind_box].astype(np.float32)
 
@@ -398,11 +399,21 @@ starStudio.render(plt.gca())
 
         all_bands = np.concatenate([out_u,out_g,out_r])
         maxden_guess,dynrange_guess = self.predictParameters(all_bands=all_bands)
+        if self.maxden is None:
+            print("setting maxden to best guess")
+            self.set_ImageParams(
+                maxden=maxden_guess)
+
+        if self.dynrange is None:
+            print("setting dynrange to best guess")
+            self.set_ImageParams(
+                dynrange=dynrange_guess)
+
         ## open the hdf5 file and load the maps
         image24, massmap = makethreepic.make_threeband_image_process_bandmaps(
             copy.copy(out_r),copy.copy(out_g),copy.copy(out_u),
-            maxden=self.maxden if self.maxden is not None else maxden_guess,
-            dynrange=self.dynrange if self.dynrange is not None else dynrange_guess,
+            maxden=self.maxden,
+            dynrange=self.dynrange,
             pixels=self.pixels,
             color_scheme_nasa=self.color_scheme_nasa,
             color_scheme_sdss=not self.color_scheme_nasa)
