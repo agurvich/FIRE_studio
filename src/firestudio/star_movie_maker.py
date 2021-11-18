@@ -5,7 +5,7 @@ import matplotlib
 matplotlib.use('Agg') 
 import matplotlib.pyplot as plt
 
-from firestudio.studios.star_studio import StarStudio
+from .studios.star_studio import StarStudio
 
 def renderStarGalaxy(
     ax,

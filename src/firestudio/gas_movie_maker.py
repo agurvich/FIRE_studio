@@ -5,7 +5,7 @@ import multiprocessing
 import itertools
 import gc
 
-from firestudio.studios.gas_studio import GasStudio
+from .studios.gas_studio import GasStudio
 
 def renderGalaxy(
     ax,

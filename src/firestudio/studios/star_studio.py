@@ -15,10 +15,10 @@ from abg_python import append_function_docstring,append_string_docstring,findInt
 from abg_python.galaxy.metadata_utils import metadata_cache
 
 ## firestudio imports
-from firestudio.studios.studio import Studio
+from .studio import Studio
 
-from firestudio.utils.stellar_utils import raytrace_projection,load_stellar_hsml
-import firestudio.utils.stellar_utils.make_threeband_image as makethreepic
+from ..utils.stellar_utils import raytrace_projection,load_stellar_hsml
+import ..utils.stellar_utils.make_threeband_image as makethreepic
 
 
 class StarStudio(Studio):

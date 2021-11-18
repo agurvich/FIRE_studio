@@ -16,8 +16,8 @@ from abg_python.plot_utils import addColorbar
 from abg_python.galaxy.metadata_utils import metadata_cache
 
 ## firestudio imports
-import firestudio.utils.gas_utils.my_colour_maps as mcm 
-from firestudio.studios.studio import Studio
+import ..utils.gas_utils.my_colour_maps as mcm 
+from .studio import Studio
 
 
 
