@@ -681,13 +681,6 @@ def getImageGrid(
     loud=True):
 
     ## set c-routine variables
-    desngb   = 32
-    Axis1    = 0
-    Axis2    = 1
-    Axis3    = 2
-
-    Hmax     = 0.5*(Xmax-Xmin) ## ignored if smoothing lengths are passed in
-
     n_smooth = pos.shape[0]
 
     ## output array for sum along the line of sight
@@ -697,23 +690,17 @@ def getImageGrid(
     weightWeightedQuantityMap = np.zeros(shape = (npix_x,npix_y),dtype=np.float32)
     
     ## create hsml output array
-    if hsml is None:
-        raise ValueError("HSML cannot be None and weights != masses.",
-            "We don't check if weights == masses, so we'll just assume",
-            "they're not for ultimate safety.")
-        hsml = np.zeros(weight.shape[0],dtype=np.float32)
-    #else:
-        #print("Using provided smoothing lengths")
+    if hsml is None: raise ValueError(
+            "HSML cannot be None and weights != masses." + 
+            " We don't check if weights == masses, so we'll just assume" +
+            " they're not for ultimate safety.")
+    #else: print("Using provided smoothing lengths")
     
     ## make sure everything is in single precision lest we
     ##  make a swiss-cheese magenta nightmare, #neverforget 6/15/17
     c_f_p      = ctypes.POINTER(ctypes.c_float)
 
-    w_f_p    = weightMap.ctypes.data_as(c_f_p)
-    q_f_p    = weightWeightedQuantityMap.ctypes.data_as(c_f_p)
-
-    if loud:
-        print('------------------------------------------')
+    if loud: print('------------------------------------------')
     curpath = os.path.realpath(__file__)
     curpath = os.path.split(curpath)[0] #split off this filename
     curpath = os.path.split(curpath)[0] #split off studios direcotry
@@ -723,26 +710,10 @@ def getImageGrid(
         'gas_utils',
         'HsmlAndProject_cubicSpline/hsml_project.so')
 
-    if not os.path.isfile(c_obj_path):
-        raise IOError(
-            'Missing',
-            c_obj_path,
-            'compile the missing file and restart.')
+    if not os.path.isfile(c_obj_path): raise IOError(
+        'Missing ' + c_obj_path + ' - compile the missing file and restart.')
 
     c_obj = ctypes.CDLL(c_obj_path)
-
-    #print(n_smooth)
-    #print(pos_p)
-    #print(hsml_p)
-    #print(mass_p)
-    #print(quantity_p)
-    #print(Xmin,Xmax)
-    #print(Ymin,Ymax)
-    #print(Zmin,Zmax)
-    #print(npix_x,npix_y)
-    #print(desngb)
-    #print(Axis1,Axis2,Axis3)
-    #print(Hmax,BoxSize)
 
     c_obj.hsml_project( 
         ctypes.c_int(n_smooth), ## number of particles
@@ -757,9 +728,6 @@ def getImageGrid(
         ctypes.c_int(npix_x),ctypes.c_int(npix_y), ## output shape
         weightMap.ctypes.data_as(c_f_p), ## mass map
         weightWeightedQuantityMap.ctypes.data_as(c_f_p))
-
-    if loud:
-        print('------------------------------------------')
     
     # convert into Msun/pc^2
     #unitmass_in_g = 1.9890000e+43 
@@ -767,13 +735,13 @@ def getImageGrid(
     #conv_fac = (unitmass_in_g/solar_mass) / (1.0e3)**2 ## Msun/pc^2
     #columnDensityMap *= conv_fac
     if loud:
+        print('------------------------------------------')
+
         print('minmax(weightMap)',
             np.min(weightMap),
             np.max(weightMap))
         print('Fraction deposited:',np.sum(weightMap)/np.sum(weight))
 
-    # weightWeightedQuantityMap contains the mass-weighted quantity
-    if loud:
         print('minmax(weightWeightedQuantityMap)',
             np.min(weightWeightedQuantityMap),
             np.min(weightWeightedQuantityMap))
@@ -781,9 +749,6 @@ def getImageGrid(
     weightWeightedQuantityMap = weightWeightedQuantityMap/weightMap
 
     return weightMap,weightWeightedQuantityMap
-
-__doc__  = ''
-__doc__ = append_string_docstring(__doc__,GasStudio)
 
 ###### Color helper functions
 from matplotlib.colors import rgb_to_hsv, hsv_to_rgb 
