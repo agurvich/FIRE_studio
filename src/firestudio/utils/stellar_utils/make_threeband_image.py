@@ -24,7 +24,7 @@ def clip_256(x,max=255,min=2):
     return x
 
 def single_vec_sorted(x,reverse=False):
-    return sorted(np.reshape(x,x.size),reverse=reverse); 
+    return sorted(np.reshape(x,x.size),reverse=reverse)
 
 def make_threeband_image_process_bandmaps(
     r,g,b,
@@ -83,10 +83,10 @@ def make_threeband_image_process_bandmaps(
 
     f_saturated=0.0004  ## fraction of pixels that should be saturated
     f_saturated=0.0001  ## fraction of pixels that should be saturated
-    x0 = int_round( f_saturated * (np.float(checklen(r)) - 1.) ); 
+    x0 = int_round( f_saturated * (np.float(checklen(r)) - 1.) )
 
     for rgb_v in [r,g,b]: 
-        rgbm = single_vec_sorted(rgb_v,reverse=True); 
+        rgbm = single_vec_sorted(rgb_v,reverse=True)
         if(rgbm[x0]>maxrgb): maxrgb=rgbm[x0]
 
     if (maxrgb > 1.): 
@@ -122,4 +122,4 @@ def make_threeband_image_process_bandmaps(
 
     image24 = image24_new
 
-    return image24, cmap_m; ## return both processed image and massmap
+    return image24, cmap_m ## return both processed image and massmap
