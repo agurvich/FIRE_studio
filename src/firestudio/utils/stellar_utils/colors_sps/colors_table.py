@@ -4,6 +4,84 @@ import math
 import scipy.ndimage.interpolation as interpolate
 import struct
 
+def read_band_lums_from_tables(
+    BAND_IDS, 
+    stellar_mass,stellar_age,stellar_metallicity,
+    nu_effs=None,
+    lums=None,
+    QUIET=False,
+    IMF_CHABRIER=1,
+    IMF_SALPETER=0):
+        
+    if nu_effs is None:
+        nu_effs = [None,None,None]
+
+    ## count particles we're using
+    Nstars=len(np.array(stellar_mass))
+
+    ## count how many bands we're attenuating
+    Nbands=len(np.array(BAND_IDS))
+
+    ## require that we attenuate 3 bands to combine since attenuation
+    ##  routine is hardcoded to accept 3 weights
+    if (Nbands != 3): 
+        print("stellar_raytrace needs 3 bands, you gave",Nbands)
+        return -1,-1,-1;
+
+    ## check if stellar metallicity is a matrix
+    ##  i.e. mass fraction of many species. If so,
+    ##  take the total metallicity 
+    if (len(stellar_metallicity.shape)>1): 
+        stellar_metallicity=stellar_metallicity[:,0];
+
+    if lums is None:
+        lums=np.zeros([Nbands,Nstars])
+    else:
+        ## verify shape of lums is correct
+        if lums.shape != (Nbands,Nstars):
+            raise ValueError(
+                "Shape (%d,%d) of lums does not match (3,%d)"%(
+                lums.shape[0],lums.shape[1],Nstars))
+
+    for i_band in range(Nbands):
+        if nu_effs[i_band] is None:
+            if not np.all(lums[i_band]==0):
+                raise ValueError(
+                    "Non-zero lums passed in axis %d"%i_band+
+                    " without corresponding nu_eff")
+            ## find the frequency associated with this band
+            nu_effs[i_band] = colors_table(
+                np.array([1.0]), ## dummy value
+                np.array([1.0]), ## dummy value
+                BAND_ID=BAND_IDS[i_band], ## band index
+                RETURN_NU_EFF=1,
+                QUIET=True) ## flag to return effective NU in this band
+
+
+        
+
+        these_lums = lums[i_band]
+        ## if lums were not passed in for this band
+        if np.all( these_lums == 0):
+            ## lookup the luminosity/mass in this band
+            ##  given stellar ages and metallicities
+            these_lums[:] = colors_table(
+                stellar_age, ## ages in Gyr
+                stellar_metallicity/0.02,  ## metallicity in solar
+                BAND_ID=BAND_IDS[i_band], ## band index
+                CHABRIER_IMF=IMF_CHABRIER, ## imf flags
+                SALPETER_IMF=IMF_SALPETER, ## imf flags
+                CRUDE=1, ## map particles to nearest table entry rather than interpolate
+                UNITS_SOLAR_IN_BAND=1, ## return ((L_star)_band / L_sun) / M_sun
+                QUIET=QUIET
+                ) 
+
+        #these_lums[these_lums >= 300.] = 300. ## just to prevent crazy values here 
+        #these_lums[these_lums <= 0.] = 0. ## just to prevent crazy values here 
+        lums[i_band] = stellar_mass * these_lums 
+
+    return lums
+
 def colors_table(
     age_in_Gyr,
     metallicity_in_solar_units, 

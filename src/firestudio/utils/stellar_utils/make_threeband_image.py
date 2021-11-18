@@ -1,5 +1,4 @@
 import numpy as np
-import .colors as viscolors
 import matplotlib
 
 def checklen(x):
@@ -24,71 +23,6 @@ def clip_256(x,max=255,min=2):
 
 def single_vec_sorted(x,reverse=False):
     return sorted(np.reshape(x,x.size),reverse=reverse); 
-
-## some of my favorite regular cmaps below
-def pick_custom_cmap(i):
-    cm='hot'
-    if(i==0): cm='heat_purple'
-    if(i==1): cm='heat_green'
-    if(i==2): cm='heat_blue'
-    if(i==3): cm='heat_yellow'
-    if(i==4): cm='heat_red'
-    if(i==5): cm='heat_orange'
-    if(i==6): cm='heat_redyellow'
-    if(i==7): cm='pink' # whites out fairly quickly
-    if(i==8): cm='bone' # pretty nice for white-ish (X-ray like colors)
-    if(i==9): cm='copper' # orange-y
-    if(i==10): cm='gray' # basic greyscale
-    
-    if(i==11): cm='spring'
-    if(i==12): cm='summer'
-    if(i==13): cm='winter'
-    if(i==14): cm='autumn'
-    if(i==15): cm='gist_earth'
-    if(i==16): cm='Blues_r'
-    if(i==17): cm='Greens_r'
-    if(i==18): cm='Oranges_r'
-    if(i==19): cm='Purples_r'
-    if(i==20): cm='RdPu_r'
-    if(i==21): cm='Reds_r'
-    
-
-    if(i==0): cm='heat_orange'
-    if(i==0): cm='heat_redyellow'
-    if(i==1): cm='heat_green'
-    if(i==2): cm='heat_purple'
-    return cm;
-
-
-def layer_band_images(ims, maps):
-    matplotlib.pyplot.imshow(0.*ims[:,:,0]); ## zero out background
-    
-    viscolors.load_my_custom_color_tables();
-    nx=ims[:,0,0].size; ny=ims[0,:,0].size;
-    im_new = np.zeros((nx,ny,3))
-    map_cum = np.zeros((nx,ny))
-    
-    for i in range(ims.shape[2]):
-        im = ims[:,:,i]
-        map = maps[:,:,i]
-
-        #im_0=im/np.max(im); # if want more saturated images
-        ####alpha_im=maps[:,:,i]/map_sum; ## deprected
-        cm=pick_custom_cmap(i);
-        my_cmap=matplotlib.cm.get_cmap(cm); ## load cmap
-        #rgb_im=my_cmap(im_0); ## get rgba values of image as mapped by this cmap
-        
-        rgb_im = my_cmap(im)[:,:,0:3]
-        for j in [0,1,2]:
-            im_new[:,:,j] = (map_cum*im_new[:,:,j] + map*rgb_im[:,:,j]) / (map_cum+map)
-        map_cum += map
-        
-        #rgb_im[:,:,3]=alpha_im; ## replace alpha channel for this image
-        #rgb_im[:,:,3]=0.*alpha_im+1.;
-        #matplotlib.pyplot.imshow(rgb_im); ## plot it, with appropriate (new) alpha channel
-
-    return im_new
-    
 
 def make_threeband_image_process_bandmaps(
     r,g,b,
@@ -158,7 +92,6 @@ def make_threeband_image_process_bandmaps(
     ## ok have r, g, b -- really just three re-scaled maps. no reason they 
     ##   have to map to r, g, b colors: use the filter set given to map them ::
     image24_new = 0.*image24
-    viscolors.load_my_custom_color_tables();
     for i in [0,1,2]:
         im=image24[:,:,i]
         if filterset[i]=='r': image24_new[:,:,0] = im

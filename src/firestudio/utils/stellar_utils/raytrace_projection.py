@@ -2,11 +2,6 @@ import os
 import numpy as np
 import ctypes
 
-from .colors_sps.colors_table import colors_table
-from .cross_section import opacity_per_solar_metallicity
-
-import scipy
-
 def checklen(x):
     return len(np.array(x,ndmin=1));
 def int_round(x):
@@ -38,7 +33,6 @@ def stellar_raytrace(
     lums,
     xlim=0,ylim=0,zlim=0,
     pixels=720, 
-    KAPPA_UNITS=2.08854068444, ## cm^2/g -> kpc^2/mcode
     QUIET=False):
 
     ## check if stellar metallicity is a matrix
@@ -62,7 +56,6 @@ def stellar_raytrace(
 
     ## convert units
     gas_mass_metal = gas_mass * (gas_metallicity/0.02)
-    kappa *= KAPPA_UNITS
     
     ## combine the relevant arrays so it can all be fed into the ray-tracing
     ##  positions
@@ -96,96 +89,6 @@ def stellar_raytrace(
         xlim=xlim,ylim=ylim,zlim=zlim,
         pixels=pixels,
         TRIM_PARTICLES=1)
-
-## important to set KAPPA_UNITS appropriately: code loads opacity (kappa) for 
-##   the bands of interest in cgs (cm^2/g), must be converted to match units of input 
-##   mass and size. the default it to assume gadget units (M=10^10 M_sun, l=kpc)
-##
-def read_band_lums_from_tables(
-    BAND_IDS, 
-    stellar_mass,stellar_age,stellar_metallicity,
-    nu_effs=None,
-    lums=None,
-    QUIET=False,
-    IMF_CHABRIER=1,
-    IMF_SALPETER=0):
-        
-    if nu_effs is None:
-        nu_effs = [None,None,None]
-
-    ## count particles we're using
-    Nstars=len(np.array(stellar_mass))
-
-    ## count how many bands we're attenuating
-    Nbands=len(np.array(BAND_IDS))
-
-    ## require that we attenuate 3 bands to combine since attenuation
-    ##  routine is hardcoded to accept 3 weights
-    if (Nbands != 3): 
-        print("stellar_raytrace needs 3 bands, you gave",Nbands)
-        return -1,-1,-1;
-
-    ## check if stellar metallicity is a matrix
-    ##  i.e. mass fraction of many species. If so,
-    ##  take the total metallicity 
-    if (len(stellar_metallicity.shape)>1): 
-        stellar_metallicity=stellar_metallicity[:,0];
-
-    ## get opacities and luminosities at frequencies we need:
-    kappa=np.zeros([Nbands])
-    if lums is None:
-        lums=np.zeros([Nbands,Nstars])
-    else:
-        ## verify shape of lums is correct
-        if lums.shape != (Nbands,Nstars):
-            raise ValueError(
-                "Shape (%d,%d) of lums does not match (3,%d)"%(
-                lums.shape[0],lums.shape[1],Nstars))
-
-    for i_band in range(Nbands):
-        if nu_effs[i_band] is None:
-            if not np.all(lums[i_band]==0):
-                raise ValueError(
-                    "Non-zero lums passed in axis %d"%i_band+
-                    " without corresponding nu_eff")
-            ## find the frequency associated with this band
-            nu_effs[i_band] = colors_table(
-                np.array([1.0]), ## dummy value
-                np.array([1.0]), ## dummy value
-                BAND_ID=BAND_IDS[i_band], ## band index
-                RETURN_NU_EFF=1,
-                QUIET=True) ## flag to return effective NU in this band
-
-
-        ## calculate the kappa in this band using:
-        ##  Thompson scattering + 
-        ##  Pei (1992) + -- 304 < lambda[Angstroms] < 2e7
-        ##  Morrison & McCammon (1983) -- 1.2 < lambda[Angstroms] < 413
-        kappa[i_band] = opacity_per_solar_metallicity(
-            nu_effs[i_band])
-
-        these_lums = lums[i_band]
-        ## if lums were not passed in for this band
-        if np.all( these_lums == 0):
-            ## lookup the luminosity/mass in this band
-            ##  given stellar ages and metallicities
-            these_lums[:] = colors_table(
-                stellar_age, ## ages in Gyr
-                stellar_metallicity/0.02,  ## metallicity in solar
-                BAND_ID=BAND_IDS[i_band], ## band index
-                CHABRIER_IMF=IMF_CHABRIER, ## imf flags
-                SALPETER_IMF=IMF_SALPETER, ## imf flags
-                CRUDE=1, ## map particles to nearest table entry rather than interpolate
-                UNITS_SOLAR_IN_BAND=1, ## return ((L_star)_band / L_sun) / M_sun
-                QUIET=QUIET
-                ) 
-
-        #these_lums[these_lums >= 300.] = 300. ## just to prevent crazy values here 
-        #these_lums[these_lums <= 0.] = 0. ## just to prevent crazy values here 
-        lums[i_band] = stellar_mass * these_lums 
-
-    return kappa,lums
-
 
 ##
 ##  Wrapper for raytrace_rgb, program which does a simply line-of-sight projection 
@@ -337,47 +240,3 @@ def raytrace_projection_compute(
     out_3 = out_3.reshape([Xpixels,Ypixels]);
 
     return out_0, out_1, out_2, out_3;
-
-
-## 
-## routine to use 'raytrace_projection_compute' to make mock gas images, 
-##   with three color channels for different temperature ranges
-## 
-def gas_raytrace_temperature( TEMPERATURE_CUTS, \
-        gas_x, gas_y, gas_z, gas_temperature, gas_mass, gas_hsml, \
-        xlim=0, ylim=0, zlim=0, pixels=720, 
-        KAPPA_UNITS=2.08854068444, kernel_width=0.05, use_log_t=1 , \
-        isosurfaces=0 , add_temperature_weights=0 ):
-    
-    wtfn = gas_mass #* np.sqrt(gas_temperature/1.0e4) 
-    if (add_temperature_weights==1): wtfn *= np.sqrt(1. + gas_temperature/1.0e4) 
-    # weighting by sqrt(temp) makes the contributions more similar by temperature bins
-
-    tcuts=TEMPERATURE_CUTS;
-    tval=gas_temperature
-    if(use_log_t==1):
-        tcuts=np.log10(tcuts);
-        tval=np.log10(tval);
-
-    if np.array(kernel_width).size > 1:
-        w = kernel_width
-    else:
-        w = kernel_width + np.zeros(3)
-    ## continuous smoothing with gaussians for the temperature:
-    if (isosurfaces==1):
-        wt1 = np.exp(-(tval-tcuts[0])*(tval-tcuts[0])/(2.*w[0]*w[0]));
-        wt2 = np.exp(-(tval-tcuts[1])*(tval-tcuts[1])/(2.*w[1]*w[1]));
-        wt3 = np.exp(-(tval-tcuts[2])*(tval-tcuts[2])/(2.*w[2]*w[2]));
-    else: ## isosurfaces==0, so do total in integral ranges set by temperature_cuts  
-        wt1 = 0.5*(1.0-scipy.special.erf((tval-tcuts[0])/(np.sqrt(2.)*w[0])));
-        wt3 = 0.5*(1.0-scipy.special.erf((tcuts[1]-tval)/(np.sqrt(2.)*w[1])));
-        wt2 = 1.-wt1-wt3; wt2[wt2<0.]=0.;
-
-    wt1*= wtfn; wt2*=wtfn; wt3*=wtfn;
-    kappa = 200. * (1.+np.zeros((3)));
-    kappa *= KAPPA_UNITS;
-    print('KAPPA == ',kappa)
-
-    return raytrace_projection_compute(gas_x,gas_y,gas_z,gas_hsml,gas_mass,\
-        wt1,wt2,wt3,kappa[0],kappa[1],kappa[2],\
-        xlim=xlim,ylim=ylim,zlim=zlim,pixels=pixels,TRIM_PARTICLES=1);
