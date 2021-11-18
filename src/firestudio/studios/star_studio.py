@@ -423,9 +423,9 @@ starStudio.render(plt.gca())
             copy.copy(out_r),copy.copy(out_g),copy.copy(out_u),
             maxden=self.maxden,
             dynrange=self.dynrange,
-            pixels=self.pixels,
             color_scheme_nasa=self.color_scheme_nasa,
-            color_scheme_sdss=not self.color_scheme_nasa)
+            color_scheme_sdss=not self.color_scheme_nasa,
+            QUIET=not self.master_loud)
 
         ## for some reason it's rotated 90 degrees...? kind of like transposed but different
         ##  need to take the rows of the output image and make them the columns, iteratively,
