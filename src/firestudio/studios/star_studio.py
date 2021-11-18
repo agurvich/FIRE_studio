@@ -13,8 +13,11 @@ from abg_python.galaxy.metadata_utils import metadata_cache
 ## firestudio imports
 from .studio import Studio
 
-from ..utils.stellar_utils.raytrace_projection import read_band_lums_from_tables,stellar_raytrace
-from ..utils.stellar_utils.make_threeband_image import make_threeband_image_process_bandmaps
+from ..utils.stellar_utils import (
+    opacity_per_solar_metallicity, ## calculate dust opacity for arbitrary wavelengths
+    read_band_lums_from_tables, ## calculate luminosities in specific tabulated bands
+    stellar_raytrace, ## project along the LoS and attenuate by obscuring dust column for 3 bands simultaneously
+    make_threeband_image_process_bandmaps) ## take 3 bands, overlay them, and map to RGB to make final image
 
 
 class StarStudio(Studio):
@@ -143,9 +146,6 @@ starStudio.set_ImageParams(
         (kappas, lums,
             star_pos, mstar, ages, metals, h_star,
             gas_pos , mgas , gas_metals ,  h_gas) = self.prepareCoordinates(lums,nu_effs,BAND_IDS)
-
-        KAPPA_UNITS=2.08854068444 ## cm^2/g -> kpc^2/mcode
-        kappas*=KAPPA_UNITS
 
         star_xs,star_ys,star_zs = star_pos.T
         gas_xs,gas_ys,gas_zs = gas_pos.T
@@ -306,13 +306,26 @@ starStudio.set_ImageParams(
 
         ## will fill any columns of lums with appropriate BAND_ID 
         ##  if nu_eff for that column is not None
-        kappas,lums = read_band_lums_from_tables(
+        lums = read_band_lums_from_tables(
             BAND_IDS, 
             mstar,ages,metals,
             ## flag to return luminosity in each band requested without projecting
             nu_effs=nu_effs,
             lums=lums,
             QUIET=not self.master_loud)
+
+        ## calculate the kappa in this band using:
+        ##  Thompson scattering + 
+        ##  Pei (1992) + -- 304 < lambda[Angstroms] < 2e7
+        ##  Morrison & McCammon (1983) -- 1.2 < lambda[Angstroms] < 413
+        ## get opacities and luminosities at frequencies we need:
+
+        ## important to set KAPPA_UNITS appropriately: code loads opacity (kappa) for 
+        ##   the bands of interest in cgs (cm^2/g), must be converted to match units of input 
+        ##   mass and size. the default it to assume gadget units (M=10^10 M_sun, l=kpc)
+        KAPPA_UNITS=2.08854068444 ## cm^2/g -> kpc^2/mcode
+        kappas = [KAPPA_UNITS*opacity_per_solar_metallicity(nu_eff) for nu_eff in nu_effs]
+
 
         ## rotate by euler angles if necessary
         gas_pos = self.rotateEuler(self.theta,self.phi,self.psi,self.gas_snapdict['Coordinates'])
