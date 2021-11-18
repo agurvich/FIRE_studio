@@ -12,11 +12,10 @@ import matplotlib.pyplot as plt
 
 ## abg_python imports
 from abg_python import filterDictionary,append_function_docstring,append_string_docstring
-from abg_python.plot_utils import addColorbar
+from abg_python.plot_utils import addColorbar,get_cmap
 from abg_python.galaxy.metadata_utils import metadata_cache
 
 ## firestudio imports
-import ..utils.gas_utils.my_colour_maps as mcm 
 from .studio import Studio
 
 
@@ -633,7 +632,7 @@ gasStudio.render(
             raise ValueError("Use (min/max)_(weight/quantity) kwargs to set image")
 
         ## convert the images from 0->1 space to 0-> 255 space
-        final_image = mcm.produce_cmap_hsv_image(image_Q, image_W, cmap=self.cmap) 
+        final_image = produce_cmap_hsv_image(image_Q, image_W, cmap=self.cmap) 
 
         return final_image
 
@@ -656,7 +655,7 @@ gasStudio.render(
                 cbar_min,cbar_max = self.cbar_min,self.cbar_max 
         
             addColorbar(
-                ax,mcm.get_cmap(self.cmap),
+                ax,get_cmap(self.cmap),
                 cbar_min,cbar_max,
                 self.cbar_label,
                 logflag = self.cbar_logspace,
@@ -785,3 +784,45 @@ def getImageGrid(
 
 __doc__  = ''
 __doc__ = append_string_docstring(__doc__,GasStudio)
+
+###### Color helper functions
+from matplotlib.colors import rgb_to_hsv, hsv_to_rgb 
+def produce_colmap(cmap_name):
+    cmap = get_cmap(cmap_name)
+    ## discretize the colormap into 256 parts...
+    return [list(cmap(i/255.)[:3]) for i in range(0,256)]
+
+def produce_cmap_hsv_image(image_1, image_2,cmap='viridis'): 
+    # image_1 and image_2 are arrays of pixels 
+    # with integer values in the range 0 to 255. 
+    # These will be mapped onto hue and brightness, 
+    # respectively, with saturation fixed at 1. 
+    cols = produce_colmap(cmap)
+    cols = np.array(cols) 
+
+    cols_2d = np.ones((len(cols), 1, 3)) 
+    cols_2d[:, 0, 0] = cols[:, 0] 
+    cols_2d[:, 0, 1] = cols[:, 1] 
+    cols_2d[:, 0, 2] = cols[:, 2] 
+    cols_hsv = rgb_to_hsv(cols_2d) 
+    hue_viridis = cols_hsv[:, 0, 0] 
+
+    npix_x = len(image_1) 
+    npix_y = len(image_1[0]) 
+    if image_2 is not None:
+        output_image_hsv = np.zeros((npix_x, npix_y, 3)) 
+        for i in range(npix_x): 
+            for j in range(npix_y): 
+                output_image_hsv[i, j, 0] = hue_viridis[image_1[i, j]] 
+                output_image_hsv[i, j, 1] = 1.0 
+                output_image_hsv[i, j, 2] = float(image_2[i, j]) / 255.0 
+
+        output_image_rgb = hsv_to_rgb(output_image_hsv) 
+    else:
+        output_image_rgb = np.zeros((npix_x, npix_y, 3)) 
+        for i in range(npix_x): 
+            for j in range(npix_y): 
+                output_image_rgb[i,j]=cols[image_1[i,j]]
+                
+    return output_image_rgb 
+
