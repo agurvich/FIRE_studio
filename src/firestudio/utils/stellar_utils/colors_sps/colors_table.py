@@ -57,10 +57,8 @@ def colors_table(
     ##  directory in which the data binaries are stored
     froot = os.path.join(curpath,'stellar_utils','colors_sps/') 
 
-    if (CHABRIER_IMF==1): 
-        fname=froot+'colors.chabrier.dat'
-    if (SALPETER_IMF==1): 
-        fname=froot+'colors.salpeter.dat'
+    if (CHABRIER_IMF==1): fname=froot+'colors.chabrier.dat'
+    if (SALPETER_IMF==1): fname=froot+'colors.salpeter.dat'
 
     ## read color data from binary 
     ##  TODO consider rewriting these tables to disk as text...

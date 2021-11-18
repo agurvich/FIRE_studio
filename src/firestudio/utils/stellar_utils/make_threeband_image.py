@@ -1,7 +1,5 @@
 import numpy as np
-import math
-import firestudio.utils.stellar_utils.contour_makepic as cmakepic
-import firestudio.utils.stellar_utils.colors as viscolors
+import .colors as viscolors
 import matplotlib
 
 def checklen(x):
@@ -92,9 +90,10 @@ def layer_band_images(ims, maps):
     return im_new
     
 
-def make_threeband_image_process_bandmaps(r,g,b, \
-    dont_make_image=0, maxden=0, dynrange=0, pixels=720, \
-    color_scheme_nasa=1, color_scheme_sdss=0 , \
+def make_threeband_image_process_bandmaps(
+    r,g,b,
+    dont_make_image=0, maxden=0, dynrange=0, pixels=720, 
+    color_scheme_nasa=1, color_scheme_sdss=0 , 
     filterset = ['r','g','b'] ):
 
     ## now clip the maps and determine saturation levels
@@ -172,48 +171,3 @@ def make_threeband_image_process_bandmaps(r,g,b, \
     image24 = image24_new
 
     return image24, cmap_m; ## return both processed image and massmap
-
-
-
-def make_threeband_image( x, y, lums, hsml=0, xrange=0, yrange=0, \
-    dont_make_image=0, maxden=0, dynrange=0, pixels=720, \
-    color_scheme_nasa=1, color_scheme_sdss=0 ):
-
-    if (len(lums[0,:]) != len(x)) or (len(lums[:,0]) != 3):
-        print(' expect error: lums must be an array of (3,n) ')
-	
-    ## set x/y ranges and clip the particle distribution 
-    if checklen(xrange)<=1:
-        x0=np.median(x); xm=np.median(np.fabs(x-x0)); xrange=[-xm+x0,xm+x0];
-    if checklen(yrange)<=1:
-        y0=np.median(y); ym=np.median(np.fabs(y-y0)); xrange=[-ym+y0,ym+y0];
-    h=0.*x+1.; 
-    if (checklen(hsml)==checklen(x)): h=hsml
-    wt0=lums[0,:]; wt1=lums[1,:]; wt2=lums[2,:]
-
-    tolfac=0.1 ; xr=xrange ; yr=yrange
-    ok=ok_scan(x) & ok_scan(y) & ok_scan(h,pos=1) & ok_scan(wt0,pos=1,xmax=1.0e40) & \
-        ok_scan(wt1,pos=1,xmax=1.0e40) & ok_scan(wt2,pos=1,xmax=1.0e40) & \
-        (x >= xr[0]-(xr[1]-xr[0])*tolfac) & (x <= xr[1]+(xr[1]-xr[0])*tolfac) & \
-        (y >= yr[0]-(yr[1]-yr[0])*tolfac) & (y <= yr[1]+(yr[1]-yr[0])*tolfac) 
-    n_ok=checklen(x[ok]);
-    x_c=0.5*(np.max(xr)+np.min(xr)); xlen=0.5*(np.max(xr)-np.min(xr)); xx=x-x_c;
-    y_c=0.5*(np.max(yr)+np.min(yr)); ylen=0.5*(np.max(yr)-np.min(yr)); yy=y-y_c;
-    zz=0.*xx; aspect_ratio=ylen/xlen; 
-    
-    ## make the image maps in each band
-    u_band_map, r_band_map, k_band_map, dummy_pic = \
-        cmakepic.contour_makepic( xx[ok], yy[ok], zz[ok], h[ok], \
-        wt0[ok], weight2=wt1[ok], weight3=wt2[ok], \
-        xlen=xlen, set_aspect_ratio=aspect_ratio, pixels=pixels );
-
-    r=k_band_map #*4.9
-    g=r_band_map #*5.7
-    b=u_band_map #*7.8
-    image24,cmap_m = make_threeband_image_process_bandmaps(r,g,b, \
-        dont_make_image=dont_make_image, maxden=maxden, dynrange=dynrange, pixels=pixels, \
-        color_scheme_nasa=color_scheme_nasa, color_scheme_sdss=color_scheme_sdss );
-        
-    ## insert the actual plotting here
-
-    return image24,cmap_m; ## return both processed image and massmap

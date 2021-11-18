@@ -24,7 +24,8 @@ setuptools.setup(
     packages=setuptools.find_packages(where="src"),
     python_requires=">=3.6",
     install_requires=[            
-          'abg_python'
+          'abg_python',
+          'numpy',
       ],
     include_package_data=True,
 )

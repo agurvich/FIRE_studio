@@ -1,12 +1,8 @@
 ## builtin imports
-import os
-import sys 
-import h5py
 import matplotlib 
 matplotlib.use('Agg') 
 import matplotlib.pyplot as plt
 import numpy as np 
-import ctypes
 import copy
 
 ## abg_python imports
@@ -17,8 +13,8 @@ from abg_python.galaxy.metadata_utils import metadata_cache
 ## firestudio imports
 from .studio import Studio
 
-from ..utils.stellar_utils import raytrace_projection,load_stellar_hsml
-import ..utils.stellar_utils.make_threeband_image as makethreepic
+from ..utils.stellar_utils.raytrace_projection import read_band_lums_from_tables,stellar_raytrace
+from ..utils.stellar_utils.make_threeband_image import make_threeband_image_process_bandmaps
 
 
 class StarStudio(Studio):
@@ -310,7 +306,7 @@ starStudio.set_ImageParams(
 
         ## will fill any columns of lums with appropriate BAND_ID 
         ##  if nu_eff for that column is not None
-        kappas,lums = raytrace_projection.read_band_lums_from_tables(
+        kappas,lums = read_band_lums_from_tables(
             BAND_IDS, 
             mstar,ages,metals,
             ## flag to return luminosity in each band requested without projecting
@@ -410,7 +406,7 @@ starStudio.render(plt.gca())
                 dynrange=dynrange_guess)
 
         ## open the hdf5 file and load the maps
-        image24, massmap = makethreepic.make_threeband_image_process_bandmaps(
+        image24, massmap = make_threeband_image_process_bandmaps(
             copy.copy(out_r),copy.copy(out_g),copy.copy(out_u),
             maxden=self.maxden,
             dynrange=self.dynrange,
@@ -614,7 +610,7 @@ def raytrace_ugr_attenuation(
     if zlim is None:
         zlim = [np.min(z),np.max(z)]
 
-    return raytrace_projection.stellar_raytrace(
+    return stellar_raytrace(
         x,y,z,
         mstar,ages,metals,
         h_star,
