@@ -256,6 +256,9 @@ star_snapdict['AgeGyr'] ## age of particles in Gyr
         self.cache_file = None
         
         ## IO stuff
+        ##  append 'firestudio' if we're living in a folder that belongs to a Galaxy
+        if 'firestudio' not in datadir and sim_name in datadir:
+            datadir = os.path.join(datadir,'firestudio')
         self.datadir = datadir
 
         ## make the datadirectory if it doesn't exist
