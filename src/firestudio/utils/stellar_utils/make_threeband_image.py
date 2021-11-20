@@ -76,7 +76,7 @@ def make_threeband_image_process_bandmaps(
     bad = (rgb_avg<=0.)
 
     maxrgb = 0.
-    if (checklen(i[bad])>0):
+    if (checklen(rgb_avg[bad])>0):
         r[bad]=0.
         g[bad]=0.
         b[bad]=0.
