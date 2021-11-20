@@ -18,10 +18,8 @@ from abg_python.galaxy.metadata_utils import metadata_cache
 ## firestudio imports
 from .studio import Studio
 
-
-
 def vfloat(x):
-    return x.ctypes.data_as(ctypes.POINTER(ctypes.c_float));
+    return x.ctypes.data_as(ctypes.POINTER(ctypes.c_float))
 
 class GasStudio(Studio):
     """`FIREstudio` class for making gas projection images.
@@ -707,7 +705,7 @@ def getImageGrid(
     c_obj_path = os.path.join(
         curpath,
         'utils',
-        'gas_utils',
+        'C_routines',
         'HsmlAndProject_cubicSpline/hsml_project.so')
 
     if not os.path.isfile(c_obj_path): raise IOError(
