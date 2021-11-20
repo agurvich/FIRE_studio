@@ -26,13 +26,13 @@ def read_band_lums_from_tables(
     ##  routine is hardcoded to accept 3 weights
     if (Nbands != 3): 
         print("stellar_raytrace needs 3 bands, you gave",Nbands)
-        return -1,-1,-1;
+        return -1,-1,-1
 
     ## check if stellar metallicity is a matrix
     ##  i.e. mass fraction of many species. If so,
     ##  take the total metallicity 
     if (len(stellar_metallicity.shape)>1): 
-        stellar_metallicity=stellar_metallicity[:,0];
+        stellar_metallicity=stellar_metallicity[:,0]
 
     if lums is None:
         lums=np.zeros([Nbands,Nstars])
@@ -57,9 +57,6 @@ def read_band_lums_from_tables(
                 RETURN_NU_EFF=1,
                 QUIET=True) ## flag to return effective NU in this band
 
-
-        
-
         these_lums = lums[i_band]
         ## if lums were not passed in for this band
         if np.all( these_lums == 0):
@@ -80,7 +77,7 @@ def read_band_lums_from_tables(
         #these_lums[these_lums <= 0.] = 0. ## just to prevent crazy values here 
         lums[i_band] = stellar_mass * these_lums 
 
-    return lums
+    return lums,nu_effs
 
 def colors_table(
     age_in_Gyr,
@@ -91,8 +88,8 @@ def colors_table(
     RETURN_NU_EFF=0,RETURN_LAMBDA_EFF=0,
     UNITS_SOLAR_IN_BAND=0):
 
-    age_in_Gyr=np.array(age_in_Gyr,ndmin=1);
-    metallicity_in_solar_units=np.array(metallicity_in_solar_units,ndmin=1);
+    age_in_Gyr=np.array(age_in_Gyr,ndmin=1)
+    metallicity_in_solar_units=np.array(metallicity_in_solar_units,ndmin=1)
 
     ## remap BAND_ID to a different ordering @_@
     ## ordering I'm used to
@@ -141,7 +138,7 @@ def colors_table(
     ## read color data from binary 
     ##  TODO consider rewriting these tables to disk as text...
     with open(fname,'rb') as lut:
-        lut_dat = lut.read();
+        lut_dat = lut.read()
         Nl,Na,Nz = struct.unpack('3i',lut_dat[0:12])
         z_grid = np.array(struct.unpack(str(Nz)+'d',lut_dat[12:12+8*Nz]))
         age_grid = np.array(struct.unpack(str(Na)+'d',lut_dat[12+8*Nz:12+8*Nz+8*Na]))
@@ -149,16 +146,16 @@ def colors_table(
         l_all = np.transpose(l_all_l.reshape(Nz,Na,Nl))
     
     ## pick the luminosity in this band
-    l_band = np.zeros((Na,Nz),dtype=np.float64);
+    l_band = np.zeros((Na,Nz),dtype=np.float64)
     for iz in range(Nz): 
         l_band[:,iz]=l_all[BAND_ID,:,iz]
     ## TODO i think this is the same as l_band = l_all[band]...
     
     # allow for extreme metallicities (extrapolate linearly past table)
-    push_metals = 1;
+    push_metals = 1
     if (push_metals==1):
-        Nz = Nz + 1;
-        z_ext = [1000.0];
+        Nz = Nz + 1
+        z_ext = [1000.0]
         z_grid = np.concatenate([z_grid,z_ext])
         lb1 = l_band[:,Nz-3]
         lb2 = l_band[:,Nz-2]
@@ -167,7 +164,7 @@ def colors_table(
         lbx[:,Nz-1] = ( (lb2 - lb1) / 
             np.log10(z_grid[Nz-2]/z_grid[Nz-3]) * 
             np.log10(z_grid[Nz-1]/z_grid[Nz-2]) ) 
-        l_band = lbx;
+        l_band = lbx
 
     # get the x-axis (age) locations of input points
     ia_pts=np.interp(
@@ -176,18 +173,18 @@ def colors_table(
         np.arange(0,Na,1))
 
     # this returns the boundary values for points outside of them (no extrapolation)
-    #f=interp.interp1d(age_grid,np.arange(0,Na,1),kind='linear'); 
-    #ia_pts=f(np.log10(age_in_Gyr)+9.0);
+    #f=interp.interp1d(age_grid,np.arange(0,Na,1),kind='linear') 
+    #ia_pts=f(np.log10(age_in_Gyr)+9.0)
 
     # get the y-axis (metallicity) locations of input points
-    zsun = 0.02;
+    zsun = 0.02
     iz_pts=np.interp(
         np.log10(metallicity_in_solar_units*zsun),
         np.log10(z_grid),
         np.arange(0,Nz,1))
 
-    #f=interp.interp1d(np.log10(z_grid),np.arange(0,Nz,1),kind='linear'); 
-    #iz_pts=f(np.log10(metallicity_in_solar_units*zsun));
+    #f=interp.interp1d(np.log10(z_grid),np.arange(0,Nz,1),kind='linear') 
+    #iz_pts=f(np.log10(metallicity_in_solar_units*zsun))
 
     ## map requested points to their location on the grid.
     ##  TODO i think these are index maps, in which case 
@@ -240,16 +237,16 @@ def renormalize_band_luminosity(l_b,BAND_ID):
         ##      I      J       H       K
                 8700., 12150., 16540., 21790.])
 
-    c_light = 2.998e10; # speed of light in cm/s
-    nu_eff  = c_light / (lambda_eff * 1.0e-8); # converts to nu_eff in Hz
+    c_light = 2.998e10 # speed of light in cm/s
+    nu_eff  = c_light / (lambda_eff * 1.0e-8) # converts to nu_eff in Hz
 
-    ten_pc   = 10.e0 * 3.086e18; # 10 pc in cm
-    log_S_nu = -(mag_sun_ab + 48.6)/2.5; # zero point definition for ab magnitudes
-    S_nu     = 10.**log_S_nu; # get the S_nu at 10 pc which defines M_AB
-    lnu_sun_band = S_nu * (4.*math.pi*ten_pc*ten_pc); # multiply by distance modulus 
-    nulnu_sun_band = lnu_sun_band * nu_eff; # multiply by nu_eff to get nu*L_nu
-    l_bol_sun = nulnu_sun_band[0];
+    ten_pc   = 10.e0 * 3.086e18 # 10 pc in cm
+    log_S_nu = -(mag_sun_ab + 48.6)/2.5 # zero point definition for ab magnitudes
+    S_nu     = 10.**log_S_nu # get the S_nu at 10 pc which defines M_AB
+    lnu_sun_band = S_nu * (4.*math.pi*ten_pc*ten_pc) # multiply by distance modulus 
+    nulnu_sun_band = lnu_sun_band * nu_eff # multiply by nu_eff to get nu*L_nu
+    l_bol_sun = nulnu_sun_band[0]
 
-    l_b *= nulnu_sun_band[BAND_ID] / l_bol_sun;
+    l_b *= nulnu_sun_band[BAND_ID] / l_bol_sun
 
     return l_b
