@@ -306,7 +306,7 @@ starStudio.set_ImageParams(
 
         ## will fill any columns of lums with appropriate BAND_ID 
         ##  if nu_eff for that column is not None
-        lums = read_band_lums_from_tables(
+        lums,nu_effs = read_band_lums_from_tables(
             BAND_IDS, 
             mstar,ages,metals,
             ## flag to return luminosity in each band requested without projecting
@@ -625,7 +625,6 @@ def raytrace_ugr_attenuation(
 
     return stellar_raytrace(
         x,y,z,
-        mstar,ages,metals,
         h_star,
         gx,gy,gz,
         mgas,gas_metals,
