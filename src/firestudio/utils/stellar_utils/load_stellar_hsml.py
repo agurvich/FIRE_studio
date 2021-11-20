@@ -29,7 +29,7 @@ def get_particle_hsml( x, y, z, DesNgb=32, Hmax=0.):
     ## load the routine we need
     ## find the path of the parent directory, removing any symbolic links for safety
     curpath = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-    exec_call = os.path.join(curpath,'C_routines/c_libraries/StellarHsml/starhsml.so')
+    exec_call = os.path.join(curpath,'C_routines/StellarHsml/starhsml.so')
     h_routine = ctypes.cdll[exec_call]
 
     ## create a C array as output
