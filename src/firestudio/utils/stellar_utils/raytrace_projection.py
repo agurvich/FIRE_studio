@@ -177,7 +177,7 @@ def raytrace_projection_compute(
     ## load the routine we need
     curpath = os.path.realpath(__file__)
     curpath = curpath[:len("utils")+curpath.index("utils")] #split off this filename
-    exec_call=os.path.join(curpath,'stellar_utils/c_libraries/RayTrace_RGB/raytrace_rgb.so')
+    exec_call=os.path.join(curpath,'C_routines/RayTrace_RGB/raytrace_rgb.so')
     routine=ctypes.cdll[exec_call]
     
     ## cast the variables to store the results
