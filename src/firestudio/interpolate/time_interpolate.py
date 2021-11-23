@@ -1,5 +1,6 @@
 import itertools
 import multiprocessing
+import os
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -11,6 +12,10 @@ from .time_helper import split_into_n_approx_equal_chunks
 
 class TimeInterpolationHandler(object):
 
+    def __repr__(self):
+        return ('TimeInterpolationHandler with %d snapshot pairs:\n'%len(self.snap_pairs)+
+        repr(self.snap_pairs[-10:]).replace('array([[','[ [...],\n[').replace(' ','')[:-1])
+
     def __init__(
         self,
         dGyr_or_times_gyr,
@@ -19,12 +24,13 @@ class TimeInterpolationHandler(object):
         dGyr_tmax=None):
         """ """
 
-        print("TODO: in cache file projections from different times are only differentiated to Myr precision.")
         ## need to check/decide how one would convert to Myr if necessary. I think only
         ##  the snap interpolation would break.
 
         if snap_times_gyr is None:
-            raise NotImplementedError("Need to open each snapshot and extract the time in Gyr")
+            snapnums,scale_factors,redshifts,snap_times_gyr,dgyrs = np.genfromtxt(
+                os.path.join(
+                    os.path.dirname(__file__),'snapshot_times.txt')).T
 
         dGyr_or_times_gyr = np.array(dGyr_or_times_gyr)
 
@@ -85,7 +91,8 @@ class TimeInterpolationHandler(object):
                 itertools.repeat(extra_keys_to_extract))
 
             with multiprocessing.Pool(multi_threads) as my_pool:
-                    my_pool.starmap(single_threaded_control_flow,argss)
+                return_value = my_pool.starmap(single_threaded_control_flow,argss)
+            return return_value
         else:
             raise ValueError("Specify a number of threads >=1, not",multi_threads)
         
@@ -121,24 +128,24 @@ def my_func(interp_snap):
     render_kwargs = {
         'weight_name':'Masses',
         'quantity_name':'Temperature',
-        #min_quantity=2,
-        #max_quantity=7,
+        'min_quantity':2,
+        'max_quantity':7,
         'quantity_adjustment_function':np.log10,
-        'quick':True,
-        'min_weight':-0.5,
-        'max_weight':3,
-        'weight_adjustment_function':lambda x: np.log10(x/(30**2/1200**2)) + 10 - 6, ## msun/pc^2,
-        'cmap':'afmhot',
-        'quick':True}
+        'quick':False,
+        #'min_weight':-0.5,
+        #'max_weight':3,
+        #'weight_adjustment_function':lambda x: np.log10(x/(30**2/1200**2)) + 10 - 6, ## msun/pc^2,
+        }
 
     my_gasStudio = GasStudio(
-        interp_snap['datadir'],
+        interp_snap['studio_datadir'],
         interp_snap['next_snapnum'], ## attribute this data to the next_snapnum's projection file
         interp_snap['name'],
-        gas_snapdict=interp_snap)
+        gas_snapdict=interp_snap,
+        master_loud=False)
     
-    ## differentiate this time to Myr precision
-    my_gasStudio.this_setup_id += "_time%.3f"%interp_snap['this_time'] 
+    ## differentiate this time to << Myr precision
+    my_gasStudio.this_setup_id += "_time%.5f"%interp_snap['this_time'] 
 
     ## create a new figure for this guy
     fig = plt.figure()
