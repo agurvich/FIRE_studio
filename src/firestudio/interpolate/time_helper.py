@@ -17,7 +17,7 @@ def split_into_n_approx_equal_chunks(snap_pairs,nchunks):
     ##  process, i.e. when the remainder > nchunks/2
     per_chunk = nrenders//nchunks + (nrenders%nchunks > nchunks//2)
     
-    for i in range(len(indices)):
+    for i in range(len(indices)+1):
         #print(this_chunk,per_chunk)
         if this_chunk >= per_chunk:
             mps_chunks+=[indices[i-1]]

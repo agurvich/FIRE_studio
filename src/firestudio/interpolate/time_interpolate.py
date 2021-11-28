@@ -92,7 +92,7 @@ class TimeInterpolationHandler(object):
 
             with multiprocessing.Pool(multi_threads) as my_pool:
                 return_value = my_pool.starmap(single_threaded_control_flow,argss)
-            return return_value
+            return np.hstack(return_value)
         else:
             raise ValueError("Specify a number of threads >=1, not",multi_threads)
         
@@ -132,6 +132,9 @@ def my_func(interp_snap):
         'max_quantity':7,
         'quantity_adjustment_function':np.log10,
         'quick':False,
+        'loud':False,
+        #'save_meta':False,
+        #'use_metadata':False,
         #'min_weight':-0.5,
         #'max_weight':3,
         #'weight_adjustment_function':lambda x: np.log10(x/(30**2/1200**2)) + 10 - 6, ## msun/pc^2,
