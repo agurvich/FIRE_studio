@@ -3,18 +3,16 @@ import numpy as np
 import h5py
 
 import matplotlib.pyplot as plt
-from abg_python.math_utils import construct_quaternion, q_to_rotation_matrix
 #import matplotlib.gridspec as gridspec
 
-from abg_python.snapshot_utils import openSnapshot
-from abg_python.cosmo_utils import load_AHF
-from abg_python import append_function_docstring,getThetasTaitBryan,filterDictionary
+from abg_python import append_function_docstring,filterDictionary
 from abg_python.plot_utils import nameAxes
 
 from abg_python.galaxy.gal_utils import Galaxy
 from abg_python.galaxy.metadata_utils import Metadata,metadata_cache
 
 from ..utils.stellar_utils.load_stellar_hsml import get_particle_hsml
+from ..utils.camera_utils import Camera
 
 class Drawer(object):
 
@@ -39,7 +37,7 @@ class Drawer(object):
             coordinates[points.size*i:points.size*(i+1),i] = points 
         
         ## perform the rotation
-        coordinates = self.rotateEuler(self.theta,self.phi,self.psi,coordinates)
+        coordinates = self.camera.rotate_array(coordinates,offset=True)
 
         ## plot the new x-y coordiantes
         for i in range(3):
@@ -84,7 +82,6 @@ class Drawer(object):
 ####### image utilities #######
     def addScaleBar(self,image):
 
-        image_length =2*self.frame_half_width # kpc
         ## set scale bar length
         self.scale_label_text = r"$\mathbf{%1g \, \rm{kpc}}$"%self.scale_line_length
 
@@ -170,7 +167,7 @@ class Drawer(object):
 
         
         if image_name is None:
-            image_name = "%03d_%dkpc.pdf" % (self.snapnum, 2*self.frame_half_width)
+            image_name = "%03d_%dkpc.pdf" % (self.snapnum, 2*self.camera.camera_dist)
 
         if 'png' not in image_name and 'pdf' not in image_name:
             image_name+='.pdf'
@@ -194,7 +191,6 @@ class Studio(Drawer):
         star_snapdict=None, ## open galaxy star snapshot dictionary
         galaxy_kwargs=None,
         master_loud=True,
-        camera=None, ## firestudio.utils.camera_utils.Camera object
         **kwargs
         ):
         """Initializes a cache file to be read from and sets any image parameters
@@ -276,12 +272,14 @@ star_snapdict['AgeGyr'] ## age of particles in Gyr
         ## create, if necessary, directories to store intermediate and output files,
         ##  this could get crowded! sets self.image_dir and self.projection_dir
         #self.makeOutputDirectories(datadir)
+ 
+        if 'camera' not in kwargs or kwargs['camera'] is None:
+            ## extract camera keyword args to create the Camera instance
+            camera_kwargs = {'camera_pos':[0,0,15],'camera_focus':[0,0,0],'camera_north':None}
+            for kwarg in camera_kwargs:
+                if kwarg in kwargs: camera_kwargs[kwarg] = kwargs.pop(kwarg)
+            kwargs['camera'] = Camera(**camera_kwargs)
 
-        ## overwrite whatever's passed with camera properties
-        if camera is not None:
-            kwargs['frame_half_width'] = camera.camera_dist ## corresponds to 45 degree FOV
-            kwargs['frame_center'] = camera.camera_focus
-            kwargs['quaternion'] = camera.quaternion
         ## initialize the object with some default image params that will
         ##  make a face-on image of a galaxy, can always set these manually
         ##  with  external calls to set_ImageParams
@@ -431,13 +429,7 @@ star_snapdict['AgeGyr'] ## age of particles in Gyr
                     this call to their default value. 
                 loud = True -- 
 
-                frame_half_width = 15 --  half-width of image in x direction
                 frame_half_thickness = 15 -- half-thickness of image in z direction
-                frame_center = None -- center of frame in data space
-
-                theta = 0,phi = 0,psi = 0 -- euler rotation angles in degrees
-                quaternion = None - alternate mode of specifying a rotation using a quaternion
-                    with q[0] = cos(angle/2) and q[1:] = sin(angle/2) * axis of rotation
 
                 aspect_ratio = 1 -- shape of image, y/x TODO figure out if this is necessary to pass?
                 pixels = 1200 -- pixels in x direction, resolution of image
@@ -464,17 +456,13 @@ Example usage:
 ```python
 studio.set_ImageParams(
     this_setup_id='my_custom_setup',
-    theta=90,
     scale_bar=False,
     figure_label='high redshift')
 ```"""
 
         default_kwargs = {
-            'frame_half_width':15, ## half-width of image in x direction
+            'camera':None,
             'frame_half_thickness':None, ## half-thickness of image in z direction
-            'frame_center':None, ## center of frame in data space
-            'theta':0,'phi':0,'psi':0, ## euler rotation angles
-            'quaternion':None, ## alternate mode of specifying a rotation
             'aspect_ratio':1, ## shape of image, y/x TODO figure out if this is necessary to pass?
             'pixels':1200, ## pixels in x direction, resolution of image
             'figure_label':'', ## string to be put in upper right corner
@@ -509,22 +497,16 @@ studio.set_ImageParams(
                         default_kwargs.keys())
 
         if use_defaults:
-            ## if we haven't already set frame center by passed kwarg
+            ## if we haven't already set the camera by passed kwarg
             ##  need to replace None with [0,0,0]
-            if ('frame_center' in default_kwargs and 
-                default_kwargs['frame_center'] is None):
-                default_kwargs['frame_center'] = np.zeros(3)
+            if ('camera' in default_kwargs and 
+                default_kwargs['camera'] is None):
+                raise ValueError('Cannot explicitly set camera = None,'+
+                ' pass a utils.camera_utils.Camera instance instead.')
 
-            ##  need to replace frame_half_thickness with frame_half_width
             if ('frame_half_thickness' in default_kwargs and 
                 default_kwargs['frame_half_thickness'] is None):
-
-                ## take the frame_half_width
-                if 'frame_half_width' in default_kwargs:
-                    default_kwargs['frame_half_thickness'] = default_kwargs['frame_half_width']
-                ## take the value that was passed and set above
-                else:
-                    default_kwargs['frame_half_thickness'] = self.frame_half_width
+                default_kwargs['frame_half_thickness'] = self.camera.camera_dist
              
             ## set the remaining image parameters to their default values
             for default_arg in default_kwargs:
@@ -547,11 +529,8 @@ studio.set_ImageParams(
         self.set_CacheFile()
 
     set_ImageParams.default_kwargs = {
-            'frame_half_width':15, ## half-width of image in x direction
+            'camera':None,
             'frame_half_thickness':None, ## half-thickness of image in z direction
-            'frame_center':None, ## center of frame in data space
-            'theta':0,'phi':0,'psi':0, ## euler rotation angles
-            'quaternion':None, ## alternate mode of specifying a rotation
             'aspect_ratio':1, ## shape of image, y/x TODO figure out if this is necessary to pass?
             'pixels':1200, ## pixels in x direction, resolution of image
             'figure_label':'', ## string to be put in upper right/left corner
@@ -606,10 +585,7 @@ studio.set_ImageParams(
 
                 None"""
         default_kwargs = [
-            'frame_half_width',
             'frame_half_thickness',
-            'frame_center',
-            'theta','phi','psi',
             'aspect_ratio',
             'pixels', 
             'figure_label', 
@@ -627,27 +603,20 @@ studio.set_ImageParams(
 
     def __identifyThisSetup(self):
         ## uniquely identify this projection setup using a simple "hash"
-        if self.quaternion is None: 
-            rotation_string = 'theta%.2f_phi%.2f_psi%.2f'%(
-                np.round(self.theta,decimals=2),
-                np.round(self.phi,decimals=2),
-                np.round(self.psi,decimals=2))
-            
-        else:
-            rotation_string = 'quat_%.2f_%.2f_%.2f_%.2f'%(
-                np.round(self.quaternion[0],decimals=2),
-                np.round(self.quaternion[1],decimals=2),
-                np.round(self.quaternion[2],decimals=2),
-                np.round(self.quaternion[3],decimals=2))
+        rotation_string = 'quat_%.2f_%.2f_%.2f_%.2f'%(
+            np.round(self.camera.quaternion[0],decimals=2),
+            np.round(self.camera.quaternion[1],decimals=2),
+            np.round(self.camera.quaternion[2],decimals=2),
+            np.round(self.camera.quaternion[3],decimals=2))
 
         self.this_setup_id = (
         "npix%d_width%.2fkpc_depth%.2fkpc_x%.2f_y%.2f_z%.2f_%s_aspect%.2f"%(
             self.pixels, 
-                np.round(2*self.frame_half_width,decimals=2),
+                np.round(self.camera.camera_dist,decimals=2),
                 np.round(self.frame_half_thickness,decimals=2),
-                np.round(self.frame_center[0],decimals=2),
-                np.round(self.frame_center[1],decimals=2),
-                np.round(self.frame_center[2],decimals=2),
+                np.round(self.camera.camera_focus[0],decimals=2),
+                np.round(self.camera.camera_focus[1],decimals=2),
+                np.round(self.camera.camera_focus[2],decimals=2),
                 rotation_string,
                 np.round(self.aspect_ratio,decimals=2)))
         return self.this_setup_id
@@ -672,13 +641,14 @@ studio.set_ImageParams(
                 self.Acell -- 
                 
         """
-        self.Xmin,self.Xmax = self.frame_center[0] + np.array(
-            [-self.frame_half_width,self.frame_half_width])
+        ## +- camera_dist limits -> 45 degree FOV
+        self.Xmin,self.Xmax = self.camera.camera_focus[0] + np.array(
+            [-self.camera.camera_dist,self.camera.camera_dist])
 
-        self.Ymin,self.Ymax = self.frame_center[1] + np.array(
-            [-self.frame_half_width,self.frame_half_width])*self.aspect_ratio
+        self.Ymin,self.Ymax = self.camera.camera_focus[1] + np.array(
+            [-self.camera.camera_dist,self.camera.camera_dist])*self.aspect_ratio
 
-        self.Zmin,self.Zmax = self.frame_center[2] + np.array(
+        self.Zmin,self.Zmax = self.camera.camera_focus[2] + np.array(
             [-self.frame_half_thickness,self.frame_half_thickness])
 
         ## Set image size 
@@ -695,34 +665,6 @@ studio.set_ImageParams(
                    (Coordinates[:,2] > self.Zmin) & (Coordinates[:,2] < self.Zmax))
 
         return ind_box
-
-    def rotateQuaternion(self,quat,pos):
-        rot_matrix = q_to_rotation_matrix(quat)
-
-        ## on 11/23/2018 (the day after thanksgiving) I discovered that 
-        ##  numpy will change to column major order or something if you
-        ##  take the transpose of a transpose, as above. Try commenting out
-        ##  this line and see what garbage you get. ridiculous.
-        ##  also, C -> "C standard" i.e. row major order. lmfao
-        rotated_positions = np.array(np.matmul(
-                rot_matrix,
-                pos.T).T,
-            order='C',
-            dtype=np.float32)
-        rotated_center = np.array(np.matmul(
-                rot_matrix,
-                self.frame_center.reshape(3,1)).T,
-            order='C',
-            dtype=np.float32)
-        return rotated_positions - rotated_center
-
-    def rotateEuler(self,theta,phi,psi,pos,order='xyz'):
-        ## note that this will overwrite whatever theta/phi/psi are passed in
-        ##  which is a *feature* not a bug
-        if self.quaternion is None: quat = construct_quaternion([theta,phi,psi],order)
-        else: quat = self.quaternion
-        return self.rotateQuaternion(quat,pos)
-        
 
 ## append method docstrings to class docstring
 append_function_docstring(Studio,Studio.__init__)
