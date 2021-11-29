@@ -273,7 +273,7 @@ starStudio.set_ImageParams(
         star_pos = self.star_snapdict['Coordinates']
 
         ## rotate by euler angles if necessary
-        star_pos = self.rotateEuler(self.theta,self.phi,self.psi,star_pos)
+        star_pos = self.camera.rotate_array(star_pos,offset=True)
 
         ## cull the particles outside the frame and cast to float32
         star_ind_box = self.cullFrameIndices(star_pos)
@@ -328,7 +328,7 @@ starStudio.set_ImageParams(
 
 
         ## rotate by euler angles if necessary
-        gas_pos = self.rotateEuler(self.theta,self.phi,self.psi,self.gas_snapdict['Coordinates'])
+        gas_pos = self.camera.rotate_array(self.gas_snapdict['Coordinates'],offset=True)
 
         ## cull the particles outside the frame and cast to float32
         gas_ind_box = self.cullFrameIndices(gas_pos)

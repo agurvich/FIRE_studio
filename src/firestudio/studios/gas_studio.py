@@ -329,7 +329,7 @@ The maps computed in pixel j are then:
             if quantity_name not in snapdict:
                 ## need to rotate the velocities in here
                 if quantity_name in ['Vx','Vy','Vz']:
-                    vels = self.rotateEuler(self.theta,self.phi,self.psi,snapdict['Velocities'])
+                    vels = self.camera.rotate_array(snapdict['Velocities'])
                     quantities = vels[:,['Vx','Vy','Vz'].index(quantity_name)]
                 ## was passed something that we don't know what to do with
                 elif 'Log' in quantity_name or 'log' in quantity_name:
@@ -347,7 +347,7 @@ The maps computed in pixel j are then:
                 quantities = snapdict[quantity_name]
 
         ## rotate by euler angles if necessary
-        pos = self.rotateEuler(self.theta,self.phi,self.psi,Coordinates)
+        pos = self.camera.rotate_array(Coordinates,offset=True)
 
         ## cull the particles outside the frame and cast to float32
         box_mask = self.cullFrameIndices(pos)

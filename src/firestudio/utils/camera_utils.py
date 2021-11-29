@@ -61,30 +61,26 @@ class Camera(object):
         self.quaternion = new_quat
         self.quat_rot_matrix = q_to_rotation_matrix(self.quaternion)
 
-    def rotate_array(self,arr,offset=0):
-        print(self.quaternion)
+    def rotate_array(self,arr,offset=False):
         rotated_positions = np.array(np.matmul(
                 self.quat_rot_matrix,
                 arr.T).T,
             order='C',
             dtype=np.float32)
-        rotated_center = np.array(np.matmul(
-                self.quat_rot_matrix,
-                offset.reshape(3,1)).T,
+
+        if offset: rotated_center = np.array(np.matmul(
+            self.quat_rot_matrix,
+            self.camera_focus.reshape(3,1)).T,
             order='C',
             dtype=np.float32)
+        else: rotated_center = 0
+
         return rotated_positions - rotated_center
-
-    def rotate_coordinates(self,coords):
-        return self.rotate_array(coords,self.camera_focus)
-
-    def rotate_velocities(self,vels):
-        return self.rotate_array(vels)
 
     def clip(self,coords,vels):
 
-        new_coords = self.rotate_coordinates(coords)
-        new_vels = self.rotate_velocities(vels) if vels is not None else None
+        new_coords = self.rotate_array(coords,offset=True)
+        new_vels = self.rotate_array(vels) if vels is not None else None
 
         ## then determine the camera distance from the camera focus
         ##  and take FOV = 45 degrees left + 45 degrees right i.e. 
