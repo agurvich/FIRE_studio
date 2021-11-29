@@ -1,6 +1,6 @@
 import numpy as np
 
-from abg_python.math_utils import rotateEuler,getThetasTaitBryan,construct_quaternion,q_to_rotation_matrix,q_mult
+from abg_python.math_utils import rotateEuler,getThetasTaitBryan,construct_quaternion,q_to_rotation_matrix,q_mult, rotateQuaternion
 
 class Camera(object):
     def __init__(self,camera_pos,camera_focus=None,camera_north=None,quaternion=None):
@@ -10,21 +10,45 @@ class Camera(object):
         if camera_focus is None: camera_focus = np.zeros(3)
         else: camera_focus = np.array(camera_focus)
 
-        if quaternion is None:
-            if camera_north is not None: psi = np.arctan2(camera_north[1],camera_north[0])*180/np.pi
-            else: psi = 0
+        self.camera_focus = camera_focus
+        self.camera_pos = camera_pos
 
-            self.camera_pos = camera_pos
-            self.camera_focus = camera_focus
-            self.camera_north = camera_north
+        camera_normal = camera_pos-camera_focus
+        self.camera_dist = np.linalg.norm(camera_normal)
+        camera_normal = camera_normal/self.camera_dist
+
+        if quaternion is None:
 
             ## rotate to match camera orientation-- there's a negative sign here
             ##  based on my definition of getThetasTaitBryan which was originally 
             ##  designed to align along angular momentum vector which pointed from 
             ##  the origin to the camera rather than from the camera to the origin
-            theta, phi = getThetasTaitBryan(camera_pos-camera_focus)
+            theta, phi = getThetasTaitBryan(camera_normal)
 
-            self.quaternion = construct_quaternion([psi,theta,phi],'zxy')
+            #https://yt-project.org/doc/_modules/yt/visualization/volume_rendering/off_axis_projection.html#off_axis_projection
+            ##  the below is some voodoo from yt which figures out the "appropriate" camera north
+            ##  somehow it nails it and gives intuitive results but i do not understand why
+            if camera_north is None:
+                vecs = np.identity(3)
+                t = np.cross(vecs, camera_normal).sum(axis=1)
+                ax = t.argmax()
+                east_vector = np.cross(vecs[ax, :], camera_normal).ravel()
+                camera_north = np.cross(camera_normal, east_vector).ravel()
+            else:
+                camera_north = np.array(camera_north)
+                camera_north = camera_north / np.linalg.norm(camera_north)
+
+            ## consider the rotation minus psi
+            temp_quaternion = construct_quaternion([theta,phi],'xy')
+
+            ## rotate the north vector into this temporary frame
+            foo = rotateQuaternion(temp_quaternion,camera_north.reshape(1,3))[0]
+
+            ## find the angle between the rotated north vector and the y-axis
+            psi = 90-np.arctan2(foo[1],foo[0])*180/np.pi
+
+            self.quaternion = construct_quaternion([theta,phi,psi],'xyz')
+
         else: self.quaternion = quaternion
         
         self.quat_rot_matrix = q_to_rotation_matrix(self.quaternion)
@@ -34,7 +58,18 @@ class Camera(object):
         self.quat_rot_matrix = q_to_rotation_matrix(self.quaternion)
 
     def rotate_array(self,arr,offset=0):
-        return np.array(np.matmul(self.quat_rot_matrix,arr.T).T,order='C') - offset
+        print(self.quaternion)
+        rotated_positions = np.array(np.matmul(
+                self.quat_rot_matrix,
+                arr.T).T,
+            order='C',
+            dtype=np.float32)
+        rotated_center = np.array(np.matmul(
+                self.quat_rot_matrix,
+                offset.reshape(3,1)).T,
+            order='C',
+            dtype=np.float32)
+        return rotated_positions - rotated_center
 
     def rotate_coordinates(self,coords):
         return self.rotate_array(coords,self.camera_focus)
@@ -47,15 +82,14 @@ class Camera(object):
         new_coords = self.rotate_coordinates(coords)
         new_vels = self.rotate_velocities(vels) if vels is not None else None
 
-        camera_dist = np.linalg.norm(self.camera_pos-self.camera_focus)
         ## then determine the camera distance from the camera focus
         ##  and take FOV = 45 degrees left + 45 degrees right i.e. 
         ##  xmin,xmax = -z,+z
         ##  ymin,ymax = -z,+z
         ##  where z is measured as the distance from the camera to the camera focus
         mask = np.logical_and(
-            np.abs(new_coords[:,0])<camera_dist,
-            np.abs(new_coords[:,1])<camera_dist)
+            np.abs(new_coords[:,0])<self.camera_dist,
+            np.abs(new_coords[:,1])<self.camera_dist)
 
         new_coords = new_coords[mask]
         if new_vels is not None: new_vels = new_vels[mask]

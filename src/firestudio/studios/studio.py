@@ -3,6 +3,7 @@ import numpy as np
 import h5py
 
 import matplotlib.pyplot as plt
+from abg_python.math_utils import construct_quaternion, q_to_rotation_matrix
 #import matplotlib.gridspec as gridspec
 
 from abg_python.snapshot_utils import openSnapshot
@@ -193,6 +194,7 @@ class Studio(Drawer):
         star_snapdict=None, ## open galaxy star snapshot dictionary
         galaxy_kwargs=None,
         master_loud=True,
+        camera=None, ## firestudio.utils.camera_utils.Camera object
         **kwargs
         ):
         """Initializes a cache file to be read from and sets any image parameters
@@ -275,6 +277,11 @@ star_snapdict['AgeGyr'] ## age of particles in Gyr
         ##  this could get crowded! sets self.image_dir and self.projection_dir
         #self.makeOutputDirectories(datadir)
 
+        ## overwrite whatever's passed with camera properties
+        if camera is not None:
+            kwargs['frame_half_width'] = camera.camera_dist ## corresponds to 45 degree FOV
+            kwargs['frame_center'] = camera.camera_focus
+            kwargs['quaternion'] = camera.quaternion
         ## initialize the object with some default image params that will
         ##  make a face-on image of a galaxy, can always set these manually
         ##  with  external calls to set_ImageParams
@@ -429,6 +436,8 @@ star_snapdict['AgeGyr'] ## age of particles in Gyr
                 frame_center = None -- center of frame in data space
 
                 theta = 0,phi = 0,psi = 0 -- euler rotation angles in degrees
+                quaternion = None - alternate mode of specifying a rotation using a quaternion
+                    with q[0] = cos(angle/2) and q[1:] = sin(angle/2) * axis of rotation
 
                 aspect_ratio = 1 -- shape of image, y/x TODO figure out if this is necessary to pass?
                 pixels = 1200 -- pixels in x direction, resolution of image
@@ -465,6 +474,7 @@ studio.set_ImageParams(
             'frame_half_thickness':None, ## half-thickness of image in z direction
             'frame_center':None, ## center of frame in data space
             'theta':0,'phi':0,'psi':0, ## euler rotation angles
+            'quaternion':None, ## alternate mode of specifying a rotation
             'aspect_ratio':1, ## shape of image, y/x TODO figure out if this is necessary to pass?
             'pixels':1200, ## pixels in x direction, resolution of image
             'figure_label':'', ## string to be put in upper right corner
@@ -541,6 +551,7 @@ studio.set_ImageParams(
             'frame_half_thickness':None, ## half-thickness of image in z direction
             'frame_center':None, ## center of frame in data space
             'theta':0,'phi':0,'psi':0, ## euler rotation angles
+            'quaternion':None, ## alternate mode of specifying a rotation
             'aspect_ratio':1, ## shape of image, y/x TODO figure out if this is necessary to pass?
             'pixels':1200, ## pixels in x direction, resolution of image
             'figure_label':'', ## string to be put in upper right/left corner
@@ -616,19 +627,29 @@ studio.set_ImageParams(
 
     def __identifyThisSetup(self):
         ## uniquely identify this projection setup using a simple "hash"
+        if self.quaternion is None: 
+            rotation_string = 'theta%.2f_phi%.2f_psi%.2f'%(
+                np.round(self.theta,decimals=2),
+                np.round(self.phi,decimals=2),
+                np.round(self.psi,decimals=2))
+            
+        else:
+            rotation_string = 'quat_%.2f_%.2f_%.2f_%.2f'%(
+                np.round(self.quaternion[0],decimals=2),
+                np.round(self.quaternion[1],decimals=2),
+                np.round(self.quaternion[2],decimals=2),
+                np.round(self.quaternion[3],decimals=2))
+
         self.this_setup_id = (
-	"npix%d_width%.2fkpc_depth%.2fkpc_x%.2f_y%.2f_z%.2f_theta%.2f_phi%.2f_psi%.2f_aspect%.2f"%(
-	    self.pixels, 
-            np.round(2*self.frame_half_width,decimals=2),
-            np.round(self.frame_half_thickness,decimals=2),
-	    np.round(self.frame_center[0],decimals=2),
-            np.round(self.frame_center[1],decimals=2),
-            np.round(self.frame_center[2],decimals=2),
-	    np.round(self.theta,decimals=2),
-            np.round(self.phi,decimals=2),
-            np.round(self.psi,decimals=2),
-            np.round(self.aspect_ratio,decimals=2)
-            ))
+        "npix%d_width%.2fkpc_depth%.2fkpc_x%.2f_y%.2f_z%.2f_%s_aspect%.2f"%(
+            self.pixels, 
+                np.round(2*self.frame_half_width,decimals=2),
+                np.round(self.frame_half_thickness,decimals=2),
+                np.round(self.frame_center[0],decimals=2),
+                np.round(self.frame_center[1],decimals=2),
+                np.round(self.frame_center[2],decimals=2),
+                rotation_string,
+                np.round(self.aspect_ratio,decimals=2)))
         return self.this_setup_id
 
     def computeFrameBoundaries(self):
@@ -666,9 +687,7 @@ studio.set_ImageParams(
 
         self.Acell = (self.Xmax-self.Xmin)/self.npix_x * (self.Ymax-self.Ymin)/self.npix_y
 
-    def cullFrameIndices(
-        self,
-        Coordinates):
+    def cullFrameIndices(self,Coordinates):
 
         ## extract a cube of particles that are in relevant area
         ind_box = ((Coordinates[:,0] > self.Xmin) & (Coordinates[:,0] < self.Xmax) &
@@ -677,61 +696,33 @@ studio.set_ImageParams(
 
         return ind_box
 
-    def rotateEuler(self,theta,phi,psi,pos,
-        order = 'xyz'):
-        pos=pos-self.frame_center
-        ## if need to rotate at all really -__-
-        if theta==0 and phi==0 and psi==0:
-            return pos
-        # rotate particles by angle derived from frame number
-        pi        = 3.14159265
-        theta_rad = pi*theta/ 1.8e2
-        phi_rad   = pi*phi  / 1.8e2
-        psi_rad   = pi*psi  / 1.8e2
-
-        c1 = np.cos(theta_rad)
-        s1 = np.sin(theta_rad)
-        c2 = np.cos(phi_rad)
-        s2 = np.sin(phi_rad)
-        c3 = np.cos(psi_rad)
-        s3 = np.sin(psi_rad)
-
-        # construct rotation matrix
-        ##  Tait-Bryan angles
-        if order == 'xyz':
-            rot_matrix = np.array([
-                [c2*c3           , - c2*s3         , s2    ],
-                [c1*s3 + s1*s2*c3, c1*c3 - s1*s2*s3, -s1*c2],
-                [s1*s3 - c1*s2*c3, s1*c3 + c1*s2*s3, c1*c2 ]],
-                dtype = np.float32)
-
-        ##  classic Euler angles
-        elif order == 'zxz':
-            rot_matrix = np.array([
-                [c1*c3 - c2*s1*s3, -c1*s3 - c2*c3*s1, s1*s2 ],
-                [c3*s1 + c1*c2*s3, c1*c2*c3 - s1*s3 , -c1*s2],
-                [s2*s3           , c3*s2            , c2    ]],
-                dtype=np.float32)
-        else:
-            raise Exception("Bad order")
-
-        n_box = pos.shape[0]
-
-        ## rotate about each axis with a matrix operation
-        pos_rot = np.matmul(rot_matrix,pos.T).T
+    def rotateQuaternion(self,quat,pos):
+        rot_matrix = q_to_rotation_matrix(quat)
 
         ## on 11/23/2018 (the day after thanksgiving) I discovered that 
         ##  numpy will change to column major order or something if you
         ##  take the transpose of a transpose, as above. Try commenting out
         ##  this line and see what garbage you get. ridiculous.
         ##  also, C -> "C standard" i.e. row major order. lmfao
-        pos_rot = np.array(pos_rot,order='C')
-        
-        ### add the frame_center back
-        #pos_rot+=self.frame_center
+        rotated_positions = np.array(np.matmul(
+                rot_matrix,
+                pos.T).T,
+            order='C',
+            dtype=np.float32)
+        rotated_center = np.array(np.matmul(
+                rot_matrix,
+                self.frame_center.reshape(3,1)).T,
+            order='C',
+            dtype=np.float32)
+        return rotated_positions - rotated_center
 
-        ## can never be too careful that we're float32
-        return pos_rot.astype(np.float32)
+    def rotateEuler(self,theta,phi,psi,pos,order='xyz'):
+        ## note that this will overwrite whatever theta/phi/psi are passed in
+        ##  which is a *feature* not a bug
+        if self.quaternion is None: quat = construct_quaternion([theta,phi,psi],order)
+        else: quat = self.quaternion
+        return self.rotateQuaternion(quat,pos)
+        
 
 ## append method docstrings to class docstring
 append_function_docstring(Studio,Studio.__init__)
