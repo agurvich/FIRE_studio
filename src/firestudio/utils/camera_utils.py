@@ -54,7 +54,11 @@ class Camera(object):
         self.quat_rot_matrix = q_to_rotation_matrix(self.quaternion)
     
     def convolve_quaternion(self,new_quat):
-        self.quaternion = q_mult(new_quat,self.quaternion)
+        quaternion = q_mult(new_quat,self.quaternion)
+        self.replace_quaternion(quaternion)
+    
+    def replace_quaternion(self,new_quat):
+        self.quaternion = new_quat
         self.quat_rot_matrix = q_to_rotation_matrix(self.quaternion)
 
     def rotate_array(self,arr,offset=0):
