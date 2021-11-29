@@ -360,8 +360,6 @@ The maps computed in pixel j are then:
         quantities = quantities[box_mask].astype(np.float32)
         hsml = Hsml[box_mask].astype(np.float32)
 
-        frame_center = self.frame_center.astype(np.float32)
-
         return (
             BoxSize,
             self.Xmin,self.Xmax,

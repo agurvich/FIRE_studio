@@ -1,8 +1,11 @@
 import numpy as np
 
-from abg_python.math_utils import rotateEuler,getThetasTaitBryan,construct_quaternion,q_to_rotation_matrix,q_mult, rotateQuaternion
+from abg_python.math_utils import getThetasTaitBryan,construct_quaternion,q_to_rotation_matrix,q_mult, rotateQuaternion
 
 class Camera(object):
+    def __repr__(self):
+        return "Camera(%s,%s) - %s "%(repr(self.camera_pos),repr(self.camera_focus),repr(self.quaternion))
+
     def __init__(self,camera_pos,camera_focus=None,camera_north=None,quaternion=None):
         camera_pos = np.array(camera_pos,ndmin=1)
 
