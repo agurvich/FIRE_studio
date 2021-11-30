@@ -1,6 +1,6 @@
 import numpy as np
 
-from abg_python.math_utils import getThetasTaitBryan,construct_quaternion,q_to_rotation_matrix,q_mult, rotateQuaternion
+from abg_python.math_utils import getThetasTaitBryan,construct_quaternion,q_to_rotation_matrix,q_mult,rotateQuaternion
 
 class Camera(object):
     def __repr__(self):
