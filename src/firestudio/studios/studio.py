@@ -151,10 +151,7 @@ class Drawer(object):
         self,
         ax,
         image_name=None,
-        ):
-
-        ## save the figure if asked
-        savefig_args={} 
+        **savefig_args):
 
         if self.noaxis:
             ## remove whitespace around the axis, apparently the x/y origin is offset in pixel 
@@ -173,7 +170,8 @@ class Drawer(object):
             image_name+='.pdf'
 
         ax.get_figure().savefig(
-            os.path.join(self.datadir,image_name),dpi=300,
+            os.path.join(self.datadir,image_name),
+            dpi=300,
             **savefig_args)
 
 class Studio(Drawer):
@@ -274,10 +272,12 @@ star_snapdict['AgeGyr'] ## age of particles in Gyr
         #self.makeOutputDirectories(datadir)
  
         if 'camera' not in kwargs or kwargs['camera'] is None:
-            ## extract camera keyword args to create the Camera instance
-            camera_kwargs = {'camera_pos':[0,0,15],'camera_focus':[0,0,0],'camera_north':None}
-            for kwarg in camera_kwargs:
-                if kwarg in kwargs: camera_kwargs[kwarg] = kwargs.pop(kwarg)
+            if 'quaternion' not in kwargs:
+                ## extract camera keyword args to create the Camera instance
+                camera_kwargs = {'camera_pos':[0,0,15],'camera_focus':[0,0,0],'camera_north':None}
+                for kwarg in camera_kwargs:
+                    if kwarg in kwargs: camera_kwargs[kwarg] = kwargs.pop(kwarg)
+            else: camera_kwargs = {'quaternion':kwargs.pop('quaternion')}
             kwargs['camera'] = Camera(**camera_kwargs)
 
         ## initialize the object with some default image params that will
