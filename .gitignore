@@ -5,3 +5,4 @@
 *.so
 src/*egg*/*
 dist/*
+src/firestudio/utils/stellar_utils/BPASSv2.2.1_bin-imf135_300/*
