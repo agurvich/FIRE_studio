@@ -1,11 +1,13 @@
 import numpy as np
 import os
 
-from .time_interpolate import TimeInterpolationHandler
-from .scene_interpolate import SceneInterpolationHandler
+from abg_python.plot_utils import plt
 
 from ..studios.gas_studio import GasStudio
 from ..studios.star_studio import StarStudio 
+
+from .time_interpolate import TimeInterpolationHandler
+from .scene_interpolate import SceneInterpolationHandler
 
 class InterpolationHandler(object):
     def __repr__(self):
@@ -43,7 +45,11 @@ class InterpolationHandler(object):
         render_kwargs=None, ## only 1 dict, shared by all frames
         savefig=True,
         which_studio=None,
-        multi_threads=1):
+        multi_threads=1,
+        keyframes=False):
+
+        if keyframes: self.time_handler.keyframes = self.scene_handler.keyframes
+        elif hasattr(self.time_handler,'keyframes'): del self.time_handler.keyframes
 
         ndiff =  self.nframes - len(self.scene_handler.frame_kwargss)
         scene_kwargs = self.scene_handler.frame_kwargss + [self.scene_handler.frame_kwargss[-1]]*ndiff
@@ -83,8 +89,7 @@ def worker_function(
     this_snapdict,
     this_star_snapdict=None,
     studio_kwargs=None,
-    add_render_kwargs=None,
-    savefig=False):
+    add_render_kwargs=None):
 
     if studio_kwargs is None: studio_kwargs = {}
     if add_render_kwargs is None: add_render_kwargs = {}
@@ -96,8 +101,6 @@ def worker_function(
         'min_quantity':2,
         'max_quantity':7,
         'quantity_adjustment_function':np.log10,
-        'quick':False,
-        'loud':False,
         #'save_meta':False,
         #'use_metadata':False,
         #'min_weight':-0.5,
@@ -123,6 +126,6 @@ def worker_function(
 
     ## create a new figure for this guy
     fig,ax = plt.subplots(nrows=1,ncols=1)
-    my_gasStudio.render(ax,savefig=savefig,**render_kwargs)
-    if savefig: plt.close(fig)
+    my_studio.render(ax,**render_kwargs)
+    if studio_kwargs['savefig'] is not None: plt.close(fig)
     else: return fig
