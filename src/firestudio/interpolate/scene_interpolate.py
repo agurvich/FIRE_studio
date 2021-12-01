@@ -76,6 +76,11 @@ class SceneInterpolationHandler(object):
         self.keyframes = [0]
 
     def parse_kwargs(self,**kwargs):
+        if 'camera' in kwargs:
+            camera = kwargs.pop('camera')
+            for key in ['quaternion','camera_pos','camera_focus']:
+                kwargs[key] = getattr(camera,key)
+
         for kwarg in list(kwargs.keys()): 
             if (kwarg in default_kwargs): pass
             else: raise KeyError(
