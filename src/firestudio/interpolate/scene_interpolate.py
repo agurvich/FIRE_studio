@@ -13,6 +13,8 @@ from ..studios.star_studio import StarStudio
 
 studio_kwargs = {
     'quaternion':(1,0,0,0),
+    'camera_pos':(0,0,15),
+    'camera_focus':(0,0,0),
     'frame_half_thickness':15, ## half-thickness of image in z direction
     'aspect_ratio':1, ## shape of image, y/x TODO figure out if this is necessary to pass?
     'pixels':1200, ## pixels in x direction, resolution of image
@@ -49,7 +51,7 @@ class SceneInterpolationHandler(object):
             "SceneInterpolationHandler(%d/%d frames (%d keyframes) - %s)"%(
                 len(self.frame_kwargss),
                 self.nframes,
-                self.nkeyframes,
+                len(self.keyframes),
                 repr(list(self.frame_kwargss[0].keys()))))
     
     def __getitem__(self,key):
@@ -71,29 +73,15 @@ class SceneInterpolationHandler(object):
         ##  self.add_keyframe and we'll copy it if, for whatever reason, we make it to 
         ##  interpolater.render
         self.frame_kwargss = [kwargs]
-        self.nkeyframes = 1
+        self.keyframes = [0]
 
     def parse_kwargs(self,**kwargs):
-        camera_kwargs = {'camera_pos':[0,0,15],}
         for kwarg in list(kwargs.keys()): 
-            ## overwrite the camera_kwargs with anything passed through
-            if 'camera_' in kwarg: camera_kwargs[kwarg] = kwargs.pop(kwarg)
-
-            elif (kwarg in default_kwargs): pass
+            if (kwarg in default_kwargs): pass
             else: raise KeyError(
                 'Invalid key: %s - try one of:\n%s'%(
                     kwarg,
                     repr(list(default_kwargs.keys()))))
-
-        if 'quaternion' not in kwargs:
-            ## will want to initialize the camera in the studio instance w/ 
-            ##  quaternion that is interpolated from the quaternions taken
-            ##  from the cameras initialized by the interpolater here
-            if 'camera' not in kwargs or kwargs['camera'] is None:
-                kwargs['camera'] = Camera(**camera_kwargs)
-        
-            kwargs['quaternion'] = kwargs.pop('camera').quaternion
-
 
         return kwargs
 
@@ -124,6 +112,12 @@ class SceneInterpolationHandler(object):
                 nsteps = self.nframes - len(self.frame_kwargss)
                 if loud: print(message+'... clipping to %d frames instead'%nsteps)
         
+        ## handle case where we are not changing a previously specified kwarg
+        for prev_kwarg in prev_kwargs:
+            if prev_kwarg not in new_kwargs:
+                ##  just copy the old value over
+                new_kwargs[prev_kwarg] = prev_kwargs[prev_kwarg]
+
         ## make sure each dictionary has one-to-one
         ##  corresponding keys: 
         for new_kwarg in new_kwargs:
@@ -137,12 +131,6 @@ class SceneInterpolationHandler(object):
                 for sub_prev_kwargs in self.frame_kwargss:
                     sub_prev_kwargs[new_kwarg] = default_kwargs[new_kwarg]
         
-        ## handle case where we are not changing a previously specified kwarg
-        for prev_kwarg in prev_kwargs:
-            if prev_kwarg not in new_kwargs:
-                ##  just copy the old value over
-                new_kwargs[prev_kwarg] = prev_kwargs[prev_kwarg]
-
         if nsteps == 1: self.frame_kwargss.append(new_kwargs)
         ## start at i = 1 to avoid repeating frames
         for i in range(1,nsteps+1):
@@ -150,14 +138,20 @@ class SceneInterpolationHandler(object):
             for kwarg in new_kwargs:
                 pval = prev_kwargs[kwarg]
                 nval = new_kwargs[kwarg]
+                ## convert args that are lists/tuples to arrays
+                if kwarg in ['quaternion','camera_pos','camera_focus','font_color']:
+                    pval = np.array(pval)
+                    nval = np.array(nval)
                 ## TODO should have some kind of interpolation function
                 ##  so we don't have to do just linear
                 ##  then again we can always string together keyframes
                 ##  to get complex interpolations
-                this_kwargs[kwarg] = pval + i*(nval-pval)/(nsteps-1)
+                this_kwargs[kwarg] = pval + i*(nval-pval)/(nsteps)
             self.frame_kwargss.append(this_kwargs)
 
-        self.nkeyframes+=1
+        ## note the index of this keyframe
+        self.keyframes.append(len(self.frame_kwargss)-1)
+
         if loud: print(self)
     
     def interpolateAndRender(
@@ -193,8 +187,10 @@ class SceneInterpolationHandler(object):
             raise TypeError("%s is not GasStudio or StarStudio"%repr(which_studio))
 
         ## initialize array of savefig values
-        savefigs = ['frame_%04d.png'%i if savefig else False 
-            for i in range(len(self.nframes))]
+        if savefig: 
+            for i in range(self.nframes):
+                frame_kwargss[i]['savefig'] = 'frame_%04d.png'%i
+
 
         ## collect positional arguments for worker_function
         argss = zip(
@@ -202,8 +198,7 @@ class SceneInterpolationHandler(object):
             itertools.repeat(galaxy.sub_snap),
             itertools.repeat(galaxy.sub_star_snap),
             frame_kwargss,
-            itertools.repeat(render_kwargs),
-            savefigs)
+            itertools.repeat(render_kwargs))
 
         these_figs = [worker_function(*args) for args in argss]
 
@@ -242,8 +237,9 @@ class SceneInterpolationHandler(object):
             raise TypeError("%s is not GasStudio or StarStudio"%repr(which_studio))
 
         ## initialize array of savefig values
-        savefigs = ['frame_%04d.png'%i if savefig else False 
-            for i in range(len(self.nframes))]
+        if savefig: 
+            for i in range(self.nframes):
+                frame_kwargss[i]['savefig'] = 'frame_%04d.png'%i
 
         ## collect positional arguments for worker_function
         argss = zip(
@@ -251,8 +247,7 @@ class SceneInterpolationHandler(object):
             itertools.repeat(global_snapdict_name),
             itertools.repeat(global_star_snapdict_name),
             frame_kwargss,
-            itertools.repeat(render_kwargs),
-            savefigs)
+            itertools.repeat(render_kwargs))
 
         ## initialize dictionary that will point to shared memory buffers
         wrapper_dict = {}
@@ -314,8 +309,7 @@ def worker_function_wrapper(
     global_snapdict_name, ## important to access shared memory :\
     global_star_snapdict_name,
     studio_kwargs=None,
-    add_render_kwargs=None,
-    savefig=False):
+    add_render_kwargs=None):
 
     ## put here to avoid circular import
     from .interpolate import worker_function
@@ -329,4 +323,4 @@ def worker_function_wrapper(
     ##  is turned off which should be the default mode tbh.
     this_snapdict = globals()[global_snapdict_name]
     this_star_snapdict = globals()[global_star_snapdict_name]
-    worker_function(which_studio,this_snapdict,this_star_snapdict,studio_kwargs,add_render_kwargs,savefig)
+    worker_function(which_studio,this_snapdict,this_star_snapdict,studio_kwargs,add_render_kwargs)
