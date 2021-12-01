@@ -53,9 +53,8 @@ def single_threaded_control_flow(
     snap_pairs,
     snap_pair_times,
     galaxy_kwargs,
-    studio_kwargs,
-    render_kwargs,
-    savefigs):
+    frame_kwargss,
+    render_kwargs):
     """ """
 
     ## put here to avoid circular import
@@ -73,10 +72,11 @@ def single_threaded_control_flow(
     extra_keys_to_extract = (
         galaxy_kwargs.pop('extra_keys_to_extract') if 
         'extra_keys_to_extract' in galaxy_kwargs else [])
+    
 
     for i,(pair,pair_times) in enumerate(zip(snap_pairs,snap_pair_times)):     
 
-        savefig = savefigs[i]
+        frame_kwargs = frame_kwargss[i]
 
         if not i%10: print(i,pair,pair_times)
         ## determine if the galaxies in the pair are actually
@@ -105,8 +105,10 @@ def single_threaded_control_flow(
 
         ## update the interp_snap with new values for the new time
         interp_snap = make_interpolated_snap(this_time,time_merged_df,t0,t1)
-        ## TODO
-        print(interp_snap.keys(),"TODO in time_helper, figure out what keys are in interp_snap")
+        interp_snap['name'] = next_galaxy.name
+        interp_snap['datadir'] = next_galaxy.datadir
+        interp_snap['snapnum'] = next_galaxy.snapnum
+        interp_snap['this_time'] = this_time
 
         ## TODO interpolate on stars as well
         interp_star_snap = None
@@ -116,9 +118,8 @@ def single_threaded_control_flow(
             which_studio,
             interp_snap,
             interp_star_snap,
-            studio_kwargs,
-            render_kwargs,
-            savefig)]
+            frame_kwargs,
+            render_kwargs)]
 
     return return_values
 
