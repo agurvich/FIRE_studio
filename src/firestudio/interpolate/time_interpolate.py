@@ -30,6 +30,7 @@ class TimeInterpolationHandler(object):
         ##  the snap interpolation would break.
 
         if snap_times_gyr is None:
+            print("Using default snapshot_times.txt for 600 snapshots")
             snapnums,scale_factors,redshifts,snap_times_gyr,dgyrs = np.genfromtxt(
                 os.path.join(
                     os.path.dirname(__file__),'snapshot_times.txt')).T
@@ -74,7 +75,7 @@ class TimeInterpolationHandler(object):
         frame_kwargss=None, ## 1 dict per frame
         studio_kwargs=None,
         render_kwargs=None, ## only 1 dict, shared by all frames
-        savefig=True,
+        savefig='frame',
         which_studio=None,
         multi_threads=1,
         ):
@@ -95,9 +96,11 @@ class TimeInterpolationHandler(object):
             raise TypeError("%s is not GasStudio or StarStudio"%repr(which_studio))
 
         ## initialize array of savefig values
-        if savefig: 
+        if savefig is not None: 
             for i in range(self.nframes):
-                frame_kwargss[i]['savefig'] = 'frame_%04d.png'%i
+                ## determine minimum number of leading zeros
+                format_str = '%s'%savefig + '_%0'+'%dd.png'%(np.ceil(np.log10(self.nframes)))
+                frame_kwargss[i]['savefig'] = format_str%i
         
         times_gyr = self.times_gyr
         snap_pairs = self.snap_pairs

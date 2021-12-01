@@ -69,9 +69,9 @@ def single_threaded_control_flow(
 
     return_values = []
 
-    extra_keys_to_extract = (
-        galaxy_kwargs.pop('extra_keys_to_extract') if 
-        'extra_keys_to_extract' in galaxy_kwargs else [])
+    keys_to_extract = (
+        galaxy_kwargs.pop('keys_to_extract') if 
+        'keys_to_extract' in galaxy_kwargs else [])
     
 
     for i,(pair,pair_times) in enumerate(zip(snap_pairs,snap_pair_times)):     
@@ -101,7 +101,7 @@ def single_threaded_control_flow(
             time_merged_df = index_match_snapshots_with_dataframes(
                 prev_galaxy.sub_snap,
                 next_galaxy.sub_snap,
-                extra_keys_to_extract=extra_keys_to_extract)
+                keys_to_extract=keys_to_extract)
 
         ## update the interp_snap with new values for the new time
         interp_snap = make_interpolated_snap(this_time,time_merged_df,t0,t1)
