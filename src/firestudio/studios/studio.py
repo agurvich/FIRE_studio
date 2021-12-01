@@ -272,12 +272,9 @@ star_snapdict['AgeGyr'] ## age of particles in Gyr
         #self.makeOutputDirectories(datadir)
  
         if 'camera' not in kwargs or kwargs['camera'] is None:
-            if 'quaternion' not in kwargs:
-                ## extract camera keyword args to create the Camera instance
-                camera_kwargs = {'camera_pos':[0,0,15],'camera_focus':[0,0,0],'camera_north':None}
-                for kwarg in camera_kwargs:
-                    if kwarg in kwargs: camera_kwargs[kwarg] = kwargs.pop(kwarg)
-            else: camera_kwargs = {'quaternion':kwargs.pop('quaternion')}
+            camera_kwargs = {'camera_pos':[0,0,15],'camera_focus':[0,0,0],'camera_north':None}
+            for ckwarg in list(camera_kwargs.keys())+['quaternion']:
+                if ckwarg in kwargs: camera_kwargs[ckwarg] = kwargs.pop(ckwarg)
             kwargs['camera'] = Camera(**camera_kwargs)
 
         ## initialize the object with some default image params that will
