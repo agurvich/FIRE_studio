@@ -95,31 +95,42 @@ class TimeInterpolationHandler(object):
             raise TypeError("%s is not GasStudio or StarStudio"%repr(which_studio))
 
         ## initialize array of savefig values
-        savefigs = ['frame_%04d.png'%i if savefig else False 
-            for i in range(self.nframes)]
+        if savefig: 
+            for i in range(self.nframes):
+                frame_kwargss[i]['savefig'] = 'frame_%04d.png'%i
+        
+        times_gyr = self.times_gyr
+        snap_pairs = self.snap_pairs
+        snap_pair_times = self.snap_pair_times
+
+        if hasattr(self,'keyframes'):
+            times_gyr = times_gyr[self.keyframes]
+            snap_pairs = snap_pairs[self.keyframes]
+            snap_pair_times = snap_pair_times[self.keyframes]
+            frame_kwargss = np.array(frame_kwargss)[self.keyframes]
+            for i in range(len(self.keyframes)):
+                frame_kwargss[i]['savefig'] = None
 
         if multi_threads == 1:
             ## collect positional arguments for worker_function
             return single_threaded_control_flow(
                 which_studio,
-                self.times_gyr,
-                self.snap_pairs,
-                self.snap_pair_times,
+                times_gyr,
+                snap_pairs,
+                snap_pair_times,
                 galaxy_kwargs,
-                studio_kwargs,
-                render_kwargs,
-                savefigs)
+                frame_kwargss,
+                render_kwargs)
             
         elif multi_threads > 1:
             ## split the pairs of snapshots into approximately equal chunks
             ##  prioritizing  matching pairs of snapshots
-            mps_indices = split_into_n_approx_equal_chunks(self.snap_pairs,multi_threads)
+            mps_indices = split_into_n_approx_equal_chunks(snap_pairs,multi_threads)
 
-            split_times_gyr = np.array_split(self.times_gyr,mps_indices)
-            split_snap_pairs = np.array_split(self.snap_pairs,mps_indices)
-            split_snap_pair_times = np.array_split(self.snap_pair_times,mps_indices)
-            studio_kwargs = np.array_split(studio_kwargs,mps_indices)
-            savefigs = np.array_split(savefigs,mps_indices)
+            split_times_gyr = np.array_split(times_gyr,mps_indices)
+            split_snap_pairs = np.array_split(snap_pairs,mps_indices)
+            split_snap_pair_times = np.array_split(snap_pair_times,mps_indices)
+            frame_kwargss = np.array_split(frame_kwargss,mps_indices)
             
             ## collect positional arguments for worker_function
             argss = zip(
@@ -128,9 +139,8 @@ class TimeInterpolationHandler(object):
                 split_snap_pairs,
                 split_snap_pair_times,
                 itertools.repeat(galaxy_kwargs),
-                studio_kwargs,
+                frame_kwargss,
                 itertools.repeat(render_kwargs),
-                savefigs
                 )
 
             with multiprocessing.Pool(multi_threads) as my_pool:
