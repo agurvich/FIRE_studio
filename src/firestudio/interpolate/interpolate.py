@@ -1,7 +1,8 @@
 import numpy as np
 import os
 
-from abg_python.plot_utils import plt
+from abg_python.plot_utils import plt,ffmpeg_frames
+from abg_python.galaxy.gal_utils import Galaxy
 
 from ..studios.gas_studio import GasStudio
 from ..studios.star_studio import StarStudio 
@@ -18,18 +19,18 @@ class InterpolationHandler(object):
     def __init__(
         self,
         total_duration_sec,
-        sim_time,
+        sim_time_begin=None,
         sim_time_end=None,
-        fps=15,
+        fps=24,
         snapshot_times=None,
         **scene_kwargs):
         
         self.nframes = int(total_duration_sec*fps)
 
         ## need to interpolate in time
-        if sim_time_end is not None:
+        if sim_time_begin and sim_time_end is not None:
             self.time_handler = TimeInterpolationHandler(
-                np.linspace(sim_time,sim_time_end,self.nframes),
+                np.linspace(sim_time_begin,sim_time_end,self.nframes),
                 snapshot_times)
         else: self.time_handler = None
 
@@ -43,39 +44,48 @@ class InterpolationHandler(object):
         galaxy_kwargs, ## only 1 dict, shared by all frames
         studio_kwargs=None, ## only 1 dicts, shared by all frames
         render_kwargs=None, ## only 1 dict, shared by all frames
-        savefig=True,
+        savefig='frame',
         which_studio=None,
         multi_threads=1,
         keyframes=False):
 
-        if keyframes: self.time_handler.keyframes = self.scene_handler.keyframes
-        elif hasattr(self.time_handler,'keyframes'): del self.time_handler.keyframes
-
-        ndiff =  self.nframes - len(self.scene_handler.frame_kwargss)
-        scene_kwargs = self.scene_handler.frame_kwargss + [self.scene_handler.frame_kwargss[-1]]*ndiff
-
-        ## merge dictionaries with priority such that
-        ## studio_kwargs < this_time_kwargs < this_scene_kwargs
-        frame_kwargss = [{**this_time_kwargs,**this_scene_kwargs} for 
-            this_time_kwargs,this_scene_kwargs in 
-            zip(self.time_handler.frame_kwargss,scene_kwargs)]
-
         ## handle simple case of moving camera at fixed time
         if self.time_handler is None: 
-            raise NotImplementedError("Need to handle case of just moving camera at fixed time")
-            snapnum = np.argmin(snapshot_times-sim_time)**2
-            ## now we handle a single snapnum 
-            ##  ....
-            return self.scene_handler.interpolateAndRender()
+            if 'snapnum' not in galaxy_kwargs: raise KeyError("galaxy_kwargs must contain snapnum.")
+
             if multi_threads > 1: 
-                return self.scene_handler.interpolateAndRenderMultiprocessing(multi_threads=multi_threads)
+                return_value = self.scene_handler.interpolateAndRenderMultiprocessing(
+                    galaxy_kwargs,
+                    studio_kwargs,
+                    render_kwargs,
+                    savefig,
+                    which_studio,
+                    multi_threads,
+                    keyframes)
+            else:
+                return_value = self.scene_handler.interpolateAndRender(
+                    galaxy_kwargs,
+                    studio_kwargs,
+                    render_kwargs,
+                    savefig,
+                    which_studio,
+                    keyframes)
 
         ## handle complex case of moving camera and incrementing time
         else:
-            #for this_kwargs,time_kwargs in zip(frame_kwargss,self.time_handler.frame_kwargss):
-                #this_kwargs.update(time_kwargs)
+            if keyframes: self.time_handler.keyframes = self.scene_handler.keyframes
+            elif hasattr(self.time_handler,'keyframes'): del self.time_handler.keyframes
 
-            return self.time_handler.interpolateAndRender(
+            ndiff =  self.nframes - len(self.scene_handler.frame_kwargss)
+            scene_kwargs = self.scene_handler.frame_kwargss + [self.scene_handler.frame_kwargss[-1]]*ndiff
+
+            ## merge dictionaries with priority such that
+            ## studio_kwargs < this_time_kwargs < this_scene_kwargs
+            frame_kwargss = [{**this_time_kwargs,**this_scene_kwargs} for 
+                this_time_kwargs,this_scene_kwargs in 
+                zip(self.time_handler.frame_kwargss,scene_kwargs)]
+
+            return_value = self.time_handler.interpolateAndRender(
                 galaxy_kwargs, ## only 1 dict, shared by all frames
                 frame_kwargss=frame_kwargss, ## nframe dicts, 1 for each frame
                 studio_kwargs=studio_kwargs, ## only 1 dict, shared by all frames
@@ -83,6 +93,22 @@ class InterpolationHandler(object):
                 savefig=savefig,
                 which_studio=which_studio,
                 multi_threads=multi_threads)
+
+        if savefig is not None:
+            if 'keys_to_extract' in galaxy_kwargs: galaxy_kwargs.pop('keys_to_extract')
+
+            galaxy = Galaxy(**galaxy_kwargs)
+
+            format_str = '%s'%savefig + '_%0'+'%dd.png'%(np.ceil(np.log10(self.nframes)))
+            ## ffmpeg the frames
+            ffmpeg_frames(
+                os.path.join(galaxy.datadir,'firestudio'),
+                [format_str],
+                savename=galaxy_kwargs['name'],
+                framerate=self.scene_handler.fps,
+                extension='.mp4')
+
+        return return_value
 
 def worker_function(
     which_studio,
@@ -122,7 +148,7 @@ def worker_function(
         **studio_kwargs)
     
     ## differentiate this time to << Myr precision
-    my_studio.this_setup_id += "_time%.5f"%this_snapdict['this_time'] 
+    if 'this_time' in this_snapdict: my_studio.this_setup_id += "_time%.5f"%this_snapdict['this_time'] 
 
     ## create a new figure for this guy
     fig,ax = plt.subplots(nrows=1,ncols=1)
