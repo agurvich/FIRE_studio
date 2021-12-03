@@ -286,7 +286,7 @@ The maps computed in pixel j are then:
 
         ## pick which particle type we're projecting, 
         if snapdict_name != 'gas' and snapdict_name != 'star':
-            raise ValueError("Choose between 'gas' or 'star' snapdict!")
+            raise KeyError("Choose between 'gas' or 'star' snapdict!")
         
         full_snapdict_name = '%s_snapdict'%snapdict_name
         
