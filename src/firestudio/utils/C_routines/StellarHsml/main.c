@@ -25,7 +25,7 @@ int stellarhsml(int N_in, float* x, float* y, float* z, int DesNgb, float Hmax, 
   float *r2list;
   int *ngblist;
 
-  printf("N=%d\n",N_in); printf("Hmax=%g\n",Hmax); printf("DesNgb=%d\n",DesNgb);
+  //printf("N=%d\n",N_in); printf("Hmax=%g\n",Hmax); printf("DesNgb=%d\n",DesNgb);
 
   ngb3d_treeallocate(N_in, 2*N_in);
   set_particle_pointer(N_in, x,y,z);
@@ -38,11 +38,13 @@ int stellarhsml(int N_in, float* x, float* y, float* z, int DesNgb, float Hmax, 
 	  xyz[2]=P3d[i+1]->Pos[2]+1.0e-10;
 	  h2=ngb3d_treefind( xyz, DesNgb ,1.04*h_guess, &ngblist, &r2list, Hmax, &ngbfound); 
 
+    /*
     if(!(i%10000))
     {
     printf("i=%d hmax=%g h_guess=%g h=%g xyz=%g|%g|%g ngb=%d \n",
         i,Hmax,h_guess,sqrt(h2),xyz[0],xyz[1],xyz[2],ngbfound); fflush(stdout);
     }
+    */
       H_OUT[i] = sqrt(h2);
       h_guess = H_OUT[i]; // use this value for next guess, should speed things up // 
       //if (h_guess>10.*h_guess_0) h_guess=2.*h_guess_0;
@@ -50,7 +52,7 @@ int stellarhsml(int N_in, float* x, float* y, float* z, int DesNgb, float Hmax, 
 
   ngb3d_treefree();
   free_memory_3d(N_in);
-  printf("done\n");
+  //printf("done\n");
   return 0;
 }
 
