@@ -1,5 +1,6 @@
 import numpy as np
 import os
+import copy
 
 from abg_python.plot_utils import plt,ffmpeg_frames
 from abg_python.galaxy.gal_utils import Galaxy
@@ -77,7 +78,7 @@ class InterpolationHandler(object):
             elif hasattr(self.time_handler,'keyframes'): del self.time_handler.keyframes
 
             ndiff =  self.nframes - len(self.scene_handler.frame_kwargss)
-            scene_kwargs = self.scene_handler.frame_kwargss + [self.scene_handler.frame_kwargss[-1]]*ndiff
+            scene_kwargs = self.scene_handler.frame_kwargss + [copy.copy(self.scene_handler.frame_kwargss[-1]) for i in range(ndiff)]
 
             ## merge dictionaries with priority such that
             ## studio_kwargs < this_time_kwargs < this_scene_kwargs

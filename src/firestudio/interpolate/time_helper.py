@@ -2,6 +2,7 @@ import numpy as np
 
 from abg_python.interpolate.time_interpolate_utils import index_match_snapshots_with_dataframes,make_interpolated_snap
 from abg_python.galaxy.gal_utils import Galaxy
+from .scene_interpolate import load_data_flags
 
 #### MPS LOAD BALANCING
 def split_into_n_approx_equal_chunks(snap_pairs,nchunks):
@@ -57,6 +58,8 @@ def single_threaded_control_flow(
     render_kwargs):
     """ """
 
+    if 'snapnum' in galaxy_kwargs: galaxy_kwargs.pop('snapnum')
+
     ## put here to avoid circular import
     from .interpolate import worker_function
 
@@ -74,6 +77,8 @@ def single_threaded_control_flow(
         'keys_to_extract' in galaxy_kwargs else [])
     
 
+    load_gas,load_star = load_data_flags(which_studio,render_kwargs)
+
     for i,(pair,pair_times) in enumerate(zip(snap_pairs,snap_pair_times)):     
 
         frame_kwargs = frame_kwargss[i]
@@ -86,6 +91,7 @@ def single_threaded_control_flow(
             pair,
             prev_galaxy,
             next_galaxy,
+            compute_stellar_hsml=load_star,
             **galaxy_kwargs)
 
         ## update the previous/next snapnums
@@ -98,20 +104,37 @@ def single_threaded_control_flow(
             ##  this takes a while so we'll hold onto it and only 
             ##  make a new one if necessary.
             t0,t1 = pair_times
-            time_merged_df = index_match_snapshots_with_dataframes(
-                prev_galaxy.sub_snap,
-                next_galaxy.sub_snap,
-                keys_to_extract=keys_to_extract)
+            if load_gas: gas_time_merged_df = index_match_snapshots_with_dataframes(
+                    prev_galaxy.sub_snap,
+                    next_galaxy.sub_snap,
+                    keys_to_extract=keys_to_extract)
 
-        ## update the interp_snap with new values for the new time
-        interp_snap = make_interpolated_snap(this_time,time_merged_df,t0,t1)
+            if load_star: star_time_merged_df = index_match_snapshots_with_dataframes(
+                    prev_galaxy.sub_star_snap,
+                    next_galaxy.sub_star_snap,
+                    keys_to_extract=keys_to_extract)
+            
+
+        if load_gas:
+            ## update the interp_snap with new values for the new time
+            interp_snap = make_interpolated_snap(this_time,gas_time_merged_df,t0,t1) 
+        else: interp_snap = None
+
+        ## keep outrside the conditional b.c. worker function
+        ##  looks for them in gas_snapdict
         interp_snap['name'] = next_galaxy.name
         interp_snap['datadir'] = next_galaxy.datadir
         interp_snap['snapnum'] = next_galaxy.snapnum
         interp_snap['this_time'] = this_time
 
-        ## TODO interpolate on stars as well
-        interp_star_snap = None
+        if load_star:
+            ## TODO interpolate on stars as well
+            interp_star_snap = make_interpolated_snap(this_time,star_time_merged_df,t0,t1)
+            interp_star_snap['name'] = next_galaxy.name
+            interp_star_snap['datadir'] = next_galaxy.datadir
+            interp_star_snap['snapnum'] = next_galaxy.snapnum
+            interp_star_snap['this_time'] = this_time
+        else: interp_star_snap = None
 
         ## call the function we were passed
         return_values += [worker_function(
@@ -128,6 +151,7 @@ def load_gals_from_disk(
     pair,
     prev_galaxy,next_galaxy,
     testing=False,
+    compute_stellar_hsml=False,
     **kwargs):
     """ Determines whether it needs to load a new galaxy from disk
         or if we already have what we need."""
@@ -157,14 +181,14 @@ def load_gals_from_disk(
         print('loading',pair[0],'from disk')
         if not testing:
             prev_galaxy = Galaxy(snapnum=pair[0],**kwargs)
-            prev_galaxy.extractMainHalo()
+            prev_galaxy.extractMainHalo(compute_stellar_hsml=compute_stellar_hsml)
         else: prev_galaxy = pair[0]
         changed = True
     if next_galaxy is None:
         print('loading',pair[1],'from disk')
         if not testing:
             next_galaxy = Galaxy(snapnum=pair[1],**kwargs)
-            next_galaxy.extractMainHalo()
+            next_galaxy.extractMainHalo(compute_stellar_hsml=compute_stellar_hsml)
         else: next_galaxy = pair[1]
         changed = True
         

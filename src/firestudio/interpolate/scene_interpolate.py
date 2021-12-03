@@ -1,6 +1,7 @@
 import gc
 import multiprocessing
 import itertools
+import copy
 
 import numpy as np
 
@@ -10,6 +11,19 @@ from abg_python.galaxy.gal_utils import Galaxy
 from ..utils.camera_utils import Camera
 from ..studios.gas_studio import GasStudio
 from ..studios.star_studio import StarStudio
+
+def load_data_flags(which_studio,render_kwargs):
+    ## determine which data needs to be loaded into shared memory
+    if which_studio is StarStudio:
+        load_gas = True
+        load_star = True
+    elif 'snapdict_name' in render_kwargs and render_kwargs['snapdict_name'] == 'star':
+        load_gas = False
+        load_star = True
+    else:
+        load_gas = True
+        load_star = False
+    return load_gas,load_star
 
 studio_kwargs = {
     'quaternion':(1,0,0,0),
@@ -169,6 +183,8 @@ class SceneInterpolationHandler(object):
         multi_threads=None,
         keyframes=False):
 
+        load_gas,load_star = load_data_flags(which_studio,render_kwargs)
+
         ## put here to avoid circular import
         from .interpolate import worker_function
 
@@ -180,7 +196,9 @@ class SceneInterpolationHandler(object):
         else: keys_to_extract = None ## default to all keys
 
         galaxy = Galaxy(**galaxy_kwargs)
-        galaxy.extractMainHalo(keys_to_extract=keys_to_extract)
+        galaxy.extractMainHalo(
+            keys_to_extract=keys_to_extract,
+            compute_stellar_hsml=load_star)
         self.frame_output_dir = galaxy.datadir
 
         if multi_threads >1: raise ValueError("Use interpolateAndRenderMultiprocessing instead.")
@@ -192,7 +210,7 @@ class SceneInterpolationHandler(object):
         frame_kwargss = [{**this_frame_kwargs,**studio_kwargs} for this_frame_kwargs in self.frame_kwargss]
         ndiff =  self.nframes - len(frame_kwargss)
         ## repeat the last frame until we reach the total duration \_(ツ)_/
-        frame_kwargss = np.array(frame_kwargss + [frame_kwargss[-1]]*ndiff,dtype=object)
+        frame_kwargss = np.array(frame_kwargss + [copy.copy(frame_kwargss[-1]) for i in range(ndiff)],dtype=object)
 
         if keyframes: frame_kwargss = frame_kwargss[self.keyframes]
 
@@ -232,6 +250,8 @@ class SceneInterpolationHandler(object):
         multi_threads=1,
         keyframes=False):
 
+        load_gas,load_star = load_data_flags(which_studio,render_kwargs)
+
         if galaxy_kwargs is None: raise ValueError(
             'galaxy_kwargs must be a dictionary with,'+
             ' at minimum, name (i.e. m12i_res7100) and snapnum (i.e. 600).')
@@ -240,7 +260,9 @@ class SceneInterpolationHandler(object):
         else: keys_to_extract = None ## default to all keys
 
         galaxy = Galaxy(**galaxy_kwargs)
-        galaxy.extractMainHalo(keys_to_extract=keys_to_extract)
+        galaxy.extractMainHalo(
+            keys_to_extract=keys_to_extract,
+            compute_stellar_hsml=load_star)
         self.frame_output_dir = galaxy.datadir
 
         ## if we were bold enough to extract everything, copy nothing to the child processes.
@@ -262,7 +284,7 @@ class SceneInterpolationHandler(object):
         frame_kwargss = [{**this_frame_kwargs,**studio_kwargs} for this_frame_kwargs in self.frame_kwargss]
         ndiff =  self.nframes - len(frame_kwargss)
         ## repeat the last frame until we reach the total duration \_(ツ)_/
-        frame_kwargss = np.array(frame_kwargss + [frame_kwargss[-1]]*ndiff,dtype=object)
+        frame_kwargss = np.array(frame_kwargss + [copy.copy(frame_kwargss[-1]) for i in range(ndiff)],dtype=object)
 
         if keyframes: frame_kwargss = frame_kwargss[self.keyframes]
 
@@ -288,22 +310,43 @@ class SceneInterpolationHandler(object):
             itertools.repeat(render_kwargs))
 
         ## initialize dictionary that will point to shared memory buffers
-        wrapper_dict = {}
-        try:
-            ## use as few references so i have to clean up fewer below lol
-            wrapper_dict,shm_buffers = copySnapshotNamesToMPSharedMemory(
-                ['Coordinates',
-                'Masses',
-                'SmoothingLength']+keys_to_extract,
-                galaxy.sub_snap,
-                finally_flag=True,
-                loud=True)
+        gas_wrapper_dict = {}
+        star_wrapper_dict = {}
 
-            for key in ['name','datadir','snapnum']: wrapper_dict[key] = galaxy.sub_snap[key]
+        try:
+            if load_gas:
+                ## use as few references so i have to clean up fewer below lol
+                gas_wrapper_dict,gas_shm_buffers = copySnapshotNamesToMPSharedMemory(
+                    ['Coordinates',
+                    'Masses',
+                    'SmoothingLength']+keys_to_extract,
+                    galaxy.sub_snap,
+                    finally_flag=True,
+                    loud=True)
+            else: gas_shm_buffers = [None]
+
+            if load_star:
+                ## NOTE the lack of smoothing lengths might mess this up if a bunch of processes all
+                ##  try and compute smoothing lengths and write to the same file :\
+                star_wrapper_dict,star_shm_buffers = copySnapshotNamesToMPSharedMemory(
+                    ['Coordinates',
+                    'Masses',
+                    'SmoothingLength',
+                    'AgeGyr']+keys_to_extract,
+                    galaxy.sub_star_snap,
+                    finally_flag=True,
+                    loud=True)
+                
+                if 'SmoothingLength' not in star_wrapper_dict: raise NotImplementedError("Need to figure out how to load smoothing lengths into sub_star_snap")
+            else: star_shm_buffers = [None]
+                
+
+            for key in ['name','datadir','snapnum']: gas_wrapper_dict[key] = galaxy.sub_snap[key]
+            for key in ['name','datadir','snapnum']: star_wrapper_dict[key] = galaxy.sub_star_snap[key]
 
             del galaxy
-            globals()[global_snapdict_name] = wrapper_dict
-            globals()[global_star_snapdict_name] = None
+            globals()[global_snapdict_name] = gas_wrapper_dict
+            globals()[global_star_snapdict_name] = star_wrapper_dict
 
             ## don't remove these lines, they perform some form of dark arts
             ##  that helps the garbage collector its due
@@ -332,13 +375,19 @@ class SceneInterpolationHandler(object):
             ##  are unlinked or python will crash.
             globals().pop(global_snapdict_name)
             globals().pop(global_star_snapdict_name)
-            del wrapper_dict
-            for shm_buffer in shm_buffers:
+            del gas_wrapper_dict
+            del star_wrapper_dict
+            for shm_buffer in gas_shm_buffers:
                 ## handle case where multiprocessing isn't used
                 if shm_buffer is not None:
                     shm_buffer.close()
                     shm_buffer.unlink()
 
+            for shm_buffer in star_shm_buffers:
+                ## handle case where multiprocessing isn't used
+                if shm_buffer is not None:
+                    shm_buffer.close()
+                    shm_buffer.unlink()
             del shm_buffers
 
         return these_figs
