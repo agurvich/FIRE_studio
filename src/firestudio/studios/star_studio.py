@@ -298,7 +298,9 @@ starStudio.set_ImageParams(
 
         mstar = self.star_snapdict['Masses'][star_ind_box].astype(np.float32)
         ages = self.star_snapdict['AgeGyr'][star_ind_box].astype(np.float32)
-        metals = self.star_snapdict['Metallicity'][:,0][star_ind_box].astype(np.float32)
+        metals = self.star_snapdict['Metallicity']
+        if len(np.shape(metals)) > 1: metals = metals[:,0]
+        metals = metals[star_ind_box].astype(np.float32)
 
         ## apply frame mask to band luminosities
         if lums is not None:
@@ -340,7 +342,9 @@ starStudio.set_ImageParams(
 
 
         mgas = self.gas_snapdict['Masses'][gas_ind_box].astype(np.float32)
-        gas_metals = self.gas_snapdict['Metallicity'][:,0][gas_ind_box].astype(np.float32)
+        gas_metals = self.gas_snapdict['Metallicity']
+        if len(np.shape(gas_metals)) > 1: gas_metals = gas_metals[:,0]
+        gas_metals = gas_metals[gas_ind_box].astype(np.float32)
 
         ## set metallicity of hot gas to 0 so there is no dust extinction
         temperatures = self.gas_snapdict['Temperature'][gas_ind_box]
@@ -409,12 +413,12 @@ starStudio.render(plt.gca())
         all_bands = np.concatenate([out_u,out_g,out_r])
         maxden_guess,dynrange_guess = self.predictParameters(all_bands=all_bands)
         if self.maxden is None:
-            print("setting maxden to best guess")
+            print("setting maxden to best guess %.2g"%maxden_guess)
             self.set_ImageParams(
                 maxden=maxden_guess)
 
         if self.dynrange is None:
-            print("setting dynrange to best guess")
+            print("setting dynrange to best guess %.2g"%dynrange_guess)
             self.set_ImageParams(
                 dynrange=dynrange_guess)
 
