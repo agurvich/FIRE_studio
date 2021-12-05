@@ -123,3 +123,33 @@ def make_threeband_image_process_bandmaps(
     image24 = image24_new
 
     return image24, cmap_m ## return both processed image and massmap
+
+def layer_band_images(ims, maps):
+    
+    nx=ims[:,0,0].size; ny=ims[0,:,0].size;
+    im_new = np.zeros((nx,ny,3))
+    map_cum = np.zeros((nx,ny))
+
+    cmaps = ['Blues',
+        'heat_green',
+        'heat_red']
+    
+    for i in range(ims.shape[2]):
+        im = ims[:,:,i]
+        map = maps[:,:,i]
+
+        #im_0=im/np.max(im); # if want more saturated images
+        ####alpha_im=maps[:,:,i]/map_sum; ## deprected
+        my_cmap=matplotlib.cm.get_cmap(cmaps[i]); ## load cmap
+        #rgb_im=my_cmap(im_0); ## get rgba values of image as mapped by this cmap
+        
+        rgb_im = my_cmap(im)[:,:,0:3]
+        for j in [0,1,2]:
+            im_new[:,:,j] = (map_cum*im_new[:,:,j] + map*rgb_im[:,:,j]) / (map_cum+map)
+        map_cum += map
+        
+        #rgb_im[:,:,3]=alpha_im; ## replace alpha channel for this image
+        #rgb_im[:,:,3]=0.*alpha_im+1.;
+        #matplotlib.pyplot.imshow(rgb_im); ## plot it, with appropriate (new) alpha channel
+
+    return im_new
