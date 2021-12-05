@@ -515,6 +515,19 @@ starStudio.render(plt.gca())
                 supertitle="maxden=%.2g\ndynrange=%2d"%(maxden,dynrange))
             ax.get_figure().set_dpi(120)
 
+            this_maxden = top
+            if self.maxden is not None:
+                #ax.text(self.maxden*1.05,0.5,'maxden',rotation=90,va='center')
+                ax.axvline(self.maxden,c='C2',ls='--',alpha=0.25)
+                ax.axvline(self.maxden,c='C2')
+                this_maxden = self.maxden
+
+            if self.dynrange is not None:
+                ax.plot([this_maxden/self.dynrange,this_maxden],[0.4,0.4],c='C2')
+                #ax.text(np.sqrt(this_maxden**2/self.dynrange),0.4/1.1,'dynrange',ha='center')
+
+
+
         return maxden,dynrange
 
     def plotParameterGrid(
