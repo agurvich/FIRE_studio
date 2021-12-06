@@ -14,7 +14,7 @@ from setuptools.command.egg_info import egg_info
 
 #Can yield `setup.py install`, `setup.py egg_info`, or `setup.py develop`
 
-def custom_command():
+def custom_command(prepend=''):
     C_routine_subdir = 'src/firestudio/utils/C_routines'
     C_routines = os.listdir(C_routine_subdir)
     for C_routine in C_routines:
@@ -38,7 +38,7 @@ class CustomDevelop(develop):
 
 class CustomEggInfo(egg_info):
     def run(self):
-        custom_command()
+        custom_command(prepend='../../')
         egg_info.run(self)
 
 ####  END CUSTOM INSTALL COMMANDS 
@@ -48,7 +48,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name="firestudio",
-    version="1.0.0",
+    version="2.0.0",
     author = 'Alex Gurvich',
     author_email = 'agurvich@u.northwestern.edu',
     description="Rendering code for FIRE simulation data.",
@@ -69,6 +69,8 @@ setup(
     install_requires=[            
           'abg_python',
           'numpy',
+          'scipy',
+          'matplotlib'
       ],
     include_package_data=True,
     ## to compile C code
