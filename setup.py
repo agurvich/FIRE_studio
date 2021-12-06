@@ -48,7 +48,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name="firestudio",
-    version="2.0.0",
+    version="2.0.1",
     author = 'Alex Gurvich',
     author_email = 'agurvich@u.northwestern.edu',
     description="Rendering code for FIRE simulation data.",
