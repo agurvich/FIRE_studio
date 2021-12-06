@@ -3,6 +3,7 @@ import numpy as np
 import h5py
 
 import matplotlib.pyplot as plt
+from matplotlib.colors import rgb_to_hsv,hsv_to_rgb
 #import matplotlib.gridspec as gridspec
 
 from abg_python import append_function_docstring,filterDictionary
@@ -173,6 +174,25 @@ class Drawer(object):
             os.path.join(self.datadir,image_name),
             dpi=300,
             **savefig_args)
+    
+    def gradientBlendImages(self,image_1,image_2=None,**kwargs):
+
+        if image_2 is None: image_2 = self.produceImage(**kwargs)
+
+        new_image = np.zeros(image_1.shape)
+
+        xs = np.ones(new_image.shape[0])*0.05
+
+        gradient = np.linspace(0.05,1,xs.shape[0]//2)[::-1]
+        xs[:xs.shape[0]//2] = gradient
+
+
+        new_image = image_1*xs[:,None]+image_2*(1-xs[:,None])
+        hsv_image = rgb_to_hsv(new_image)
+        hsv_image[...,-1]*=1.2
+        new_image = hsv_to_rgb(hsv_image)
+
+        return new_image
 
 class Studio(Drawer):
     """`FIREstudio` parent class that regularizes image setup, rotation, 
