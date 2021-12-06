@@ -513,7 +513,7 @@ gasStudio.render(
             fig = ax.get_figure()
 
         ## remap the C output to RGB space
-        final_image = self.__produceImage(**kwargs)
+        final_image = self.produceImage(**kwargs)
 
         ## plot that RGB image and overlay scale bars/text
         self.plotImage(ax,final_image)
@@ -524,7 +524,7 @@ gasStudio.render(
 
         return ax,final_image
 
-    def __produceImage(
+    def produceImage(
         self,
         weight_name='Masses',
         quantity_name='Temperature',
