@@ -266,6 +266,47 @@ fireStudio.set_ImageParams(
             wt1,wt2,wt3,
             kappa)
 
+    def __get_gasThreebandImage_quick(
+        self,
+        **kwargs, 
+        ):
+
+        # apply filters, rotations, unpack snapshot data, etc...
+        (coords,hsml,mass,
+        wt1,wt2,wt3,
+        kappas) = self.prepareCoordinates()
+
+        xedges = np.linspace(self.Xmin,self.Xmax,self.pixels)
+        out_all,_,_ = np.histogram2d(
+            coords[:,0],
+            coords[:,1],
+            bins=xedges,
+            weights=mass)
+
+        out_cold,_,_ = np.histogram2d(
+            coords[:,0],
+            coords[:,1],
+            bins=xedges,
+            weights=wt1)
+
+        out_warm,_,_ = np.histogram2d(
+            coords[:,0],
+            coords[:,1],
+            bins=xedges,
+            weights=wt2)
+
+        out_hot,_,_ = np.histogram2d(
+            coords[:,0],
+            coords[:,1],
+            bins=xedges,
+            weights=wt3)
+
+
+        return out_all,out_cold,out_warm,out_hot
+
+
+
+
 ####### produceImage implementation #######
     def render(
         self,
@@ -292,7 +333,7 @@ fireStudio.render()
         else: fig = ax.get_figure()
 
         ## remap the C output to RGB space
-        final_image = self.__produceImage(**kwargs)
+        final_image = self.produceImage(**kwargs)
 
         ## plot that RGB image and overlay scale bars/text
         self.plotImage(ax,final_image)
@@ -302,14 +343,14 @@ fireStudio.render()
 
         return ax,final_image
 
-    def __produceImage(
+    def produceImage(
         self,
         quick=False,
         **kwargs
         ):
 
         if not quick: out_all,out_cold,out_warm,out_hot = self.get_gasThreebandImage(**kwargs)
-        else: raise NotImplementedError
+        else: out_all,out_cold,out_warm,out_hot = self.__get_gasThreebandImage_quick(**kwargs)
 
         if self.maxden is None:
             maxden_guess,dynrange_guess = self.predictParameters()
@@ -334,7 +375,7 @@ fireStudio.render()
 
         final_image = layer_band_images(image24, massmap)
 
-        return final_image
+        return np.transpose(final_image,axes=(1,0,2))
 
     def predictParameters(self,all_bands=None,**kwargs):
 
