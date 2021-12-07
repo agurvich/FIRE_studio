@@ -7,6 +7,7 @@ from abg_python.galaxy.gal_utils import Galaxy
 
 from ..studios.gas_studio import GasStudio
 from ..studios.star_studio import StarStudio 
+from ..studios.FIRE_studio import FIREStudio
 
 from .time_interpolate import TimeInterpolationHandler
 from .scene_interpolate import SceneInterpolationHandler
@@ -135,6 +136,7 @@ def worker_function(
         #'weight_adjustment_function':lambda x: np.log10(x/(30**2/1200**2)) + 10 - 6, ## msun/pc^2,
         }
     elif which_studio is StarStudio: render_kwargs = {}
+    elif which_studio is FIREStudio: render_kwargs = {}
     else: raise TypeError("%s is not GasStudio or StarStudio"%repr(which_studio))
 
     render_kwargs.update(add_render_kwargs)
