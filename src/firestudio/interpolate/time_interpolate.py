@@ -9,6 +9,7 @@ from abg_python.interpolate.time_interpolate_utils import find_bordering_snapnum
 from .time_helper import split_into_n_approx_equal_chunks,single_threaded_control_flow
 from ..studios.gas_studio import GasStudio
 from ..studios.star_studio import StarStudio
+from ..studios.FIRE_studio import FIREStudio
 
 class TimeInterpolationHandler(object):
 
@@ -92,8 +93,10 @@ class TimeInterpolationHandler(object):
 
         ## determine which studio we should initialize inside the worker_function
         if which_studio is None: which_studio = GasStudio
-        elif which_studio is not GasStudio and which_studio is not StarStudio: 
-            raise TypeError("%s is not GasStudio or StarStudio"%repr(which_studio))
+        elif (which_studio is not GasStudio and 
+            which_studio is not StarStudio and
+            which_studio is not FIREStudio): 
+            raise TypeError("%s is not GasStudio, StarStudio, or FIREStudio"%repr(which_studio))
 
         ## initialize array of savefig values
         if savefig is not None: 

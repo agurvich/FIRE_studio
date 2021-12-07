@@ -11,10 +11,12 @@ from abg_python.galaxy.gal_utils import Galaxy
 from ..utils.camera_utils import Camera
 from ..studios.gas_studio import GasStudio
 from ..studios.star_studio import StarStudio
+from ..studios.FIRE_studio import FIREStudio
 
 def load_data_flags(which_studio,render_kwargs):
     ## determine which data needs to be loaded into shared memory
-    if which_studio is StarStudio:
+    if which_studio is not GasStudio:
+        #which_studio is StarStudio or which_studio is FIREStudio:
         load_gas = True
         load_star = True
     elif 'snapdict_name' in render_kwargs and render_kwargs['snapdict_name'] == 'star':
@@ -216,8 +218,10 @@ class SceneInterpolationHandler(object):
 
         ## determine which studio we should initialize inside the worker_function
         if which_studio is None: which_studio = GasStudio
-        elif which_studio is not GasStudio and which_studio is not StarStudio: 
-            raise TypeError("%s is not GasStudio or StarStudio"%repr(which_studio))
+        elif (which_studio is not GasStudio and 
+            which_studio is not StarStudio and
+            which_studio is not FIREStudio): 
+            raise TypeError("%s is not GasStudio, StarStudio, or FIREStudio"%repr(which_studio))
 
         ## initialize array of savefig values
         if savefig is not None: 
@@ -290,8 +294,10 @@ class SceneInterpolationHandler(object):
 
         ## determine which studio we should initialize inside the worker_function
         if which_studio is None: which_studio = GasStudio
-        elif which_studio is not GasStudio and which_studio is not StarStudio: 
-            raise TypeError("%s is not GasStudio or StarStudio"%repr(which_studio))
+        elif (which_studio is not GasStudio and 
+            which_studio is not StarStudio and
+            which_studio is not FIREStudio): 
+            raise TypeError("%s is not GasStudio, StarStudio, or FIREStudio"%repr(which_studio))
 
         ## initialize array of savefig values
         if savefig is not None: 
