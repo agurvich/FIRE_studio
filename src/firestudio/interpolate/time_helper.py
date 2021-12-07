@@ -107,12 +107,16 @@ def single_threaded_control_flow(
             if load_gas: gas_time_merged_df = index_match_snapshots_with_dataframes(
                     prev_galaxy.sub_snap,
                     next_galaxy.sub_snap,
-                    keys_to_extract=keys_to_extract)
+                    keys_to_extract=keys_to_extract,
+                    t0=t0,
+                    t1=t1)
 
             if load_star: star_time_merged_df = index_match_snapshots_with_dataframes(
                     prev_galaxy.sub_star_snap,
                     next_galaxy.sub_star_snap,
-                    keys_to_extract=keys_to_extract)
+                    keys_to_extract=keys_to_extract,
+                    t0=t0,
+                    t1=t1)
             
 
         if load_gas:
