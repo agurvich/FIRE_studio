@@ -195,72 +195,72 @@ class Drawer(object):
         return new_image
 
 class Studio(Drawer):
-    """`FIREstudio` parent class that regularizes image setup, rotation, 
-        caching, etc between `GasStudio` and `StarStudio` classes. 
     """
+    `FIREstudio` parent class that regularizes image setup, rotation, 
+        caching, etc between `GasStudio` and `StarStudio` classes. 
+
+    `GasStudio` requires: 
+    ```python
+        snapdict['Coordinates'] ## coordinates of the particles
+    ```
+    (and ideally `'SmoothingLengths'`, in the same units as coordinates, but these can be calculated). 
+
+    `StarStudio` requires: 
+    ```python
+    gas_snapdict['Coordinates'] ## coordinates of the particles
+    gas_snapdict['Metallicity'] ## metallicity (mass fractions) of the particles 
+    gas_snapdict['Masses'] ## masses of the particles in 1e10 solar masses
+    gas_snapdict['Temperature'] ## temperature of the gas in K
+
+    star_snapdict['Coordinates'] ## coordinates of the particles
+    star_snapdict['Metallicity'] ## metallicity (mass fractions) of the particles 
+    star_snapdict['Masses'] ## masses of the particles in 1e10 solar masses
+    star_snapdict['AgeGyr'] ## age of particles in Gyr
+    ```
+    (and ideally `'SmoothingLengths'` for both, in the same units as coordinates, but these can be calculated)."""
 
     def __init__(
         self,
-        datadir, ## directory to put intermediate and output files 
-        snapnum, ## snapshot number 
+        datadir,  
+        snapnum,  
         sim_name,
-        cache_file_name=None, ##  the name of the file to save maps to
-        gas_snapdict=None, ## open galaxy gas snapshot dictionary 
-        star_snapdict=None, ## open galaxy star snapshot dictionary
+        cache_file_name=None, 
+        gas_snapdict=None,  
+        star_snapdict=None, 
         galaxy_kwargs=None,
         master_loud=True,
         **kwargs
-        ):
-        """Initializes a cache file to be read from and sets any image parameters
-            that have been passed to init. Extra `kwargs` will be passed to `set_ImageParams`.
-            Snapshot dictionaries can be passed to avoid `FIREstudio` using `load_SnapshotData`
-            to open them from disk. They require a minimum number of keys to function.
+        ): 
+        """ Base class that handles camera manipulation and data caching. 
 
-`GasStudio` requires: 
-```python
-    snapdict['Coordinates'] ## coordinates of the particles
-```
-(and ideally `'SmoothingLengths'`, in the same units as coordinates, but these can be calculated). 
-
-`StarStudio` requires: 
-```python
-gas_snapdict['Coordinates'] ## coordinates of the particles
-gas_snapdict['Metallicity'] ## metallicity (mass fractions) of the particles 
-gas_snapdict['Masses'] ## masses of the particles in 1e10 solar masses
-gas_snapdict['Temperature'] ## temperature of the gas in K
-
-star_snapdict['Coordinates'] ## coordinates of the particles
-star_snapdict['Metallicity'] ## metallicity (mass fractions) of the particles 
-star_snapdict['Masses'] ## masses of the particles in 1e10 solar masses
-star_snapdict['AgeGyr'] ## age of particles in Gyr
-```
-(and ideally `'SmoothingLengths'` for both, in the same units as coordinates for both, but these can be calculated). 
-
-            Input:
-
-                datadir -- directory to put intermediate and output files 
-                snapnum -- snapshot number (feel free to lie if you aren't using
-                    FIRE_studio to open a snapshot, it is needed for cache file name though)
-                sim_name -- name of the simulation, i.e. m12i_res7100. prepends the cache_file_name
-                    if the sim_name isn't already in the path to disambiguate caches.  
-                cache_file_name = None -- the name of the file to save maps to
-                    defaults to proj_maps_%03d.hdf5, changes when you use set_DataParams
-                    to choose a snapshot.
-
-                gas_snapdict = None -- an open galaxy gas snapshot dictionary, opens from snapdir/snapnum if None
-                    (must then also provide snapdir)
-                star_snapdict = None -- an open galaxy star snapshot dictionary, opens from snapdir/snapnum if None 
-                    (must then also provide snapdir)
-                galaxy_kwargs = None -- dictionary that contains kwargs that should be passed to the opened
-                    abg_python.galaxy.Galaxy instance that is used to load snapshot data from disk. 
-                master_loud = True -- flag for turning off *all* print statements
-
-                **set_ImageParams_kwargs -- keyword arguments that will be passed to
-                    set_ImageParams
-
-            Output:
-
-                None"""
+        Parameters
+        ----------
+        datadir : str
+            directory to put intermediate and output files, 'firestudio' is appended
+            if the directory contains sim_name
+        snapnum : int
+            snapshot number (feel free to lie if you aren't using
+            FIRE_studio to open a snapshot, it is needed for cache file name though)
+        sim_name : str
+            name of the simulation, i.e. m12i_res7100. prepends the cache_file_name
+            if the sim_name isn't already in the path to disambiguate caches.  
+        cache_file_name : str, optional
+            the name of the file to save maps to,
+            by default 'proj_maps_%03d.hdf5'%snapnum
+        gas_snapdict : dict, optional
+            a dictionary containing gas data (or that which should be treated as 
+            gas data, depending on the context), by default None
+        star_snapdict : dict, optional
+            a dictionary containing collisionless particle data (i.e. star particles, or
+            that which should be treated as star data, depending on the context),
+            by default None
+        galaxy_kwargs : dict, optional
+            dictionary that contains kwargs that should be passed to the opened
+            abg_python.galaxy.Galaxy instance that is used to load snapshot data from disk,
+            by default None
+        master_loud : bool, optional
+            flag for enabling/disabling *all* print statements, by default True
+        """
         
         ## bind loud flag
         self.master_loud = master_loud
@@ -308,27 +308,39 @@ star_snapdict['AgeGyr'] ## age of particles in Gyr
         gas_mask=None,
         star_mask=None,
         **kwargs):
-        """Binds simulation output to self.gas_snapdict and self.star_snapdict.
+        """ Binds simulation output to self.gas_snapdict and self.star_snapdict.
 
-            Input:
+        Parameters
+        ----------
+        gas_mask : bool np.ndarray, optional
+            boolean mask that should be applied to the galaxy.sub_snap, by default None
+        star_mask : bool np.ndarry, optional
+            boolean mask that should be applied to the galaxy.sub_star_snap, by default None
+        
+        Keywords
+        --------
+            use_saved_subsnapshots: bool, optional
+                save/load subsnapshots, uncompressed copies of the snapshot
+                oriented on the main disk with particles within the virial radius. This can 
+                take up lots of disk space, by default False
+            del_galaxy: bool, optional 
+                flag for whether the abg_python.galaxy.gal_utils.Galaxy object should be deleted after 
+                being used to get the snapshot dictionaries.
 
-                use_saved_subsnapshots = False -- save/load subsnapshots, uncompressed copies of the snapshot
-                    oriented on the main disk with particles within the virial radius. This can 
-                    take up lots of disk space. 
-                del_galaxy = True -- whether the abg_python.galaxy.Galaxy object should be deleted after 
-                    being used to get the snapshot dictionaries.
+        Returns
+        -------
+        [type]
+            None/abg_python.galaxy.Galaxy object -- if del_galaxy == False then returns the galaxy object, 
+            otherwise returns None.
 
-            Output:
+        """
 
-                None/abg_python.galaxy.Galaxy object -- if del_galaxy == False then returns the galaxy object, 
-                    otherwise returns None. """
+        
 
         ## determine if we need to open any snapshot data
         if (self.gas_snapdict is None or 
             self.gas_snapdict['snapnum'] != self.snapnum ): ## haven't loaded this data yet, or we are replacing it
-            return_value = self.__get_snapdicts(
-                self.sim_name,
-                self.snapdir,self.snapnum,**kwargs)
+            return_value = self.__get_snapdicts(**kwargs)
 
             if hasattr(self,'masked_gas_snapdict'):
                 del self.masked_gas_snapdict
@@ -354,23 +366,31 @@ star_snapdict['AgeGyr'] ## age of particles in Gyr
         loud=True,
         **kwargs, 
         ):
-        """Compute smoothing lengths for particles that don't have them,
+        """ Compute smoothing lengths for particles that don't have them,
             typically collisionless particles (like stars). 
 
-            Input:
+        Parameters
+        ----------
+        snapdict_name : str
+            string identifying which snapdict should be used
+            used to compute smoothing lengths, either 'gas' or 'star'
+        use_metadata : bool, optional
+            flag for whether a cached result should be used (if it exists), by default True
+        save_meta : bool, optional
+            flag to save the result in the cache, by default True
+        assert_cached : bool, optional
+            flag to require a cache hit and raise an exception otherwise, by default False
+        loud : bool, optional
+            flag for whether cache hits/misses should be announced
+            to the console., by default True
 
-                snapdict_name -- name in the form of `'%s_snapdict'%snapdict_name`
-                    that will be used to compute smoothing lengths for. 
+        Returns
+        -------
+        np.float32 np.ndarray
+            estimated smoothing lengths
+        """
 
-                use_metadata = True -- flag to search cache for result
-                save_meta = True -- flag to cache the result
-                assert_cached = False -- flag to require a cache hit
-                loud = True -- whether cache hits/misses should be announced
-                    to the console.
-                
-            Output:
-
-                smoothing_lengths -- numpy array of estimated smoothing lengths"""
+        
 
         @metadata_cache(
             '%s_data'%snapdict_name,  ## hdf5 file group name
@@ -390,31 +410,43 @@ star_snapdict['AgeGyr'] ## age of particles in Gyr
 
     def __get_snapdicts(
         self,
-        sim_name,
-        snapdir,snapnum,
         use_saved_subsnapshots=False,
         del_galaxy=True,
         **kwargs):
+        """ Open an abg_python.galaxy.gal_utils.Galaxy instance to load
+            snapshot data from disk.
+
+        Parameters
+        ----------
+        use_saved_subsnapshots : bool, optional
+            flag to cache particle data within the virial radius by 
+            saving it to disk in a "subsnapshot" hdf5 file, by default False
+        del_galaxy : bool, optional
+            delete the Galaxy object after binding the gas and star snapdicts,
+            else return it, by default True
+
+        Returns
+        -------
+        abg_python.galaxy.gal_utils.Galaxy
+            the Galaxy instance used to open snapshot data, 
+            only returned if `del_galaxy=False`
+        """
 
         these_kwargs = self.galaxy_kwargs.copy()
         these_kwargs.update(kwargs)
 
         galaxy = Galaxy(
-            sim_name,
-            snapdir,
-            snapnum,
+            self.sim_name,
+            self.snapnum,
             datadir=os.path.dirname(self.datadir), 
             loud_metadata=False, ## shh don't let them know
             save_header_to_table=False,
             **these_kwargs)
 
-        ## add use_saved_subsnapshots into these kwargs to be passed to extract
-        ##  main halo to allow users to use cached snapshot data
-        these_kwargs.update({'use_saved_subsnapshots':use_saved_subsnapshots})
-
         ## handles opening the snapshot, centering it, and rotating it to be face-on.
         galaxy.extractMainHalo(
             save_meta=False,
+            use_saved_subsnapshots=use_saved_subsnapshots,
             **these_kwargs) ## metadata cache will pull only the good keys out
 
         ## bind the snapshot dictionaries
@@ -422,10 +454,8 @@ star_snapdict['AgeGyr'] ## age of particles in Gyr
         self.star_snapdict = galaxy.sub_star_snap
 
         ## just get rid of it now that we've opened it
-        if del_galaxy:
-            del galaxy
-        else:
-            return galaxy
+        if del_galaxy: del galaxy
+        else: return galaxy
 
     def set_ImageParams(
         self,
@@ -433,49 +463,68 @@ star_snapdict['AgeGyr'] ## age of particles in Gyr
         use_defaults=False,
         loud=True,
         **kwargs):
-        """Changes the parameters of the image. If `use_defaults=True` then 
-            default values of the parameters will be set. Leave `use_defaults=False`
-            to adjust only the keywords passed. 
+        """ Changes the parameters of the image such as camera orientation, frame size, etc. 
+            If `use_defaults=True` then default values of the parameters will be set and will 
+            overwrite the current state. Leave `use_defaults=False` to adjust only the keywords passed.
 
-            Input:
+        Parameters
+        ----------
+        this_setup_id : str, optional
+            string to use to identify this combination of image parameters. If None, 
+            then the image parameters are stringified and combined, by default None
+        use_defaults : bool, optional
+            overwrite current state with default values of each parameter, useful for initialization
+            or resetting after making changes, by default False
+        loud : bool, optional
+            flag to print which parameters are being set/updated, by default True
+        
+        Keywords
+        --------
+        frame_half_thickness : float
+            half-thickness of image in z direction, by default self.camera.camera_dist
+        aspect_ratio: float
+            ratio of number of pixels in each direction determining 
+            the shape of image, y/x, by default 1
+        pixels: int
+            pixels in x direction, resolution of image, by default 1200
+        figure_label: str
+            string to be put in upper right corner, by default ''
+        figure_label_side: str 
+            side of the image to put label in, by default 'right' 
+        scale_bar: bool
+            flag to plot length scale bar in lower left corner, by default True
+        scale_line_length: float
+            length of the scale bar in kpc, by default 5
+        noaxis: bool
+            turns off axis ticks and labels, by default True
+        savefig: str
+            save the image as a png if passed a string or does not save a figure if None, by default None
+        fontsize: int
+            fontsize (in pt) of figure label and scale bar text, 12
+        font_color: str/RGBA tuple
+            color of the subtitle font, by default 'white'
+        snapdir: str
+            path to simulation output
+        snapnum: int
+            which snapshot to open/use for naming the cache
+        sim_name: str
+            name of simulation (i.e. m12i_res7100)
 
-                this_setup_id = None -- string that identies this image setup in the cache,
-                    use this to differentiate between things that might otherwise
-                    be overwritten.
-                use_defaults = False -- flag to overwrite any kwargs that *aren't* passed in
-                    this call to their default value. 
-                loud = True -- 
+        Raises
+        ------
+        ValueError
+            if camera=None is passed explicitly, instead pass an open 
+            `firestudio.utils.camera_utils.Camera instance`
 
-                frame_half_thickness = 15 -- half-thickness of image in z direction
-
-                aspect_ratio = 1 -- shape of image, y/x TODO figure out if this is necessary to pass?
-                pixels = 1200 -- pixels in x direction, resolution of image
-                figure_label = '' -- string to be put in upper right corner
-                'figure_label_side' = 'right' --  corner to put label in
-
-                scale_bar = True -- flag to plot length scale bar in lower left corner
-                scale_line_length = 5 -- length of the scale bar in kpc
-
-                noaxis = True -- turns off axis ticks
-                savefig = None -- save the image as a png if passed a string
-                fontsize = 12  -- fontsize of figure label and scale bar text
-                font_color = 'white' -- color of the subtitle font
-                
-                snapdir - path to simulation output
-                snapnum -  which snapshot to open
-                sim_name - name of simulation (i.e. m12i_res7100)
-
-            Output:
-
-                None
-
-Example usage:
+        Example usage
+        -------------
 ```python
 studio.set_ImageParams(
     this_setup_id='my_custom_setup',
     scale_bar=False,
     figure_label='high redshift')
 ```"""
+        
 
         default_kwargs = {
             'camera':None,
@@ -565,13 +614,17 @@ studio.set_ImageParams(
     def set_CacheFile(self):
         """ Creates the cache hdf5 file. Requires self.snapnum and sim_name be set.
 
-            Input:
+        Returns
+        ------- 
+        abg_python.galaxy.metadata_utils.Metadata
+            cache file for storing image maps
 
-                None
-
-            Output:
-
-                cache_file -- abg_python.galaxy.metadata_utils.Metadata object"""
+        Raises
+        ------
+        IOError
+            if self.snapnum and self.sim_name are not set to disambiguate the cache file
+        """
+        
 
         if (self.snapnum is not None and 
             self.sim_name is not None):
@@ -592,15 +645,8 @@ studio.set_ImageParams(
         return self.metadata
 
     def print_ImageParams(self):
-        """ Prints current image setup to console.
-
-            Input:
-
-                None
-
-            Output:
-
-                None"""
+        """ Prints the current image parameters.
+        """
         default_kwargs = [
             'frame_half_thickness',
             'aspect_ratio',
@@ -619,6 +665,14 @@ studio.set_ImageParams(
             print(arg,'=',getattr(self,arg))
 
     def __identifyThisSetup(self):
+        """ stringifies image parameters and combines them to 'uniquely' 
+            hash this combination of input in the cache file
+
+        Returns
+        -------
+        str
+            a stringified combination of image parameters
+        """
         ## uniquely identify this projection setup using a simple "hash"
         rotation_string = 'quat_%.2f_%.2f_%.2f_%.2f'%(
             np.round(self.camera.quaternion[0],decimals=2),
@@ -639,23 +693,17 @@ studio.set_ImageParams(
         return self.this_setup_id
 
     def computeFrameBoundaries(self):
-        """Uses current image parameters to calculate the minimum and maximum 
-            x, y, and z limits. 
+        """ Uses the camera to calculate the minimum and maximum 
+            x, y, and z limits as well as the physical resolution of the image.
+            
 
-            Input: 
-                
-                None
-
-            Output:
-
-                None
-
-            Attributes set:
-                self.Xmin, self.Xmax -- 
-                self.Ymin, self.Ymax -- 
-                self.Zmin, self.Zmax -- 
-                self.npix_x, self.npix_y -- 
-                self.Acell -- 
+            Attributes set
+            --------------
+            self.Xmin, self.Xmax -- 
+            self.Ymin, self.Ymax -- 
+            self.Zmin, self.Zmax -- 
+            self.npix_x, self.npix_y -- 
+            self.Acell -- 
                 
         """
         ## +- camera_dist limits -> 45 degree FOV
@@ -675,6 +723,21 @@ studio.set_ImageParams(
         self.Acell = (self.Xmax-self.Xmin)/self.npix_x * (self.Ymax-self.Ymin)/self.npix_y
 
     def cullFrameIndices(self,Coordinates):
+        """ boolean mask of those particles within the volume defined by 
+            Xmin-Xmax, Ymin-Ymax, and Zmin-Zmax
+
+        Parameters
+        ----------
+        Coordinates : (N,3) np.ndarray 
+            array of particle coordinates
+
+        Returns
+        -------
+        bool np.ndarray
+            a boolean mask which is `True` for particles in the extraction volume
+            and `False` outside.
+            
+        """
 
         ## extract a cube of particles that are in relevant area
         ind_box = ((Coordinates[:,0] > self.Xmin) & (Coordinates[:,0] < self.Xmax) &
@@ -682,10 +745,3 @@ studio.set_ImageParams(
                    (Coordinates[:,2] > self.Zmin) & (Coordinates[:,2] < self.Zmax))
 
         return ind_box
-
-## append method docstrings to class docstring
-append_function_docstring(Studio,Studio.__init__)
-append_function_docstring(Studio,Studio.load_SnapshotData)
-append_function_docstring(Studio,Studio.print_ImageParams)
-append_function_docstring(Studio,Studio.computeFrameBoundaries)
-append_function_docstring(Studio,Studio.get_HSML)
