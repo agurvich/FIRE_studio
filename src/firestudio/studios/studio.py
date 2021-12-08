@@ -645,8 +645,7 @@ studio.set_ImageParams(
         return self.metadata
 
     def print_ImageParams(self):
-        """ Prints the current image parameters.
-        """
+        """ Prints the current image parameters."""
         default_kwargs = [
             'frame_half_thickness',
             'aspect_ratio',

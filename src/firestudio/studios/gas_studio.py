@@ -1,18 +1,13 @@
 ## builtin imports
 import os
-import sys 
-import h5py
-import matplotlib 
-matplotlib.use('Agg') 
 import numpy as np 
 import ctypes
 import copy
 
-import matplotlib.pyplot as plt
 
 ## abg_python imports
-from abg_python import filterDictionary,append_function_docstring,append_string_docstring
-from abg_python.plot_utils import addColorbar,get_cmap
+from abg_python import append_function_docstring,append_string_docstring
+from abg_python.plot_utils import plt,addColorbar,get_cmap
 from abg_python.galaxy.metadata_utils import metadata_cache
 
 ## firestudio imports
@@ -22,7 +17,7 @@ def vfloat(x):
     return x.ctypes.data_as(ctypes.POINTER(ctypes.c_float))
 
 class GasStudio(Studio):
-    """`FIREstudio` class for making gas projection images.
+    """ `FIREstudio` class for making gas projection images.
         Can be used for stars, but you will either have to pass smoothing lengths
         in or allow FIREstudio to calculate them itself, which  can take a long time. 
 
@@ -34,6 +29,13 @@ Important methods include:
 * [`Studio.set_ImageParams`](#studioset_imageparams)"""
 
     def __repr__(self):
+        """ implementation of built-in __repr__ method for printing.
+
+        Returns
+        -------
+        str
+            string to print back to the console
+        """
         return 'GasStudio instance'
 
     def set_ImageParams(
@@ -41,31 +43,36 @@ Important methods include:
         use_defaults=False,
         loud=True,
         **kwargs):
-        """Changes the parameters of the image. If `use_defaults=True` then 
-            default values of the parameters will be set. Leave `use_defaults=False`
-            to adjust only the keywords passed. 
+        """ Changes the parameters of the image such as camera orientation, frame size, etc. 
+            If `use_defaults=True` then default values of the parameters will be set and will 
+            overwrite the current state. Leave `use_defaults=False` to adjust only the keywords passed. 
 
-            Input: 
+        Parameters
+        ----------
+        use_defaults : bool, optional
+            overwrite current state with default values of each parameter, useful for initialization
+            or resetting after making changes, by default False
+        loud : bool, optional
+            flag to print which parameters are being set/updated, by default True
 
-                use_defaults = False -- 
-                loud = True -- 
+        Keywords
+        --------
+            use_colorbar: bool, optional
+                , by default False
+            cbar_label: str, optional
+                , by default ''
+            cbar_logspace: bool, optional
+                , by default False
 
-                use_colorbar = False -- 
-                cbar_label = '' -- 
-                cbar_logspace = False -- 
 
-            Output:
-
-                None
-
-Example usage:
-```python 
-gasStudio.set_ImageParams(
-    use_colorbar=True,
-    cbar_label='Temperature',
-    cbar_logspace=True,
-    figure_label='t = 13.8 Gyr')
-```"""
+        Example usage
+        -------------
+        ```python 
+        gasStudio.set_ImageParams(
+            use_colorbar=True,
+            cbar_label='Temperature',
+            cbar_logspace=True,
+            figure_label='t = 13.8 Gyr')```"""
 
         default_kwargs = {
             'use_colorbar':False,
@@ -119,15 +126,7 @@ gasStudio.set_ImageParams(
 
 
     def print_ImageParams(self):
-        """ Prints current image setup to console.
-
-            Input:
-
-                None
-
-            Output:
-
-                None """
+        """ Prints the current image parameters."""
 
         default_kwargs = {
             'use_colorbar':False,
@@ -142,46 +141,7 @@ gasStudio.set_ImageParams(
         ## call the super class' print image params
         super().print_ImageParams()
 
-    def __quick_weightAvgAlongLOS(
-        self,
-        weights,
-        weight_name,
-        quantities,
-        quantity_name,
-        snapdict_name='gas',
-        **kwargs):
-
-        (BoxSize,
-        Xmin,Xmax,
-        Ymin,Ymax,
-        Zmin,Zmax,
-        npix_x,npix_y,
-        prep_pos,prep_weights,prep_quantities,
-        prep_hsml) = self.__prepareCoordinates(
-            snapdict_name,
-            weights,
-            weight_name,
-            quantities,
-            quantity_name)
-
-        xedges = np.linspace(Xmin,Xmax,npix_x,endpoint=True)
-        yedges = np.linspace(Ymin,Ymax,npix_y,endpoint=True)
-
-        xs,ys,zs = prep_pos.T
-        weightMap,xedges,yedges = np.histogram2d(
-            xs,ys,
-            bins=[xedges,yedges],
-            weights=prep_weights)
-
-        weightWeightedQuantityMap,xedges,yedges = np.histogram2d(
-            xs,ys,
-            bins=[xedges,yedges],
-            weights=prep_weights*prep_quantities)
-
-        return weightMap, weightWeightedQuantityMap/weightMap
-
-
-    def weightAvgAlongLOS(
+    def projectAlongLOS(
         self,
         weights,
         weight_name,
@@ -196,37 +156,49 @@ gasStudio.set_ImageParams(
         """Projects a weighted quantity along the LOS into pixels. Projection is 
             done with a cubic spline kernel that is renormalized to conserve mass. 
 
-I.e. 
+        I.e. 
 
-`renorm_i = sum_j ( k(r_ij,h_i))`
+        `renorm_i = sum_j ( k(r_ij,h_i))`
 
-where j is a sum over the pixels particle i contributes to.
+        where j is a sum over the pixels particle i contributes to.
 
-The maps computed in pixel j are then:
+        The maps computed in the flattened pixel array at index j are then:
 
-`W[j] = sum_i( k(r_ij,h_i)/renorm_i * weight)`
-`Q[j] = sum_i( k(r_ij,h_i)/renorm_i * weight * quantity) / W[j]`
+        `W[j] = sum_i( k(r_ij,h_i)/renorm_i * weight)`
+        `Q[j] = sum_i( k(r_ij,h_i)/renorm_i * weight * quantity) / W[j]`
 
-            Input:
+        Parameters
+        ----------
+        weights : np.ndarray, optional
+            [description]
+        weight_name : str
+            Name of the key in the snapdict that should be used as the weights
+            if weights are not passed.
+            special weight_names are `Volumes` and `Ones`, which do not 
+            have to be present in the snapdict.
+        quantities : np.ndarray, optional
+            [description]
+        quantity_name : str
+            Name of the field that is being projected, should be in the snapdict if 
+            quantities is not passed.
+        use_metadata : bool, optional
+            flag for whether a cached result should be used (if it exists), by default True
+        save_meta : bool, optional
+            flag to save the result in the cache, by default True
+        assert_cached : bool, optional
+            flag to require a cache hit and raise an exception otherwise, by default False
+        loud : bool, optional
+            flag for whether cache hits/misses should be announced
+            to the console., by default True
 
-                weights --
-                weight_name -- 
-                    special weight_names are `Volumes` and `Ones`, which do not 
-                    have to be present in the snapdict to be used as weights.
-                quantities --
-                quantity_name --
-                use_metadata=True --
-                save_meta=True --
-                assert_cached=False --
-                loud=True --
-                
-                snapdict_name -- 'gas' or 'star', where to load arrays that hasn't 
-                    been passed from
-
-            Output:
-
-                weightMap -- 
-                weightWeightedQuantityMap --"""
+        Returns
+        -------
+        weightMap: np.ndarray
+            [description]
+        weightWeightedQuantityMap: np.ndarray
+            [description]
+        """
+        
 
         @metadata_cache(
             self.this_setup_id,  ## hdf5 file group name
@@ -239,7 +211,7 @@ The maps computed in pixel j are then:
             assert_cached=assert_cached,
             loud=loud,
             force_from_file=True) ## read from cache file, not attribute of object
-        def inner_weight_along_los(
+        def inner_projectAlongLOS(
             self,
             weights,
             weight_name,
@@ -262,7 +234,7 @@ The maps computed in pixel j are then:
 
             return weightMap, weightWeightedQuantityMap
 
-        return inner_weight_along_los(
+        return inner_projectAlongLOS(
             self,
             weights,
             weight_name,
@@ -282,7 +254,37 @@ The maps computed in pixel j are then:
             SmoothingLength (optional, will compute though otherwise)
             weight_name (unless it's Ones or passed in as weights)
             quantity_name (unless it's passed in as quantities)
+
+        Parameters
+        ----------
+        snapdict_name : [type]
+            [description]
+        weights : [type]
+            [description]
+        weight_name : [type]
+            [description]
+        quantities : [type]
+            [description]
+        quantity_name : [type]
+            [description]
+
+        Returns
+        -------
+        [type]
+            [description]
+
+        Raises
+        ------
+        KeyError
+            [description]
+        KeyError
+            [description]
+        KeyError
+            [description]
+        KeyError
+            [description]
         """
+        
 
         ## pick which particle type we're projecting, 
         if snapdict_name != 'gas' and snapdict_name != 'star':
@@ -369,148 +371,140 @@ The maps computed in pixel j are then:
             pos,weights,quantities,
             hsml)
 
-        if self.master_loud:
-            print('-done')
-
-    def volumeWeightAlongLOS(
+    def __quick_projectAlongLOS(
         self,
-        quantity,
-        quantity_name, 
-        **kwargs):
-        """Wrapper function for easier API if quantity = None 
-            but quantity_name is in the snapdict then it will be read for you.
-
-            Volume is calculated as 4/3 pi hsml^3 / 32.
-            If you'd like a different volume weight then set self.gas_snapdict['Volume'] = volumes.
-
-            Alternatively, call weightAvgAlongLOS directly with quantity and weights passed.
-
-            Input:
-
-                quantity --
-                quantity_name --
-
-                use_metadata=True --
-                save_meta=True --
-                assert_cached=False --
-                loud=True --
-
-                snapdict_name='gas' --
-
-            Output: 
-
-                volumeMap -- a map of the deposited cell volume along the LOS
-                    in each pixel.
-                volumeWeightedQuantityMap -- the volume weighted quantity along the
-                    LOS in each pixel."""
-
-        return self.weightAvgAlongLOS(
-            None, ## read it from the snapdict
-            'Volume',
-            quantity,
-            quantity_name,
-            **kwargs)
-
-    def massWeightAlongLOS(
-        self,
-        quantity,
+        weights,
+        weight_name,
+        quantities,
         quantity_name,
+        snapdict_name='gas',
         **kwargs):
-        """ Wrapper function for easier API if quantity = None 
-            but quantity_name is in the snapdict then it will be read for you.
+        """ approximates the projection of a weighted quantity along the LOS into pixels.
+            using a 2d histogram and assuming particles have 0 extent. much faster than the 
+            real thing and useful for quick and dirty testing.
 
-            Input:
+        Parameters
+        ----------
+        weights : np.ndarray, optional
+            [description]
+        weight_name : str
+            Name of the key in the snapdict that should be used as the weights
+            if weights are not passed.
+            special weight_names are `Volumes` and `Ones`, which do not 
+            have to be present in the snapdict.
+        quantities : np.ndarray, optional
+            [description]
+        quantity_name : str
+            Name of the field that is being projected, should be in the snapdict if 
+            quantities is not passed.
+        snapdict_name : str, optional
+            [description], by default 'gas'
 
-                quantity -- 
-                quantity_name -- 
+        Returns
+        -------
+        weightMap: np.ndarray
+            [description]
+        weightWeightedQuantityMap: np.ndarray
+            [description]
+        """
 
-                use_metadata=True -- 
-                save_meta=True -- 
-                assert_cached=False -- 
-                loud=True -- 
-                snapdict_name='gas' -- 
-            
-            Output:
+        (BoxSize,
+        Xmin,Xmax,
+        Ymin,Ymax,
+        Zmin,Zmax,
+        npix_x,npix_y,
+        prep_pos,prep_weights,prep_quantities,
+        prep_hsml) = self.__prepareCoordinates(
+            snapdict_name,
+            weights,
+            weight_name,
+            quantities,
+            quantity_name)
 
-                massMap -- a map of the deposited cell mass along the LOS
-                    in each pixel.
-                massWeightedQuantityMap -- the mass weighted quantity along the
-                    LOS in each pixel."""
+        xedges = np.linspace(Xmin,Xmax,npix_x,endpoint=True)
+        yedges = np.linspace(Ymin,Ymax,npix_y,endpoint=True)
 
+        xs,ys,_ = prep_pos.T
+        weightMap,xedges,yedges = np.histogram2d(
+            xs,ys,
+            bins=[xedges,yedges],
+            weights=prep_weights)
 
-        return self.weightAvgAlongLOS(
-            None, ## read it from the snapdict.
-            'Masses',
-            quantity,
-            quantity_name,
-            **kwargs)
+        weightWeightedQuantityMap,xedges,yedges = np.histogram2d(
+            xs,ys,
+            bins=[xedges,yedges],
+            weights=prep_weights*prep_quantities)
+
+        return weightMap, weightWeightedQuantityMap/weightMap
 
 ####### produceImage implementation #######
     def render(
         self,
         ax=None,
         **kwargs):
-        """Plots a projected image using the stored image parameters.
+        """ Plots a projected image using the stored image parameters.
 
-            Input: 
+        Parameters
+        ----------
+        ax : matplotlib axis, optional
+            [description], by default None
 
-                ax = None -- axis to plot image to, if None will create a new figure
+        Keywords
+        --------
+            ax = None -- axis to plot image to, if None will create a new figure
 
-                weight_name = 'Masses' --
-                quantity_name = 'Temperature' --
-                weights = None -- 
-                quantities = None --
-                min_weight = None,max_weight = None --
-                min_quantity = None,max_quantity = None --
-                weight_adjustment_function = None --
-                quantity_adjustment_function = None --
-                use_colorbar = False --
-                cmap = 'viridis' -- what colormap to use
-                quick = False -- flag to use a simple 2d histogram (for comparison or
-                    for quick iteration as the user defines the image parameters)
+            weight_name = 'Masses' --
+            quantity_name = 'Temperature' --
+            weights = None -- 
+            quantities = None --
+            min_weight = None,max_weight = None --
+            min_quantity = None,max_quantity = None --
+            weight_adjustment_function = None --
+            quantity_adjustment_function = None --
+            use_colorbar = False --
+            cmap = 'viridis' -- what colormap to use
+            quick = False -- flag to use a simple 2d histogram (for comparison or
+                for quick iteration as the user defines the image parameters)
 
-            Output:
+        Returns
+        -------
+            ax -- the axis the image was plotted to
+            final_image -- 2x2x3 RGB pixel array
 
-                ax -- the axis the image was plotted to
-                final_image -- 2x2x3 RGB pixel array
+        Example usage
+        -------------
+        ```python
+        ## makes a gas surface density map
+        gasStudio.render(
+            weight_name='Masses',
+            min_weight=-0.1,
+            max_weight=1.5,
+            weight_adjustment_function= lambda x: np.log10(x/gasStudio.Acell)+10-6 ## log10(msun/pc^2)
+            )
 
-Example usage:
-```python
-## makes a gas surface density map
-gasStudio.render(
-    weight_name='Masses',
-    min_weight=-0.1,
-    max_weight=1.5,
-    weight_adjustment_function= lambda x: np.log10(x/gasStudio.Acell)+10-6 ## log10(msun/pc^2)
-    )
+        ## makes a mass weighted temperature map
+        gasStudio.render(
+            weight_name='Masses',
+            quantity_name='Temperature',
+            min_quantity=2,
+            max_quantity=7,
+            quantity_adjustment_function= np.log10
+            )
 
-## makes a mass weighted temperature map
-gasStudio.render(
-    weight_name='Masses',
-    quantity_name='Temperature',
-    min_quantity=2,
-    max_quantity=7,
-    quantity_adjustment_function= np.log10
-    )
+        ## makes a saturation-hue gas surface density + Temperature map
+        gasStudio.render(
+            weight_name='Masses',
+            min_weight=-0.1,
+            max_weight=1.5,
+            weight_adjustment_function= lambda x: np.log10(x/gasStudio.Acell)+10-6 ## log10(msun/pc^2)
+            quantity_name='Temperature',
+            min_quantity=2,
+            max_quantity=7,
+            quantity_adjustment_function= np.log10
+            )```"""
 
-## makes a saturation-hue gas surface density + Temperature map
-gasStudio.render(
-    weight_name='Masses',
-    min_weight=-0.1,
-    max_weight=1.5,
-    weight_adjustment_function= lambda x: np.log10(x/gasStudio.Acell)+10-6 ## log10(msun/pc^2)
-    quantity_name='Temperature',
-    min_quantity=2,
-    max_quantity=7,
-    quantity_adjustment_function= np.log10
-    ) 
-```"""
-
-
-        if ax is None:
-            fig,ax = plt.figure(),plt.gca()
-        else:
-            fig = ax.get_figure()
+        if ax is None: fig,ax = plt.figure(),plt.gca()
+        else: fig = ax.get_figure()
 
         ## remap the C output to RGB space
         final_image = self.produceImage(**kwargs)
@@ -533,25 +527,63 @@ gasStudio.render(
         min_quantity=None,max_quantity=None,
         weight_adjustment_function=None,
         quantity_adjustment_function=None,
-        use_colorbar=False,
         cmap='viridis', ## what colormap to use
         quick=False,
         **kwargs
         ):
+        """[summary]
+
+        Parameters
+        ----------
+        weight_name : str, optional
+            [description], by default 'Masses'
+        quantity_name : str, optional
+            [description], by default 'Temperature'
+        weights : [type], optional
+            [description], by default None
+        quantities : [type], optional
+            [description], by default None
+        min_weight : [type], optional
+            [description], by default None
+        max_weight : [type], optional
+            [description], by default None
+        min_quantity : [type], optional
+            [description], by default None
+        max_quantity : [type], optional
+            [description], by default None
+        weight_adjustment_function : [type], optional
+            [description], by default None
+        quantity_adjustment_function : [type], optional
+            [description], by default None
+        use_colorbar : bool, optional
+            [description], by default False
+        cmap : str, optional
+            [description], by default 'viridis'
+
+        Returns
+        -------
+        [type]
+            [description]
+
+        Raises
+        ------
+        ValueError
+            [description]
+        """
 
         self.cmap = cmap
 
 
         ## load the requested maps
         if not quick:
-            weightMap, weightWeightedQuantityMap = self.weightAvgAlongLOS(
+            weightMap, weightWeightedQuantityMap = self.projectAlongLOS(
                 weights,
                 weight_name,
                 quantities,
                 quantity_name,
                 **kwargs)
         else:
-            weightMap, weightWeightedQuantityMap = self.__quick_weightAvgAlongLOS(
+            weightMap, weightWeightedQuantityMap = self.__quick_projectAlongLOS(
                 weights,
                 weight_name,
                 quantities,
@@ -624,8 +656,7 @@ gasStudio.render(
             self.cbar_min = min_quantity
             self.cbar_max = max_quantity
 
-        else:
-            raise ValueError("Use (min/max)_(weight/quantity) kwargs to set image")
+        else: raise ValueError("Use (min/max)_(weight/quantity) kwargs to set image")
 
         ## convert the images from 0->1 space to 0-> 255 space
         final_image = produce_cmap_hsv_image(image_Q, image_W, cmap=self.cmap) 
@@ -657,14 +688,6 @@ gasStudio.render(
                 logflag = self.cbar_logspace,
                 fontsize=self.fontsize,
                 cmap_number=0.25)
-
-append_function_docstring(GasStudio,GasStudio.set_ImageParams)
-append_function_docstring(GasStudio,GasStudio.weightAvgAlongLOS)
-append_function_docstring(GasStudio,GasStudio.massWeightAlongLOS)
-append_function_docstring(GasStudio,GasStudio.volumeWeightAlongLOS)
-append_function_docstring(GasStudio,GasStudio.render)
-append_function_docstring(GasStudio,Studio)
-
 
 def getImageGrid(
     BoxSize,
