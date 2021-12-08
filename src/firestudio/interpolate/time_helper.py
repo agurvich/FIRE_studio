@@ -1,4 +1,5 @@
 import numpy as np
+import os
 
 from abg_python.interpolate.time_interpolate_utils import index_match_snapshots_with_dataframes,make_interpolated_snap
 from abg_python.galaxy.gal_utils import Galaxy
@@ -55,7 +56,9 @@ def single_threaded_control_flow(
     snap_pair_times,
     galaxy_kwargs,
     frame_kwargss,
-    render_kwargs):
+    render_kwargs,
+    datadir=None):
+
     """ """
 
     if 'snapnum' in galaxy_kwargs: galaxy_kwargs.pop('snapnum')
@@ -82,6 +85,10 @@ def single_threaded_control_flow(
     for i,(pair,pair_times) in enumerate(zip(snap_pairs,snap_pair_times)):     
 
         frame_kwargs = frame_kwargss[i]
+        savefig = frame_kwargs['savefig']
+
+        if savefig is not None and datadir is not None and os.path.isfile(os.path.join(datadir,savefig)): 
+            continue
 
         if not i%10: print(i,pair,pair_times)
         ## determine if the galaxies in the pair are actually
@@ -93,6 +100,12 @@ def single_threaded_control_flow(
             next_galaxy,
             compute_stellar_hsml=load_star,
             **galaxy_kwargs)
+
+        if datadir is None: 
+            datadir = os.path.join(prev_galaxy.datadir,'firestudio')
+
+            if savefig is not None and os.path.isfile(os.path.join(datadir,savefig)): 
+                continue
 
         ## update the previous/next snapnums
         prev_snapnum,next_snapnum = pair
