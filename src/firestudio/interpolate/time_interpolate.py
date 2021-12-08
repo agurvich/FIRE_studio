@@ -5,6 +5,7 @@ import multiprocessing
 import numpy as np
 
 from abg_python.interpolate.time_interpolate_utils import find_bordering_snapnums
+from abg_python.galaxy.gal_utils import ManyGalaxy
 
 from .time_helper import split_into_n_approx_equal_chunks,single_threaded_control_flow
 from ..studios.gas_studio import GasStudio
@@ -99,11 +100,12 @@ class TimeInterpolationHandler(object):
             raise TypeError("%s is not GasStudio, StarStudio, or FIREStudio"%repr(which_studio))
 
         ## initialize array of savefig values
-        if savefig is not None: 
-            for i in range(self.nframes):
-                ## determine minimum number of leading zeros
+        for i in range(self.nframes):
+            ## determine minimum number of leading zeros
+            if savefig is not None:
                 format_str = '%s'%savefig + '_%0'+'%dd.png'%(np.ceil(np.log10(self.nframes)))
                 frame_kwargss[i]['savefig'] = format_str%i
+            else: frame_kwargss[i]['savefig'] = None
         
         times_gyr = self.times_gyr
         snap_pairs = self.snap_pairs
@@ -116,6 +118,18 @@ class TimeInterpolationHandler(object):
             frame_kwargss = np.array(frame_kwargss)[self.keyframes]
             for i in range(len(self.keyframes)):
                 frame_kwargss[i]['savefig'] = None
+
+        if 'final_orientation' in galaxy_kwargs:
+            flag = galaxy_kwargs.pop('final_orientation')
+            if flag:
+                many_galaxy = ManyGalaxy(
+                    galaxy_kwargs['name'],
+                    suite_name=galaxy_kwargs['suite_name'] if 'suite_name' in galaxy_kwargs else 'metal_diffusion'
+                )
+                theta,phi = many_galaxy.get_final_orientation()
+                galaxy_kwargs['force_theta_TB'] = theta
+                galaxy_kwargs['force_phi_TB'] = phi
+                del many_galaxy
 
         if multi_threads == 1:
             ## collect positional arguments for worker_function

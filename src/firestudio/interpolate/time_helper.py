@@ -169,6 +169,8 @@ def load_gals_from_disk(
     prev_galaxy,next_galaxy,
     testing=False,
     compute_stellar_hsml=False,
+    force_theta_TB=None,
+    force_phi_TB=None,
     **kwargs):
     """ Determines whether it needs to load a new galaxy from disk
         or if we already have what we need."""
@@ -198,14 +200,20 @@ def load_gals_from_disk(
         print('loading',pair[0],'from disk')
         if not testing:
             prev_galaxy = Galaxy(snapnum=pair[0],**kwargs)
-            prev_galaxy.extractMainHalo(compute_stellar_hsml=compute_stellar_hsml)
+            prev_galaxy.extractMainHalo(
+                compute_stellar_hsml=compute_stellar_hsml,
+                force_theta_TB=force_theta_TB,
+                force_phi_TB=force_phi_TB)
         else: prev_galaxy = pair[0]
         changed = True
     if next_galaxy is None:
         print('loading',pair[1],'from disk')
         if not testing:
             next_galaxy = Galaxy(snapnum=pair[1],**kwargs)
-            next_galaxy.extractMainHalo(compute_stellar_hsml=compute_stellar_hsml)
+            next_galaxy.extractMainHalo(
+                compute_stellar_hsml=compute_stellar_hsml,
+                force_theta_TB=force_theta_TB,
+                force_phi_TB=force_phi_TB)
         else: next_galaxy = pair[1]
         changed = True
         

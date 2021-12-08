@@ -99,6 +99,7 @@ class InterpolationHandler(object):
         if savefig is not None:
             if 'keys_to_extract' in galaxy_kwargs: galaxy_kwargs.pop('keys_to_extract')
 
+            if 'snapnum' not in galaxy_kwargs: galaxy_kwargs['snapnum'] = None
             galaxy = Galaxy(**galaxy_kwargs)
 
             format_str = '%s'%savefig + '_%0'+'%dd.png'%(np.ceil(np.log10(self.nframes)))
