@@ -31,7 +31,7 @@ def split_into_n_approx_equal_chunks(snap_pairs,nchunks):
     
     mps_chunks = np.array(mps_chunks)#-indices[0]
     mps_chunks=list(mps_chunks)
-    print('split into:',np.diff([0]+mps_chunks+[len(snap_pairs)]))   
+    print('split into:','%d threads'%len(mps_chunks),np.diff([0]+mps_chunks+[len(snap_pairs)]))
     return mps_chunks
 
 def split_pairs(snap_pairs):
@@ -57,7 +57,9 @@ def single_threaded_control_flow(
     galaxy_kwargs,
     frame_kwargss,
     render_kwargs,
-    datadir=None):
+    datadir=None,
+    timestamp=True,
+    coord_interp_mode='spherical'):
 
     """ """
 
@@ -90,7 +92,7 @@ def single_threaded_control_flow(
         if savefig is not None and datadir is not None and os.path.isfile(os.path.join(datadir,savefig)): 
             continue
 
-        if not i%10: print(i,pair,pair_times)
+        #if not i%10: print(i,pair,pair_times)
         ## determine if the galaxies in the pair are actually
         ##  changed, and if so, open their data from the disk.
         prev_galaxy,next_galaxy,changed = load_gals_from_disk(
@@ -111,7 +113,7 @@ def single_threaded_control_flow(
         prev_snapnum,next_snapnum = pair
 
         this_time = times[i]
-        
+ 
         if changed:
             ## make an interpolated snapshot with these galaxies,
             ##  this takes a while so we'll hold onto it and only 
@@ -130,11 +132,17 @@ def single_threaded_control_flow(
                     keys_to_extract=keys_to_extract,
                     t0=t0,
                     t1=t1)
+
+        if timestamp: frame_kwargs['figure_label'] = format_timestamp(this_time,t0,t1)
             
 
         if load_gas:
             ## update the interp_snap with new values for the new time
-            interp_snap = make_interpolated_snap(this_time,gas_time_merged_df,t0,t1) 
+            interp_snap = make_interpolated_snap(
+                this_time,
+                gas_time_merged_df,
+                t0,t1,
+                coord_interp_mode=coord_interp_mode) 
         else: interp_snap = None
 
         ## keep outrside the conditional b.c. worker function
@@ -145,8 +153,14 @@ def single_threaded_control_flow(
         interp_snap['this_time'] = this_time
 
         if load_star:
-            ## TODO interpolate on stars as well
-            interp_star_snap = make_interpolated_snap(this_time,star_time_merged_df,t0,t1)
+            ## TODO how are young stars handled? what is their left coordinate
+            ##  for interpolation if they don't exist yet?
+            ##  should take their velocity and just back track it i guess
+            interp_star_snap = make_interpolated_snap(
+                this_time,
+                star_time_merged_df,
+                t0,t1,
+                coord_interp_mode=coord_interp_mode)
             interp_star_snap['name'] = next_galaxy.name
             interp_star_snap['datadir'] = next_galaxy.datadir
             interp_star_snap['snapnum'] = next_galaxy.snapnum
@@ -197,7 +211,7 @@ def load_gals_from_disk(
 
     changed = False ## flag for whether we loaded something from disk
     if prev_galaxy is None:
-        print('loading',pair[0],'from disk')
+        #print('loading',pair[0],'from disk')
         if not testing:
             prev_galaxy = Galaxy(snapnum=pair[0],**kwargs)
             prev_galaxy.extractMainHalo(
@@ -207,7 +221,7 @@ def load_gals_from_disk(
         else: prev_galaxy = pair[0]
         changed = True
     if next_galaxy is None:
-        print('loading',pair[1],'from disk')
+        #print('loading',pair[1],'from disk')
         if not testing:
             next_galaxy = Galaxy(snapnum=pair[1],**kwargs)
             next_galaxy.extractMainHalo(
@@ -218,3 +232,8 @@ def load_gals_from_disk(
         changed = True
         
     return prev_galaxy,next_galaxy,changed
+
+def format_timestamp(t,t0,t1):
+    ## Myr precision
+    this_string = "%.3f Gyr - %d Myr - %d Myr"%(t,(t-t0)*1e3,(t1-t)*1e3)
+    return this_string
