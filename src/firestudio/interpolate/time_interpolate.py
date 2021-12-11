@@ -25,6 +25,7 @@ class TimeInterpolationHandler(object):
         snap_times_gyr=None,
         dGyr_tmin=None,
         dGyr_tmax=None,
+        coord_interp_mode='spherical',
         **studio_kwargs):
         """ """
 
@@ -60,6 +61,9 @@ class TimeInterpolationHandler(object):
         self.unique_snaps = np.unique(self.snap_pairs)
         self.nframes = len(self.times_gyr)
 
+        ## how should we interpolate the coordinates? in spherical coords? cylindrical?
+        self.coord_interp_mode=coord_interp_mode
+
         ## add in any scene kwargs that should be shared across all frames, 
         ##  convenient to set up the image how you want while maintaining
         ##  compatibility for scene interpolation
@@ -80,6 +84,7 @@ class TimeInterpolationHandler(object):
         savefig='frame',
         which_studio=None,
         multi_threads=1,
+        timestamp=True
         ):
         """ """
 
@@ -119,17 +124,33 @@ class TimeInterpolationHandler(object):
             for i in range(len(self.keyframes)):
                 frame_kwargss[i]['savefig'] = None
 
+        ## anything to do with the galaxy
         if 'final_orientation' in galaxy_kwargs:
-            flag = galaxy_kwargs.pop('final_orientation')
-            if flag:
-                many_galaxy = ManyGalaxy(
-                    galaxy_kwargs['name'],
-                    suite_name=galaxy_kwargs['suite_name'] if 'suite_name' in galaxy_kwargs else 'metal_diffusion'
-                )
-                theta,phi = many_galaxy.get_final_orientation()
-                galaxy_kwargs['force_theta_TB'] = theta
-                galaxy_kwargs['force_phi_TB'] = phi
-                del many_galaxy
+            orientation_flag = galaxy_kwargs.pop('final_orientation')
+
+        ## create a many galaxy instance
+        many_galaxy = ManyGalaxy(
+            galaxy_kwargs['name'],
+            suite_name=galaxy_kwargs['suite_name'] if 'suite_name' in galaxy_kwargs else 'metal_diffusion')
+
+        if orientation_flag:
+            theta,phi = many_galaxy.get_final_orientation()
+            galaxy_kwargs['force_theta_TB'] = theta
+            galaxy_kwargs['force_phi_TB'] = phi
+
+        ## address png caching here that way we can load balance appropriately
+        ##  for multiprocessing
+        frames_to_do = []
+        for i,frame_kwargs in enumerate(frame_kwargss):
+            this_fname = os.path.join(many_galaxy.datadir,'firestudio',frame_kwargs['savefig'])
+            if this_fname is None or not os.path.isfile(this_fname): frames_to_do.append(i)
+
+        times_gyr = times_gyr[frames_to_do]
+        snap_pairs = snap_pairs[frames_to_do]
+        snap_pair_times = snap_pair_times[frames_to_do]
+        frame_kwargss = np.array(frame_kwargss)[frames_to_do]
+
+        if len(frames_to_do) == 0: return
 
         if multi_threads == 1:
             ## collect positional arguments for worker_function
@@ -140,7 +161,10 @@ class TimeInterpolationHandler(object):
                 snap_pair_times,
                 galaxy_kwargs,
                 frame_kwargss,
-                render_kwargs)
+                render_kwargs,
+                many_galaxy.datadir,
+                timestamp,
+                self.coord_interp_mode)
             
         elif multi_threads > 1:
             ## split the pairs of snapshots into approximately equal chunks
@@ -161,7 +185,9 @@ class TimeInterpolationHandler(object):
                 itertools.repeat(galaxy_kwargs),
                 frame_kwargss,
                 itertools.repeat(render_kwargs),
-                )
+                itertools.repeat(many_galaxy.datadir),
+                itertools.repeat(timestamp),
+                itertools.repeat(self.coord_interp_mode))
 
             with multiprocessing.Pool(multi_threads) as my_pool:
                 return_value = my_pool.starmap(single_threaded_control_flow,argss)
