@@ -15,6 +15,31 @@ from abg_python.galaxy.metadata_utils import Metadata,metadata_cache
 from ..utils.stellar_utils.load_stellar_hsml import get_particle_hsml
 from ..utils.camera_utils import Camera
 
+try:
+    from numba import njit
+    @njit()
+    def sample_gradient_at_angle(gradient_mask,image_1,angle):
+        new_gradient_mask = np.zeros(image_1.shape[:-1])
+        ## coordinates are w.r.t. center of image so rotation is correct
+        for pix_i in range(-image_1.shape[0]//2,image_1.shape[0]//2):
+            for pix_j in range(-image_1.shape[1]//2,image_1.shape[1]//2):
+                lookup_i = int(np.round(np.cos(angle)*pix_i-np.sin(angle)*pix_j,0))+gradient_mask.shape[0]//2
+                lookup_j = int(np.round(np.sin(angle)*pix_i+np.cos(angle)*pix_j,0))+gradient_mask.shape[1]//2
+                new_gradient_mask[pix_i+image_1.shape[0]//2,pix_j+image_1.shape[1]//2] = gradient_mask[lookup_i,lookup_j]
+        return new_gradient_mask
+except ImportError:
+    ## don't have numba so gradient blending will be slow. oh well
+    def sample_gradient_at_angle(gradient_mask,image_1,angle):
+        new_gradient_mask = np.zeros(image_1.shape[:-1])
+        ## coordinates are w.r.t. center of image so rotation is correct
+        for pix_i in range(-image_1.shape[0]//2,image_1.shape[0]//2):
+            for pix_j in range(-image_1.shape[1]//2,image_1.shape[1]//2):
+                lookup_i = int(np.round(np.cos(angle)*pix_i-np.sin(angle)*pix_j,0))+gradient_mask.shape[0]//2
+                lookup_j = int(np.round(np.sin(angle)*pix_i+np.cos(angle)*pix_j,0))+gradient_mask.shape[1]//2
+                new_gradient_mask[pix_i+image_1.shape[0]//2,pix_j+image_1.shape[1]//2] = gradient_mask[lookup_i,lookup_j]
+        return new_gradient_mask
+
+
 class Drawer(object):
 
     def drawCoordinateAxes(
@@ -175,25 +200,51 @@ class Drawer(object):
             dpi=300,
             **savefig_args)
     
-    def gradientBlendImages(self,image_1,image_2=None,**kwargs):
+    def gradientBlendImages(
+        self,
+        image_1,
+        image_2=None,
+        gradient_width_percent=0.1,
+        angle=None,
+        **kwargs):
 
         if image_2 is None: image_2 = self.produceImage(**kwargs)
 
-        new_image = np.zeros(image_1.shape)
+        ## crop images as necessary
+        image_1 = image_1[:image_2.shape[0],:image_2.shape[1]]
+        image_2 = image_2[:image_1.shape[0],:image_1.shape[1]]
 
-        xs = np.ones(new_image.shape[0])*0.05
+        if image_1.shape[-1] == 3:
+            print('appending')
+            image_1 = np.append(image_1,np.ones(image_1.shape[:-1])[...,None],axis=-1)
+        if image_2.shape[-1] == 3:
+            print('appending')
+            image_2 = np.append(image_2,np.ones(image_2.shape[:-1])[...,None],axis=-1)
 
-        gradient = np.linspace(0.05,1,xs.shape[0]//2)[::-1]
-        xs[:xs.shape[0]//2] = gradient
+        ## build the gradient to sample from
+        gradient_edge_length = np.ceil(np.sqrt(2*image_1.shape[0]*image_1.shape[1])).astype(int)
+        gradient_mask = np.zeros((gradient_edge_length,gradient_edge_length))
+        gradient_mask[:gradient_mask.shape[0]//2,:] = 1
+        
+        ## TODO could consider allowing gradient to be offcenter I suppose
+        offset = (gradient_mask.shape[0]//2-image_1.shape[0]//2)
+        gradient_begin_index = int(image_1.shape[0]*(0.5-gradient_width_percent/2))+offset
+        gradient_end_index = int(image_1.shape[0]*(0.5+gradient_width_percent/2))+offset
+        gradient_mask[gradient_begin_index:gradient_end_index] = np.linspace(1,0,gradient_end_index-gradient_begin_index)[:,None]
+        
+        ## expect angle in degrees
+        if angle is not None: angle*=np.pi/180
+        
+        ## sample gradient but rotate coordinates. this takes a while because it's a nested for loop over pixels
+        ##  so we can use numba if we have it
+        new_gradient_mask = sample_gradient_at_angle(gradient_mask,image_1,angle)
+        
+        final_image = np.ones(image_1.shape)
+        ## apply the alpha blend from the gradient
+        final_image[...,:-1] = image_1[...,:-1]*(new_gradient_mask*image_1[...,-1])[...,None]+image_2[...,:-1]*(((1-new_gradient_mask)*image_2[...,-1])[...,None])
 
-
-        new_image = image_1*xs[:,None]+image_2*(1-xs[:,None])
-        hsv_image = rgb_to_hsv(new_image)
-        hsv_image[...,-1]*=1.2
-        new_image = hsv_to_rgb(hsv_image)
-
-        return new_image
-
+        ## final alpha channel is 1s everywhere
+        return final_image
 class Studio(Drawer):
     """
     `FIREstudio` parent class that regularizes image setup, rotation, 
