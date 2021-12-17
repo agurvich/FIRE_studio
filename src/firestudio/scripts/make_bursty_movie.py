@@ -1,4 +1,7 @@
 import sys
+
+import numpy as np
+
 from abg_python.plot_utils import plt
 plt.rcParams['figure.dpi']=240
 from abg_python.galaxy.gal_utils import Galaxy
@@ -25,11 +28,17 @@ def main(coord_interp_mode='spherical'):
         {'name':galaxy.name,
         'keys_to_extract':['Velocities','Temperature'],
         'final_orientation':True},
-        render_kwargs={'quick':False,'use_metadata':False},
+        render_kwargs={
+            'quick':False,'use_metadata':False,
+            'save_meta':True,
+            'min_quantity':2,'max_quantity':7,
+            'min_weight':-0.5,'max_weight':3 
+            }, ## msun/pc^2,
     #    studio_kwargs={'maxden':2.2e8,'dynrange':4.7e2},
         multi_threads=7,
-        savefig='bursty_movie_%s'%coord_interp_mode,
-        which_studio=GasStudio)
+        savefig='two_color_%s'%coord_interp_mode,
+        which_studio=GasStudio,
+        check_exists=True) ## skip rendering a frame if the png already exists
 
 if __name__ == '__main__':
     print(sys.argv)
