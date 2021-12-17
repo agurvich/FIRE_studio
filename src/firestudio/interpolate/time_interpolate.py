@@ -84,7 +84,8 @@ class TimeInterpolationHandler(object):
         savefig='frame',
         which_studio=None,
         multi_threads=1,
-        timestamp=True
+        timestamp=True,
+        check_exists=True
         ):
         """ """
 
@@ -138,19 +139,20 @@ class TimeInterpolationHandler(object):
             galaxy_kwargs['force_theta_TB'] = theta
             galaxy_kwargs['force_phi_TB'] = phi
 
-        ## address png caching here that way we can load balance appropriately
-        ##  for multiprocessing
-        frames_to_do = []
-        for i,frame_kwargs in enumerate(frame_kwargss):
-            this_fname = os.path.join(many_galaxy.datadir,'firestudio',frame_kwargs['savefig'])
-            if this_fname is None or not os.path.isfile(this_fname): frames_to_do.append(i)
+        if check_exists:
+            ## address png caching here that way we can load balance appropriately
+            ##  for multiprocessing
+            frames_to_do = []
+            for i,frame_kwargs in enumerate(frame_kwargss):
+                this_fname = os.path.join(many_galaxy.datadir,'firestudio',frame_kwargs['savefig'])
+                if this_fname is None or not os.path.isfile(this_fname): frames_to_do.append(i)
 
-        times_gyr = times_gyr[frames_to_do]
-        snap_pairs = snap_pairs[frames_to_do]
-        snap_pair_times = snap_pair_times[frames_to_do]
-        frame_kwargss = np.array(frame_kwargss)[frames_to_do]
+            if len(frames_to_do) == 0: return
+            times_gyr = times_gyr[frames_to_do]
+            snap_pairs = snap_pairs[frames_to_do]
+            snap_pair_times = snap_pair_times[frames_to_do]
+            frame_kwargss = np.array(frame_kwargss)[frames_to_do]
 
-        if len(frames_to_do) == 0: return
 
         if multi_threads == 1:
             ## collect positional arguments for worker_function

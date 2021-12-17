@@ -57,7 +57,9 @@ class InterpolationHandler(object):
         savefig='frame',
         which_studio=None,
         multi_threads=1,
-        keyframes=False):
+        keyframes=False,
+        check_exists=True
+        ):
 
         ## handle simple case of moving camera at fixed time
         if self.time_handler is None: 
@@ -71,7 +73,8 @@ class InterpolationHandler(object):
                     savefig,
                     which_studio,
                     multi_threads,
-                    keyframes)
+                    keyframes,
+                    check_exists)
             else:
                 return_value = self.scene_handler.interpolateAndRender(
                     galaxy_kwargs,
@@ -79,7 +82,8 @@ class InterpolationHandler(object):
                     render_kwargs,
                     savefig,
                     which_studio,
-                    keyframes)
+                    keyframes,
+                    check_exists)
 
         ## handle complex case of moving camera and incrementing time
         else:
@@ -102,7 +106,8 @@ class InterpolationHandler(object):
                 render_kwargs=render_kwargs, ## only 1 dict, shared by all frames
                 savefig=savefig,
                 which_studio=which_studio,
-                multi_threads=multi_threads)
+                multi_threads=multi_threads,
+                check_exists=check_exists)
 
         if savefig is not None:
             if 'keys_to_extract' in galaxy_kwargs: galaxy_kwargs.pop('keys_to_extract')
@@ -138,11 +143,8 @@ def worker_function(
         'min_quantity':2,
         'max_quantity':7,
         'quantity_adjustment_function':np.log10,
-        #'save_meta':False,
-        #'use_metadata':False,
         #'min_weight':-0.5,
         #'max_weight':3,
-        #'weight_adjustment_function':lambda x: np.log10(x/(30**2/1200**2)) + 10 - 6, ## msun/pc^2,
         }
     elif which_studio is StarStudio: render_kwargs = {}
     elif which_studio is FIREStudio: render_kwargs = {}
@@ -158,6 +160,9 @@ def worker_function(
         star_snapdict=this_star_snapdict,
         master_loud=False,
         **studio_kwargs)
+
+    if render_kwargs['weight_name'] == 'Masses':
+        render_kwargs['weight_adjustment_function'] = lambda x: np.log10(x/my_studio.Acell) + 10 - 6 ## msun/pc^2,
     
     ## differentiate this time to << Myr precision
     if 'this_time' in this_snapdict: my_studio.this_setup_id += "_time%.5f"%this_snapdict['this_time'] 

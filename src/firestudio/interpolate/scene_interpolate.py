@@ -183,7 +183,8 @@ class SceneInterpolationHandler(object):
         savefig='frame',
         which_studio=None,
         multi_threads=None,
-        keyframes=False):
+        keyframes=False,
+        check_exists=True):
 
         load_gas,load_star = load_data_flags(which_studio,render_kwargs)
 
@@ -252,7 +253,8 @@ class SceneInterpolationHandler(object):
         savefig='frame',
         which_studio=None,
         multi_threads=1,
-        keyframes=False):
+        keyframes=False,
+        check_exists=True):
 
         load_gas,load_star = load_data_flags(which_studio,render_kwargs)
 
