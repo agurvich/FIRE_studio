@@ -84,13 +84,32 @@ def single_threaded_control_flow(
 
     load_gas,load_star = load_data_flags(which_studio,render_kwargs)
 
-    for i,(pair,pair_times) in enumerate(zip(snap_pairs,snap_pair_times)):     
+    for i,(pair,(t0,t1)) in enumerate(zip(snap_pairs,snap_pair_times)):     
 
         frame_kwargs = frame_kwargss[i]
-        savefig = frame_kwargs['savefig']
+        this_time = times[i]
+        #savefig = frame_kwargs['savefig']
+        if timestamp: frame_kwargs['figure_label'] = format_timestamp(this_time,t0,t1)
 
-        if savefig is not None and datadir is not None and os.path.isfile(os.path.join(datadir,savefig)): 
+        #if savefig is not None and datadir is not None and os.path.isfile(os.path.join(datadir,savefig)): 
+            #continue
+
+        try:
+            dummy_snap = {}
+            dummy_snap['name'] = galaxy_kwargs['name']
+            dummy_snap['datadir'] = datadir
+            dummy_snap['snapnum'] = pair[1]
+            dummy_snap['this_time'] = this_time
+            ## call the function we were passed
+            return_values += [worker_function(
+                which_studio,
+                dummy_snap,
+                dummy_snap,
+                frame_kwargs,
+                {'assert_cached':True,**render_kwargs})]
             continue
+        except AssertionError:
+            pass
 
         #if not i%10: print(i,pair,pair_times)
         ## determine if the galaxies in the pair are actually
@@ -106,36 +125,32 @@ def single_threaded_control_flow(
         if datadir is None: 
             datadir = os.path.join(prev_galaxy.datadir,'firestudio')
 
-            if savefig is not None and os.path.isfile(os.path.join(datadir,savefig)): 
-                continue
+            #if savefig is not None and os.path.isfile(os.path.join(datadir,savefig)): 
+                #continue
 
         ## update the previous/next snapnums
         prev_snapnum,next_snapnum = pair
 
-        this_time = times[i]
- 
         if changed:
             ## make an interpolated snapshot with these galaxies,
             ##  this takes a while so we'll hold onto it and only 
             ##  make a new one if necessary.
-            t0,t1 = pair_times
             if load_gas: gas_time_merged_df = index_match_snapshots_with_dataframes(
                     prev_galaxy.sub_snap,
                     next_galaxy.sub_snap,
                     keys_to_extract=keys_to_extract,
                     t0=t0,
-                    t1=t1)
+                    t1=t1,
+                    coord_interp_mode=coord_interp_mode)
 
             if load_star: star_time_merged_df = index_match_snapshots_with_dataframes(
                     prev_galaxy.sub_star_snap,
                     next_galaxy.sub_star_snap,
                     keys_to_extract=keys_to_extract,
                     t0=t0,
-                    t1=t1)
-
-        if timestamp: frame_kwargs['figure_label'] = format_timestamp(this_time,t0,t1)
+                    t1=t1,
+                    coord_interp_mode=coord_interp_mode)
             
-
         if load_gas:
             ## update the interp_snap with new values for the new time
             interp_snap = make_interpolated_snap(
