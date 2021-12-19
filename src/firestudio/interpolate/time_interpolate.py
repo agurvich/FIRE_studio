@@ -84,7 +84,7 @@ class TimeInterpolationHandler(object):
         savefig='frame',
         which_studio=None,
         multi_threads=1,
-        timestamp=True,
+        timestamp=0, ## offset by 0 Myr, pass None for no timestamp
         check_exists=True
         ):
         """ """
