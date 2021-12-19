@@ -58,7 +58,7 @@ def single_threaded_control_flow(
     frame_kwargss,
     render_kwargs,
     datadir=None,
-    timestamp=True,
+    timestamp=0, ## offset by 0 Gyr
     coord_interp_mode='spherical'):
 
     """ """
@@ -74,6 +74,8 @@ def single_threaded_control_flow(
 
     prev_galaxy,next_galaxy = None,None
     prev_snapnum,next_snapnum = None,None
+    gas_time_merged_df = None
+    star_time_merged_df = None
 
     return_values = []
 
@@ -89,7 +91,7 @@ def single_threaded_control_flow(
         frame_kwargs = frame_kwargss[i]
         this_time = times[i]
         #savefig = frame_kwargs['savefig']
-        if timestamp: frame_kwargs['figure_label'] = format_timestamp(this_time,t0,t1)
+        if timestamp is not None: frame_kwargs['figure_label'] = format_timestamp(this_time,t0,t1,timestamp)
 
         #if savefig is not None and datadir is not None and os.path.isfile(os.path.join(datadir,savefig)): 
             #continue
@@ -108,8 +110,7 @@ def single_threaded_control_flow(
                 frame_kwargs,
                 {'assert_cached':True,**render_kwargs})]
             continue
-        except AssertionError:
-            pass
+        except (AssertionError,KeyError): pass
 
         #if not i%10: print(i,pair,pair_times)
         ## determine if the galaxies in the pair are actually
@@ -149,7 +150,8 @@ def single_threaded_control_flow(
                     keys_to_extract=keys_to_extract,
                     t0=t0,
                     t1=t1,
-                    coord_interp_mode=coord_interp_mode)
+                    coord_interp_mode=coord_interp_mode,
+                    extra_df=gas_time_merged_df)
             
         if load_gas:
             ## update the interp_snap with new values for the new time
@@ -248,7 +250,7 @@ def load_gals_from_disk(
         
     return prev_galaxy,next_galaxy,changed
 
-def format_timestamp(t,t0,t1):
+def format_timestamp(t,t0,t1,offset=0):
     ## Myr precision
-    this_string = "%.3f Gyr - %d Myr - %d Myr"%(t,(t-t0)*1e3,(t1-t)*1e3)
+    this_string = "%.3f Gyr - %d Myr - %d Myr"%(t-offset,(t-t0)*1e3,(t1-t)*1e3)
     return this_string
