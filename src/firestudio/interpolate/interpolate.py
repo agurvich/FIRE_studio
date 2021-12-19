@@ -58,7 +58,8 @@ class InterpolationHandler(object):
         which_studio=None,
         multi_threads=1,
         keyframes=False,
-        check_exists=True
+        check_exists=True,
+        timestamp=0, ## offset in Gyr for timestamp, None = no timestamp
         ):
 
         ## handle simple case of moving camera at fixed time
@@ -107,7 +108,8 @@ class InterpolationHandler(object):
                 savefig=savefig,
                 which_studio=which_studio,
                 multi_threads=multi_threads,
-                check_exists=check_exists)
+                check_exists=check_exists,
+                timestamp=timestamp)
 
         if savefig is not None:
             if 'keys_to_extract' in galaxy_kwargs: galaxy_kwargs.pop('keys_to_extract')
@@ -161,7 +163,7 @@ def worker_function(
         master_loud=False,
         **studio_kwargs)
 
-    if render_kwargs['weight_name'] == 'Masses':
+    if which_studio is GasStudio and render_kwargs['weight_name'] == 'Masses':
         render_kwargs['weight_adjustment_function'] = lambda x: np.log10(x/my_studio.Acell) + 10 - 6 ## msun/pc^2,
     
     ## differentiate this time to << Myr precision
