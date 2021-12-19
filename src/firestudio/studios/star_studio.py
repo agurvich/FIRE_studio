@@ -69,7 +69,8 @@ starStudio.set_ImageParams(
         default_kwargs = {
             'maxden' : None, ## 
             'dynrange' : None, ## controls the saturation of the image in a non-obvious way
-            'color_scheme_nasa' : True} ## flag to use nasa colors (vs. SDSS if false)
+            'color_scheme_nasa' : True,
+            'no_dust':False} ## flag to use nasa colors (vs. SDSS if false)
 
         for kwarg in list(kwargs.keys()):
             ## only set it here if it was passed
@@ -102,6 +103,7 @@ starStudio.set_ImageParams(
 
         ## set any other image params here
         super().set_ImageParams(use_defaults=use_defaults,**kwargs)
+        if self.no_dust: self.this_setup_id+='_no_dust'
 
     append_function_docstring(set_ImageParams,Studio.set_ImageParams,prepend_string='passes `kwargs` to:\n')
 
@@ -354,6 +356,12 @@ starStudio.set_ImageParams(
             h_gas = self.get_HSML('gas')[gas_ind_box]
         else:
             h_gas = self.gas_snapdict['SmoothingLength'][gas_ind_box].astype(np.float32)
+        
+        if self.no_dust: 
+            mgas = np.zeros(1)
+            gas_pos = np.zeros((1,3))
+            gas_metals = np.zeros(1)
+            h_gas = np.array([1e-3])
 
         return (kappas, lums,
                 star_pos, mstar, ages, metals, h_star,
