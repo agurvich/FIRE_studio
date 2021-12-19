@@ -8,10 +8,16 @@ from abg_python.galaxy.gal_utils import Galaxy
 
 from firestudio.interpolate.interpolate import InterpolationHandler
 from firestudio.studios.gas_studio import GasStudio
+from firestudio.studios.star_studio import StarStudio
 
 
-def main(coord_interp_mode='spherical'):
-    galaxy = Galaxy('m12b_res7100',600)
+def main(
+    coord_interp_mode='cylindrical',
+    name='m12b_res57000',
+    multi_threads=80):
+
+    #galaxy = Galaxy('m12b_res7100',600)
+    galaxy = Galaxy(name,600)
     _,bursty_time,_,_ = galaxy.get_bursty_regime(save_meta=True)
 
     interp_handler = InterpolationHandler(
@@ -20,28 +26,27 @@ def main(coord_interp_mode='spherical'):
         bursty_time+2,
         camera_pos=[0,0,30],
         scale_line_length=10,
-        #time_slice=slice(-24*8,None)
+        #time_slice=slice(-24*4,None),
+        #time_slice=slice(-1,None),
         coord_interp_mode=coord_interp_mode,
     )
 
     figs = interp_handler.interpolateAndRender(
         {'name':galaxy.name,
-        'keys_to_extract':['Velocities','Temperature'],
+        'keys_to_extract':['Metallicity','AgeGyr'],
         'final_orientation':True},
         render_kwargs={
             'quick':False,'use_metadata':False,
-            'save_meta':True,
-            'min_quantity':2,'max_quantity':7,
-            'min_weight':-0.5,'max_weight':3 
+            'save_meta':True,'assert_cached':False,
+            #'min_quantity':2,'max_quantity':7,
+            #'min_weight':-0.5,'max_weight':3 
             }, ## msun/pc^2,
-    #    studio_kwargs={'maxden':2.2e8,'dynrange':4.7e2},
-        multi_threads=7,
-        savefig='two_color_%s'%coord_interp_mode,
-        which_studio=GasStudio,
-        check_exists=True) ## skip rendering a frame if the png already exists
+        studio_kwargs={'maxden':2.2e8,'dynrange':4.7e2,'no_dust':True},
+        multi_threads=multi_threads,
+        savefig='vcorr_nodust_young_star_%s'%coord_interp_mode,
+        which_studio=StarStudio,
+        check_exists=True, ## skip rendering a frame if the png already exists
+        timestamp=bursty_time) 
 
 if __name__ == '__main__':
-    print(sys.argv)
-    if len(sys.argv) != 2 or sys.argv[1] not in ['cylindrical','spherical']:
-        raise KeyError("Must specify cylindrical or spherical as the only positional argument from the command line")
-    main(sys.argv[1])
+    main()
