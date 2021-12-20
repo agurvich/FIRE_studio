@@ -109,6 +109,7 @@ def single_threaded_control_flow(
                 dummy_snap,
                 frame_kwargs,
                 {'assert_cached':True,**render_kwargs})]
+            del dummy_snap
             continue
         except (AssertionError,KeyError): pass
 
@@ -170,9 +171,6 @@ def single_threaded_control_flow(
         interp_snap['this_time'] = this_time
 
         if load_star:
-            ## TODO how are young stars handled? what is their left coordinate
-            ##  for interpolation if they don't exist yet?
-            ##  should take their velocity and just back track it i guess
             interp_star_snap = make_interpolated_snap(
                 this_time,
                 star_time_merged_df,
