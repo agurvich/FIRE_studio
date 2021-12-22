@@ -157,7 +157,7 @@ class TimeInterpolationHandler(object):
             times_gyr = times_gyr[frames_to_do]
             snap_pairs = snap_pairs[frames_to_do]
             snap_pair_times = snap_pair_times[frames_to_do]
-            frame_kwargss = np.array(frame_kwargss)[frames_to_do]
+            scene_kwargss = np.array(scene_kwargss)[frames_to_do]
 
 
         if multi_threads == 1:
@@ -176,7 +176,6 @@ class TimeInterpolationHandler(object):
                 self.coord_interp_mode)
             
         elif multi_threads > 1:
-            raise NotImplementedError("MPS not implemented yet")
             ## split the pairs of snapshots into approximately equal chunks
             ##  prioritizing  matching pairs of snapshots
             mps_indices = split_into_n_approx_equal_chunks(snap_pairs,multi_threads)
@@ -184,17 +183,18 @@ class TimeInterpolationHandler(object):
             split_times_gyr = np.array_split(times_gyr,mps_indices)
             split_snap_pairs = np.array_split(snap_pairs,mps_indices)
             split_snap_pair_times = np.array_split(snap_pair_times,mps_indices)
-            frame_kwargss = np.array_split(frame_kwargss,mps_indices)
+            scene_kwargss = np.array_split(scene_kwargss,mps_indices)
             
             ## collect positional arguments for worker_function
             argss = zip(
-                itertools.repeat(which_studio),
+                itertools.repeat(which_studios), ## Nstudios
                 split_times_gyr,
                 split_snap_pairs,
                 split_snap_pair_times,
                 itertools.repeat(galaxy_kwargs),
-                frame_kwargss,
-                itertools.repeat(render_kwargs),
+                scene_kwargss, ## Ntimesteps
+                itertools.repeat(studio_kwargss), ## Nstudios
+                itertools.repeat(render_kwargss), ## Nstudios
                 itertools.repeat(many_galaxy.datadir),
                 itertools.repeat(timestamp),
                 itertools.repeat(self.coord_interp_mode))
