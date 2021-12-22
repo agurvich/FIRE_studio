@@ -138,11 +138,17 @@ class TimeInterpolationHandler(object):
         if check_exists:
             ## address png caching here that way we can load balance appropriately
             ##  for multiprocessing
-            raise NotImplementedError("frame caching for multi-frame rendering is not done yet")
             frames_to_do = []
-            for i,frame_kwargs in enumerate(frame_kwargss):
-                this_fname = os.path.join(many_galaxy.datadir,'firestudio',frame_kwargs['savefig'])
-                if this_fname is None or not os.path.isfile(this_fname): frames_to_do.append(i)
+
+            for i,scene_kwargs in enumerate(scene_kwargss):
+                for studio_kwargs in studio_kwargss:
+                    this_fname = os.path.join(
+                        many_galaxy.datadir,
+                        'firestudio',
+                        studio_kwargs['savefig']+scene_kwargs['savefig_suffix'])
+                    if this_fname is None or not os.path.isfile(this_fname): 
+                        frames_to_do.append(i)
+                        break
 
             if len(frames_to_do) == 0: return
             times_gyr = times_gyr[frames_to_do]
