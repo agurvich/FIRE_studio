@@ -11,6 +11,7 @@ from .time_helper import split_into_n_approx_equal_chunks,single_threaded_contro
 from ..studios.gas_studio import GasStudio
 from ..studios.star_studio import StarStudio
 from ..studios.FIRE_studio import FIREStudio
+from ..studios.composition import Composition
 
 class TimeInterpolationHandler(object):
 
@@ -25,8 +26,7 @@ class TimeInterpolationHandler(object):
         snap_times_gyr=None,
         dGyr_tmin=None,
         dGyr_tmax=None,
-        coord_interp_mode='spherical',
-        **studio_kwargs):
+        coord_interp_mode='spherical'):
         """ """
 
         ## need to check/decide how one would convert to Myr if necessary. I think only
@@ -64,54 +64,52 @@ class TimeInterpolationHandler(object):
         ## how should we interpolate the coordinates? in spherical coords? cylindrical?
         self.coord_interp_mode=coord_interp_mode
 
-        ## add in any scene kwargs that should be shared across all frames, 
-        ##  convenient to set up the image how you want while maintaining
-        ##  compatibility for scene interpolation
-        self.frame_kwargss = [{**studio_kwargs} for i in range(self.nframes)]
+        ## initialize dummy dictionaries
+        self.scene_kwargss = [{} for i in range(self.nframes)]
 
-        #self.frame_kwargss = [
-            #dict(list(this_tuple)) for this_tuple in zip(
-                #zip(itertools.repeat('time_gyr'),times_gyr),
-                #zip(itertools.repeat('snap_pair'),snap_pairs),
-                #zip(itertools.repeat('snap_pair_time'),snap_pair_times))]
 
     def interpolateAndRender(
         self,
         galaxy_kwargs, ## only 1 dict, shared by all frames
-        frame_kwargss=None, ## 1 dict per frame
-        studio_kwargs=None,
-        render_kwargs=None, ## only 1 dict, shared by all frames
-        savefig='frame',
-        which_studio=None,
+        scene_kwargss=None, ## 1 dict per frame
+        studio_kwargss=None,
+        render_kwargss=None, ## only 1 dict, shared by all frames
+        savefigs=None,
+        which_studios=None,
         multi_threads=1,
         timestamp=0, ## offset by 0 Myr, pass None for no timestamp
         check_exists=True
         ):
         """ """
 
+        if which_studios is None: which_studios = [GasStudio]
+
         ## handle default arguments
-        if studio_kwargs is None: studio_kwargs = {}
-        if render_kwargs is None: render_kwargs = {}
-        if frame_kwargss is None: frame_kwargss = self.frame_kwargss
+        if studio_kwargss is None: studio_kwargss = [{} for i in range(len(which_studios))]
+        if render_kwargss is None: render_kwargss = [{} for i in range(len(which_studios))]
+        if scene_kwargss is None: scene_kwargss = self.scene_kwargss
 
-        frame_kwargss = [{**this_frame_kwargss,**studio_kwargs} for 
-            this_frame_kwargss in 
-            frame_kwargss]
+        ## prepended to frame_%0{log10(N)//1+1}d.png
+        if savefigs is None: savefigs = [None for i in range(len(which_studios))]  
 
-        ## determine which studio we should initialize inside the worker_function
-        if which_studio is None: which_studio = GasStudio
-        elif (which_studio is not GasStudio and 
-            which_studio is not StarStudio and
-            which_studio is not FIREStudio): 
-            raise TypeError("%s is not GasStudio, StarStudio, or FIREStudio"%repr(which_studio))
+        for savefig,studio_kwargs in zip(savefigs,studio_kwargss):
+            studio_kwargs['savefig'] = savefig
 
+        for i,which_studio in enumerate(which_studios):
+            ## determine which studio we should initialize inside the worker_function
+            if which_studio is None: which_studios[i] = GasStudio
+            elif (which_studio is not GasStudio and 
+                which_studio is not StarStudio and
+                which_studio is not FIREStudio and
+                which_studio is not Composition): 
+                raise TypeError("%s is not GasStudio, StarStudio, or FIREStudio"%repr(which_studio))
+
+
+        format_str = '_frame_%0'+'%dd.png'%(np.ceil(np.log10(self.nframes)))
         ## initialize array of savefig values
         for i in range(self.nframes):
             ## determine minimum number of leading zeros
-            if savefig is not None:
-                format_str = '%s'%savefig + '_%0'+'%dd.png'%(np.ceil(np.log10(self.nframes)))
-                frame_kwargss[i]['savefig'] = format_str%i
-            else: frame_kwargss[i]['savefig'] = None
+            scene_kwargss[i]['savefig_suffix'] = format_str%i
         
         times_gyr = self.times_gyr
         snap_pairs = self.snap_pairs
@@ -121,9 +119,7 @@ class TimeInterpolationHandler(object):
             times_gyr = times_gyr[self.keyframes]
             snap_pairs = snap_pairs[self.keyframes]
             snap_pair_times = snap_pair_times[self.keyframes]
-            frame_kwargss = np.array(frame_kwargss)[self.keyframes]
-            for i in range(len(self.keyframes)):
-                frame_kwargss[i]['savefig'] = None
+            scene_kwargss = np.array(scene_kwargss)[self.keyframes]
 
         ## anything to do with the galaxy
         if 'final_orientation' in galaxy_kwargs:
@@ -142,6 +138,7 @@ class TimeInterpolationHandler(object):
         if check_exists:
             ## address png caching here that way we can load balance appropriately
             ##  for multiprocessing
+            raise NotImplementedError("frame caching for multi-frame rendering is not done yet")
             frames_to_do = []
             for i,frame_kwargs in enumerate(frame_kwargss):
                 this_fname = os.path.join(many_galaxy.datadir,'firestudio',frame_kwargs['savefig'])
@@ -157,18 +154,20 @@ class TimeInterpolationHandler(object):
         if multi_threads == 1:
             ## collect positional arguments for worker_function
             return single_threaded_control_flow(
-                which_studio,
+                which_studios,
                 times_gyr,
                 snap_pairs,
                 snap_pair_times,
-                galaxy_kwargs,
-                frame_kwargss,
-                render_kwargs,
+                galaxy_kwargs, ## 1 dictionary
+                scene_kwargss, ## Ntimesteps many dictionaries, shared for all studios
+                studio_kwargss, ## Nstudios
+                render_kwargss, ## Nstudios
                 many_galaxy.datadir,
                 timestamp,
                 self.coord_interp_mode)
             
         elif multi_threads > 1:
+            raise NotImplementedError("MPS not implemented yet")
             ## split the pairs of snapshots into approximately equal chunks
             ##  prioritizing  matching pairs of snapshots
             mps_indices = split_into_n_approx_equal_chunks(snap_pairs,multi_threads)

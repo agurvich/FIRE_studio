@@ -50,13 +50,14 @@ def split_head(snap_pairs):
     return split_index
 
 def single_threaded_control_flow(
-    which_studio,
+    which_studios, ##Nstudios
     times,
     snap_pairs,
     snap_pair_times,
     galaxy_kwargs,
-    frame_kwargss,
-    render_kwargs,
+    scene_kwargss, ## Ntimesteps
+    studio_kwargss, ## Nstudios
+    render_kwargss, ## Nstudios
     datadir=None,
     timestamp=0, ## offset by 0 Gyr
     coord_interp_mode='spherical'):
@@ -66,7 +67,7 @@ def single_threaded_control_flow(
     if 'snapnum' in galaxy_kwargs: galaxy_kwargs.pop('snapnum')
 
     ## put here to avoid circular import
-    from .interpolate import worker_function
+    from .interpolate import multi_worker_function
 
     if galaxy_kwargs is None: raise ValueError(
         'galaxy_kwargs must be a dictionary with,'+
@@ -84,14 +85,22 @@ def single_threaded_control_flow(
         'keys_to_extract' in galaxy_kwargs else [])
     
 
-    load_gas,load_star = load_data_flags(which_studio,render_kwargs)
+    load_gas,load_star = False,False
+    for which_studio,render_kwargs in zip(which_studios,render_kwargss):
+        this_load_gas,this_load_star = load_data_flags(which_studio,render_kwargs)
+        load_gas = load_gas or this_load_gas
+        load_star = load_star or this_load_star
 
     for i,(pair,(t0,t1)) in enumerate(zip(snap_pairs,snap_pair_times)):     
 
-        frame_kwargs = frame_kwargss[i]
+        scene_kwargs = scene_kwargss[i]
         this_time = times[i]
         #savefig = frame_kwargs['savefig']
-        if timestamp is not None: frame_kwargs['figure_label'] = format_timestamp(this_time,t0,t1,timestamp)
+        if timestamp is not None: 
+            this_timestamp = format_timestamp(this_time,t0,t1,timestamp)
+            for studio_kwargs in studio_kwargss:
+                if 'figure_label' not in studio_kwargs:
+                    studio_kwargs['figure_label'] = this_timestamp
 
         #if savefig is not None and datadir is not None and os.path.isfile(os.path.join(datadir,savefig)): 
             #continue
@@ -103,12 +112,13 @@ def single_threaded_control_flow(
             dummy_snap['snapnum'] = pair[1]
             dummy_snap['this_time'] = this_time
             ## call the function we were passed
-            return_values += [worker_function(
-                which_studio,
+            return_values += [multi_worker_function(
+                which_studios,
                 dummy_snap,
                 dummy_snap,
-                frame_kwargs,
-                {'assert_cached':True,**render_kwargs})]
+                scene_kwargs,
+                studio_kwargss,
+                [{'assert_cached':True,**render_kwargs} for render_kwargs in render_kwargss])]
             del dummy_snap
             continue
         except (AssertionError,KeyError): pass
@@ -183,12 +193,13 @@ def single_threaded_control_flow(
         else: interp_star_snap = None
 
         ## call the function we were passed
-        return_values += [worker_function(
-            which_studio,
+        return_values += [multi_worker_function(
+            which_studios,
             interp_snap,
             interp_star_snap,
-            frame_kwargs,
-            render_kwargs)]
+            scene_kwargs,
+            studio_kwargss,
+            render_kwargss)]
 
     return return_values
 
