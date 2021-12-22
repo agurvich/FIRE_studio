@@ -70,7 +70,8 @@ starStudio.set_ImageParams(
             'maxden' : None, ## 
             'dynrange' : None, ## controls the saturation of the image in a non-obvious way
             'color_scheme_nasa' : True,
-            'no_dust':False} ## flag to use nasa colors (vs. SDSS if false)
+            'no_dust':False,
+            'age_max_gyr':None} ## flag to use nasa colors (vs. SDSS if false)
 
         for kwarg in list(kwargs.keys()):
             ## only set it here if it was passed
@@ -104,6 +105,7 @@ starStudio.set_ImageParams(
         ## set any other image params here
         super().set_ImageParams(use_defaults=use_defaults,**kwargs)
         if self.no_dust: self.this_setup_id+='_no_dust'
+        if self.age_max_gyr is not None: self.this_setup_id+='_age_max%0.3f'%self.age_max_gyr
 
     append_function_docstring(set_ImageParams,Studio.set_ImageParams,prepend_string='passes `kwargs` to:\n')
 
@@ -121,7 +123,9 @@ starStudio.set_ImageParams(
         default_kwargs = {
             'maxden' : 1.0e-2, ## 
             'dynrange' : 100.0, ## controls the saturation of the image in a non-obvious way
-            'color_scheme_nasa' : True} ## flag to use nasa colors (vs. SDSS if false)
+            'color_scheme_nasa' : True, ## flag to use nasa colors (vs. SDSS if false)
+            'no_dust':False,
+            'age_max_gyr':None} ## flag to use nasa colors (vs. SDSS if false)
 
         ## print the current value, not the default value
         for arg in default_kwargs:
@@ -279,6 +283,10 @@ starStudio.set_ImageParams(
 
         ## cull the particles outside the frame and cast to float32
         star_ind_box = self.cullFrameIndices(star_pos)
+        ages = self.star_snapdict['AgeGyr']
+        if self.age_max_gyr is not None:
+            star_ind_box = np.logical_and(star_ind_box,ages<self.age_max_gyr)
+        ages = ages[star_ind_box].astype(np.float32)
         if self.master_loud:
             print(np.sum(star_ind_box),'many star particles in volume')
         
@@ -299,7 +307,6 @@ starStudio.set_ImageParams(
         star_pos = star_pos[star_ind_box].astype(np.float32)
 
         mstar = self.star_snapdict['Masses'][star_ind_box].astype(np.float32)
-        ages = self.star_snapdict['AgeGyr'][star_ind_box].astype(np.float32)
         metals = self.star_snapdict['Metallicity']
         if len(np.shape(metals)) > 1: metals = metals[:,0]
         metals = metals[star_ind_box].astype(np.float32)
