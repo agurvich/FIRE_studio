@@ -13,8 +13,8 @@ from firestudio.studios.star_studio import StarStudio
 
 def main(
     coord_interp_mode='cylindrical',
-    name='m12b_res57000',
-    multi_threads=80):
+    name='m12b_res7100',
+    multi_threads=6):
 
     #galaxy = Galaxy('m12b_res7100',600)
     galaxy = Galaxy(name,600)
@@ -43,7 +43,7 @@ def main(
             }, ## msun/pc^2,
         studio_kwargs={'maxden':2.2e8,'dynrange':4.7e2,'no_dust':True},
         multi_threads=multi_threads,
-        savefig='vcorr_nodust_young_star_%s'%coord_interp_mode,
+        savefig='halo_file_young_star_%s'%coord_interp_mode,
         which_studio=StarStudio,
         check_exists=True, ## skip rendering a frame if the png already exists
         timestamp=bursty_time) 
