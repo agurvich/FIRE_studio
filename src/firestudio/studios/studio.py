@@ -101,6 +101,11 @@ class Drawer(object):
         ## turn off the axis if asked
         if self.noaxis:
             ax.axis('off')
+            ## remove whitespace around the axis, apparently the x/y origin is offset in pixel 
+            ## space and so the bounding box doesn't actually reflect the left/bottom edge of the 
+            ## axis
+            ax.xaxis.set_major_locator(plt.NullLocator())
+            ax.yaxis.set_major_locator(plt.NullLocator())
 
         ## will check relevant flags internally
         self.addText(ax)
@@ -175,16 +180,11 @@ class Drawer(object):
 
     def saveFigure(
         self,
-        ax,
+        fig,
         image_name=None,
         **savefig_args):
 
         if self.noaxis:
-            ## remove whitespace around the axis, apparently the x/y origin is offset in pixel 
-            ## space and so the bounding box doesn't actually reflect the left/bottom edge of the 
-            ## axis
-            ax.xaxis.set_major_locator(plt.NullLocator())
-            ax.yaxis.set_major_locator(plt.NullLocator())
             savefig_args['bbox_inches']='tight'
             savefig_args['pad_inches']=0
 
@@ -195,7 +195,7 @@ class Drawer(object):
         if 'png' not in image_name and 'pdf' not in image_name:
             image_name+='.pdf'
 
-        ax.get_figure().savefig(
+        fig.savefig(
             os.path.join(self.datadir,image_name),
             dpi=300,
             **savefig_args)
@@ -270,6 +270,16 @@ class Studio(Drawer):
     ```
     (and ideally `'SmoothingLengths'` for both, in the same units as coordinates, but these can be calculated)."""
 
+    def __repr__(self):
+        """ implementation of built-in __repr__ method for printing.
+
+        Returns
+        -------
+        str
+            string to print back to the console
+        """
+        return 'Studio instance'
+
     def __init__(
         self,
         datadir,  
@@ -280,6 +290,7 @@ class Studio(Drawer):
         star_snapdict=None, 
         galaxy_kwargs=None,
         master_loud=True,
+        setup_id_append='',
         **kwargs
         ): 
         """ Base class that handles camera manipulation and data caching. 
@@ -352,6 +363,7 @@ class Studio(Drawer):
         ##  make a face-on image of a galaxy, can always set these manually
         ##  with  external calls to set_ImageParams
         self.set_ImageParams(use_defaults=True,snapnum=snapnum,sim_name=sim_name,**kwargs)
+        self.this_setup_id+=setup_id_append
 
 ####### I/O functions #######
     def load_SnapshotData(
