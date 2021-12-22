@@ -514,7 +514,7 @@ Important methods include:
 
         ## save the image
         if self.savefig is not None:
-            self.saveFigure(ax,self.savefig)
+            self.saveFigure(fig,self.savefig)
 
         return ax,final_image
 
