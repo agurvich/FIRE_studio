@@ -93,6 +93,7 @@ class InterpolationHandler(object):
 
         ## handle simple case of moving camera at fixed time
         if self.time_handler is None: 
+            raise NotImplementedError("Haven't updated scene interpolation for multiple studios")
             if 'snapnum' not in galaxy_kwargs: raise KeyError("galaxy_kwargs must contain snapnum.")
 
             if multi_threads > 1: 
@@ -219,10 +220,9 @@ def worker_function(
 
     render_kwargs.update(add_render_kwargs)
 
-    print(which_studio)
-    print(studio_kwargs)
-    print(render_kwargs)
-    import pdb; pdb.set_trace()
+    #print(which_studio)
+    #print(studio_kwargs)
+    #print(render_kwargs)
     my_studio = which_studio(
         os.path.join(this_snapdict['datadir'],'firestudio'),
         this_snapdict['snapnum'], ## attribute this data to the next_snapnum's projection file
