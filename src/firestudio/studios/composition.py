@@ -28,6 +28,15 @@ class Composition(object):
         elif len(studio_kwargss) != nstudios: raise ValueError(
             "studio_kwargss must be the same length as studios_tuple "+
             "(%d,%d)"%(len(studio_kwargss),nstudios))
+        
+        for i,studio_kwargs in enumerate(studio_kwargss): 
+            ## overwrite whatever savefig settings they had, 
+            ##  we don't want to output individual frames
+            studio_kwargs['savefig'] = None
+            ## only put the scalebar in the left-most panel
+            if i!= 0: studio_kwargs['scale_bar'] = False
+            ## only put the label in the right-most panel
+            if i!=(nstudios-1): studio_kwargs['figure_label']=''
 
         if ncols is None: ncols = 2
         if nrows is None: nrows= nstudios//ncols+nstudios%ncols
