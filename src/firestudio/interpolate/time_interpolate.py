@@ -142,10 +142,13 @@ class TimeInterpolationHandler(object):
 
             for i,scene_kwargs in enumerate(scene_kwargss):
                 for studio_kwargs in studio_kwargss:
-                    this_fname = os.path.join(
-                        many_galaxy.datadir,
-                        'firestudio',
-                        studio_kwargs['savefig']+scene_kwargs['savefig_suffix'])
+                    if studio_kwargs['savefig'] is None:
+                        this_fname = None
+                    else:
+                        this_fname = os.path.join(
+                            many_galaxy.datadir,
+                            'firestudio',
+                            studio_kwargs['savefig']+scene_kwargs['savefig_suffix'])
                     if this_fname is None or not os.path.isfile(this_fname): 
                         frames_to_do.append(i)
                         break
