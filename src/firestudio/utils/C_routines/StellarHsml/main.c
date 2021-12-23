@@ -73,25 +73,25 @@ void set_particle_pointer(int Nsize, float* x, float* y, float* z)
 
 void allocate_3d(int Nsize)
 {
-  printf("allocating memory...\n");
+  //printf("allocating memory...\n");
   int i;
   if(Nsize>0)
     {
       if(!(P3d=malloc(Nsize*sizeof(struct particle_3d *))))
 	{
-	  printf("failed to allocate memory. (A)\n");
+	  //printf("failed to allocate memory. (A)\n");
 	  exit(0);
 	}
       P3d--;   /* start with offset 1 */
       if(!(P3d[1]=malloc(Nsize*sizeof(struct particle_3d))))
 	{
-	  printf("failed to allocate memory. (B)\n");
+	  //printf("failed to allocate memory. (B)\n");
 	  exit(0);
 	}
       for(i=2;i<=Nsize;i++)   /* initiliaze pointer table */
 	P3d[i]=P3d[i-1]+1;
     }
-  printf("allocating memory...done\n");
+  //printf("allocating memory...done\n");
 }
 
 

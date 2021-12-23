@@ -39,11 +39,11 @@ int raytrace_rgb(
     float* OUT0, float* OUT1, float* OUT2, float* OUT3 ) // output vectors with final weights
 {
   // print out the input parameters // 
-  printf("N_xy=%d...",N_xy); 
-  printf("Xmin=%f...Xmax=%f...Ymin=%f...Ymax=%f...Xpixels=%d...Ypixels=%d\n",
-    Xmin,Xmax,Ymin,Ymax,Xpixels,Ypixels);
-  printf("Kappa_1=%f...Kappa_2=%f...Kappa_3=%f...\n",KAPPA1,KAPPA2,KAPPA3);
-  printf("wt_1=%f...wt_2=%f...wt_3=%f...\n",wt1,wt2,wt3);
+  //printf("N_xy=%d...",N_xy); 
+  //printf("Xmin=%f...Xmax=%f...Ymin=%f...Ymax=%f...Xpixels=%d...Ypixels=%d\n",
+    //Xmin,Xmax,Ymin,Ymax,Xpixels,Ypixels);
+  //printf("Kappa_1=%f...Kappa_2=%f...Kappa_3=%f...\n",KAPPA1,KAPPA2,KAPPA3);
+  //printf("wt_1=%f...wt_2=%f...wt_3=%f...\n",wt1,wt2,wt3);
 
   double dx, dy, dx_i, dy_i, dx_dy_i, dx_n, dy_n, i_x_flt, i_y_flt, d_ij, h, hmin;
   double h2, x2_n, y2_n, r2_n, h2_i, wk, wt_sum, hkernel_over_hsml_to_use, *Kernel; 

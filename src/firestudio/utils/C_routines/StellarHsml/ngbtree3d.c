@@ -249,31 +249,31 @@ void ngb3d_treeallocate(int npart,int maxnodes)  /* usually maxnodes=2*npart is 
   
   if(!(nodes=malloc(MaxNodes*sizeof(struct NODE))))
     {
-      fprintf(stderr,"Failed to allocate %d nodes.\n",MaxNodes);
+      //fprintf(stderr,"Failed to allocate %d nodes.\n",MaxNodes);
       exit(0);
     }
   
   if(!(next=malloc(N*sizeof(int))))
     {
-      fprintf(stderr,"Failed to allocate %d spaces for next array\n",N);
+      //fprintf(stderr,"Failed to allocate %d spaces for next array\n",N);
       exit(0);
     }
 
   if(!(previous=malloc(N*sizeof(int))))
     {
-      fprintf(stderr,"Failed to allocate %d spaces for previous array\n",N);
+      //fprintf(stderr,"Failed to allocate %d spaces for previous array\n",N);
       exit(0);
     }
 
   if(!(ngblist=malloc(N*sizeof(int))))
     {
-      fprintf(stderr,"Failed to allocate %d spaces for ngblist array\n",N);
+      //fprintf(stderr,"Failed to allocate %d spaces for ngblist array\n",N);
       exit(0);
     }
 
   if(!(r2list=malloc(N*sizeof(float))))
     {
-      fprintf(stderr,"Failed to allocate %d spaces for r2list array\n",N);
+      //fprintf(stderr,"Failed to allocate %d spaces for r2list array\n",N);
       exit(0);
     }
 }
@@ -308,10 +308,10 @@ void ngb3d_treebuild(float **pospointer,int Npart,int MinMaxFlag,float XminOpt[3
   struct NODE *nfree,*th,*nn; 
 
 
-  printf("Begin tree construction.\n");
+  //printf("Begin tree construction.\n");
   if(Npart<2)
     {
-      fprintf(stderr,"must be at least two particles in tree.\n");
+      //fprintf(stderr,"must be at least two particles in tree.\n");
       exit(0);
     }
 
@@ -442,11 +442,11 @@ void ngb3d_treebuild(float **pospointer,int Npart,int MinMaxFlag,float XminOpt[3
 
 	      if(numnodes>=MaxNodes)
 		{
-		  fprintf(stderr,"maximum node number %d in neighbour tree reached.\n",numnodes);
-		  fprintf(stderr,"subi= %d  subp= %d\n",subi,subp);
-		  fprintf(stderr,"i=%d  xyz= %g  %g  %g\n",i,Pos[i]->xyz[0],Pos[i]->xyz[1],Pos[i]->xyz[2]);
-		  fprintf(stderr,"p=%d  xyz= %g  %g  %g\n",p,Pos[p]->xyz[0],Pos[p]->xyz[1],Pos[p]->xyz[2]);
-		  fprintf(stderr,"parent len= %g center = %g %g %g\n",th->len,th->center[0],th->center[1],th->center[2]);
+		  //fprintf(stderr,"maximum node number %d in neighbour tree reached.\n",numnodes);
+		  //fprintf(stderr,"subi= %d  subp= %d\n",subi,subp);
+		  //fprintf(stderr,"i=%d  xyz= %g  %g  %g\n",i,Pos[i]->xyz[0],Pos[i]->xyz[1],Pos[i]->xyz[2]);
+		  //fprintf(stderr,"p=%d  xyz= %g  %g  %g\n",p,Pos[p]->xyz[0],Pos[p]->xyz[1],Pos[p]->xyz[2]);
+		  //fprintf(stderr,"parent len= %g center = %g %g %g\n",th->len,th->center[0],th->center[1],th->center[2]);
 		  exit(0);
 		}
 
@@ -527,8 +527,8 @@ void ngb3d_treebuild(float **pospointer,int Npart,int MinMaxFlag,float XminOpt[3
 
       if(numnodes>=MaxNodes)
 	{
-	  fprintf(stderr,"maximum node number %d in neighbour tree reached.\n",numnodes);
-	  fprintf(stderr,"i=%d  xyz= %g  %g  %g\n",i,Pos[i]->xyz[0],Pos[i]->xyz[1],Pos[i]->xyz[2]);
+	  //fprintf(stderr,"maximum node number %d in neighbour tree reached.\n",numnodes);
+	  //fprintf(stderr,"i=%d  xyz= %g  %g  %g\n",i,Pos[i]->xyz[0],Pos[i]->xyz[1],Pos[i]->xyz[2]);
 	  exit(0);
 	}
     }
@@ -545,7 +545,7 @@ void ngb3d_treebuild(float **pospointer,int Npart,int MinMaxFlag,float XminOpt[3
     }
 
   
-  printf("Tree contruction finished. Number of nodes: %d\n",numnodes);
+  //printf("Tree contruction finished. Number of nodes: %d\n",numnodes);
 }
 
 

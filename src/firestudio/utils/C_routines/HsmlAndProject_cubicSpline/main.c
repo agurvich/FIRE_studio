@@ -31,10 +31,10 @@ int hsml_project(
     float* OUT0, float* OUT1) // output vectors for weightMap and weightWeightedQuantityMap
 {
   // print out the input parameters // 
-  printf("N_xy=%d...",N_xy); 
-  printf("Xmin=%f...Xmax=%f...Ymin=%f...Ymax=%f...Xpixels=%d...Ypixels=%d\n",
-    Xmin,Xmax,Ymin,Ymax,Xpixels,Ypixels);
-  printf("quantity=%f...\n",quantity);
+  //printf("N_xy=%d...",N_xy); 
+  //printf("Xmin=%f...Xmax=%f...Ymin=%f...Ymax=%f...Xpixels=%d...Ypixels=%d\n",
+    //Xmin,Xmax,Ymin,Ymax,Xpixels,Ypixels);
+  //printf("quantity=%f...\n",quantity);
 
   double dx, dy, dx_i, dy_i, dx_n, dy_n, i_x_flt, i_y_flt, d_ij, h, hmin;
   double h2, x2_n, y2_n, r2_n, h2_i, wk, wt_sum, hkernel_over_hsml_to_use, *Kernel; 
