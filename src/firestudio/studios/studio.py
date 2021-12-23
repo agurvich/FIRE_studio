@@ -701,7 +701,9 @@ studio.set_ImageParams(
                     self.sim_name not in h5name):
                     h5name = self.sim_name+'_'+h5name
 
-                self.metadata = self.cache_file = Metadata(os.path.join(self.datadir,h5name)) 
+                self.metadata = self.cache_file = Metadata(
+                    os.path.join(self.datadir,h5name),
+                    loud=False) 
         else:
             raise IOError("Need to set self.snapnum and self.sim_name to disambiguate cache_file")
 

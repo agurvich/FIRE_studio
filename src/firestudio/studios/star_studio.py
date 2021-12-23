@@ -90,8 +90,9 @@ starStudio.set_ImageParams(
             else:
                 if (kwarg not in Studio.set_ImageParams.default_kwargs 
                     and kwarg != 'this_setup_id'):
-                    print(kwarg,'ignored. Did you mean something else?',
-                        default_kwargs.keys())
+                    if self.master_loud:
+                        print(kwarg,'ignored. Did you mean something else?',
+                            default_kwargs.keys())
 
         if use_defaults:
             ## set the remaining image parameters to their default values
