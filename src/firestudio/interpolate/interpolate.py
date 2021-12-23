@@ -1,6 +1,7 @@
 import numpy as np
 import os
 import copy
+import warnings
 
 from abg_python.plot_utils import plt,ffmpeg_frames
 from abg_python.galaxy.gal_utils import Galaxy
@@ -76,7 +77,7 @@ class InterpolationHandler(object):
                     'left':0,'right':1,
                     'bottom':0,'top':1},
                 'savefig':'_'.join([which_studio.__name__ for which_studio in which_studios]),
-                'studio_kwargss':studio_kwargss,
+                'studio_kwargss':copy.deepcopy(studio_kwargss),
                 'size_inches':(12,6),
                 }
 
@@ -151,7 +152,7 @@ class InterpolationHandler(object):
             ##  we'll loop through a list of savefigs (even if there's only one)
             for this_savefig in savefigs:
                 if this_savefig is not None:
-                    format_str = '%s'%this_savefig + 'frame_%0'+'%dd.png'%(np.ceil(np.log10(self.nframes)))
+                    format_str = '%s'%this_savefig + '_frame_%0'+'%dd.png'%(np.ceil(np.log10(self.nframes)))
                     ## ffmpeg the frames
                     ffmpeg_frames(
                         os.path.join(galaxy.datadir,'firestudio'),
@@ -178,12 +179,17 @@ def multi_worker_function(
 
     for which_studio,studio_kwargs,add_render_kwargs in zip(
         which_studios,studio_kwargss,add_render_kwargss):
-        worker_function(
-            which_studio,
-            this_snapdict,
-            this_star_snapdict,
-            {**scene_kwargs,**studio_kwargs},
-            add_render_kwargs)
+        try:
+            worker_function(
+                which_studio,
+                this_snapdict,
+                this_star_snapdict,
+                {**scene_kwargs,**studio_kwargs},
+                add_render_kwargs)
+        except AssertionError: raise
+        except:
+            print(this_snapdict['snapnum'],'failed')
+            raise
 
 def worker_function(
     which_studio,
@@ -196,7 +202,8 @@ def worker_function(
     if add_render_kwargs is None: add_render_kwargs = {}
 
     if studio_kwargs['savefig'] is not None and 'savefig_suffix' in studio_kwargs:
-        studio_kwargs['savefig'] += studio_kwargs.pop('savefig_suffix')
+        this_savefig = studio_kwargs['savefig'] + studio_kwargs.pop('savefig_suffix')
+    else: this_savefig = None
 
     ## decide what we want to pass to the GasStudio
     if which_studio is GasStudio: render_kwargs = {
@@ -231,14 +238,21 @@ def worker_function(
         star_snapdict=this_star_snapdict,
         master_loud=False,
         setup_id_append="_time%.5f"%this_snapdict['this_time'],
-        **studio_kwargs)
+        **{**studio_kwargs,'savefig':this_savefig})
 
     if which_studio is GasStudio and render_kwargs['weight_name'] == 'Masses':
         render_kwargs['weight_adjustment_function'] = lambda x: np.log10(x/my_studio.Acell) + 10 - 6 ## msun/pc^2,
     
-    ax,im = my_studio.render(None,**render_kwargs)
+
+    ## ignore warnings to reduce console spam
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        ## overwrite loud rendering to reduce console spam
+        ax,im = my_studio.render(None,**{**render_kwargs,'loud':False})
     axs = np.array([ax]).reshape(-1)
     fig = axs[0].get_figure()
 
-    if studio_kwargs['savefig'] is not None: plt.close(fig)
+    if my_studio.savefig is not None: 
+        plt.close(fig)
+        print(this_snapdict['snapnum'],my_studio.savefig)
     else: return fig
