@@ -118,7 +118,7 @@ def single_threaded_control_flow(
                 dummy_snap,
                 scene_kwargs,
                 studio_kwargss,
-                [{'assert_cached':True,**render_kwargs} for render_kwargs in render_kwargss])]
+                [{'assert_cached':True,'loud':False,**render_kwargs} for render_kwargs in render_kwargss])]
             del dummy_snap
             continue
         except (AssertionError,KeyError): pass
@@ -243,7 +243,8 @@ def load_gals_from_disk(
             prev_galaxy.extractMainHalo(
                 compute_stellar_hsml=compute_stellar_hsml,
                 force_theta_TB=force_theta_TB,
-                force_phi_TB=force_phi_TB)
+                force_phi_TB=force_phi_TB,
+                loud=False)
         else: prev_galaxy = pair[0]
         changed = True
     if next_galaxy is None:
@@ -253,7 +254,8 @@ def load_gals_from_disk(
             next_galaxy.extractMainHalo(
                 compute_stellar_hsml=compute_stellar_hsml,
                 force_theta_TB=force_theta_TB,
-                force_phi_TB=force_phi_TB)
+                force_phi_TB=force_phi_TB,
+                loud=False)
         else: next_galaxy = pair[1]
         changed = True
         
