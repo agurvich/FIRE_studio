@@ -98,9 +98,7 @@ def single_threaded_control_flow(
         #savefig = frame_kwargs['savefig']
         if timestamp is not None: 
             this_timestamp = format_timestamp(this_time,t0,t1,timestamp)
-            for studio_kwargs in studio_kwargss:
-                if 'figure_label' not in studio_kwargs:
-                    studio_kwargs['figure_label'] = this_timestamp
+            scene_kwargs['figure_label'] = this_timestamp
 
         #if savefig is not None and datadir is not None and os.path.isfile(os.path.join(datadir,savefig)): 
             #continue
