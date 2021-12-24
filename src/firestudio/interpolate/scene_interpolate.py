@@ -1,31 +1,13 @@
 import gc
 import multiprocessing
 import itertools
-import copy
 
 import numpy as np
 
 from abg_python.parallel.multiproc_utils import copySnapshotNamesToMPSharedMemory
 from abg_python.galaxy.gal_utils import Galaxy
 
-from ..utils.camera_utils import Camera
-from ..studios.gas_studio import GasStudio
-from ..studios.star_studio import StarStudio
-from ..studios.FIRE_studio import FIREStudio
-
-def load_data_flags(which_studio,render_kwargs):
-    ## determine which data needs to be loaded into shared memory
-    if which_studio is not GasStudio:
-        #which_studio is StarStudio or which_studio is FIREStudio:
-        load_gas = True
-        load_star = True
-    elif 'snapdict_name' in render_kwargs and render_kwargs['snapdict_name'] == 'star':
-        load_gas = False
-        load_star = True
-    else:
-        load_gas = True
-        load_star = False
-    return load_gas,load_star
+from .time_interpolate import TimeInterpolationHandler
 
 studio_kwargs = {
     'quaternion':(1,0,0,0),
@@ -61,7 +43,10 @@ gas_kwargs = {}
 default_kwargs ={}
 for kwargs in [studio_kwargs,star_kwargs,gas_kwargs]: default_kwargs.update(kwargs)
 
-class SceneInterpolationHandler(object):
+class SceneInterpolationHandler(TimeInterpolationHandler):
+
+    snap_pairs = None
+
     def __repr__(self):
         return (
             "SceneInterpolationHandler(%d/%d frames (%d keyframes) - %s)"%(
@@ -175,76 +160,6 @@ class SceneInterpolationHandler(object):
 
         if loud: print(self)
     
-    def interpolateAndRender(
-        self,
-        galaxy_kwargs,
-        studio_kwargs=None,
-        render_kwargs=None,
-        savefig='frame',
-        which_studio=None,
-        multi_threads=None,
-        keyframes=False,
-        check_exists=True):
-
-        load_gas,load_star = load_data_flags(which_studio,render_kwargs)
-
-        ## put here to avoid circular import
-        from .interpolate import worker_function
-
-        if galaxy_kwargs is None: raise ValueError(
-            'galaxy_kwargs must be a dictionary with,'+
-            ' at minimum, name (i.e. m12i_res7100) and snapnum (i.e. 600).')
-
-        if 'keys_to_extract' in galaxy_kwargs: keys_to_extract = galaxy_kwargs.pop('keys_to_extract')
-        else: keys_to_extract = None ## default to all keys
-
-        galaxy = Galaxy(**galaxy_kwargs)
-        galaxy.extractMainHalo(
-            keys_to_extract=keys_to_extract,
-            compute_stellar_hsml=load_star)
-        self.frame_output_dir = galaxy.datadir
-
-        if multi_threads >1: raise ValueError("Use interpolateAndRenderMultiprocessing instead.")
-
-        ## handle default arguments
-        if studio_kwargs is None: studio_kwargs = {}
-        if render_kwargs is None: render_kwargs = {}
-
-        frame_kwargss = [{**this_frame_kwargs,**studio_kwargs} for this_frame_kwargs in self.frame_kwargss]
-        ndiff =  self.nframes - len(frame_kwargss)
-        ## repeat the last frame until we reach the total duration \_(ツ)_/
-        frame_kwargss = np.array(frame_kwargss + [copy.copy(frame_kwargss[-1]) for i in range(ndiff)],dtype=object)
-
-        if keyframes: frame_kwargss = frame_kwargss[self.keyframes]
-
-        ## determine which studio we should initialize inside the worker_function
-        if which_studio is None: which_studio = GasStudio
-        elif (which_studio is not GasStudio and 
-            which_studio is not StarStudio and
-            which_studio is not FIREStudio): 
-            raise TypeError("%s is not GasStudio, StarStudio, or FIREStudio"%repr(which_studio))
-
-        ## initialize array of savefig values
-        if savefig is not None: 
-            for i in range(self.nframes):
-                ## determine minimum number of leading zeros
-                format_str = '%s'%savefig + '_%0'+'%dd.png'%(np.ceil(np.log10(self.nframes)))
-                frame_kwargss[i]['savefig'] = format_str%i
-
-
-
-        ## collect positional arguments for worker_function
-        argss = zip(
-            itertools.repeat(which_studio),
-            itertools.repeat(galaxy.sub_snap),
-            itertools.repeat(galaxy.sub_star_snap),
-            frame_kwargss,
-            itertools.repeat(render_kwargs))
-
-        these_figs = [worker_function(*args) for args in argss]
-
-        return these_figs
-
     def interpolateAndRenderMultiprocessing(
         self,
         galaxy_kwargs,
@@ -255,15 +170,7 @@ class SceneInterpolationHandler(object):
         multi_threads=1,
         keyframes=False,
         check_exists=True):
-
-        load_gas,load_star = load_data_flags(which_studio,render_kwargs)
-
-        if galaxy_kwargs is None: raise ValueError(
-            'galaxy_kwargs must be a dictionary with,'+
-            ' at minimum, name (i.e. m12i_res7100) and snapnum (i.e. 600).')
-
-        if 'keys_to_extract' in galaxy_kwargs: keys_to_extract = galaxy_kwargs.pop('keys_to_extract')
-        else: keys_to_extract = None ## default to all keys
+        raise NotImplementedError("Not updated for new structure yet")
 
         galaxy = Galaxy(**galaxy_kwargs)
         galaxy.extractMainHalo(
@@ -271,43 +178,18 @@ class SceneInterpolationHandler(object):
             compute_stellar_hsml=load_star)
         self.frame_output_dir = galaxy.datadir
 
-        ## if we were bold enough to extract everything, copy nothing to the child processes.
-        ##  that'll teach us!
-        if keys_to_extract is None: 
-            ## todo, why not just use all the keys if they're going to go to a shared memory buffer?
-            raise KeyError("Use keys_to_extract to specify field keys you need for rendering,"+
-            " they're going to be put into a shared memory buffer so we will *not* pass all keys by default.")
-
         global_snapdict_name = 'gas_snapshot_%03d'%galaxy.snapnum
         global_star_snapdict_name = 'star_snapshot_%03d'%galaxy.snapnum
 
+        ## if we were bold enough to extract everything, copy nothing to the child processes.
+        ##  that'll teach us!
+        #if keys_to_extract is None: 
+            ### todo, why not just use all the keys if they're going to go to a shared memory buffer?
+            #raise KeyError("Use keys_to_extract to specify field keys you need for rendering,"+
+            #" they're going to be put into a shared memory buffer so we will *not* pass all keys by default.")
+
+
         if multi_threads is None: multi_threads = multiprocessing.cpu_count()-1
-
-        ## handle default arguments
-        if studio_kwargs is None: studio_kwargs = {}
-        if render_kwargs is None: render_kwargs = {}
-
-        frame_kwargss = [{**this_frame_kwargs,**studio_kwargs} for this_frame_kwargs in self.frame_kwargss]
-        ndiff =  self.nframes - len(frame_kwargss)
-        ## repeat the last frame until we reach the total duration \_(ツ)_/
-        frame_kwargss = np.array(frame_kwargss + [copy.copy(frame_kwargss[-1]) for i in range(ndiff)],dtype=object)
-
-        if keyframes: frame_kwargss = frame_kwargss[self.keyframes]
-
-        ## determine which studio we should initialize inside the worker_function
-        if which_studio is None: which_studio = GasStudio
-        elif (which_studio is not GasStudio and 
-            which_studio is not StarStudio and
-            which_studio is not FIREStudio): 
-            raise TypeError("%s is not GasStudio, StarStudio, or FIREStudio"%repr(which_studio))
-
-        ## initialize array of savefig values
-        if savefig is not None: 
-            for i in range(self.nframes):
-                ## determine minimum number of leading zeros
-                format_str = '%s'%savefig + '_%0'+'%dd.png'%(np.ceil(np.log10(self.nframes)))
-                frame_kwargss[i]['savefig'] = format_str%i
-        
 
         ## collect positional arguments for worker_function
         argss = zip(
@@ -400,15 +282,16 @@ class SceneInterpolationHandler(object):
 
         return these_figs
 
-def worker_function_wrapper(
-    which_studio,
+def multi_worker_function_wrapper(
+    which_studios,
     global_snapdict_name, ## important to access shared memory :\
     global_star_snapdict_name,
-    studio_kwargs=None,
-    add_render_kwargs=None):
+    scene_kwargss,
+    studio_kwargss,
+    render_kwargss):
 
     ## put here to avoid circular import
-    from .interpolate import worker_function
+    from .interpolate import multi_worker_function
 
     ## read the unique global name for the relevant snapshot dictionary
     ##  TODO: could I handle time interpolation right here by checking if 
@@ -419,4 +302,10 @@ def worker_function_wrapper(
     ##  is turned off which should be the default mode tbh.
     this_snapdict = globals()[global_snapdict_name]
     this_star_snapdict = globals()[global_star_snapdict_name]
-    worker_function(which_studio,this_snapdict,this_star_snapdict,studio_kwargs,add_render_kwargs)
+    multi_worker_function(
+        which_studios,
+        this_snapdict,
+        this_star_snapdict,
+        scene_kwargss,
+        studio_kwargss,
+        render_kwargss)

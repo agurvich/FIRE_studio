@@ -15,7 +15,7 @@ from firestudio.studios.composition import Composition
 def main(
     coord_interp_mode='cylindrical',
     name='m12b_res57000',
-    multi_threads=1):
+    multi_threads=60):
 
     #galaxy = Galaxy('m12b_res7100',600)
     galaxy = Galaxy(name,600)
@@ -35,13 +35,15 @@ def main(
     figs = interp_handler.interpolateAndRender(
         {'name':galaxy.name,
         'keys_to_extract':['Metallicity','AgeGyr'],
-        'final_orientation':True},
+        'final_orientation':True,
+        'loud_metadata':False},
         render_kwargss=[
             {'weight_name':'Masses',
             'quantity_name':'Temperature',
             'min_quantity':2,
             'max_quantity':7,
             'quantity_adjustment_function':np.log10,
+            'save_meta':True,#'assert_cached':False,
             #'min_weight':-0.5,
             #'max_weight':3, 
             },
@@ -51,15 +53,15 @@ def main(
             #'min_weight':-0.5,'max_weight':3 
             }], ## msun/pc^2,
         studio_kwargss=[
-            {'figure_label':None},
+            {},
             {'maxden':2.2e8,
             'dynrange':4.7e2,
             'no_dust':True,
-            'scale_bar':False}],
+            'age_max_gyr':25/1e3, ## 25 Myr
+            }],
         multi_threads=multi_threads,
-        savefigs=None, ## defaults to GasStudio_frame and StarStudio_frame
         which_studios=[GasStudio,StarStudio],
-        check_exists=False, ## skip rendering a frame if the png already exists
+        check_exists=True, ## skip rendering a frame if the png already exists
         timestamp=bursty_time,
         add_composition=True)  ## will add a composition frame of the requested Studios
 
