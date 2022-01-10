@@ -1,8 +1,8 @@
 import os 
 import copy
-import warnings
 import itertools
 import multiprocessing
+import time
 
 import numpy as np
 
@@ -76,11 +76,16 @@ class BaseInterpolate(object):
             keyframes,
             many_galaxy.datadir if check_exists else None,
             add_composition=add_composition)
+        
+        if 'snap_pair' in scene_kwargss[0]:
+            snap_pairs = [scene_kwargs['snap_pair'] for scene_kwargs in scene_kwargss]
+        else: snap_pairs = None
+
 
         ## check if there's actually any work to be done
         if len(scene_kwargss) == 0:
             print('all frames already rendered, exiting...')
-            ffmpeg_frames(studio_kwargss,galaxy_kwargs,self.nframes,self.fps)
+            render_ffmpeg_frames(studio_kwargss,galaxy_kwargs,self.nframes,self.fps)
             return [None]
 
         ## single threaded, the vanilla experience
@@ -102,7 +107,7 @@ class BaseInterpolate(object):
         elif multi_threads > 1:
             ## split the pairs of snapshots into approximately equal chunks
             ##  prioritizing  matching pairs of snapshots
-            mps_indices = split_into_n_approx_equal_chunks(self.snap_pairs,multi_threads)
+            mps_indices = split_into_n_approx_equal_chunks(snap_pairs,multi_threads)
 
             scene_kwargss = np.array_split(scene_kwargss,mps_indices)
             
@@ -124,7 +129,7 @@ class BaseInterpolate(object):
             raise ValueError("Specify a number of threads >=1, not",multi_threads)
 
         ## use ffmpeg to produce an mp4 of the frames
-        ffmpeg_frames(studio_kwargss,galaxy_kwargs,self.nframes,self.fps)
+        render_ffmpeg_frames(studio_kwargss,galaxy_kwargs,self.nframes,self.fps)
 
         return return_value
 
@@ -202,7 +207,8 @@ class BaseInterpolate(object):
                     'bottom':0,'top':1},
                 'savefig':'_'.join([which_studio.__name__ for which_studio in which_studios]),
                 'studio_kwargss':copy.deepcopy(studio_kwargss),
-                'size_inches':(12,6),
+                'ncols':3
+                #'size_inches':(12,6),
                 }
 
             ## tell the interpolator to initialize a composition
@@ -257,12 +263,13 @@ def png_frame_cache(scene_kwargss,studio_kwargss,datadir):
                     'firestudio',
                     studio_kwargs['savefig']+scene_kwargs['savefig_suffix'])
             if this_fname is None or not os.path.isfile(this_fname): 
+                #print(this_fname)
                 frames_to_do.append(i)
                 break
 
     return frames_to_do
 
-def ffmpeg_frames(studio_kwargss,galaxy_kwargs,nframes,fps):
+def render_ffmpeg_frames(studio_kwargss,galaxy_kwargs,nframes,fps):
     for studio_kwargs in studio_kwargss:
         if 'keys_to_extract' in galaxy_kwargs: galaxy_kwargs.pop('keys_to_extract')
 
@@ -284,6 +291,7 @@ def ffmpeg_frames(studio_kwargss,galaxy_kwargs,nframes,fps):
 
 #### MPS LOAD BALANCING
 def split_into_n_approx_equal_chunks(snap_pairs,nchunks):
+
     
     if snap_pairs is None: mps_chunks = nchunks
     else:
@@ -291,6 +299,7 @@ def split_into_n_approx_equal_chunks(snap_pairs,nchunks):
         ## split matching pairs into groups
         indices = split_pairs(snap_pairs[:])
         splitted = np.array_split(snap_pairs,indices)
+        nchunks = min(len(indices),nchunks)
         
         ## determine how many of each matching pair there are
         n_renders_per_split = [len(this_split) for this_split in splitted]
@@ -310,7 +319,8 @@ def split_into_n_approx_equal_chunks(snap_pairs,nchunks):
         
         mps_chunks = np.array(mps_chunks)#-indices[0]
         mps_chunks=list(mps_chunks)
-        print('split into:','%d threads'%len(mps_chunks),np.diff([0]+mps_chunks+[len(snap_pairs)]))
+        print('split into:','%d threads'%(len(mps_chunks)+1),np.diff([0]+mps_chunks+[len(snap_pairs)]))
+        time.sleep(5)
     return mps_chunks
 
 def split_pairs(snap_pairs):
