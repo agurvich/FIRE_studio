@@ -42,18 +42,18 @@ def single_threaded_control_flow(
     dummy_snap['name'] = galaxy_kwargs['name']
     dummy_snap['datadir'] = datadir
 
-    if 'snapnum' in galaxy_kwargs:
-        dummy_snap['snapnum'] = galaxy_kwargs['snapnum']
-        dummy_snap['this_time'] = None
-        ## rely on user to provide figure_label explicitly
-        timestamp = None 
-    else:
-        pair = scene_kwargss[0]['snap_pair']
-        this_time = scene_kwargss[0]['time']
-        dummy_snap['snapnum'] = pair[1]
-        dummy_snap['this_time'] = this_time
-
     for scene_kwargs in scene_kwargss:     
+
+        if 'snapnum' in galaxy_kwargs:
+            dummy_snap['snapnum'] = galaxy_kwargs['snapnum']
+            dummy_snap['this_time'] = None
+            ## rely on user to provide figure_label explicitly
+            timestamp = None 
+        else:
+            pair = scene_kwargs['snap_pair']
+            this_time = scene_kwargs['time']
+            dummy_snap['snapnum'] = pair[1]
+            dummy_snap['this_time'] = this_time
 
         ## generate a timestamp if requested
         if timestamp is not None: 
@@ -195,7 +195,7 @@ def get_interpolated_snaps(
                 coord_interp_mode=coord_interp_mode)
 
             del prev_galaxy.sub_snap
-            del next_galaxy.sub_snap
+            #del next_galaxy.sub_snap ## don't delete this b.c. we'll need it when we load the next one
 
         if load_star: 
             star_time_merged_df = index_match_snapshots_with_dataframes(
@@ -208,7 +208,7 @@ def get_interpolated_snaps(
                 extra_df=gas_time_merged_df)
 
             del prev_galaxy.sub_star_snap
-            del next_galaxy.sub_star_snap
+            #del next_galaxy.sub_star_snap ## don't delete this b.c. we'll need it when we load the next one
         
     if load_gas:
         ## update the interp_snap with new values for the new time
