@@ -350,7 +350,7 @@ void ngb3d_treebuild(float **pospointer,int Npart,int MinMaxFlag,float XminOpt[3
 
   len*=1.01;
 
-  printf("Enclosing max has length= %g\n",len); fflush(stdout);
+  //printf("Enclosing max has length= %g\n",len); fflush(stdout);
 
 
   /* insert particle 1 in root node */
