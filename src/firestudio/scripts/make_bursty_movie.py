@@ -14,8 +14,8 @@ from firestudio.studios.composition import Composition
 
 def main(
     coord_interp_mode='cylindrical',
-    name='m12b_res57000',
-    multi_threads=60):
+    name='m12b_res7100',
+    multi_threads=5):
 
     #galaxy = Galaxy('m12b_res7100',600)
     galaxy = Galaxy(name,600)
@@ -28,7 +28,7 @@ def main(
         camera_pos=[0,0,30],
         scale_line_length=10,
         #time_slice=slice(-24*4,None),
-        #time_slice=slice(-1,None),
+        #time_slice=slice(-10,None),
         coord_interp_mode=coord_interp_mode,
     )
 
@@ -43,24 +43,34 @@ def main(
             'min_quantity':2,
             'max_quantity':7,
             'quantity_adjustment_function':np.log10,
-            'save_meta':True,#'assert_cached':False,
+            'save_meta':True,
+            #'use_metadata':False,
+            #'assert_cached':False,
             #'min_weight':-0.5,
             #'max_weight':3, 
             },
             {'quick':False,#'use_metadata':True,
             'save_meta':True,#'assert_cached':False,
+            #'use_metadata':False,
             #'min_quantity':2,'max_quantity':7,
             #'min_weight':-0.5,'max_weight':3 
-            }], ## msun/pc^2,
+            },
+            {}], ## msun/pc^2,
         studio_kwargss=[
             {},
             {'maxden':2.2e8,
+            'dynrange':4.7e2,
+            #'no_dust':True,
+            #'age_max_gyr':25/1e3, ## 25 Myr
+            },
+            {'savefig':'young_StarStudio',
+            'maxden':2.2e8,
             'dynrange':4.7e2,
             'no_dust':True,
             'age_max_gyr':25/1e3, ## 25 Myr
             }],
         multi_threads=multi_threads,
-        which_studios=[GasStudio,StarStudio],
+        which_studios=[GasStudio,StarStudio,StarStudio],
         check_exists=True, ## skip rendering a frame if the png already exists
         timestamp=bursty_time,
         add_composition=True)  ## will add a composition frame of the requested Studios
