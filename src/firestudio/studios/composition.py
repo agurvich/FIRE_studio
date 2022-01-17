@@ -85,7 +85,7 @@ class Composition(object):
         fig.set_size_inches(self.size_inches)
         
         ims = [which_studio.render(ax,**kwargs)[1]
-            for ax,which_studio in zip(axs,self.studios)]
+            for ax,which_studio in zip(axs.flatten(),self.studios)]
 
         ## save the image
         if self.savefig is not None:
