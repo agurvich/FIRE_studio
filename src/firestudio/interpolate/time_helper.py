@@ -118,10 +118,10 @@ def get_single_snap(
     force_theta_TB=None,
     force_phi_TB=None,
     keys_to_extract=None,
+    use_saved_subsnapshots=True,
     **galaxy_kwargs):
 
-    if keys_to_extract is None:
-        keys_to_extract = ['Coordinates','Masses']
+    if keys_to_extract is None: keys_to_extract = []
 
     snapdict,star_snapdict = {},{}
 
@@ -130,6 +130,7 @@ def get_single_snap(
         compute_stellar_hsml=load_star,
         force_theta_TB=force_theta_TB,
         force_phi_TB=force_phi_TB,
+        use_saved_subsnapshots=use_saved_subsnapshots,
         loud=False)
     if load_gas: 
         for key in galaxy.sub_snap.keys():
@@ -162,8 +163,7 @@ def get_interpolated_snaps(
     keys_to_extract=None,
     **galaxy_kwargs):
 
-    if keys_to_extract is None:
-        keys_to_extract = ['Coordinates','Masses','Temperature']
+    if keys_to_extract is None: keys_to_extract = []
 
     global prev_galaxy,next_galaxy
     global gas_time_merged_df,star_time_merged_df
@@ -249,6 +249,7 @@ def load_gals_from_disk(
     compute_stellar_hsml=False,
     force_theta_TB=None,
     force_phi_TB=None,
+    use_saved_subsnapshots=True,
     **kwargs):
     """ Determines whether it needs to load a new galaxy from disk
         or if we already have what we need."""
@@ -282,6 +283,7 @@ def load_gals_from_disk(
                 compute_stellar_hsml=compute_stellar_hsml,
                 force_theta_TB=force_theta_TB,
                 force_phi_TB=force_phi_TB,
+                use_saved_subsnapshots=use_saved_subsnapshots,
                 loud=False)
         else: prev_galaxy = pair[0]
         changed = True
@@ -293,6 +295,7 @@ def load_gals_from_disk(
                 compute_stellar_hsml=compute_stellar_hsml,
                 force_theta_TB=force_theta_TB,
                 force_phi_TB=force_phi_TB,
+                use_saved_subsnapshots=use_saved_subsnapshots,
                 loud=False)
         else: next_galaxy = pair[1]
         changed = True
@@ -350,11 +353,12 @@ def multi_worker_function(
                 {**scene_kwargs,**studio_kwargs},
                 add_render_kwargs)
         except AssertionError: raise
-        except:
+        except Exception as e:
             print(
                 '%03d'%(this_snapdict['snapnum']-1),
                 '%03d'%this_snapdict['snapnum'],
-                'failed')
+                'failed',
+                e.__context__)
             raise
 
 def worker_function(
