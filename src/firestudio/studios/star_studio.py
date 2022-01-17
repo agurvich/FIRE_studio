@@ -29,6 +29,14 @@ class StarStudio(Studio):
 * [`Studio.__init__`](#studio__init__) 
 * [`Studio.set_ImageParams`](#studioset_imageparams)"""
 
+    required_snapdict_keys = [
+        'Masses',
+        'Coordinates',
+        'SmoothingLength',
+        'Temperature',
+        'AgeGyr',
+        'Metallicity']
+
     def __repr__(self):
         return 'StarStudio instance'
 

@@ -66,10 +66,12 @@ class BaseInterpolate(object):
         ##    studio_kwargs['savefig'] = None
         ## *6: adds '_frame%d.png' as savefig suffixes, this is what numbers each frame
         (which_studios,
+        galaxy_kwargs,
         scene_kwargss,
         studio_kwargss,
         render_kwargss,) = self.sanitize_input(
             which_studios,
+            galaxy_kwargs,
             scene_kwargss,
             studio_kwargss,
             render_kwargss,
@@ -136,6 +138,7 @@ class BaseInterpolate(object):
     def sanitize_input(
         self,
         which_studios,
+        galaxy_kwargs,
         scene_kwargss,
         studio_kwargss,
         render_kwargss,
@@ -155,10 +158,18 @@ class BaseInterpolate(object):
         ## *5: names frames if savefig is not present in studio_kwargss[i]. defaults to 
         ##    outputting a frame for each studio. this can be overridden by setting
         ##    studio_kwargs['savefig'] = None
-        ## *6: adds '_frame%d.png' as savefig suffixes, this is what numbers each frame"""
+        ## *6: adds '_frame%d.png' as savefig suffixes, this is what numbers each frame
+        ## *7: adds minimum required snapshot keys to load from disk based on which_studios
+        """
 
         ## in the rare case when 
         if which_studios is None: which_studios = [GasStudio]
+
+        if 'keys_to_extract' not in galaxy_kwargs:
+            keys_to_extract = []
+            for which_studio in which_studios:
+                keys_to_extract+=which_studio.required_snapdict_keys
+            galaxy_kwargs['keys_to_extract'] = list(np.unique(keys_to_extract))
 
         ## prepended to frame_%0{log10(N)//1+1}d.png
         for which_studio,studio_kwargs in zip(which_studios,studio_kwargss):
@@ -207,7 +218,7 @@ class BaseInterpolate(object):
                     'bottom':0,'top':1},
                 'savefig':'_'.join([which_studio.__name__ for which_studio in which_studios]),
                 'studio_kwargss':copy.deepcopy(studio_kwargss),
-                'ncols':3
+                'ncols':2
                 #'size_inches':(12,6),
                 }
 
@@ -237,7 +248,7 @@ class BaseInterpolate(object):
                 datadir)
         else: frames_to_do = np.ones(scene_kwargss.shape[0],dtype=bool)
 
-        return which_studios,scene_kwargss[frames_to_do],studio_kwargss,render_kwargss
+        return which_studios,galaxy_kwargs,scene_kwargss[frames_to_do],studio_kwargss,render_kwargss
 
 def add_savefig_suffix_to_dicts(scene_kwargss,nframes):
 

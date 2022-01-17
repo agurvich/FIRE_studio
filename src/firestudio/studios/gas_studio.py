@@ -28,6 +28,9 @@ Important methods include:
 * [`Studio.__init__`](#studio__init__) 
 * [`Studio.set_ImageParams`](#studioset_imageparams)"""
 
+
+    required_snapdict_keys = ['Coordinates','Masses','SmoothingLength','Temperature','Velocities']
+
     def __repr__(self):
         """ implementation of built-in __repr__ method for printing.
 

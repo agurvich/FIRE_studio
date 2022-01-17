@@ -13,6 +13,9 @@ from ..utils.stellar_utils import (
     layer_band_images) 
 
 class FIREStudio(Studio):
+
+    required_snapdict_keys = ['Masses','Coordinates','SmoothingLength','Temperature']
+
     def __repr__(self):
         return 'FIREStudio instance'
 
@@ -66,7 +69,9 @@ fireStudio.set_ImageParams(
                 kwargs.pop(kwarg)
             else:
                 if (kwarg not in Studio.set_ImageParams.default_kwargs
-                    and kwarg != 'this_setup_id'):
+                    and kwarg != 'this_setup_id'
+                    and self.master_loud
+                    and loud):
                     print(kwarg,'ignored. Did you mean something else?',
                         default_kwargs.keys())
 
@@ -339,7 +344,7 @@ fireStudio.render()
         self.plotImage(ax,final_image)
 
         ## save the image
-        if self.savefig is not None: self.saveFigure(ax,self.savefig)
+        if self.savefig is not None: self.saveFigure(fig,self.savefig)
 
         return ax,final_image
 
