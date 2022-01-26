@@ -210,13 +210,17 @@ class BaseInterpolate(object):
         ## add a Composition studio (which is a tiled mosaic of all the studios in which_studios)
         ##  if requested
         if add_composition:
+            if type(add_composition) != str:
+                c_savefig = '_'.join([which_studio.__name__ for which_studio in which_studios])
+            else:
+                c_savefig=add_composition
             c_studio_kwargs = {
                 'studios_tuple':tuple(which_studios),
                 'subplots_kwargs':{
                     'wspace':0,'hspace':0,
                     'left':0,'right':1,
                     'bottom':0,'top':1},
-                'savefig':'_'.join([which_studio.__name__ for which_studio in which_studios]),
+                'savefig':c_savefig,
                 'studio_kwargss':copy.deepcopy(studio_kwargss),
                 'ncols':2
                 #'size_inches':(12,6),
