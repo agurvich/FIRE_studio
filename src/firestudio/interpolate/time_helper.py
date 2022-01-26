@@ -1,3 +1,6 @@
+import gc
+import itertools
+import multiprocessing
 import numpy as np
 import os
 import warnings
@@ -29,88 +32,199 @@ def single_threaded_control_flow(
     if galaxy_kwargs is None: raise ValueError(
         'galaxy_kwargs must be a dictionary with,'+
         ' at minimum, name (i.e. m12i_res7100).')
-
     
-    return_values = []
-
+    ## secret multithreading inside single threaded function, :eyes:
+    if 'ABG_force_multithread' in galaxy_kwargs:
+        ABG_force_multithread = galaxy_kwargs.pop('ABG_force_multithread')
+    else: ABG_force_multithread = False
+    
+    ## determine what particle types we need to load from disk
     load_gas,load_star = get_load_flags(which_studios,render_kwargss)
 
+    ## initialize the variables which we'll use
+    ##  to avoid loading from disk unless we have to
+    ##  i.e. moving next -> prev, etc...
     prev_snapnum,next_snapnum = None,None
     snapdict,star_snapdict = None,None
+
+    snap_pairs = [scene_kwargs['snap_pair'] for scene_kwargs in scene_kwargss]
+    if not ABG_force_multithread:
+        return_values = []
+        for scene_kwargs in scene_kwargss:     
+            (prev_snapnum, next_snapnum,
+            snapdict,star_snapdict,
+            return_value) = render_this_scene(
+                which_studios, ##Nstudios
+                galaxy_kwargs, ## 1 dictionary shared by all scenes
+                scene_kwargs, ## 1 dictionary for this scene
+                studio_kwargss, ## Nstudios
+                render_kwargss, ## Nstudios
+                datadir,
+                timestamp,
+                coord_interp_mode,
+                load_gas,load_star,
+                prev_snapnum,next_snapnum,
+                snapdict,star_snapdict,
+                ABG_force_multithread)
+            return_values +=[return_value]
+
+    elif len(np.unique(snap_pairs)) == 2:
+        pair = scene_kwargss[0]['snap_pair']
+        (t0,t1) = scene_kwargss[0]['snap_pair_time']
+        this_time = scene_kwargss[0]['time']
+        snapdict,star_snapdict = get_interpolated_snaps(
+            prev_snapnum,next_snapnum,
+            pair,
+            t0,t1,
+            this_time,
+            coord_interp_mode,
+            load_gas,load_star,
+            **galaxy_kwargs)
+
+        prev_snapnum,next_snapnum = pair
+        ## set inside get_interpolated snaps, we won't need them
+        ##  anymore
+        global next_galaxy,prev_galaxy
+        if hasattr(next_galaxy,'sub_snap'): del next_galaxy.sub_snap
+        if hasattr(next_galaxy,'sub_star_snap'): del next_galaxy.sub_star_snap
+        if hasattr(next_galaxy,'sub_star_snap'): del next_galaxy.sub_dark_snap
+        if hasattr(prev_galaxy,'sub_snap'): del prev_galaxy.sub_snap
+        if hasattr(prev_galaxy,'sub_star_snap'): del prev_galaxy.sub_star_snap
+        if hasattr(prev_galaxy,'sub_star_snap'): del prev_galaxy.sub_dark_snap
+        locals().keys()
+        globals().keys()
+        gc.collect()
+
+        argss = zip(
+            itertools.repeat(which_studios), ##Nstudios
+            itertools.repeat(galaxy_kwargs), ## 1 dictionary shared by all scenes
+            scene_kwargss, ## 1 dictionary for each scene
+            itertools.repeat(studio_kwargss), ## Nstudios
+            itertools.repeat(render_kwargss), ## Nstudios
+            itertools.repeat(datadir),
+            itertools.repeat(timestamp),
+            itertools.repeat(coord_interp_mode),
+            itertools.repeat(load_gas),
+            itertools.repeat(load_star),
+            itertools.repeat(prev_snapnum),
+            itertools.repeat(next_snapnum),
+            itertools.repeat(snapdict),
+            itertools.repeat(star_snapdict),
+            itertools.repeat(ABG_force_multithread))
+
+        with multiprocessing.Pool(ABG_force_multithread) as pool:
+            ## render_this_scene only returns FIRE studio return values
+            ##  when ABG_force_multithread is true
+            return_values = pool.starmap(render_this_scene,argss)
+    else: raise ValueError("Not just a single pair of snapshots to use",np.unique(snap_pairs))
+
+
+def render_this_scene(
+    which_studios, ##Nstudios
+    galaxy_kwargs, ## 1 dictionary shared by all scenes
+    scene_kwargs, ## 1 dictionary for this scene
+    studio_kwargss, ## Nstudios
+    render_kwargss, ## Nstudios
+    datadir,
+    timestamp,
+    coord_interp_mode,
+    load_gas,load_star,
+    prev_snapnum,next_snapnum,
+    snapdict,star_snapdict,
+    ABG_force_multithread):
 
     dummy_snap = {}
     dummy_snap['name'] = galaxy_kwargs['name']
     dummy_snap['datadir'] = datadir
 
-    for scene_kwargs in scene_kwargss:     
+    ## initialize dummy snapdict so that we can try and use
+    ##  cached maps before loading anything from disk
+    if 'snapnum' in galaxy_kwargs:
+        dummy_snap['snapnum'] = galaxy_kwargs['snapnum']
+        ## rely on user to provide figure_label explicitly
+        timestamp = None 
+    else:
+        pair = scene_kwargs['snap_pair']
+        dummy_snap['snapnum'] = pair[1]
 
-        if 'snapnum' in galaxy_kwargs:
-            dummy_snap['snapnum'] = galaxy_kwargs['snapnum']
-            dummy_snap['this_time'] = None
-            ## rely on user to provide figure_label explicitly
-            timestamp = None 
-        else:
-            pair = scene_kwargs['snap_pair']
-            this_time = scene_kwargs['time']
-            dummy_snap['snapnum'] = pair[1]
-            dummy_snap['this_time'] = this_time
+    ## generate a timestamp if requested
+    if timestamp is not None: 
+        pair = scene_kwargs['snap_pair']
+        (t0,t1) = scene_kwargs['snap_pair_time']
+        scene_kwargs['figure_label'] = format_timestamp(
+            scene_kwargs['time'],
+            t0,t1,
+            timestamp)
 
-        ## generate a timestamp if requested
-        if timestamp is not None: 
-            pair = scene_kwargs['snap_pair']
-            (t0,t1) = scene_kwargs['snap_pair_time']
-            this_time = scene_kwargs['time']
-            scene_kwargs['figure_label'] = format_timestamp(
-                this_time,
-                t0,t1,
-                timestamp)
-
-        ## attempt to use cached images
-        try:
-            ## call the function we were passed
-            return_values += [multi_worker_function(
-                which_studios,
-                dummy_snap,
-                dummy_snap,
-                scene_kwargs,
-                studio_kwargss,
-                [{'assert_cached':True,'loud':False,**render_kwargs} for render_kwargs in render_kwargss])]
-            continue
-        except (AssertionError,KeyError): 
-            pass
-
-        ## determine if we are using 'just' a single snapshot's data
-        if 'snapnum' in galaxy_kwargs: 
-            if snapdict is None:
-                ## only open the snapshot data once
-                snapdict,star_snapdict = get_single_snap(
-                    load_gas,load_star,
-                    **galaxy_kwargs)
-        ## or if we want to interpolate between two snapshots
-        else:
-            ## remove timing information for this dictionary
-            pair = scene_kwargs.pop('snap_pair')
-            (t0,t1) = scene_kwargs.pop('snap_pair_time')
-            this_time = scene_kwargs.pop('time')
-            snapdict,star_snapdict = get_interpolated_snaps(
-                prev_snapnum,next_snapnum,
-                pair,
-                t0,t1,
-                this_time,
-                coord_interp_mode,
-                load_gas,load_star,
-                **galaxy_kwargs)
-            prev_snapnum,next_snapnum = pair
-
-        return_values += [multi_worker_function(
+    ## attempt to use cached images
+    try:
+        ## call the abstract draw function
+        return_value = multi_worker_function(
             which_studios,
-            snapdict,
-            star_snapdict,
+            dummy_snap,
+            dummy_snap,
             scene_kwargs,
             studio_kwargss,
-            render_kwargss)]
+            [{'assert_cached':True,'loud':False,**render_kwargs} for render_kwargs in render_kwargss])
+        if not ABG_force_multithread:
+            return prev_snapnum,next_snapnum,snapdict,star_snapdict,return_value
+        else: return return_value
+    ## yeah alright, it was worth a shot. let's load from disk and project then
+    except (AssertionError,KeyError): pass
 
-    return return_values
+    ## determine if we've already loaded the data or if we need to open it from disk
+    snapdict,star_snapdict,prev_snapnum,next_snapnum = load_data_from_disk_if_necessary(
+        galaxy_kwargs,
+        scene_kwargs,
+        prev_snapnum,next_snapnum,
+        snapdict,star_snapdict,
+        coord_interp_mode, ## determines what coordinates we save in snapdict
+        load_gas,load_star)
+
+    ## call the abstract draw function with live data this time
+    return_value = multi_worker_function(
+        which_studios,
+        snapdict,
+        star_snapdict,
+        scene_kwargs,
+        studio_kwargss,
+        render_kwargss)
+
+    if not ABG_force_multithread:
+        return prev_snapnum,next_snapnum,snapdict,star_snapdict,return_value
+    else: return return_value
+
+def load_data_from_disk_if_necessary(
+    galaxy_kwargs,
+    scene_kwargs,
+    prev_snapnum,next_snapnum,
+    snapdict,star_snapdict,
+    coord_interp_mode,
+    load_gas,load_star):
+
+    ## determine if we are using 'just' a single snapshot's data
+    if 'snapnum' in galaxy_kwargs: 
+        if snapdict is None:
+            ## only open the snapshot data once
+            snapdict,star_snapdict = get_single_snap(
+                load_gas,load_star,
+                **galaxy_kwargs)
+    ## or if we want to interpolate between two snapshots
+    else:
+        ## remove timing information for this dictionary
+        pair = scene_kwargs['snap_pair']
+        (t0,t1) = scene_kwargs['snap_pair_time']
+        this_time = scene_kwargs['time']
+        snapdict,star_snapdict = get_interpolated_snaps(
+            prev_snapnum,next_snapnum,
+            pair,
+            t0,t1,
+            this_time,
+            coord_interp_mode,
+            load_gas,load_star,
+            **galaxy_kwargs)
+        prev_snapnum,next_snapnum = pair
+    return snapdict,star_snapdict,prev_snapnum,next_snapnum
 
 def get_single_snap(
     load_gas,
@@ -146,7 +260,6 @@ def get_single_snap(
     snapdict['name'] = galaxy.name
     snapdict['datadir'] = galaxy.datadir
     snapdict['snapnum'] = galaxy.snapnum
-    snapdict['this_time'] = None
 
     del galaxy
 
@@ -224,7 +337,6 @@ def get_interpolated_snaps(
     interp_snap['name'] = next_galaxy.name
     interp_snap['datadir'] = next_galaxy.datadir
     interp_snap['snapnum'] = next_galaxy.snapnum
-    interp_snap['this_time'] = this_time
 
     if load_star:
         interp_star_snap = make_interpolated_snap(
@@ -235,7 +347,6 @@ def get_interpolated_snaps(
         interp_star_snap['name'] = next_galaxy.name
         interp_star_snap['datadir'] = next_galaxy.datadir
         interp_star_snap['snapnum'] = next_galaxy.snapnum
-        interp_star_snap['this_time'] = this_time
     else: interp_star_snap = None
 
     return interp_snap,interp_star_snap
@@ -406,11 +517,10 @@ def worker_function(
         this_snapdict['name'],
         gas_snapdict=this_snapdict,
         star_snapdict=this_star_snapdict,
-        master_loud=False,
-        setup_id_append="_time%.5f"%this_snapdict['this_time']
-            if this_snapdict['this_time'] is not None  
+        setup_id_append="_time%.5f"%studio_kwargs['time']
+            if studio_kwargs['time'] is not None  
             else None,
-        **{**studio_kwargs,'savefig':this_savefig})
+        **{'master_loud':False,**studio_kwargs,'savefig':this_savefig})
 
     if which_studio is GasStudio and render_kwargs['weight_name'] == 'Masses':
         render_kwargs['weight_adjustment_function'] = lambda x: np.log10(x/my_studio.Acell) + 10 - 6 ## msun/pc^2,
