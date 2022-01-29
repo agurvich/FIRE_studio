@@ -106,42 +106,6 @@ class SimpleStudio(Studio):
         plt.close(fig)
         return final_image
 
-    def produceHackyImage(self,**kwargs):
-
-        fig = plt.figure( figsize=(12,10), facecolor='k' )
-        ax = plt.gca()
-
-        # Point size
-        if len( d['M'] ) > 0:
-            width_in_data = 2 * lim
-            width_in_pixels = ax.get_window_extent().width
-            pixels_to_points = fig.dpi / 72.
-            scale = 10.
-            radius = d['h'] * ( width_in_pixels / width_in_data ) * pixels_to_points * scale
-            s = ( radius )**2.
-
-            # Colors
-            colors = cmap( norm( d[data_key] ) )
-
-            # Alpha
-            if pm['variable_alpha']:
-                column_den = d['M'] / d['h']**2.
-                alpha = plt_colors.LogNorm( vmin=np.nanmin( column_den ), vmax=np.nanmax( column_den ) )( column_den ) * 0.065 * ( 50000 / w.n_particles)
-                alpha[alpha>1.] = 1.
-                alpha[alpha<0.] = 0.
-                colors[:,3] = alpha
-            else:
-                colors[:,3] = 0.01
-
-            # Plot itself
-            ax.scatter(
-                d['Rx'],
-                d['Rz'],
-                s = s,
-                c = colors,
-                edgecolors = 'none',
-            )
-
     def __prepareCoordinates(
         self,
         snapdict_name='star',
