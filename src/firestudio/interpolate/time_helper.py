@@ -12,6 +12,7 @@ from abg_python.plot_utils import plt
 from firestudio.studios.gas_studio import GasStudio
 from firestudio.studios.star_studio import StarStudio
 from firestudio.studios.FIRE_studio import FIREStudio
+from firestudio.studios.simple_studio import SimpleStudio
 from firestudio.studios.composition import Composition
 
 prev_galaxy,next_galaxy = None,None
@@ -498,6 +499,7 @@ def worker_function(
         }
     elif which_studio is StarStudio: render_kwargs = {}
     elif which_studio is FIREStudio: render_kwargs = {}
+    elif which_studio is SimpleStudio: render_kwargs = {}
     elif which_studio is Composition: 
         studios_tuple = studio_kwargs.pop('studios_tuple')
         which_studio_actual = which_studio

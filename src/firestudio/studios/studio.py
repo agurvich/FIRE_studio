@@ -41,6 +41,37 @@ except ImportError:
 
 
 class Drawer(object):
+    def render(
+        self,
+        ax=None,
+        **kwargs):
+        """ Generates an image with the `produceImage` method and then plots it with the `plotImage` method.
+
+            Input: 
+
+                ax = None -- axis to plot image to, if None will create a new figure
+
+            Output:
+
+                ax -- the axis the image was plotted to
+                final_image -- Npixels x Npixels x 3 RGB pixel array"""
+
+        if ax is None:
+            fig,ax = plt.figure(),plt.gca()
+        else:
+            fig = ax.get_figure()
+
+        ## remap the C output to RGB space
+        final_image = self.produceImage(**kwargs)
+
+        ## plot that RGB image and overlay scale bars/text
+        self.plotImage(ax,final_image)
+
+        ## save the image
+        if self.savefig is not None:
+            self.saveFigure(fig,self.savefig)
+
+        return ax,final_image
 
     def drawCoordinateAxes(
         self,
@@ -81,7 +112,6 @@ class Drawer(object):
         self,
         ax,
         final_image,
-        cbar_label=None,
         **kwargs): 
 
         ## fill the pixels of the the scale bar with white

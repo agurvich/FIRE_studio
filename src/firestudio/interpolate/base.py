@@ -13,6 +13,7 @@ from abg_python.galaxy.gal_utils import Galaxy
 from ..studios.gas_studio import GasStudio
 from ..studios.star_studio import StarStudio 
 from ..studios.FIRE_studio import FIREStudio
+from ..studios.simple_studio import SimpleStudio
 from ..studios.composition import Composition
 
 from .time_helper import single_threaded_control_flow
@@ -163,7 +164,7 @@ class BaseInterpolate(object):
         """
 
         ## in the rare case when 
-        if which_studios is None: which_studios = [GasStudio]
+        if which_studios is None: which_studios = [SimpleStudio]
 
         if 'keys_to_extract' not in galaxy_kwargs:
             keys_to_extract = []
@@ -185,6 +186,7 @@ class BaseInterpolate(object):
             if (which_studio is not GasStudio and 
                 which_studio is not StarStudio and
                 which_studio is not FIREStudio and
+                which_studio is not SimpleStudio and
                 which_studio is not Composition): 
                 raise TypeError("%s is not GasStudio, StarStudio, or FIREStudio"%repr(which_studio))
 

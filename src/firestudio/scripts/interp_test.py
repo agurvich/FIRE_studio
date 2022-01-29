@@ -1,12 +1,13 @@
 import numpy as np
 
 from abg_python.plot_utils import plt
-plt.rcParams['figure.dpi']=240
+plt.rcParams['figure.dpi']=300
 from abg_python.galaxy.gal_utils import ManyGalaxy
 
 from firestudio.interpolate.interpolate import InterpolationHandler
 from firestudio.studios.star_studio import StarStudio
 from firestudio.studios.FIRE_studio import FIREStudio
+from firestudio.studios.simple_studio import SimpleStudio 
 
 
 def main(
@@ -49,19 +50,20 @@ def main(
             ## cd ~
             ## ln -s /scratch/projects/xsede/GalaxiesOnFIRE snaps
         render_kwargss=[
-            {}, ## kwargs for FIREStudio render call
-            {}], ## kwargs for StarStudio render call
+            {'age_max_gyr':15/1e3, ## 25 Myr
+            'use_metadata':False,
+            'save_meta':False}], ## kwargs for StarStudio render call
         studio_kwargss=[
-            {'savefig':None,'master_loud':True}, ## kwargs for FIREStudio initialization
-            {'savefig':None,'maxden':2.2e8,'dynrange':4.7e2,
-            'no_dust':True,
-            'age_max_gyr':25/1e3, ## 25 Myr
+            {
+            'savefig':'simple_test',
+                # 'maxden':2.2e8,'dynrange':4.7e2,
+            #'no_dust':True,
             }], ## kwargs for StarStudio initialization
         multi_threads=multi_threads,
-        which_studios=[FIREStudio,StarStudio],
-        check_exists=True, ## skip rendering a frame if the png already exists
+        which_studios=[SimpleStudio],
+        check_exists=False, ## skip rendering a frame if the png already exists
         timestamp=7.11419974, ## offset the timestamp by 0 Gyr ## bursty_time
-        add_composition='rot50_r30')  ## will add a composition frame of the requested Studios
+        add_composition=False)  ## will add a composition frame of the requested Studios
 
 if __name__ == '__main__':
     main()
