@@ -107,7 +107,7 @@ class SceneInterpolationHandler(TimeInterpolationHandler):
         ##  the total duration of the movie
         if len(self.frame_kwargss) + nsteps > self.nframes:
             message = ("time since last keyframe too large,"+
-            " this segment (%d + %d frames) would exceed total duration: %d frames (%d sec)"%(
+            " this segment (%d + %d frames) would exceed total duration: %d frames (%.1f sec)"%(
                 len(self.frame_kwargss),
                 nsteps,
                 self.nframes,

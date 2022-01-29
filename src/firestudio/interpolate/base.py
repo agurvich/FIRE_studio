@@ -222,7 +222,7 @@ class BaseInterpolate(object):
                     'bottom':0,'top':1},
                 'savefig':c_savefig,
                 'studio_kwargss':copy.deepcopy(studio_kwargss),
-                'ncols':2
+                'ncols':min(len(which_studios),4)
                 #'size_inches':(12,6),
                 }
 
@@ -270,15 +270,14 @@ def png_frame_cache(scene_kwargss,studio_kwargss,datadir):
 
     for i,scene_kwargs in enumerate(scene_kwargss):
         for studio_kwargs in studio_kwargss:
-            if studio_kwargs['savefig'] is None:
-                this_fname = None
-            else:
+            if studio_kwargs['savefig'] is None: continue
+            else: 
                 this_fname = os.path.join(
                     datadir,
                     'firestudio',
                     studio_kwargs['savefig']+scene_kwargs['savefig_suffix'])
-            if this_fname is None or not os.path.isfile(this_fname): 
-                #print(this_fname)
+            if not os.path.isfile(this_fname): 
+                #print(this_fname,'missing')
                 frames_to_do.append(i)
                 break
 

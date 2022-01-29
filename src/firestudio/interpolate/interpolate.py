@@ -33,13 +33,13 @@ class InterpolationHandler(BaseInterpolate):
         ## need to interpolate in time
         if sim_time_begin and sim_time_end is not None:
             self.time_handler = TimeInterpolationHandler(
-                np.linspace(sim_time_begin,sim_time_end,total_duration_sec*fps)[time_slice],
+                np.linspace(sim_time_begin,sim_time_end,int(total_duration_sec*fps))[time_slice],
                 snapshot_times,
                 coord_interp_mode=coord_interp_mode)
             self.nframes = self.time_handler.nframes
         else: 
             self.time_handler = None
-            self.nframes = fps*total_duration_sec
+            self.nframes = int(fps*total_duration_sec)
         
         self.scene_handler.nframes = self.nframes
         self.fps = fps
