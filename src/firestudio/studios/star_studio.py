@@ -384,50 +384,23 @@ starStudio.set_ImageParams(
                 gas_pos , mgas , gas_metals ,  h_gas)
 
 ####### produceImage implementation #######
-    def render(
+    def produceImage(
         self,
-        ax=None,
+        quick=False,
         **kwargs):
-        """Plots a mock hubble image, along with any annotations/scale bars,
+        """
+        Generates a mock hubble image, along with any annotations/scale bars,
             using the stored image parameters.
 
             Input: 
 
-                ax = None -- axis to plot image to, if None will create a new figure
                 quick = False -- flag to use a simple 2d histogram (for comparison or
                     for quick iteration as the user defines the image parameters)
 
             Output:
 
-                ax -- the axis the image was plotted to
-                final_image -- 2x2x3 RGB pixel array
-
-Example usage:
-```python
-starStudio.render(plt.gca())
-```"""
-
-        if ax is None:
-            fig,ax = plt.figure(),plt.gca()
-        else:
-            fig = ax.get_figure()
-
-        ## remap the C output to RGB space
-        final_image = self.produceImage(**kwargs)
-
-        ## plot that RGB image and overlay scale bars/text
-        self.plotImage(ax,final_image)
-
-        ## save the image
-        if self.savefig is not None:
-            self.saveFigure(fig,self.savefig)
-
-        return ax,final_image
-
-    def produceImage(
-        self,
-        quick=False,
-        **kwargs):
+                final_image -- NpixelsxNpixelsx3 RGB pixel array
+        """
 
         if not quick:
             gas_out,out_u,out_g,out_r = self.get_mockHubbleImage(**kwargs)

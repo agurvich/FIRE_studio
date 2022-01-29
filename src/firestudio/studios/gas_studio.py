@@ -442,86 +442,6 @@ Important methods include:
         return weightMap, weightWeightedQuantityMap/weightMap
 
 ####### produceImage implementation #######
-    def render(
-        self,
-        ax=None,
-        **kwargs):
-        """ Plots a projected image using the stored image parameters.
-
-        Parameters
-        ----------
-        ax : matplotlib axis, optional
-            [description], by default None
-
-        Keywords
-        --------
-            ax = None -- axis to plot image to, if None will create a new figure
-
-            weight_name = 'Masses' --
-            quantity_name = 'Temperature' --
-            weights = None -- 
-            quantities = None --
-            min_weight = None,max_weight = None --
-            min_quantity = None,max_quantity = None --
-            weight_adjustment_function = None --
-            quantity_adjustment_function = None --
-            use_colorbar = False --
-            cmap = 'viridis' -- what colormap to use
-            quick = False -- flag to use a simple 2d histogram (for comparison or
-                for quick iteration as the user defines the image parameters)
-
-        Returns
-        -------
-            ax -- the axis the image was plotted to
-            final_image -- 2x2x3 RGB pixel array
-
-        Example usage
-        -------------
-        ```python
-        ## makes a gas surface density map
-        gasStudio.render(
-            weight_name='Masses',
-            min_weight=-0.1,
-            max_weight=1.5,
-            weight_adjustment_function= lambda x: np.log10(x/gasStudio.Acell)+10-6 ## log10(msun/pc^2)
-            )
-
-        ## makes a mass weighted temperature map
-        gasStudio.render(
-            weight_name='Masses',
-            quantity_name='Temperature',
-            min_quantity=2,
-            max_quantity=7,
-            quantity_adjustment_function= np.log10
-            )
-
-        ## makes a saturation-hue gas surface density + Temperature map
-        gasStudio.render(
-            weight_name='Masses',
-            min_weight=-0.1,
-            max_weight=1.5,
-            weight_adjustment_function= lambda x: np.log10(x/gasStudio.Acell)+10-6 ## log10(msun/pc^2)
-            quantity_name='Temperature',
-            min_quantity=2,
-            max_quantity=7,
-            quantity_adjustment_function= np.log10
-            )```"""
-
-        if ax is None: fig,ax = plt.figure(),plt.gca()
-        else: fig = ax.get_figure()
-
-        ## remap the C output to RGB space
-        final_image = self.produceImage(**kwargs)
-
-        ## plot that RGB image and overlay scale bars/text
-        self.plotImage(ax,final_image)
-
-        ## save the image
-        if self.savefig is not None:
-            self.saveFigure(fig,self.savefig)
-
-        return ax,final_image
-
     def produceImage(
         self,
         weight_name='Masses',
@@ -535,7 +455,7 @@ Important methods include:
         quick=False,
         **kwargs
         ):
-        """[summary]
+        """ Generates a projected image using the stored image parameters.
 
         Parameters
         ----------
@@ -573,7 +493,38 @@ Important methods include:
         ------
         ValueError
             [description]
-        """
+
+        Example usage
+        -------------
+        ```python
+        ## makes a gas surface density map
+        gasStudio.render(
+            weight_name='Masses',
+            min_weight=-0.1,
+            max_weight=1.5,
+            weight_adjustment_function= lambda x: np.log10(x/gasStudio.Acell)+10-6 ## log10(msun/pc^2)
+            )
+
+        ## makes a mass weighted temperature map
+        gasStudio.render(
+            weight_name='Masses',
+            quantity_name='Temperature',
+            min_quantity=2,
+            max_quantity=7,
+            quantity_adjustment_function= np.log10
+            )
+
+        ## makes a saturation-hue gas surface density + Temperature map
+        gasStudio.render(
+            weight_name='Masses',
+            min_weight=-0.1,
+            max_weight=1.5,
+            weight_adjustment_function= lambda x: np.log10(x/gasStudio.Acell)+10-6 ## log10(msun/pc^2)
+            quantity_name='Temperature',
+            min_quantity=2,
+            max_quantity=7,
+            quantity_adjustment_function= np.log10
+            )```"""
 
         self.cmap = cmap
 
