@@ -14,8 +14,8 @@ from firestudio.studios.composition import Composition
 
 def main(
     coord_interp_mode='cylindrical',
-    name='m12b_res7100',
-    multi_threads=5):
+    name='m12b_res57000',
+    multi_threads=30):
 
     #galaxy = Galaxy('m12b_res7100',600)
     galaxy = Galaxy(name,600)
@@ -57,15 +57,19 @@ def main(
             },
             {}], ## msun/pc^2,
         studio_kwargss=[
-            {},
+            {
+            'savefig':None
+            },
             {'maxden':2.2e8,
             'dynrange':4.7e2,
+            'savefig':None,
             #'no_dust':True,
             #'age_max_gyr':25/1e3, ## 25 Myr
             },
             {'savefig':'young_StarStudio',
             'maxden':2.2e8,
             'dynrange':4.7e2,
+            'savefig':None,
             'no_dust':True,
             'age_max_gyr':25/1e3, ## 25 Myr
             }],
@@ -73,7 +77,7 @@ def main(
         which_studios=[GasStudio,StarStudio,StarStudio],
         check_exists=True, ## skip rendering a frame if the png already exists
         timestamp=bursty_time,
-        add_composition=True)  ## will add a composition frame of the requested Studios
+        add_composition='bursty_movie')  ## will add a composition frame of the requested Studios
 
 if __name__ == '__main__':
     main()

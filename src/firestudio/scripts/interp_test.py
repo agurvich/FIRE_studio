@@ -24,7 +24,7 @@ def main(
         (many_galaxy.snapnums-snapnums[0])**2)
 
     interp_handler = InterpolationHandler(
-        10, ## duration of movie, 10 sec
+        2.5, ## duration of movie, 10 sec
         many_galaxy.snap_gyrs[267], ## begininng time in Gyr
         many_galaxy.snap_gyrs[268]-0.001, ## end time in Gyr
         ## fixed position of camera, optionally could move camera around
@@ -32,11 +32,12 @@ def main(
         camera_pos=[0,0,50],  
         ## how long should the line in the bottom left corner be?
         scale_line_length=10,
+        coord_interp_mode='cylindrical'
     )
 
     figs = interp_handler.interpolateAndRender(
         galaxy_kwargs={
-            'ABG_force_multithread':8,
+            'ABG_force_multithread':10,
             ## flag to write snapshot w/ particles w/i rvir to disk
             'use_saved_subsnapshots':False, 
             'name':many_galaxy.name, ## 
@@ -52,12 +53,15 @@ def main(
             {}], ## kwargs for StarStudio render call
         studio_kwargss=[
             {'savefig':None,'master_loud':True}, ## kwargs for FIREStudio initialization
-            {'savefig':None,'maxden':2.2e8,'dynrange':4.7e2}], ## kwargs for StarStudio initialization
+            {'savefig':None,'maxden':2.2e8,'dynrange':4.7e2,
+            'no_dust':True,
+            'age_max_gyr':25/1e3, ## 25 Myr
+            }], ## kwargs for StarStudio initialization
         multi_threads=multi_threads,
         which_studios=[FIREStudio,StarStudio],
         check_exists=True, ## skip rendering a frame if the png already exists
         timestamp=7.11419974, ## offset the timestamp by 0 Gyr ## bursty_time
-        add_composition='og_test')  ## will add a composition frame of the requested Studios
+        add_composition='rot50_r30')  ## will add a composition frame of the requested Studios
 
 if __name__ == '__main__':
     main()
