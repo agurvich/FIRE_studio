@@ -278,6 +278,8 @@ def get_interpolated_snaps(
     **galaxy_kwargs):
 
     if keys_to_extract is None: keys_to_extract = []
+    elif coord_interp_mode in ['cylindrical','spherical']: keys_to_extract+=['AngularMomentum']
+
 
     global prev_galaxy,next_galaxy
     global gas_time_merged_df,star_time_merged_df
