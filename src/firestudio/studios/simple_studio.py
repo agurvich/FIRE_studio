@@ -47,11 +47,13 @@ class SimpleStudio(Studio):
 
             ## TO-DO for Alex:
             # Fix these variables up how you want.
+            """
             particle_radius_data_units = ??? # Use smoothing length or sqrt of volume or whatever
             cmap = palettable.scientific.diverging.Berlin_3.mpl_colormap # Make this into what you want
             norm = matplotlib.colors.LogNorm( vmin=???, vmax=??? ) # Add in an matplotlib colors normalization for the colors
             particle_data_to_color_by = ??? # Could be temperature, for example
             particle_mass = ??? # Fill this in
+            """
 
             width_in_data = self.Xmax - self.Xmin
             width_in_pixels = ax.get_window_extent().width
