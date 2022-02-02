@@ -50,7 +50,7 @@ def main(
             ## cd ~
             ## ln -s /scratch/projects/xsede/GalaxiesOnFIRE snaps
         render_kwargss=[
-            {'age_max_gyr':15/1e3, ## 25 Myr
+            {'age_max_gyr':25/1e3, ## 25 Myr
             'use_metadata':False,
             'save_meta':False}], ## kwargs for StarStudio render call
         studio_kwargss=[

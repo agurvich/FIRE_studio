@@ -26,7 +26,7 @@ def single_threaded_control_flow(
     render_kwargss, ## Nstudios
     datadir,
     timestamp=0, ## offset by 0 Gyr
-    coord_interp_mode='spherical'):
+    polar=True):
 
     """ """
 
@@ -62,11 +62,11 @@ def single_threaded_control_flow(
                 render_kwargss, ## Nstudios
                 datadir,
                 timestamp,
-                coord_interp_mode,
                 load_gas,load_star,
                 prev_snapnum,next_snapnum,
                 snapdict,star_snapdict,
-                ABG_force_multithread)
+                ABG_force_multithread,
+                polar)
             return_values +=[return_value]
 
     elif len(np.unique(snap_pairs)) == 2:
@@ -78,8 +78,8 @@ def single_threaded_control_flow(
             pair,
             t0,t1,
             this_time,
-            coord_interp_mode,
             load_gas,load_star,
+            polar=polar,
             **galaxy_kwargs)
 
         prev_snapnum,next_snapnum = pair
@@ -104,14 +104,14 @@ def single_threaded_control_flow(
             itertools.repeat(render_kwargss), ## Nstudios
             itertools.repeat(datadir),
             itertools.repeat(timestamp),
-            itertools.repeat(coord_interp_mode),
             itertools.repeat(load_gas),
             itertools.repeat(load_star),
             itertools.repeat(prev_snapnum),
             itertools.repeat(next_snapnum),
             itertools.repeat(snapdict),
             itertools.repeat(star_snapdict),
-            itertools.repeat(ABG_force_multithread))
+            itertools.repeat(ABG_force_multithread),
+            itertools.repeat(polar))
 
         with multiprocessing.Pool(ABG_force_multithread) as pool:
             ## render_this_scene only returns FIRE studio return values
@@ -119,6 +119,7 @@ def single_threaded_control_flow(
             return_values = pool.starmap(render_this_scene,argss)
     else: raise ValueError("Not just a single pair of snapshots to use",np.unique(snap_pairs))
 
+    return return_values
 
 def render_this_scene(
     which_studios, ##Nstudios
@@ -128,11 +129,11 @@ def render_this_scene(
     render_kwargss, ## Nstudios
     datadir,
     timestamp,
-    coord_interp_mode,
     load_gas,load_star,
     prev_snapnum,next_snapnum,
     snapdict,star_snapdict,
-    ABG_force_multithread):
+    ABG_force_multithread,
+    polar=True):
 
     dummy_snap = {}
     dummy_snap['name'] = galaxy_kwargs['name']
@@ -179,8 +180,8 @@ def render_this_scene(
         scene_kwargs,
         prev_snapnum,next_snapnum,
         snapdict,star_snapdict,
-        coord_interp_mode, ## determines what coordinates we save in snapdict
-        load_gas,load_star)
+        load_gas,load_star,
+        polar=polar) ## determines what coordinates we save in snapdict
 
     ## call the abstract draw function with live data this time
     return_value = multi_worker_function(
@@ -200,8 +201,8 @@ def load_data_from_disk_if_necessary(
     scene_kwargs,
     prev_snapnum,next_snapnum,
     snapdict,star_snapdict,
-    coord_interp_mode,
-    load_gas,load_star):
+    load_gas,load_star,
+    polar=True):
 
     ## determine if we are using 'just' a single snapshot's data
     if 'snapnum' in galaxy_kwargs: 
@@ -221,8 +222,8 @@ def load_data_from_disk_if_necessary(
             pair,
             t0,t1,
             this_time,
-            coord_interp_mode,
             load_gas,load_star,
+            polar=polar,
             **galaxy_kwargs)
         prev_snapnum,next_snapnum = pair
     return snapdict,star_snapdict,prev_snapnum,next_snapnum
@@ -234,6 +235,7 @@ def get_single_snap(
     force_phi_TB=None,
     keys_to_extract=None,
     use_saved_subsnapshots=True,
+    extract_DM=False,
     **galaxy_kwargs):
 
     if keys_to_extract is None: keys_to_extract = []
@@ -246,7 +248,9 @@ def get_single_snap(
         force_theta_TB=force_theta_TB,
         force_phi_TB=force_phi_TB,
         use_saved_subsnapshots=use_saved_subsnapshots,
-        loud=False)
+        loud=False,
+        extract_DM=extract_DM,
+        jhat_coords=True)
     if load_gas: 
         for key in galaxy.sub_snap.keys():
             if key in keys_to_extract:
@@ -272,14 +276,12 @@ def get_interpolated_snaps(
     pair,
     t0,t1,
     this_time,
-    coord_interp_mode,
     load_gas,load_star,
     keys_to_extract=None,
+    polar=True, ## use polar interpolation for coordinates?
     **galaxy_kwargs):
 
     if keys_to_extract is None: keys_to_extract = []
-    elif coord_interp_mode in ['cylindrical','spherical']: keys_to_extract+=['AngularMomentum']
-
 
     global prev_galaxy,next_galaxy
     global gas_time_merged_df,star_time_merged_df
@@ -292,6 +294,7 @@ def get_interpolated_snaps(
         prev_galaxy,
         next_galaxy,
         compute_stellar_hsml=load_star,
+        polar=polar,
         **galaxy_kwargs)
 
     ## update the previous/next snapnums
@@ -308,7 +311,7 @@ def get_interpolated_snaps(
                 keys_to_extract=keys_to_extract,
                 t0=t0,
                 t1=t1,
-                coord_interp_mode=coord_interp_mode)
+                polar=polar)
 
             del prev_galaxy.sub_snap
             #del next_galaxy.sub_snap ## don't delete this b.c. we'll need it when we load the next one
@@ -320,19 +323,15 @@ def get_interpolated_snaps(
                 keys_to_extract=keys_to_extract,
                 t0=t0,
                 t1=t1,
-                coord_interp_mode=coord_interp_mode,
-                extra_df=gas_time_merged_df)
+                extra_df=gas_time_merged_df,
+                polar=polar)
 
             del prev_galaxy.sub_star_snap
             #del next_galaxy.sub_star_snap ## don't delete this b.c. we'll need it when we load the next one
         
     if load_gas:
         ## update the interp_snap with new values for the new time
-        interp_snap = make_interpolated_snap(
-            this_time,
-            gas_time_merged_df,
-            t0,t1,
-            coord_interp_mode=coord_interp_mode) 
+        interp_snap = make_interpolated_snap(gas_time_merged_df,this_time,polar=polar) 
     else: interp_snap = None
 
     ## keep outrside the conditional b.c. worker function
@@ -342,11 +341,7 @@ def get_interpolated_snaps(
     interp_snap['snapnum'] = next_galaxy.snapnum
 
     if load_star:
-        interp_star_snap = make_interpolated_snap(
-            this_time,
-            star_time_merged_df,
-            t0,t1,
-            coord_interp_mode=coord_interp_mode)
+        interp_star_snap = make_interpolated_snap(star_time_merged_df,this_time,polar=polar)
         interp_star_snap['name'] = next_galaxy.name
         interp_star_snap['datadir'] = next_galaxy.datadir
         interp_star_snap['snapnum'] = next_galaxy.snapnum
@@ -364,6 +359,8 @@ def load_gals_from_disk(
     force_theta_TB=None,
     force_phi_TB=None,
     use_saved_subsnapshots=True,
+    extract_DM=False,
+    polar=True,
     **kwargs):
     """ Determines whether it needs to load a new galaxy from disk
         or if we already have what we need."""
@@ -398,7 +395,9 @@ def load_gals_from_disk(
                 force_theta_TB=force_theta_TB,
                 force_phi_TB=force_phi_TB,
                 use_saved_subsnapshots=use_saved_subsnapshots,
-                loud=False)
+                loud=False,
+                extract_DM=extract_DM,
+                jhat_coords=polar)
         else: prev_galaxy = pair[0]
         changed = True
     if next_galaxy is None:
@@ -410,7 +409,9 @@ def load_gals_from_disk(
                 force_theta_TB=force_theta_TB,
                 force_phi_TB=force_phi_TB,
                 use_saved_subsnapshots=use_saved_subsnapshots,
-                loud=False)
+                loud=False,
+                extract_DM=extract_DM,
+                jhat_coords=polar)
         else: next_galaxy = pair[1]
         changed = True
         
