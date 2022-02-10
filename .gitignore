@@ -1,4 +1,5 @@
 # ignore these file types!
+build/*
 *.sw*
 *.pyc
 *.o
@@ -11,3 +12,4 @@ src/firestudio/ntbks/.ipynb_checkpoints/*
 *.code-workspace
 *.sh
 Untitled*ipynb
+*.DS_Store
