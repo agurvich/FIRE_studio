@@ -1,6 +1,5 @@
 import os
 import numpy as np 
-import h5py
 
 import matplotlib.pyplot as plt
 from matplotlib.colors import rgb_to_hsv,hsv_to_rgb
@@ -312,15 +311,15 @@ class Studio(Drawer):
 
     def __init__(
         self,
-        datadir,  
-        snapnum,  
-        sim_name,
-        cache_file_name=None, 
-        gas_snapdict=None,  
-        star_snapdict=None, 
-        galaxy_kwargs=None,
-        master_loud=True,
-        setup_id_append='',
+        datadir:str,  
+        snapnum:int,  
+        sim_name:str,
+        cache_file_name:str=None, 
+        gas_snapdict:dict=None,  
+        star_snapdict:dict=None, 
+        galaxy_kwargs:dict=None,
+        master_loud:bool=True,
+        setup_id_append:str='',
         **kwargs
         ): 
         """ Base class that handles camera manipulation and data caching. 
@@ -398,8 +397,8 @@ class Studio(Drawer):
 ####### I/O functions #######
     def load_SnapshotData(
         self,
-        gas_mask=None,
-        star_mask=None,
+        gas_mask:np.ndarray=None,
+        star_mask:np.ndarray=None,
         **kwargs):
         """ Binds simulation output to self.gas_snapdict and self.star_snapdict.
 
@@ -422,7 +421,7 @@ class Studio(Drawer):
 
         Returns
         -------
-        [type]
+        ``abg_python.galaxy.Galaxy``
             None/abg_python.galaxy.Galaxy object -- if del_galaxy == False then returns the galaxy object, 
             otherwise returns None.
 
@@ -452,11 +451,11 @@ class Studio(Drawer):
 
     def get_HSML(
         self,
-        snapdict_name,
-        use_metadata=True,
-        save_meta=True,
-        assert_cached=False,
-        loud=True,
+        snapdict_name:str,
+        use_metadata:bool=True,
+        save_meta:bool=True,
+        assert_cached:bool=False,
+        loud:bool=True,
         **kwargs, 
         ):
         """ Compute smoothing lengths for particles that don't have them,
@@ -503,8 +502,8 @@ class Studio(Drawer):
 
     def __get_snapdicts(
         self,
-        use_saved_subsnapshots=False,
-        del_galaxy=True,
+        use_saved_subsnapshots:bool=False,
+        del_galaxy:bool=True,
         **kwargs):
         """ Open an abg_python.galaxy.gal_utils.Galaxy instance to load
             snapshot data from disk.
@@ -552,9 +551,9 @@ class Studio(Drawer):
 
     def set_ImageParams(
         self,
-        this_setup_id=None,
-        use_defaults=False,
-        loud=True,
+        this_setup_id:str=None,
+        use_defaults:bool=False,
+        loud:bool=True,
         **kwargs):
         """ Changes the parameters of the image such as camera orientation, frame size, etc. 
             If `use_defaults=True` then default values of the parameters will be set and will 
@@ -816,7 +815,7 @@ studio.set_ImageParams(
 
         self.Acell = (self.Xmax-self.Xmin)/self.npix_x * (self.Ymax-self.Ymin)/self.npix_y
 
-    def cullFrameIndices(self,Coordinates):
+    def cullFrameIndices(self,Coordinates:np.ndarray):
         """ boolean mask of those particles within the volume defined by 
             Xmin-Xmax, Ymin-Ymax, and Zmin-Zmax
 
