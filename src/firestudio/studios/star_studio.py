@@ -43,41 +43,55 @@ class StarStudio(Studio):
 ####### makeOutputDirectories implementation #######
     def set_ImageParams(
         self,
-        use_defaults=False,
-        loud=True,
+        use_defaults:bool=False,
+        loud:bool=True,
         **kwargs):
-        """Changes the parameters of the image. If `use_defaults=True` then 
-            default values of the parameters will be set. Leave `use_defaults=False`
-            to adjust only the keywords passed. 
+        """Changes the parameters of the image. 
+         
 
-            Input: 
-
-                maxden = None --  controls the saturation of the image,
-                    sets the upper limit of the "colorbar," defaults to 
-                    the 99 %'ile of the image surface brightness
-                dynrange = None  --  controls the saturation of the image,
-                    sets the lower limit of the "colorbar" with respect to maxden,
-                    defaults to the dynamic range between maxden and the 10th %'ile
-                    of the image surface brightness
-                color_scheme_nasa = True -- flag for switching between Hubble vs. SDSS images
-                loud = True -- flagwhether print statements should show up on console.
+        Parameters
+        ----------
+        use_defaults : bool, optional
+            If `True` then default values of the parameters will be set 
+            (potentially overwriting any previously specified parameters). 
+            If `False` adjust only the keywords passed, by default False
+        loud : bool, optional
+            [description], by default True
             
-            Output: 
+        Keywords
+        --------
+        maxden : float
+             controls the saturation of the image,
+            sets the upper limit of the "colorbar" if None uses
+            the 99 %'ile of the image surface brightness, by default None
+        dynrange : float
+            controls the saturation of the image,
+            sets the lower limit of the "colorbar" with respect to maxden,
+            if None uses the dynamic range between maxden and the 10th %'ile
+            of the image surface brightness, by default None
+        nodust : bool
+            flag for whether dust attenuantion should be ignored, by default False
+        age_max_gyr : float
+            maximum age in Gyr to show stellar emission from. If None then emission from all star
+            particles is considered, by default None
+        
+        color_scheme_nasa : bool
+            flag for switching between Hubble vs. SDSS false color remapping, by default True
 
-                None
-
-Example usage:
-```python
-starStudio.set_ImageParams(
-    maxden=0.1,
-    dynrange=10,
-    figure_label='Hubble')
-```"""
+        Example usage:
+        --------------
+        ```python
+        starStudio.set_ImageParams(
+            maxden=0.1,
+            dynrange=10,
+            figure_label='Hubble')
+        ```
+        """
 
         default_kwargs = {
-            'maxden' : None, ## 
-            'dynrange' : None, ## controls the saturation of the image in a non-obvious way
-            'color_scheme_nasa' : True,
+            'maxden':None, ## 
+            'dynrange':None, ## controls the saturation of the image in a non-obvious way
+            'color_scheme_nasa':True,
             'no_dust':False,
             'age_max_gyr':None} ## flag to use nasa colors (vs. SDSS if false)
 
@@ -119,15 +133,7 @@ starStudio.set_ImageParams(
     append_function_docstring(set_ImageParams,Studio.set_ImageParams,prepend_string='passes `kwargs` to:\n')
 
     def print_ImageParams(self):
-        """ Prints current image setup to console.
-
-            Input:
-
-                None
-
-            Output:
-
-                None"""
+        """ Prints current image setup to console."""
 
         default_kwargs = {
             'maxden' : 1.0e-2, ## 
@@ -145,14 +151,48 @@ starStudio.set_ImageParams(
 
     def quick_get_mockHubbleImage(
         self,
-        use_metadata=True,
-        save_meta=True,
-        assert_cached=False,
-        loud=True,
-        lums=None,
-        nu_effs=None,
-        BAND_IDS=None
+        lums:np.ndarray=None,
+        nu_effs:list=None,
+        BAND_IDS:list=None,
+        **kwargs
         ):
+        """Approximate the `~firestudio.studios.StarStudio.get_mockHubbleImage` routine using a 2d histogram.
+
+        Parameters
+        ----------
+        lums : np.ndarray, optional
+            array of luminosities for each star particle. If None then luminosities are calculated in
+            the bands specified by `BAND_IDS`, by default None
+        nu_effs : list, optional
+            list of effective frequencies corresponding to the bands of luminosities
+            provides in the `lums`. If None, uses the frequencies corresponding to the
+            specified `BAND_IDS`., by default None
+        BAND_IDS : list, optional
+            List of indices that identify which bands to model stellar emission in. 
+            If None uses Sloan UGR bands `(1,2,3)`, by default None
+            ```
+            lambda_eff=np.array([
+                ## Bolometric (?)
+                        1.e-5,  
+                ## SDSS u       g       r      i      z
+                        3551. , 4686. , 6165., 7481., 8931.,
+                ##      U       B       V      R
+                        3600. , 4400. , 5556., 6940., 
+                ##      I      J       H       K
+                        8700., 12150., 16540., 21790.])```
+
+        Returns
+        -------
+        np.ndarray
+            metal_mass_map - 2d map of metal mass used to attenuate luminosities
+            along LOS in pixel, in Msun/kpc^2
+        np.ndarray
+            out_0 - 2d map of luminosities in first band in Lsun/kpc^2
+        np.ndarray
+            out_1 - 2d map of luminosities in second band in Lsun/kpc^2
+        np.ndarray
+            out_2 - 2d map of luminosities in third band in Lsun/kpc^2
+        """
 
         if BAND_IDS is None:
             BAND_IDS=[1,2,3] ## used if corresponding column of lums is all 0s
@@ -193,48 +233,38 @@ starStudio.set_ImageParams(
 
     def get_mockHubbleImage(
         self,
-        use_metadata=True,
-        save_meta=True,
-        assert_cached=False,
-        loud=True,
+        use_metadata:bool=True,
+        save_meta:bool=True,
+        assert_cached:bool=False,
+        loud:bool=True,
         **kwargs, 
         ):
         """Projects starlight and approximates attenuatation along line of sight
             into SDSS u, g, and r bands. 
 
-            Input:
+        Parameters
+        ----------
+        use_metadata : bool, optional
+            flag to search cache for result, by default True
+        save_meta : bool, optional
+            flag to cache the result, by default True
+        assert_cached : bool, optional
+            flag to raise an exception on a cache miss, by default False
+        loud : bool, optional
+            whether cache hits/misses should be announced to the console, by default True
 
-                use_metadata = True -- flag to search cache for result
-                save_meta = True -- flag to cache the result
-                assert_cached = False -- flag to require a cache hit
-                loud = True -- whether cache hits/misses should be announced
-                    to the console.
-
-                lums = None -- manual input for luminosities
-                nu_effs = None -- manual input for effective frequency of input luminosity band
-
-                BAND_IDS = None -- index for luminosity band to project.
-                    lambda_eff=np.array([
-                        ## Bolometric (?)
-                                1.e-5,  
-                        ## SDSS u       g       r      i      z
-                                3551. , 4686. , 6165., 7481., 8931.,
-                        ##      U       B       V      R
-                                3600. , 4400. , 5556., 6940., 
-                        ##      I      J       H       K
-                                8700., 12150., 16540., 21790.])
-
-                    BAND_IDS[i] is ignored if nu_effs[i] is not None
-
-            Output:
-
-                gas_out -- total mass along LOS in pixel, in msun/kpc^2
-                out_u -- total attenuated luminosity along LOS in pixel
-                    in u band, in Lsun/kpc^2
-                out_g -- total attenuated luminosity along LOS in pixel
-                    in g band, in Lsun/kpc^2
-                out_r -- total attenuated luminosity along LOS in pixel
-                    in r band, in Lsun/kpc^2"""
+        Returns
+        -------
+        np.ndarray
+            metal_mass_map - 2d map of metal mass used to attenuate luminosities
+            along LOS in pixel, in Msun/kpc^2
+        np.ndarray
+            out_0 - 2d map of luminosities in first band in Lsun/kpc^2
+        np.ndarray
+            out_1 - 2d map of luminosities in second band in Lsun/kpc^2
+        np.ndarray
+            out_2 - 2d map of luminosities in third band in Lsun/kpc^2
+        """
 
         @metadata_cache(
             self.this_setup_id,  ## hdf5 file group name
@@ -247,20 +277,19 @@ starStudio.set_ImageParams(
             assert_cached=assert_cached,
             loud=loud,
             force_from_file=True)  ## read from cache file, not attribute of object
-        def compute_mockHubbleImage(self,lums=None,nu_effs=None,BAND_IDS=None):
+        def compute_mockHubbleImage(self:StarStudio,lums:np.ndarray=None,nu_effs:list=None,BAND_IDS:list=None):
 
             if BAND_IDS is None:
                 BAND_IDS=[1,2,3] ## used if corresponding column of lums is all 0s
             
             # apply filters, rotations, unpack snapshot data, etc...
             (kappas, lums,
-                star_pos, mstar, ages, metals, h_star,
+                star_pos, h_star,
                 gas_pos , mgas , gas_metals ,  h_gas) = self.prepareCoordinates(lums,nu_effs,BAND_IDS)
 
             ## do the actual raytracing
             gas_out,out_u,out_g,out_r = raytrace_ugr_attenuation(
                 star_pos[:,0],star_pos[:,1],star_pos[:,2],
-                mstar,ages,metals,
                 h_star,
                 gas_pos[:,0],gas_pos[:,1],gas_pos[:,2],
                 mgas,gas_metals,h_gas,
@@ -278,10 +307,57 @@ starStudio.set_ImageParams(
         return compute_mockHubbleImage(self,**kwargs)
 
 
-    def prepareCoordinates(self,
-        lums=None,
-        nu_effs=None,
-        BAND_IDS=None):
+    def prepareCoordinates(
+        self,
+        lums:np.ndarray=None,
+        nu_effs:list=None,
+        BAND_IDS:list=None):
+        """Reads snapshot data from `self.snapdict` and `self.star_snapdict` in the
+        imaging volume defined by `self.Xmin`,`self.Xmax`,`self.Ymin`,`self.Ymax`,`self.Zmin`,`self.Zmax`.
+        Unpacks necessary arrays and provides them to the calling imaging routine. 
+
+        Parameters
+        ----------
+        lums : np.ndarray, optional
+            array of luminosities for each star particle. If None then luminosities are calculated in
+            the bands specified by `BAND_IDS`, by default None
+        nu_effs : list, optional
+            list of effective frequencies corresponding to the bands of luminosities
+            provides in the `lums`. If None, uses the frequencies corresponding to the
+            specified `BAND_IDS`., by default None
+        BAND_IDS : list, optional
+            List of indices that identify which bands to model stellar emission in. 
+            If None uses Sloan UGR bands `(1,2,3)`, by default None
+            ```
+            lambda_eff=np.array([
+                ## Bolometric (?)
+                        1.e-5,  
+                ## SDSS u       g       r      i      z
+                        3551. , 4686. , 6165., 7481., 8931.,
+                ##      U       B       V      R
+                        3600. , 4400. , 5556., 6940., 
+                ##      I      J       H       K
+                        8700., 12150., 16540., 21790.])```
+
+        Returns
+        -------
+        np.ndarray(3)
+            kappas : array of effective cross sections in each band
+        np.ndarray(Nstar,3)
+            lums :  array of luminosities in each band
+        np.ndarray(Nstar,3)
+            star_pos : coordinate data for emitting stars in kpc 
+        np.ndarray(Ngas)
+            h_star : effective smoothing length/radius for each star particle in kpc
+        np.ndarray(Ngas,3)
+            gas_pos : coordinate data for attenuating gas in kpc
+        np.ndarray(Ngas)
+            mgas : mass data for attenuating gas in 10^10 Msun
+        np.ndarray(Ngas)
+            gas_metals : total metal mass fraction for each gas particle
+        np.ndarray(Ngas)
+            h_gas : smoothing length/radius for each gas particle in kpc
+        """
         
         ## unpack the star information
         ## dont' filter star positions just yet
@@ -380,26 +456,27 @@ starStudio.set_ImageParams(
             h_gas = np.array([1e-3])
 
         return (kappas, lums,
-                star_pos, mstar, ages, metals, h_star,
+                star_pos, h_star,
                 gas_pos , mgas , gas_metals ,  h_gas)
 
 ####### produceImage implementation #######
     def produceImage(
         self,
-        quick=False,
+        quick:bool=False,
         **kwargs):
-        """
-        Generates a mock hubble image, along with any annotations/scale bars,
+        """Generates a mock hubble image, along with any annotations/scale bars,
             using the stored image parameters.
 
-            Input: 
+        Parameters
+        ----------
+        quick : bool, optional
+            flag to use a simple 2d histogram (for comparison or for quick iteration 
+            as you choose image parameters), by default False
 
-                quick = False -- flag to use a simple 2d histogram (for comparison or
-                    for quick iteration as the user defines the image parameters)
-
-            Output:
-
-                final_image -- NpixelsxNpixelsx3 RGB pixel array
+        Returns
+        -------
+        np.ndarray(npix_x,npix_y,3)
+            RGB pixel array of the produced image
         """
 
         if not quick:
@@ -407,8 +484,8 @@ starStudio.set_ImageParams(
         else:
             gas_out,out_u,out_g,out_r = self.quick_get_mockHubbleImage(**kwargs)
 
-        all_bands = np.concatenate([out_u,out_g,out_r])
-        maxden_guess,dynrange_guess = self.predictParameters(all_bands=all_bands)
+        L_sfc_densities = np.concatenate([out_u,out_g,out_r])
+        maxden_guess,dynrange_guess = self.predictParameters(L_sfc_densities=L_sfc_densities)
         if self.maxden is None:
             print("setting maxden to best guess %.2g"%maxden_guess)
             self.set_ImageParams(
@@ -439,44 +516,53 @@ starStudio.set_ImageParams(
 
     def predictParameters(
         self,
-        left_percentile=0.1,
-        right_percentile=0.99,
-        all_bands=None,
-        ax=None,
-        quick=False):
-        """ Guesses what the "best" values for maxden and dynrange are from
+        left_percentile:float=0.1,
+        right_percentile:float=0.99,
+        L_sfc_densities:np.ndarray=None,
+        ax:plt.Axes=None,
+        quick:bool=False):
+        """Guesses what the "best" values for maxden and dynrange are from
             the distribution of surface brightnesses in the current image. 
             Looks for the left_percentile and right_percentile and returns
             right_percentile and the distance between it and left_percentile
             (in log space). 
             
-            Input:
+        Parameters
+        ----------
+        left_percentile : float, optional
+            lower bound on image surface brightness percentile, by default 0.1
+        right_percentile : float, optional
+            upper bound on image surface brightness percentile, by default 0.99
+        L_sfc_densities : np.ndarray, optional
+            surface densities to find the percentiles of. If None uses 
+            `~firestudio.studios.star_studio.StarStudio.get_mockHubbleImage` to 
+            retrieve the surface densities of the projected mock hubble image, by default None
+        ax : plt.Axes, optional
+            axis to plot distribution of surface brightnesses
+            with overlay of percentiles and such to, by default None
+        quick : bool, optional
+            flag to use `~firestudio.studios.star_studio.StarStudio.quick_get_mockHubbleImage`, by default False
 
-                left_percentile = 0.1 -- lower bound on image surface brightness percentile
-                right_percentile = 0.99 --  upper bound on image surface brightness percentile
-                ax = None -- optionally plots distribution of surface brightnesses
-                    (in some units...) with overlay of percentiles and such.
-                quick = False -- flag to use a simple 2d histogram (for comparison or
-                    for quick iteration as the user defines the image parameters)
-            
-            Output:
-                
-                maxden -- maximum surface brightness of the image
-                dynrange -- distance between maximum and minimum surface brightness
-                     in log space. 
-"""
+        Returns
+        -------
+        float
+            maxden : maximum surface brightness of the image
+        float
+            dynrange : distance between maximum and minimum surface brightness
+                     in log space.
+        """
 
-        if (all_bands is None):
+        if (L_sfc_densities is None):
             ## read the luminosity maps
             if not quick:
                 gas_out,out_u,out_g,out_r = self.get_mockHubbleImage()
             else:
                 gas_out,out_u,out_g,out_r = self.quick_get_mockHubbleImage()
 
-            all_bands = np.concatenate([out_u,out_g,out_r])
+            L_sfc_densities = np.concatenate([out_u,out_g,out_r])
 
         ## concatenate the luminosity maps and take the log of the non-empty ones
-        rats = np.log10(all_bands.flatten())
+        rats = np.log10(L_sfc_densities.flatten())
         rats = rats[np.isfinite(rats)]
         h,edges = np.histogram(rats,bins=1000)
     
@@ -522,49 +608,55 @@ starStudio.set_ImageParams(
             if self.dynrange is not None:
                 ax.plot([this_maxden/self.dynrange,this_maxden],[0.4,0.4],c='C2')
                 #ax.text(np.sqrt(this_maxden**2/self.dynrange),0.4/1.1,'dynrange',ha='center')
-
-
-
         return maxden,dynrange
 
     def plotParameterGrid(
         self,
-        dynrange_init=100,
-        maxden_init=1e-2,
-        dynrange_step=None,
-        maxden_step=None,
-        nsteps=4,
-        loud=False,
+        dynrange_init:float=1e2,
+        maxden_init:float=1e-2,
+        dynrange_step:float=None,
+        maxden_step:float=None,
+        nsteps:int=4,
         **kwargs):
         """ Plots a grid of images that steps in maxden and dynrange to help the user decide
             what values to use, based on their aesthetic preference. Step is applied
-            multiplicatively. 
+            multiplicatively. Accepts keyword arguments for 
+            `~firestudio.studios.star_studio.StarStudio.set_ImageParams`
 
-            Input:
+        Parameters
+        ----------
+        dynrange_init : float, optional
+            initial value in top left corner of grid, by default 1e2
+        maxden_init : float, optional
+            initial value in top left corner of grid, by default 1e-2
+        dynrange_step : float, optional
+            step between grid thumbnails, by default sqrt(10), by default None
+        maxden_step : float, optional
+            step between grid thumbnails, by default sqrt(10), by default None
+        nsteps : int, optional
+            number of steps in (square) thumbnail grid, by default 4
+        
+        Keywords
 
-                dynrange_init = 100 -- initial value in top left corner of grid
-                maxden_init = 1e-2 -- initial value in top left corner of grid
-                dynrange_step = None -- step between grid thumbnails, defaults to sqrt(10)
-                maxden_step = None -- step between grid thumbnails, defaults to sqrt(10)
-                nsteps = 4 -- number of steps in (square) thumbnail grid
-                loud = False -- flag for set_ImageParams
-                **kwargs -- kwargs passed to set_ImageParams
-            
-            Ouput:
-                
-                fig - the matplotlib figure drawn to
-                axs - the matplotlib axes in the grid
+        Returns
+        -------
+        plt.Figure
+            fig : the matplotlib figure drawn to
+        list of plt.Axes
+            axs : the matplotlib axes in the grid
 
-Example usage:
-```python
-starStudio.plotParameterGrid(
-    dynrange_init=1e3,
-    maxden_init=1,
-    dynrange_step=.1,
-    maxden_step=.1,
-    nsteps=2,
-    use_colorscheme_nasa=False)
-```"""
+
+        Example usage:
+        --------------
+        ```python
+        starStudio.plotParameterGrid(
+            dynrange_init=1e3,
+            maxden_init=1,
+            dynrange_step=.1,
+            maxden_step=.1,
+            nsteps=2,
+            use_colorscheme_nasa=False)```
+        """
         
         ## initialize the steps for each thumbnail in the grid
         dynrange_step = 1/np.sqrt(10) if dynrange_step is None else dynrange_step
@@ -617,7 +709,6 @@ append_function_docstring(StarStudio,Studio)
 ## Stellar light attenuation projection
 def raytrace_ugr_attenuation(
     x,y,z,
-    mstar,ages,metals,
     h_star, 
     gx,gy,gz,
     mgas, gas_metals,
