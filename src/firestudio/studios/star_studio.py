@@ -199,7 +199,7 @@ class StarStudio(Studio):
        
         # apply filters, rotations, unpack snapshot data, etc...
         (kappas, lums,
-            star_pos, mstar, ages, metals, h_star,
+            star_pos, h_star,
             gas_pos , mgas , gas_metals ,  h_gas) = self.prepareCoordinates(lums,nu_effs,BAND_IDS)
 
         star_xs,star_ys,star_zs = star_pos.T
