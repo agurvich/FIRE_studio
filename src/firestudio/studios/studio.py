@@ -42,7 +42,7 @@ except ImportError:
 class Drawer(object):
     def render(
         self,
-        ax=None,
+        ax:plt.Axes=None,
         **kwargs):
         """ Generates an image with the `produceImage` method and then plots it with the `plotImage` method.
 
@@ -74,10 +74,28 @@ class Drawer(object):
 
     def drawCoordinateAxes(
         self,
-        ax,
-        spacing=1,
-        length=10,
-        colors=None):
+        ax:plt.Axes,
+        spacing:float=1,
+        length:float=10,
+        colors:list=None):
+        """[summary]
+
+        Parameters
+        ----------
+        ax : plt.Axes
+            [description]
+        spacing : float, optional
+            [description], by default 1
+        length : float, optional
+            [description], by default 10
+        colors : list, optional
+            [description], by default None
+
+        Returns
+        -------
+        [type]
+            [description]
+        """
 
         if colors is None:
             colors = ['red','blue','green']
@@ -109,9 +127,25 @@ class Drawer(object):
 
     def plotImage(
         self,
-        ax,
-        final_image,
+        ax:plt.Axes,
+        final_image:np.ndarray,
         **kwargs): 
+        """Bsae method for overlaying artists on top of projected image.
+        if `self.scale_bar`:
+            overlays a scale bar by filling the RGB pixel values with white
+        if `self.noaxis`:
+            removes the coordinate axes, labels, and ticks
+
+        will also add `self.figure_label` as text to the image. 
+        See `~firestudio.studios.studio.Studio.set_ImageParams` for details.
+
+        Parameters
+        ----------
+        ax : plt.Axes
+            axis to plot image to 
+        final_image : np.ndarray
+            array of RGB image pixel values
+        """
 
         ## fill the pixels of the the scale bar with white
         if self.scale_bar:
@@ -140,7 +174,19 @@ class Drawer(object):
         self.addText(ax)
 
 ####### image utilities #######
-    def addScaleBar(self,image):
+    def addScaleBar(self,image:np.ndarray):
+        """[summary]
+
+        Parameters
+        ----------
+        image : np.ndarray
+            [description]
+
+        Returns
+        -------
+        [type]
+            [description]
+        """
 
         ## set scale bar length
         self.scale_label_text = r"$\mathbf{%1g \, \rm{kpc}}$"%self.scale_line_length
@@ -160,7 +206,14 @@ class Drawer(object):
             image[scale_line_y:scale_line_y+npix_thick, x_index,:3] = 1 if self.font_color in ['w','white'] else 0
         return image
 
-    def addText(self,ax):
+    def addText(self,ax:plt.Axes):
+        """[summary]
+
+        Parameters
+        ----------
+        ax : plt.Axes
+            [description]
+        """
         ## handle any text additions
         if self.figure_label is not None:
         ## plot the  figure label in the top right corner
@@ -185,7 +238,31 @@ class Drawer(object):
                 verticalalignment='bottom')
             label2.set_color(self.font_color)
 
-    def renormalizeTransposeImage(self,image,min_val,max_val,quantity_name):
+    def renormalizeTransposeImage(
+        self,
+        image:np.ndarray,
+        min_val:float,
+        max_val:float,
+        quantity_name:str):
+        """[summary]
+
+        Parameters
+        ----------
+        image : np.ndarray
+            [description]
+        min_val : float
+            [description]
+        max_val : float
+            [description]
+        quantity_name : str
+            [description]
+
+        Returns
+        -------
+        [type]
+            [description]
+        """
+
         if self.master_loud:
             print('min_%s = '%quantity_name,min_val)
             print('max_%s = '%quantity_name,max_val)
@@ -210,13 +287,21 @@ class Drawer(object):
     def saveFigure(
         self,
         fig,
-        image_name=None,
+        image_name:str=None,
         **savefig_args):
+        """
+
+        Parameters
+        ----------
+        fig : [type]
+            [description]
+        image_name : str, optional
+            [description], by default None
+        """
 
         if self.noaxis:
             savefig_args['bbox_inches']='tight'
             savefig_args['pad_inches']=0
-
         
         if image_name is None:
             image_name = "%03d_%dkpc.pdf" % (self.snapnum, 2*self.camera.camera_dist)
@@ -231,11 +316,29 @@ class Drawer(object):
     
     def gradientBlendImages(
         self,
-        image_1,
-        image_2=None,
-        gradient_width_percent=0.1,
-        angle=None,
+        image_1:np.ndarray,
+        image_2:np.ndarray=None,
+        gradient_width_percent:float=0.1,
+        angle:float=None,
         **kwargs):
+        """[summary]
+
+        Parameters
+        ----------
+        image_1 : np.ndarray
+            [description]
+        image_2 : np.ndarray, optional
+            [description], by default None
+        gradient_width_percent : float, optional
+            [description], by default 0.1
+        angle : float, optional
+            [description], by default None
+
+        Returns
+        -------
+        [type]
+            [description]
+        """
 
         if image_2 is None: image_2 = self.produceImage(**kwargs)
 

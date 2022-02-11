@@ -56,7 +56,7 @@ class StarStudio(Studio):
             (potentially overwriting any previously specified parameters). 
             If `False` adjust only the keywords passed, by default False
         loud : bool, optional
-            [description], by default True
+            flag to print which parameters are being set/updated, by default True
             
         Keywords
         --------
@@ -640,7 +640,7 @@ class StarStudio(Studio):
 
         Returns
         -------
-        plt.Figure
+        plt.figure
             fig : the matplotlib figure drawn to
         list of plt.Axes
             axs : the matplotlib axes in the grid
