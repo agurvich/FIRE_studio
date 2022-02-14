@@ -382,10 +382,8 @@ Important methods include:
         hsml = Hsml[box_mask].astype(np.float32)
 
         return (
-            BoxSize,
             self.Xmin,self.Xmax,
             self.Ymin,self.Ymax,
-            self.Zmin,self.Zmax,
             self.npix_x,self.npix_y,
             pos,weights,quantities,
             hsml)
@@ -471,8 +469,8 @@ Important methods include:
         weights:np.ndarray=None,quantities:np.ndarray=None,
         min_weight:float=None,max_weight:float=None,
         min_quantity:float=None,max_quantity:float=None,
-        weight_adjustment_function:function=None,
-        quantity_adjustment_function:function=None,
+        weight_adjustment_function=None,
+        quantity_adjustment_function=None,
         cmap:str='viridis', ## what colormap to use
         quick:bool=False,
         **kwargs
