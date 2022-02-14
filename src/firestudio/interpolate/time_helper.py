@@ -250,7 +250,7 @@ def get_single_snap(
         use_saved_subsnapshots=use_saved_subsnapshots,
         loud=False,
         extract_DM=extract_DM,
-        jhat_coords=True)
+        jhat_coords=False)
     if load_gas: 
         for key in galaxy.sub_snap.keys():
             if key in keys_to_extract:
@@ -397,7 +397,7 @@ def load_gals_from_disk(
                 use_saved_subsnapshots=use_saved_subsnapshots,
                 loud=False,
                 extract_DM=extract_DM,
-                jhat_coords=polar)
+                jhat_coords=False)
         else: prev_galaxy = pair[0]
         changed = True
     if next_galaxy is None:
@@ -411,7 +411,7 @@ def load_gals_from_disk(
                 use_saved_subsnapshots=use_saved_subsnapshots,
                 loud=False,
                 extract_DM=extract_DM,
-                jhat_coords=polar)
+                jhat_coords=False)
         else: next_galaxy = pair[1]
         changed = True
         
