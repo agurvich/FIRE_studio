@@ -80,16 +80,15 @@ class BaseInterpolate(object):
             many_galaxy.datadir if check_exists else None,
             add_composition=add_composition)
         
-        if 'snap_pair' in scene_kwargss[0]:
-            snap_pairs = [scene_kwargs['snap_pair'] for scene_kwargs in scene_kwargss]
-        else: snap_pairs = None
-
-
         ## check if there's actually any work to be done
         if len(scene_kwargss) == 0:
             print('all frames already rendered, exiting...')
             render_ffmpeg_frames(studio_kwargss,galaxy_kwargs,self.nframes,self.fps)
             return [None]
+
+        if 'snap_pair' in scene_kwargss[0]:
+            snap_pairs = [scene_kwargs['snap_pair'] for scene_kwargs in scene_kwargss]
+        else: snap_pairs = None
 
         ## single threaded, the vanilla experience
         if multi_threads == 1:
@@ -235,6 +234,11 @@ class BaseInterpolate(object):
             ## join the render kwargs, they'll be ignored by the studios that don't need them
             c_render_kwargs = {}
             for this_render_kwargs in render_kwargss: c_render_kwargs.update(this_render_kwargs)
+
+            ## compositions should only be run immediately after their
+            ##  components
+            c_render_kwargs['use_metadata'] = True
+            c_render_kwargs['assert_cached'] = True
             render_kwargss = render_kwargss + [c_render_kwargs]
 
         ## mask for only keyframes if requested
