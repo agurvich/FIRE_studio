@@ -97,7 +97,6 @@ def raytrace_projection_compute(
     with multi-color source and self-extinction along the sightline
     """
 
-
     ## define bounaries
     if(checklen(xlim)<=1): xlim=[np.min(x),np.max(x)]
     if(checklen(ylim)<=1): ylim=[np.min(y),np.max(y)]
@@ -117,6 +116,12 @@ def raytrace_projection_compute(
     xlen = 0.5*(xlim[1]-xlim[0])
     ylen = 0.5*(ylim[1]-ylim[0])
     zlen = 0.5*(zlim[1]-zlim[0])
+
+    ## determine shape of output
+    aspect_ratio = ylen/xlen
+    Xpixels = int_round(pixels)
+    Ypixels = int_round(aspect_ratio*np.float(Xpixels))
+    N_pixels = Xpixels*Ypixels
 
     if (TRIM_PARTICLES==1): tolfac = 0.05
     else: tolfac = 1.0e10 ## dummy, all particles will be in box
@@ -155,7 +160,8 @@ def raytrace_projection_compute(
         print(
             'UH-OH: EXPECT ERROR NOW',
             'there are no valid source/gas particles to send!')
-        return -1,-1,-1,-1
+        dummy = np.zeros((Xpixels,Ypixels))+np.nan
+        return dummy,dummy,dummy,dummy
 
     ## now sort these in z (this is critical!)
     ##  get sort indices
@@ -180,12 +186,6 @@ def raytrace_projection_compute(
     exec_call=os.path.join(curpath,'C_routines/RayTrace_RGB/raytrace_rgb.so')
     routine=ctypes.cdll[exec_call]
     
-    ## cast the variables to store the results
-    aspect_ratio = ylen/xlen
-    Xpixels = int_round(pixels)
-    Ypixels = int_round(aspect_ratio*np.float(Xpixels))
-    N_pixels = Xpixels*Ypixels
-
     ## create output array pointers
     out_cast=ctypes.c_float*N_pixels
     out_0=out_cast() ## mass map
