@@ -279,6 +279,7 @@ def get_interpolated_snaps(
     load_gas,load_star,
     keys_to_extract=None,
     polar=True, ## use polar interpolation for coordinates?
+    take_avg_L=False,
     **galaxy_kwargs):
 
     if keys_to_extract is None: keys_to_extract = []
@@ -311,7 +312,8 @@ def get_interpolated_snaps(
                 keys_to_extract=keys_to_extract,
                 t0=t0,
                 t1=t1,
-                polar=polar)
+                polar=polar,
+                take_avg_L=take_avg_L)
 
             del prev_galaxy.sub_snap
             #del next_galaxy.sub_snap ## don't delete this b.c. we'll need it when we load the next one
@@ -324,7 +326,8 @@ def get_interpolated_snaps(
                 t0=t0,
                 t1=t1,
                 extra_df=gas_time_merged_df,
-                polar=polar)
+                polar=polar,
+                take_avg_L=take_avg_L)
 
             del prev_galaxy.sub_star_snap
             #del next_galaxy.sub_star_snap ## don't delete this b.c. we'll need it when we load the next one
