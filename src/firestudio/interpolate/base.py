@@ -320,6 +320,8 @@ def split_into_n_approx_equal_chunks(snap_pairs,nchunks):
         indices = split_pairs(snap_pairs[:])
         splitted = np.array_split(snap_pairs,indices)
         nchunks = min(len(indices),nchunks)
+
+        if len(indices) == 0: return [0,nrenders]
         
         ## determine how many of each matching pair there are
         n_renders_per_split = [len(this_split) for this_split in splitted]
