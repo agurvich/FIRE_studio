@@ -6,9 +6,7 @@ Movie Making Utilities for FIRE simulations
 
 This git repository was lovingly made, the code it contains is largely based off two separate (but related) visualization codes built by Volker Springel and Phil Hopkins. This is not the greatest song in the world, this is just a tribute.
 
-If you use FIRE studio in a talk or paper, please acknowledge it in a footnote or acknowledgements section. Some example language might look like: 
-
-"[Some of the images presented in this work were]/[This image was] produced using FIRE studio ([github.com/agurvich/FIRE_studio](github.com/agurvich/FIRE_studio)), an open source Python visualization package designed with the FIRE simulations in mind."
+If you use FIRE studio in a talk or paper, please acknowledge it textually and cite the code entry in the [Astrophysics Source Code Library](https://ui.adsabs.harvard.edu/abs/2022ascl.soft02006G/abstract).
 
 Thanks, and enjoy!
 
