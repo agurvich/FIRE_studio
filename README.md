@@ -17,7 +17,7 @@ Note that I only support the most recent version of FIRE studio by default and y
 requirements:
 [abg_python](https://www.github.com/agurvich/abg_python)
 
-![Sample Rendering](src/final.png)
+![Sample Rendering](docs/source/imgs/final.png)
 
 ## Installation
 To install (with ssh) clone the repository and its dependency
