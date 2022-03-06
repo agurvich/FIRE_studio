@@ -1,4 +1,7 @@
 # FIRE_studio
+<a href="https://ascl.net/2202.006"><img src="https://img.shields.io/badge/ascl-2202.006-blue.svg?colorB=262255" alt="ascl:2202.006" /></a>
+[![PyPI version](https://badge.fury.io/py/firestudio.svg)](https://badge.fury.io/py/firestudio)
+
 Movie Making Utilities for FIRE simulations
 
 This git repository was lovingly made, the code it contains is largely based off two separate (but related) visualization codes built by Volker Springel and Phil Hopkins. This is not the greatest song in the world, this is just a tribute.
