@@ -1,0 +1,11 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+- family-names: "Gurvich"
+  given-names: "Alexander B."
+  orcid: "https://orcid.org/0000-0002-6145-3674"
+title: "FIRE Studio: Movie making utilities for the FIRE simulations"
+version: 2.0.1
+doi: 2022ascl.soft02006G
+date-released: 2021-12-06
+url: "https://github.com/agurvich/FIRE_studio"
