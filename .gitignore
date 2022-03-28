@@ -7,7 +7,7 @@ build/*
 src/*egg*/*
 dist/*
 src/firestudio/utils/stellar_utils/BPASSv2.2.1_bin-imf135_300/*
-src/firestudio/scripts/log_out.o*
+src/firestudio/scripts/log*
 src/firestudio/ntbks/.ipynb_checkpoints/*
 *.code-workspace
 *.sh
