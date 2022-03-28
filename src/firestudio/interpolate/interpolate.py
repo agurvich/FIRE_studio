@@ -19,12 +19,9 @@ class InterpolationHandler(BaseInterpolate):
         sim_time_end=None,
         fps=24,
         snapshot_times=None,
-        time_slice=None,
         coord_interp_mode='spherical',
         **scene_kwargs):
         
-        if time_slice is None: time_slice = slice(0,None)
-
         ## need to interpolate camera orientation or other scene properties
         ##  the scene handler will have to be called interactively, I think. 
         ##  it gets so complicated trying to add stuff all at the beginning
@@ -33,7 +30,7 @@ class InterpolationHandler(BaseInterpolate):
         ## need to interpolate in time
         if sim_time_begin and sim_time_end is not None:
             self.time_handler = TimeInterpolationHandler(
-                np.linspace(sim_time_begin,sim_time_end,int(total_duration_sec*fps))[time_slice],
+                np.linspace(sim_time_begin,sim_time_end,int(total_duration_sec*fps)),
                 snapshot_times,
                 coord_interp_mode=coord_interp_mode)
             self.nframes = self.time_handler.nframes
@@ -55,7 +52,8 @@ class InterpolationHandler(BaseInterpolate):
         check_exists=True,
         timestamp=0, ## offset in Gyr for timestamp, None = no timestamp
         add_composition=False,
-        shared_memory=False
+        shared_memory=False,
+        time_slice=None
         ):
 
         ## handle simple case of moving camera at fixed time
@@ -105,6 +103,7 @@ class InterpolationHandler(BaseInterpolate):
             multi_threads=multi_threads,
             timestamp=timestamp,
             check_exists=check_exists,
-            add_composition=add_composition)
+            add_composition=add_composition,
+            time_slice=time_slice)
     
         return return_value

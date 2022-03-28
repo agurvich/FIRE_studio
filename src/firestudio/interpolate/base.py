@@ -30,7 +30,8 @@ class BaseInterpolate(object):
         multi_threads=1,
         timestamp=0, ## offset by 0 Myr, pass None for no timestamp
         check_exists=True,
-        add_composition=False
+        add_composition=False,
+        time_slice=None
         ):
         """ """
 
@@ -78,13 +79,16 @@ class BaseInterpolate(object):
             render_kwargss,
             keyframes,
             many_galaxy.datadir if check_exists else None,
-            add_composition=add_composition)
+            add_composition=add_composition,
+            time_slice=time_slice)
         
         ## check if there's actually any work to be done
         if len(scene_kwargss) == 0:
             print('all frames already rendered, exiting...')
             render_ffmpeg_frames(studio_kwargss,galaxy_kwargs,self.nframes,self.fps)
             return [None]
+        ## print out which frame numbers need to be rendered
+        #else: print([this['savefig_suffix'].split('_')[2].split('.png')[0] for this in scene_kwargss])
 
         if 'snap_pair' in scene_kwargss[0]:
             snap_pairs = [scene_kwargs['snap_pair'] for scene_kwargs in scene_kwargss]
@@ -144,7 +148,8 @@ class BaseInterpolate(object):
         render_kwargss,
         keyframes,
         datadir,
-        add_composition=False):
+        add_composition=False,
+        time_slice=None):
         """ 
         ## take input dictionaries and make sure input is valid
         ##  checks:
@@ -164,6 +169,8 @@ class BaseInterpolate(object):
 
         ## in the rare case when 
         if which_studios is None: which_studios = [SimpleStudio]
+
+        if time_slice is None: time_slice = slice(0,None)
 
         if 'keys_to_extract' not in galaxy_kwargs:
             keys_to_extract = []
@@ -248,6 +255,8 @@ class BaseInterpolate(object):
         ##  this is what gives each frame its number, important this goes
         ##  before the masking below (but after the keyframe masking above)
         scene_kwargss = add_savefig_suffix_to_dicts(scene_kwargss,self.nframes)
+
+        scene_kwargss = scene_kwargss[time_slice]
 
         ## if we were passed a directory let's assume we want to check 
         ##  if the frames exist in it
