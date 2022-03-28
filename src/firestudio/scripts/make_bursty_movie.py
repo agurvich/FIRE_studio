@@ -10,13 +10,19 @@ from abg_python.galaxy.gal_utils import Galaxy
 from firestudio.interpolate.interpolate import InterpolationHandler
 from firestudio.studios.gas_studio import GasStudio
 from firestudio.studios.star_studio import StarStudio
+from firestudio.studios.FIRE_studio import FIREStudio
 from firestudio.studios.composition import Composition
 
 
 def main(
-    name='m12b_res57000',
-    multi_threads=1,
-    take_avg_L = True 
+    name='m12b_res7100',
+    suite_name='metal_diffusion',
+    multi_threads=10,
+    take_avg_L = True,
+    slice_index = None,
+    nslices = None,
+    duration = 60, # s
+    savefig = 'full_bursty'
     ):
 
 
@@ -26,28 +32,33 @@ def main(
     galaxy.get_snapshotTimes()
     bursty_snap_index = np.argmin((galaxy.snap_gyrs-bursty_time)**2)
 
+    if slice_index is not None and nslices is not None:
+        nframes = duration * 24 ## default fps
+        slice_width = nframes // nslices + ((nframes % nslices) != 0)
+        time_slice = slice(slice_width*slice_index,slice_width*(slice_index+1))
+        print(slice_index,time_slice,nframes)
+    else: time_slice = None
 
     interp_handler = InterpolationHandler(
-        30,
+        duration,
         galaxy.snap_gyrs[bursty_snap_index]-1,
-        galaxy.snap_gyrs[bursty_snap_index]-1e-3,#+2,
+        galaxy.snap_gyrs[bursty_snap_index]+1,#+2,
         camera_pos=[0,0,15],
-        scale_line_length=5,
-        #time_slice=slice(-24*4,None),
-        #time_slice=slice(-10,None),
-        time_slice=slice(0,100)
-    )
+        scale_line_length=5)
 
-    savefig = 'avg_L' if take_avg_L else 'rot_jhat'
-    savefig+='_child'
     figs = interp_handler.interpolateAndRender(
         {'name':galaxy.name,
         ##'ABG_force_multithread':60,
+        'use_rockstar_first':True,
+        'suite_name':suite_name,
         'take_avg_L':take_avg_L,
         'keys_to_extract':['Metallicity','AgeGyr'],
         'final_orientation':True,
         'loud_metadata':False},
         render_kwargss=[
+            ## flagship FIRE studio
+            {'save_meta':True },
+            ## gas map
             {'weight_name':'Masses',
             'quantity_name':'Temperature',
             'min_quantity':2,
@@ -59,17 +70,22 @@ def main(
             #'min_weight':-0.5,
             #'max_weight':3, 
             },
+            ## hubble map
             {'quick':False,#'use_metadata':True,
             'save_meta':True,#'assert_cached':False,
             'use_metadata':False,
             #'min_quantity':2,'max_quantity':7,
             #'min_weight':-0.5,'max_weight':3 
             },
+            ## young stars map
             {
             #'save_meta':False,#'assert_cached':False,
-            'use_metadata':False,
+            #'use_metadata':False,
             }], ## msun/pc^2,
         studio_kwargss=[
+            {
+            'savefig':'FIREmap'
+            },
             {
             'savefig':None
             },
@@ -82,23 +98,26 @@ def main(
             {'savefig':'young_StarStudio',
             'maxden':2.2e8,
             'dynrange':4.7e2,
-            'savefig':None,
             'no_dust':True,
             'age_max_gyr':25/1e3, ## 25 Myr
             }],
         multi_threads=multi_threads,
-        which_studios=[GasStudio,StarStudio,StarStudio],
+        which_studios=[FIREStudio,GasStudio,StarStudio,StarStudio],
         check_exists=True, ## skip rendering a frame if the png already exists
         timestamp=bursty_time,
-        add_composition=savefig)  ## will add a composition frame of the requested Studios
+        add_composition=savefig,  ## will add a composition frame of the requested Studios
+        time_slice=time_slice)
 
 if __name__ == '__main__':
     argv = sys.argv[1:]
     opts,args = getopt.getopt(
         argv,'',[
         'name=',
+        'suite_name=',
         'multi_threads=',
-        'take_avg_L='
+        'take_avg_L=',
+        'slice_index=',
+        'nslices='
         ])
 
     for i,opt in enumerate(opts):
