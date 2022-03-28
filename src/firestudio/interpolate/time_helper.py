@@ -172,7 +172,7 @@ def render_this_scene(
             return prev_snapnum,next_snapnum,snapdict,star_snapdict,return_value
         else: return return_value
     ## yeah alright, it was worth a shot. let's load from disk and project then
-    except (AssertionError,KeyError): pass
+    except (AssertionError,KeyError): pass #raise
 
     ## determine if we've already loaded the data or if we need to open it from disk
     snapdict,star_snapdict,prev_snapnum,next_snapnum = load_data_from_disk_if_necessary(
