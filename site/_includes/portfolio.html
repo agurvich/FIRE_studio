@@ -1,45 +1,21 @@
 <section id="portfolio" class="portfolio">
-  <div class="container">
-    <div class="row">
-      <div class="col-lg-10 col-lg-offset-1 text-center">
-        <h2>Our Work</h2>
+  <div class="text-center">
+        <h1>Gallery</h1>
         <hr class="small">
-        <div class="row">
-          <div class="col-md-6">
-            <div class="portfolio-item">
-              <a href="#">
-                <img class="img-portfolio img-responsive" src="img/portfolio-1.jpg">
+          <ul class="rig columns-2">
+            {% for entry in site.gallery %}
+            <li > 
+              <a target="_blank" href="{{ entry.source }}">
+                <img alt="viz" src="{{"/assets/img/gallery/" | prepend: site.baseurl | append: entry.img }} ">
               </a>
-            </div>
-          </div>
-          <div class="col-md-6">
-            <div class="portfolio-item">
-              <a href="#">
-                <img class="img-portfolio img-responsive" src="img/portfolio-2.jpg">
-              </a>
-            </div>
-          </div>
-          <div class="col-md-6">
-            <div class="portfolio-item">
-              <a href="#">
-                <img class="img-portfolio img-responsive" src="img/portfolio-3.jpg">
-              </a>
-            </div>
-          </div>
-          <div class="col-md-6">
-            <div class="portfolio-item">
-              <a href="#">
-                <img class="img-portfolio img-responsive" src="img/portfolio-4.jpg">
-              </a>
-            </div>
-          </div>
-        </div>
-        <!-- /.row (nested) -->
+                <div class="info"> 
+                  <h3>{{ entry.title }}</h3> 
+                  <p> {{ entry.author}} </p>
+                </div>
+            </li>
+            {% endfor %}
+          </ul>
         <a href="#" class="btn btn-dark">View More Items</a>
-      </div>
-      <!-- /.col-lg-10 -->
-    </div>
-    <!-- /.row -->
   </div>
   <!-- /.container -->
 </section>
