@@ -8,6 +8,8 @@ import warnings
 from abg_python.interpolate.time_interpolate_utils import index_match_snapshots_with_dataframes,make_interpolated_snap
 from abg_python.galaxy.gal_utils import Galaxy
 from abg_python.plot_utils import plt
+from abg_python.physics_utils import makePotentialProfileFunction
+from abg_python import Gcode
 
 from firestudio.studios.gas_studio import GasStudio
 from firestudio.studios.star_studio import StarStudio
@@ -235,7 +237,7 @@ def get_single_snap(
     force_phi_TB=None,
     keys_to_extract=None,
     use_saved_subsnapshots=True,
-    extract_DM=False,
+    extract_DM=True, ## ignored
     **galaxy_kwargs):
 
     if keys_to_extract is None: keys_to_extract = []
@@ -243,24 +245,44 @@ def get_single_snap(
     snapdict,star_snapdict = {},{}
 
     galaxy = Galaxy(**galaxy_kwargs)
+    if not extract_DM: 
+        print('ignoring user request to not extract DM b.c.'
+            +' we need it for Vc which is used in the interpolation.')
     galaxy.extractMainHalo(
         compute_stellar_hsml=load_star,
         force_theta_TB=force_theta_TB,
         force_phi_TB=force_phi_TB,
         use_saved_subsnapshots=use_saved_subsnapshots,
         loud=False,
-        extract_DM=extract_DM,
+        extract_DM=True, ## force to be true
         jhat_coords=False)
+
+    ## make a lookup table for the gravitational potential
+    potential_profile_fn = makePotentialProfileFunction([
+        galaxy.sub_snap,
+        galaxy.sub_star_snap,
+        galaxy.sub_dark_snap],
+        ## maximum kpc for the lookup table, since it's in linear space
+        ##  we want to concentrate resolution where we actually want it
+        ##  (b.c. outside 30 kpc we use linear interpolation anyway)
+        rmax=30) 
+
     if load_gas: 
         for key in galaxy.sub_snap.keys():
             if key in keys_to_extract:
                 snapdict[key] = galaxy.sub_snap[key] 
+
+        radii = np.sqrt(np.sum(snapdict['Coordinates']**2,axis=1))
+        snapdict['CircularVelocities'] = np.sqrt(Gcode*potential_profile_fn(radii))
 
     if load_star: 
         star_snapdict = galaxy.sub_star_snap
         for key in galaxy.sub_star_snap.keys():
             if key in keys_to_extract:
                 star_snapdict[key] = galaxy.sub_star_snap[key] 
+
+        radii = np.sqrt(np.sum(star_snapdict['Coordinates']**2,axis=1))
+        star_snapdict['CircularVelocities'] = np.sqrt(potential_profile_fn(radii))
 
     snapdict['name'] = galaxy.name
     snapdict['datadir'] = galaxy.datadir
