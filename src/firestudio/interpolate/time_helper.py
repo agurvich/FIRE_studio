@@ -8,8 +8,7 @@ import warnings
 from abg_python.interpolate.time_interpolate_utils import index_match_snapshots_with_dataframes,make_interpolated_snap
 from abg_python.galaxy.gal_utils import Galaxy
 from abg_python.plot_utils import plt
-from abg_python.physics_utils import makePotentialProfileFunction
-from abg_python import Gcode
+from abg_python.physics_utils import addCircularVelocities
 
 from firestudio.studios.gas_studio import GasStudio
 from firestudio.studios.star_studio import StarStudio
@@ -248,45 +247,39 @@ def get_single_snap(
     if not extract_DM: 
         print('ignoring user request to not extract DM b.c.'
             +' we need it for Vc which is used in the interpolation.')
+        extract_DM=True
     galaxy.extractMainHalo(
         compute_stellar_hsml=load_star,
         force_theta_TB=force_theta_TB,
         force_phi_TB=force_phi_TB,
         use_saved_subsnapshots=use_saved_subsnapshots,
         loud=False,
-        extract_DM=True, ## force to be true
+        extract_DM=extract_DM, ## force to be true
         jhat_coords=False)
-
-    ## make a lookup table for the gravitational potential
-    potential_profile_fn = makePotentialProfileFunction([
-        galaxy.sub_snap,
-        galaxy.sub_star_snap,
-        galaxy.sub_dark_snap],
-        ## maximum kpc for the lookup table, since it's in linear space
-        ##  we want to concentrate resolution where we actually want it
-        ##  (b.c. outside 30 kpc we use linear interpolation anyway)
-        rmax=30) 
 
     if load_gas: 
         for key in galaxy.sub_snap.keys():
             if key in keys_to_extract:
                 snapdict[key] = galaxy.sub_snap[key] 
-
-        radii = np.sqrt(np.sum(snapdict['Coordinates']**2,axis=1))
-        snapdict['CircularVelocities'] = np.sqrt(Gcode*potential_profile_fn(radii))
+        snapdict['name'] = galaxy.name
+        snapdict['datadir'] = galaxy.datadir
+        snapdict['snapnum'] = galaxy.snapnum
 
     if load_star: 
         star_snapdict = galaxy.sub_star_snap
         for key in galaxy.sub_star_snap.keys():
             if key in keys_to_extract:
                 star_snapdict[key] = galaxy.sub_star_snap[key] 
+        star_snapdict['name'] = galaxy.name
+        star_snapdict['datadir'] = galaxy.datadir
+        star_snapdict['snapnum'] = galaxy.snapnum
 
-        radii = np.sqrt(np.sum(star_snapdict['Coordinates']**2,axis=1))
-        star_snapdict['CircularVelocities'] = np.sqrt(potential_profile_fn(radii))
+    ## add the circular velocity for each particle by computing
+    ##  the potential energy it has using a look-up table
+    addCircularVelocities(
+        [galaxy.sub_snap,galaxy.sub_star_snap,galaxy.sub_dark_snap],
+        [snapdict]*load_gas + [star_snapdict]*load_star)
 
-    snapdict['name'] = galaxy.name
-    snapdict['datadir'] = galaxy.datadir
-    snapdict['snapnum'] = galaxy.snapnum
 
     del galaxy
 
@@ -384,31 +377,32 @@ def load_gals_from_disk(
     force_theta_TB=None,
     force_phi_TB=None,
     use_saved_subsnapshots=True,
-    extract_DM=False,
+    extract_DM=True,
     polar=True,
     **kwargs):
     """ Determines whether it needs to load a new galaxy from disk
         or if we already have what we need."""
 
+    if not extract_DM: 
+        print('ignoring user request to not extract DM b.c.'
+            +' we need it for Vc which is used in the interpolation.')
+        extract_DM=True
+
     ## -- check the prev galaxy
     ## keep the current snapnum
-    if pair[0] == prev_snapnum:
-        prev_galaxy=prev_galaxy
+    if pair[0] == prev_snapnum: prev_galaxy=prev_galaxy
     ## step forward in time, swap pointers
     elif pair[0] == next_snapnum:
         prev_galaxy = next_galaxy
         next_galaxy = None
     ## will need to read from disk
-    else:
-        prev_galaxy = None
+    else: prev_galaxy = None
     
     ## -- now the next galaxy
     ## keep the current snapnum
-    if pair[1] == next_snapnum:
-        next_galaxy = next_galaxy
+    if pair[1] == next_snapnum: next_galaxy = next_galaxy
     ## will need to read from disk
-    else:
-        next_galaxy = None
+    else: next_galaxy = None
 
     changed = False ## flag for whether we loaded something from disk
     if prev_galaxy is None:
@@ -423,6 +417,13 @@ def load_gals_from_disk(
                 loud=False,
                 extract_DM=extract_DM,
                 jhat_coords=False)
+            if polar: 
+                addCircularVelocities(
+                    [prev_galaxy.sub_snap,
+                    prev_galaxy.sub_star_snap,
+                    prev_galaxy.sub_dark_snap],
+                    [prev_galaxy.sub_snap,
+                    prev_galaxy.sub_star_snap])
         else: prev_galaxy = pair[0]
         changed = True
     if next_galaxy is None:
@@ -437,6 +438,13 @@ def load_gals_from_disk(
                 loud=False,
                 extract_DM=extract_DM,
                 jhat_coords=False)
+            if polar: 
+                addCircularVelocities(
+                    [next_galaxy.sub_snap,
+                    next_galaxy.sub_star_snap,
+                    next_galaxy.sub_dark_snap],
+                    [next_galaxy.sub_snap,
+                    next_galaxy.sub_star_snap])
         else: next_galaxy = pair[1]
         changed = True
         

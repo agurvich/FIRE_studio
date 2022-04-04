@@ -13,7 +13,7 @@ from firestudio.studios.simple_studio import SimpleStudio
 def main(
     name='m12b_res7100',
     suite_name='metal_diffusion',
-    multi_threads=5):
+    multi_threads=1):
 
 
     many_galaxy = ManyGalaxy(name,suite_name=suite_name)
@@ -26,19 +26,18 @@ def main(
 
     interp_handler = InterpolationHandler(
         5, ## duration of movie, 10 sec
-        many_galaxy.snap_gyrs[267]-0.1, ## begininng time in Gyr
-        many_galaxy.snap_gyrs[268]-0.001+0.1, ## end time in Gyr
+        many_galaxy.snap_gyrs[267]+0.005, ## begininng time in Gyr
+        many_galaxy.snap_gyrs[268]-0.001, ## end time in Gyr
         ## fixed position of camera, optionally could move camera around
         ## defines the fov as +- zdist
         camera_pos=[0,0,50],  
         ## how long should the line in the bottom left corner be?
         scale_line_length=10,
-        coord_interp_mode='cartesian'
     )
 
     figs = interp_handler.interpolateAndRender(
         galaxy_kwargs={
-            #'ABG_force_multithread':10,
+            'ABG_force_multithread':10,
             ## flag to write snapshot w/ particles w/i rvir to disk
             'use_saved_subsnapshots':True, 
             'name':many_galaxy.name, ## 
