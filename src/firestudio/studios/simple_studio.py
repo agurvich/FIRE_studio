@@ -1,7 +1,7 @@
 import numpy as np
 
 from abg_python.array_utils import filterDictionary
-from abg_python.plot_utils import plt
+from abg_python.plot_utils import plt,matplotlib
 
 from .studio import Studio
 
@@ -12,7 +12,15 @@ class SimpleStudio(Studio):
 
     required_snapdict_keys = ['Coordinates']
 
-    def produceImage(self,fancy=False,alpha='column_density',scale_alpha=0.065,scale_radius=10.,**kwargs):
+    def produceImage(
+        self,
+        fancy=False,
+        alpha='column_density',
+        scale_alpha=0.065,
+        scale_radius=10.,
+        cmap = None,
+        colors_from_zero_to_one=None,
+        **kwargs):
         '''
         Args:
             fancy (bool):
@@ -29,7 +37,11 @@ class SimpleStudio(Studio):
             scale_radius (float):
                 What to scale the radius by. The default value is tuned for displaying on ~100 kpc scales.
         '''
-        (xs,ys,zs) = self.__prepareCoordinates(**kwargs)
+        (xs,ys,zs,hs,ms) = self.__prepareCoordinates(**kwargs)
+        if fancy and colors_from_zero_to_one is None: 
+            if self.master_loud: print(
+                "Pass in `colors_from_zero_to_one` to apply to colormap, switching fancy off.")
+            fancy = False
 
         fig,ax = plt.subplots(nrows=1,ncols=1)
         fig.subplots_adjust(wspace=0,hspace=0,left=0,right=1,bottom=0,top=1)
@@ -48,27 +60,28 @@ class SimpleStudio(Studio):
             ## TO-DO for Alex:
             # Fix these variables up how you want.
             """
-            particle_radius_data_units = ??? # Use smoothing length or sqrt of volume or whatever
-            cmap = palettable.scientific.diverging.Berlin_3.mpl_colormap # Make this into what you want
             norm = matplotlib.colors.LogNorm( vmin=???, vmax=??? ) # Add in an matplotlib colors normalization for the colors
             particle_data_to_color_by = ??? # Could be temperature, for example
-            particle_mass = ??? # Fill this in
             """
+
+            if cmap is None: 
+                import palettable
+                cmap = palettable.scientific.diverging.Berlin_3.mpl_colormap # Make this into what you want
 
             width_in_data = self.Xmax - self.Xmin
             width_in_pixels = ax.get_window_extent().width
             pixels_to_points = fig.dpi / 72.
-            radius = particle_radius_data_units * ( width_in_pixels / width_in_data ) * pixels_to_points * scale_radius
+            radius = hs * ( width_in_pixels / width_in_data ) * pixels_to_points * scale_radius
             s = ( radius )**2.
 
             # Colors
-            colors = cmap( norm( particle_data_to_color_by ) )
+            colors = cmap(colors_from_zero_to_one)
 
             # Alpha
             if alpha == 'column_density':
 
                 # Calculate alpha based on column density
-                column_den = particle_mass / particle_radius_data_units**2.
+                column_den = ms / hs**2.
                 alpha_norm = matplotlib.colors.LogNorm(
                     vmin=np.nanmin( column_den ),
                     vmax=np.nanmax( column_den )
@@ -111,7 +124,7 @@ class SimpleStudio(Studio):
     def __prepareCoordinates(
         self,
         snapdict_name='star',
-        age_max_gyr=14,
+        age_max_gyr=None,
         **kwargs):
 
         full_snapdict_name = '%s_snapdict'%snapdict_name
@@ -123,7 +136,24 @@ class SimpleStudio(Studio):
 
         snapdict = getattr(self,full_snapdict_name)
 
-        if 'AgeGyr' in snapdict:
+        if age_max_gyr is not None and 'AgeGyr' in snapdict:
             snapdict = filterDictionary(snapdict,snapdict['AgeGyr']<age_max_gyr)
 
-        return snapdict['Coordinates'].T
+        coords = snapdict['Coordinates'].T
+
+        ## rotate by euler angles if necessary
+        coords = self.camera.rotate_array(coords,offset=True)
+
+        ## cull the particles outside the frame and cast to float32
+        box_mask = self.cullFrameIndices(coords)
+
+        if "SmoothingLength" not in snapdict: hs = self.get_HSML(snapdict_name)
+        else: hs = snapdict['SmoothingLength']
+
+
+        return (
+            coords[:,0][box_mask],
+            coords[:,1][box_mask],
+            coords[:,2][box_mask],
+            hs[box_mask],snapdict['Masses'][box_mask])
+
