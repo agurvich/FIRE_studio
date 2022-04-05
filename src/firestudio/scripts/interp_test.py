@@ -43,6 +43,7 @@ def main(
         galaxy_kwargs={
             #'ABG_force_multithread':10,
             ## flag to write snapshot w/ particles w/i rvir to disk
+            'take_avg_L':True,
             'use_saved_subsnapshots':True, 
             'name':many_galaxy.name, ## 
             'final_orientation':True, ## face-on at z=0
