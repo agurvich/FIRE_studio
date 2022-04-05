@@ -155,6 +155,7 @@ def render_this_scene(
         pair = scene_kwargs['snap_pair']
         (t0,t1) = scene_kwargs['snap_pair_time']
         scene_kwargs['figure_label'] = format_timestamp(
+            pair,
             scene_kwargs['time'],
             t0,t1,
             timestamp)
@@ -450,9 +451,10 @@ def load_gals_from_disk(
         
     return prev_galaxy,next_galaxy,changed
 
-def format_timestamp(t,t0,t1,offset=0):
+def format_timestamp(snap_pair,t,t0,t1,offset=0):
     ## Myr precision
-    this_string = "%.3f Gyr - %d Myr - %d Myr"%(t-offset,(t-t0)*1e3,(t1-t)*1e3)
+    this_string = "%d - %.3f Gyr - %d Myr - %d Myr"%(snap_pair[0],t-offset,(t-t0)*1e3,(t1-t)*1e3)
+
     return this_string
 
 def get_load_flags(which_studios,render_kwargss):
