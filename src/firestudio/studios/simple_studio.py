@@ -139,7 +139,7 @@ class SimpleStudio(Studio):
         if age_max_gyr is not None and 'AgeGyr' in snapdict:
             snapdict = filterDictionary(snapdict,snapdict['AgeGyr']<age_max_gyr)
 
-        coords = snapdict['Coordinates'].T
+        coords = snapdict['Coordinates']
 
         ## rotate by euler angles if necessary
         coords = self.camera.rotate_array(coords,offset=True)

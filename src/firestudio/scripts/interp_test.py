@@ -1,4 +1,5 @@
 import numpy as np
+import sys
 
 from abg_python.plot_utils import plt
 plt.rcParams['figure.dpi']=300
@@ -13,7 +14,10 @@ from firestudio.studios.simple_studio import SimpleStudio
 def main(
     name='m12b_res7100',
     suite_name='metal_diffusion',
-    multi_threads=1):
+    multi_threads=5,
+    savefig_str=''):
+
+    if savefig_str == '': savefig_str = 'interp_test'
 
 
     many_galaxy = ManyGalaxy(name,suite_name=suite_name)
@@ -26,8 +30,8 @@ def main(
 
     interp_handler = InterpolationHandler(
         5, ## duration of movie, 10 sec
-        many_galaxy.snap_gyrs[267]+0.005, ## begininng time in Gyr
-        many_galaxy.snap_gyrs[268]-0.001, ## end time in Gyr
+        many_galaxy.snap_gyrs[267]-0.1, ## begininng time in Gyr
+        many_galaxy.snap_gyrs[268]-0.001+0.1, ## end time in Gyr
         ## fixed position of camera, optionally could move camera around
         ## defines the fov as +- zdist
         camera_pos=[0,0,50],  
@@ -37,7 +41,7 @@ def main(
 
     figs = interp_handler.interpolateAndRender(
         galaxy_kwargs={
-            'ABG_force_multithread':10,
+            #'ABG_force_multithread':10,
             ## flag to write snapshot w/ particles w/i rvir to disk
             'use_saved_subsnapshots':True, 
             'name':many_galaxy.name, ## 
@@ -54,15 +58,15 @@ def main(
             'save_meta':False}], ## kwargs for StarStudio render call
         studio_kwargss=[
             {
-            'savefig':'simple_test',
+            'savefig':savefig_str,
                 # 'maxden':2.2e8,'dynrange':4.7e2,
             #'no_dust':True,
             }], ## kwargs for StarStudio initialization
         multi_threads=multi_threads,
         which_studios=[SimpleStudio],
         check_exists=False, ## skip rendering a frame if the png already exists
-        timestamp=7.11419974, ## offset the timestamp by 0 Gyr ## bursty_time
+        timestamp=7.11419974, ## offset the timestamp by 0 Gyr ## 
         add_composition=False)  ## will add a composition frame of the requested Studios
 
 if __name__ == '__main__':
-    main()
+    main(savefig_str=sys.argv[1])
