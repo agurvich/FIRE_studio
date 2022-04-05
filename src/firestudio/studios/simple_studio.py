@@ -19,7 +19,6 @@ class SimpleStudio(Studio):
         scale_alpha=0.065,
         scale_radius=10.,
         cmap = None,
-        colors_from_zero_to_one=None,
         **kwargs):
         '''
         Args:
@@ -37,10 +36,10 @@ class SimpleStudio(Studio):
             scale_radius (float):
                 What to scale the radius by. The default value is tuned for displaying on ~100 kpc scales.
         '''
-        (xs,ys,zs,hs,ms) = self.__prepareCoordinates(**kwargs)
-        if fancy and colors_from_zero_to_one is None: 
+        (xs,ys,zs,hs,ms,colorby) = self.__prepareCoordinates(**kwargs)
+        if fancy and colorby is None: 
             if self.master_loud: print(
-                "Pass in `colors_from_zero_to_one` to apply to colormap, switching fancy off.")
+                "Pass in `colorby` to apply to colormap, switching fancy off.")
             fancy = False
 
         fig,ax = plt.subplots(nrows=1,ncols=1)
@@ -74,8 +73,9 @@ class SimpleStudio(Studio):
             radius = hs * ( width_in_pixels / width_in_data ) * pixels_to_points * scale_radius
             s = ( radius )**2.
 
+            from matplotlib.colors import Normalize
             # Colors
-            colors = cmap(colors_from_zero_to_one)
+            colors = cmap(Normalize(2,7,True)(np.log10(colorby)))
 
             # Alpha
             if alpha == 'column_density':
@@ -125,6 +125,7 @@ class SimpleStudio(Studio):
         self,
         snapdict_name='star',
         age_max_gyr=None,
+        colorby=None,
         **kwargs):
 
         full_snapdict_name = '%s_snapdict'%snapdict_name
@@ -155,5 +156,6 @@ class SimpleStudio(Studio):
             coords[:,0][box_mask],
             coords[:,1][box_mask],
             coords[:,2][box_mask],
-            hs[box_mask],snapdict['Masses'][box_mask])
+            hs[box_mask],snapdict['Masses'][box_mask],
+            snapdict[colorby][box_mask] if colorby is not None else None)
 
