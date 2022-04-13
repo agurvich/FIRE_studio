@@ -17,7 +17,7 @@ from firestudio.studios.composition import Composition
 def main(
     name='m12b_res7100',
     suite_name='metal_diffusion',
-    multi_threads=10,
+    multi_threads=5,
     take_avg_L = True,
     slice_index = None,
     nslices = None,
@@ -38,6 +38,8 @@ def main(
         time_slice = slice(slice_width*slice_index,slice_width*(slice_index+1))
         print(slice_index,time_slice,nframes)
     else: time_slice = None
+
+    #time_slice = slice(0,24*6)
 
     interp_handler = InterpolationHandler(
         duration,
