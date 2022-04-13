@@ -388,26 +388,6 @@ def get_interpolated_snaps(
                 next_gas_df.loc[starformed,other_keys] = prev_gas_df.loc[starformed,other_keys]
 
         if load_gas:
-            ## merge rows of dataframes based on particle ID
-            merged_gas_df = prev_gas_df.join(
-                next_gas_df,
-                rsuffix='_next',
-                how='outer')
-            
-            del prev_galaxy.sub_snap
-            #del next_galaxy.sub_snap ## don't delete this b.c. we'll need it when we load the next one
-
-        if load_star:
-            ## merge rows of dataframes based on particle ID
-            merged_star_df = prev_star_df.join(
-                next_star_df,
-                rsuffix='_next',
-                how='outer')
-
-            del prev_galaxy.sub_star_snap
-            #del next_galaxy.sub_star_snap ## don't delete this b.c. we'll need it when we load the next one
-        
-        if load_gas:
             ## look for ancestor gas particles for those particles which split
             """
             merged_gas_df = search_multi_ids(
@@ -423,6 +403,14 @@ def get_interpolated_snaps(
                     merged_gas_df, ## df w/ targets
                     forward=True) ## look in the future
             """
+            ## merge rows of dataframes based on particle ID
+            merged_gas_df = prev_gas_df.join(
+                next_gas_df,
+                rsuffix='_next',
+                how='outer')
+            
+            del prev_galaxy.sub_snap
+            #del next_galaxy.sub_snap ## don't delete this b.c. we'll need it when we load the next one
 
             ## fill values w. extrapolation in both directions
             ##  add polar coordinates and velocities, and drop any remaining nans or duplicates
@@ -435,6 +423,15 @@ def get_interpolated_snaps(
             merged_gas_df.next_time = t1
 
         if load_star: 
+            ## merge rows of dataframes based on particle ID
+            merged_star_df = prev_star_df.join(
+                next_star_df,
+                rsuffix='_next',
+                how='outer')
+
+            del prev_galaxy.sub_star_snap
+            #del next_galaxy.sub_star_snap ## don't delete this b.c. we'll need it when we load the next one
+
             ## fill values w. extrapolation in both directions
             ##  add polar coordinates and velocities, and drop any remaining nans or duplicates
             merged_star_df = finalize_df(
@@ -444,11 +441,18 @@ def get_interpolated_snaps(
                 extrapolate=False)
             merged_star_df.prev_time = t0
             merged_star_df.next_time = t1
+    else: pass ## [ if changed: ] 
 
     ## create the interp_snap with new values for the new time
-    if load_gas: interp_gas_snapdict = make_interpolated_snap(merged_gas_df,this_time,polar=polar) 
+    if load_gas: interp_gas_snapdict = make_interpolated_snap(
+        merged_gas_df,
+        this_time,
+        polar=polar) 
     else: interp_gas_snapdict = {}            
-    if load_star: interp_star_snapdict = make_interpolated_snap(merged_star_df,this_time,polar=polar)
+    if load_star: interp_star_snapdict = make_interpolated_snap(
+        merged_star_df,
+        this_time,
+        polar=polar)
     else: interp_star_snapdict = {}
 
     ## keep outside the conditional b.c. worker function
@@ -456,10 +460,16 @@ def get_interpolated_snaps(
     interp_gas_snapdict['name'] = next_galaxy.name
     interp_gas_snapdict['datadir'] = next_galaxy.datadir
     interp_gas_snapdict['snapnum'] = next_galaxy.snapnum
+    interp_gas_snapdict['this_time_Gyr'] = this_time
+    interp_gas_snapdict['prev_time_Gyr'] = t0
+    interp_gas_snapdict['next_time_Gyr'] = t1
 
     interp_star_snapdict['name'] = next_galaxy.name
     interp_star_snapdict['datadir'] = next_galaxy.datadir
     interp_star_snapdict['snapnum'] = next_galaxy.snapnum
+    interp_star_snapdict['this_time_Gyr'] = this_time
+    interp_star_snapdict['prev_time_Gyr'] = t0
+    interp_star_snapdict['next_time_Gyr'] = t1
 
 
     return interp_gas_snapdict,interp_star_snapdict
