@@ -6,7 +6,7 @@ import pandas as pd
 import os
 import warnings
 
-from abg_python.interpolate.time_interpolate_utils import convertToDF,search_multi_ids,finalize_df,make_interpolated_snap
+from abg_python.interpolate.time_interpolate_utils import convertToDF,cross_match_starformed_gas,finalize_df,make_interpolated_snap
 from abg_python.galaxy.gal_utils import Galaxy
 from abg_python.plot_utils import plt
 from abg_python.physics_utils import addCircularVelocities
@@ -340,52 +340,14 @@ def get_interpolated_snaps(
         ## if we have both, we can try to cross-match the positions
         ##  of particles between them
         if load_gas and load_star:
-            ## find which stars in the previous gas df are now in the 
-            ##  next star df (i.e. which ones turned into stars)
-            starformed = prev_gas_df.index[prev_gas_df.index.isin(next_star_df.index)]
-            ages = next_star_df.loc[starformed,'AgeGyr']
-            dsnap = t1 - t0
-            #print(starformed.shape[0],'many starformed particles')
-            
-            ## add gas data to the stars and set the ages s.t. they will
-            ##  appear at the correct time.
-            ## -----------
-            ##  append the rows, but only columns which are shared
-            which_keys = prev_gas_df.keys()[prev_gas_df.keys().isin(prev_star_df.keys())]
-            prev_star_df = pd.concat([
-                prev_star_df, ## df to modify
-                prev_gas_df.loc[starformed,which_keys]], ## new rows
-                axis=0, ## add rows
-                )
-            ##  linear interpolation from ages-dt -> ages-dt + dt = ages
-            ##   will result in star particles disappearing at correct time
-            prev_star_df.loc[starformed,'AgeGyr'] = ages-dsnap
+            (prev_gas_df,
+            next_gas_df,
+            prev_star_df,
+            next_star_df) = cross_match_starformed_gas(
+                t1,t0,
+                prev_gas_df,next_gas_df,
+                prev_star_df,next_star_df)
 
-            ##  copy the field values from the future for keys that aren't shared
-            ##   between gas and stars
-            other_keys = prev_star_df.keys()[~prev_star_df.keys().isin(prev_gas_df.keys())]
-            if len(other_keys):
-                prev_star_df.loc[starformed,other_keys] = next_star_df.loc[starformed,other_keys]
-
-            ## add star data to the gas and set the ages s.t. they will
-            ##  disappear at the correct time.
-            ## -----------
-            ##  append the rows, but only columns which are shared
-            which_keys = next_star_df.keys()[next_star_df.keys().isin(next_gas_df.keys())]
-            next_gas_df = pd.concat([
-                next_gas_df, ## df to modify 
-                next_star_df.loc[starformed,which_keys]], ## new rows
-                axis=0, ## add rows
-                )
-            ## tauf = age/(age-dt) -- derivation on remarkable 4/9/22
-            ##  starting at 1, will cross 0 at age
-            next_gas_df.loc[starformed,'AgeGyr'] = ages/(ages-dsnap)
-
-            ##  copy the field values from the past for keys that aren't shared
-            ##   between gas and stars
-            other_keys = next_gas_df.keys()[~next_gas_df.keys().isin(next_star_df.keys())]
-            if len(other_keys):
-                next_gas_df.loc[starformed,other_keys] = prev_gas_df.loc[starformed,other_keys]
 
         if load_gas:
             ## look for ancestor gas particles for those particles which split
