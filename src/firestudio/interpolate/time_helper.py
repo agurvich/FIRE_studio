@@ -376,9 +376,8 @@ def get_interpolated_snaps(
 
             ## fill values w. extrapolation in both directions
             ##  add polar coordinates and velocities, and drop any remaining nans or duplicates
-            merged_gas_df.prev_time = t0
-            merged_gas_df.next_time = t1
             merged_gas_df = finalize_df(
+                t0,t1,
                 merged_gas_df,
                 polar=polar,
                 take_avg_L=take_avg_L)
@@ -395,21 +394,22 @@ def get_interpolated_snaps(
 
             ## fill values w. extrapolation in both directions
             ##  add polar coordinates and velocities, and drop any remaining nans or duplicates
-            merged_star_df.prev_time = t0
-            merged_star_df.next_time = t1
             merged_star_df = finalize_df(
                 merged_star_df,
+                t0,t1,
                 polar=polar,
                 take_avg_L=take_avg_L)
     else: pass ## [ if changed: ] 
 
     ## create the interp_snap with new values for the new time
     if load_gas: interp_gas_snapdict = make_interpolated_snap(
+        t0,t1,
         merged_gas_df,
         this_time,
         polar=polar) 
     else: interp_gas_snapdict = {}            
     if load_star: interp_star_snapdict = make_interpolated_snap(
+        t0,t1,
         merged_star_df,
         this_time,
         polar=polar)
