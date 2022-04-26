@@ -376,13 +376,12 @@ def get_interpolated_snaps(
 
             ## fill values w. extrapolation in both directions
             ##  add polar coordinates and velocities, and drop any remaining nans or duplicates
+            merged_gas_df.prev_time = t0
+            merged_gas_df.next_time = t1
             merged_gas_df = finalize_df(
                 merged_gas_df,
                 polar=polar,
-                take_avg_L=take_avg_L,
-                extrapolate=False)
-            merged_gas_df.prev_time = t0
-            merged_gas_df.next_time = t1
+                take_avg_L=take_avg_L)
 
         if load_star: 
             ## merge rows of dataframes based on particle ID
@@ -396,13 +395,12 @@ def get_interpolated_snaps(
 
             ## fill values w. extrapolation in both directions
             ##  add polar coordinates and velocities, and drop any remaining nans or duplicates
+            merged_star_df.prev_time = t0
+            merged_star_df.next_time = t1
             merged_star_df = finalize_df(
                 merged_star_df,
                 polar=polar,
-                take_avg_L=take_avg_L,
-                extrapolate=False)
-            merged_star_df.prev_time = t0
-            merged_star_df.next_time = t1
+                take_avg_L=take_avg_L)
     else: pass ## [ if changed: ] 
 
     ## create the interp_snap with new values for the new time
