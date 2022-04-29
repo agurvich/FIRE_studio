@@ -10,7 +10,8 @@ assignees: agurvich
 ### Steps to receive help:
 1. Describe question and fill out form below.
 2. Attach a text file with the entire stack trace *and* any printed output (make sure that `master_loud=True` and `loud=True` is set (which it is by default, unless you've changed it). 
-3. Attach the python script or a pdf of the full jupyter notebook that recreates the problem.  
+3. Attach the python script or a pdf of the full jupyter notebook that recreates the problem.
+4. DM me a link to [pickled](https://docs.python.org/3/library/pickle.html) input dictionaries (this step is optional, but I can't run any code without it so all I can promise is to look at the stack trace and answer a question). 
 
 ### Issue/question
 
