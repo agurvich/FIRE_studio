@@ -12,7 +12,7 @@ Thanks, and enjoy!
 
 ## Help Policy
 To receive support please fill out the issue template in the [github issues tab](https://github.com/agurvich/FIRE_studio/issues). 
-Note that I only support the most recent version of FIRE studio by default and you will be required to upload a full stack trace and printed output along with the python script/pdf printout of the jupyter notebook.
+Note that I only support the most recent version of FIRE studio by default and you will be required to upload a full stack trace and printed output along with the python script/pdf printout of the jupyter notebook and, if you want me to debug something I'll need pickled dictionaries with the input data as well (w/ coordinates offset, etc...) and not just a path to the snapshot hdf5 files. I ask this to help me help you!
 
 requirements:
 [abg_python](https://www.github.com/agurvich/abg_python)
