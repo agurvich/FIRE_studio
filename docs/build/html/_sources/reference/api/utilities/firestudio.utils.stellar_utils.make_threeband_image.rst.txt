@@ -1,0 +1,35 @@
+firestudio.utils.stellar\_utils.make\_threeband\_image
+======================================================
+
+.. automodule:: firestudio.utils.stellar_utils.make_threeband_image
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      checklen
+      clip_256
+      int_round
+      layer_band_images
+      make_threeband_image_process_bandmaps
+      ok_scan
+      single_vec_sorted
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+

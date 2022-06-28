@@ -1,0 +1,32 @@
+firestudio.utils.stellar\_utils.cross\_section
+==============================================
+
+.. automodule:: firestudio.utils.stellar_utils.cross_section
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      cross_section
+      morrison_photoelec
+      opacity_per_solar_metallicity
+      pei_dustparam
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+

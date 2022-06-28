@@ -1,0 +1,35 @@
+firestudio.utils.stellar\_utils.raytrace\_projection
+====================================================
+
+.. automodule:: firestudio.utils.stellar_utils.raytrace_projection
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      checklen
+      f_cpointer
+      farr
+      int_round
+      ok_scan
+      raytrace_projection_compute
+      stellar_raytrace
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+

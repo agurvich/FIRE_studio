@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>firestudio.studios.studio &mdash; firestudio 2.0.0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../index.html" class="icon icon-home"> firestudio
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/api/api.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">firestudio</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      <li>firestudio.studios.studio</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for firestudio.studios.studio</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span> 
+
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">from</span> <span class="nn">matplotlib.colors</span> <span class="kn">import</span> <span class="n">rgb_to_hsv</span><span class="p">,</span><span class="n">hsv_to_rgb</span>
+<span class="c1">#import matplotlib.gridspec as gridspec</span>
+
+<span class="kn">from</span> <span class="nn">abg_python</span> <span class="kn">import</span> <span class="n">append_function_docstring</span><span class="p">,</span><span class="n">filterDictionary</span>
+<span class="kn">from</span> <span class="nn">abg_python.plot_utils</span> <span class="kn">import</span> <span class="n">nameAxes</span>
+
+<span class="kn">from</span> <span class="nn">abg_python.galaxy.gal_utils</span> <span class="kn">import</span> <span class="n">Galaxy</span>
+<span class="kn">from</span> <span class="nn">abg_python.galaxy.metadata_utils</span> <span class="kn">import</span> <span class="n">Metadata</span><span class="p">,</span><span class="n">metadata_cache</span>
+
+<span class="kn">from</span> <span class="nn">..utils.stellar_utils.load_stellar_hsml</span> <span class="kn">import</span> <span class="n">get_particle_hsml</span>
+<span class="kn">from</span> <span class="nn">..utils.camera_utils</span> <span class="kn">import</span> <span class="n">Camera</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">numba</span> <span class="kn">import</span> <span class="n">njit</span>
+    <span class="nd">@njit</span><span class="p">()</span>
+    <span class="k">def</span> <span class="nf">sample_gradient_at_angle</span><span class="p">(</span><span class="n">gradient_mask</span><span class="p">,</span><span class="n">image_1</span><span class="p">,</span><span class="n">angle</span><span class="p">):</span>
+        <span class="n">new_gradient_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">image_1</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="c1">## coordinates are w.r.t. center of image so rotation is correct</span>
+        <span class="k">for</span> <span class="n">pix_i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="o">-</span><span class="n">image_1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">//</span><span class="mi">2</span><span class="p">,</span><span class="n">image_1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">//</span><span class="mi">2</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">pix_j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="o">-</span><span class="n">image_1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">//</span><span class="mi">2</span><span class="p">,</span><span class="n">image_1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">//</span><span class="mi">2</span><span class="p">):</span>
+                <span class="n">lookup_i</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span><span class="o">*</span><span class="n">pix_i</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span><span class="o">*</span><span class="n">pix_j</span><span class="p">,</span><span class="mi">0</span><span class="p">))</span><span class="o">+</span><span class="n">gradient_mask</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">//</span><span class="mi">2</span>
+                <span class="n">lookup_j</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span><span class="o">*</span><span class="n">pix_i</span><span class="o">+</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span><span class="o">*</span><span class="n">pix_j</span><span class="p">,</span><span class="mi">0</span><span class="p">))</span><span class="o">+</span><span class="n">gradient_mask</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">//</span><span class="mi">2</span>
+                <span class="n">new_gradient_mask</span><span class="p">[</span><span class="n">pix_i</span><span class="o">+</span><span class="n">image_1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">//</span><span class="mi">2</span><span class="p">,</span><span class="n">pix_j</span><span class="o">+</span><span class="n">image_1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">//</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">gradient_mask</span><span class="p">[</span><span class="n">lookup_i</span><span class="p">,</span><span class="n">lookup_j</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">new_gradient_mask</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="c1">## don&#39;t have numba so gradient blending will be slow. oh well</span>
+    <span class="k">def</span> <span class="nf">sample_gradient_at_angle</span><span class="p">(</span><span class="n">gradient_mask</span><span class="p">,</span><span class="n">image_1</span><span class="p">,</span><span class="n">angle</span><span class="p">):</span>
+        <span class="n">new_gradient_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">image_1</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="c1">## coordinates are w.r.t. center of image so rotation is correct</span>
+        <span class="k">for</span> <span class="n">pix_i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="o">-</span><span class="n">image_1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">//</span><span class="mi">2</span><span class="p">,</span><span class="n">image_1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">//</span><span class="mi">2</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">pix_j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="o">-</span><span class="n">image_1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">//</span><span class="mi">2</span><span class="p">,</span><span class="n">image_1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">//</span><span class="mi">2</span><span class="p">):</span>
+                <span class="n">lookup_i</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span><span class="o">*</span><span class="n">pix_i</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span><span class="o">*</span><span class="n">pix_j</span><span class="p">,</span><span class="mi">0</span><span class="p">))</span><span class="o">+</span><span class="n">gradient_mask</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">//</span><span class="mi">2</span>
+                <span class="n">lookup_j</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span><span class="o">*</span><span class="n">pix_i</span><span class="o">+</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span><span class="o">*</span><span class="n">pix_j</span><span class="p">,</span><span class="mi">0</span><span class="p">))</span><span class="o">+</span><span class="n">gradient_mask</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">//</span><span class="mi">2</span>
+                <span class="n">new_gradient_mask</span><span class="p">[</span><span class="n">pix_i</span><span class="o">+</span><span class="n">image_1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">//</span><span class="mi">2</span><span class="p">,</span><span class="n">pix_j</span><span class="o">+</span><span class="n">image_1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">//</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">gradient_mask</span><span class="p">[</span><span class="n">lookup_i</span><span class="p">,</span><span class="n">lookup_j</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">new_gradient_mask</span>
+
+
+<span class="k">class</span> <span class="nc">Drawer</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">render</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">ax</span><span class="p">:</span><span class="n">plt</span><span class="o">.</span><span class="n">Axes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Generates an image with the `produceImage` method and then plots it with the `plotImage` method.</span>
+
+<span class="sd">            Input: </span>
+
+<span class="sd">                ax = None -- axis to plot image to, if None will create a new figure</span>
+
+<span class="sd">            Output:</span>
+
+<span class="sd">                ax -- the axis the image was plotted to</span>
+<span class="sd">                final_image -- Npixels x Npixels x 3 RGB pixel array&quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">fig</span><span class="p">,</span><span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(),</span><span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">fig</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_figure</span><span class="p">()</span>
+
+        <span class="c1">## remap the C output to RGB space</span>
+        <span class="n">final_image</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">produceImage</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="c1">## plot that RGB image and overlay scale bars/text</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plotImage</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span><span class="n">final_image</span><span class="p">)</span>
+
+        <span class="c1">## save the image</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">savefig</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">saveFigure</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">savefig</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">ax</span><span class="p">,</span><span class="n">final_image</span>
+
+    <span class="k">def</span> <span class="nf">drawCoordinateAxes</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">ax</span><span class="p">:</span><span class="n">plt</span><span class="o">.</span><span class="n">Axes</span><span class="p">,</span>
+        <span class="n">spacing</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">length</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+        <span class="n">colors</span><span class="p">:</span><span class="nb">list</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;[summary]</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        ax : plt.Axes</span>
+<span class="sd">            [description]</span>
+<span class="sd">        spacing : float, optional</span>
+<span class="sd">            [description], by default 1</span>
+<span class="sd">        length : float, optional</span>
+<span class="sd">            [description], by default 10</span>
+<span class="sd">        colors : list, optional</span>
+<span class="sd">            [description], by default None</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        [type]</span>
+<span class="sd">            [description]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">colors</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">colors</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;red&#39;</span><span class="p">,</span><span class="s1">&#39;blue&#39;</span><span class="p">,</span><span class="s1">&#39;green&#39;</span><span class="p">]</span>
+        
+        <span class="c1">## create the axis lines</span>
+        <span class="n">points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">spacing</span><span class="p">,</span><span class="n">length</span><span class="o">+</span><span class="n">spacing</span><span class="p">,</span><span class="n">spacing</span><span class="p">)</span>
+        
+        <span class="c1">## initialize the coordinate array, + 1 for the origin</span>
+        <span class="n">coordinates</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">3</span><span class="o">*</span><span class="n">points</span><span class="o">.</span><span class="n">size</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span>
+
+        <span class="c1">## for each direction, fill one axis with the points</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span>
+            <span class="n">coordinates</span><span class="p">[</span><span class="n">points</span><span class="o">.</span><span class="n">size</span><span class="o">*</span><span class="n">i</span><span class="p">:</span><span class="n">points</span><span class="o">.</span><span class="n">size</span><span class="o">*</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">points</span> 
+        
+        <span class="c1">## perform the rotation</span>
+        <span class="n">coordinates</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">rotate_array</span><span class="p">(</span><span class="n">coordinates</span><span class="p">,</span><span class="n">offset</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1">## plot the new x-y coordiantes</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span>
+            <span class="n">these_coords</span> <span class="o">=</span> <span class="n">coordinates</span><span class="p">[</span><span class="n">points</span><span class="o">.</span><span class="n">size</span><span class="o">*</span><span class="n">i</span><span class="p">:</span><span class="n">points</span><span class="o">.</span><span class="n">size</span><span class="o">*</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">these_coords</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span><span class="n">these_coords</span><span class="p">[:,</span><span class="mi">1</span><span class="p">],</span><span class="s1">&#39;.&#39;</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="n">colors</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="s1">&#39;.&#39;</span><span class="p">,</span><span class="n">c</span><span class="o">=</span><span class="n">colors</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">label</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">([</span><span class="s1">&#39;x&#39;</span><span class="p">,</span><span class="s1">&#39;y&#39;</span><span class="p">,</span><span class="s1">&#39;z&#39;</span><span class="p">]):</span>
+            <span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">z</span> <span class="o">=</span> <span class="n">coordinates</span><span class="p">[</span><span class="n">points</span><span class="o">.</span><span class="n">size</span><span class="o">*</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">label</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">ax</span>
+
+    <span class="k">def</span> <span class="nf">plotImage</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">ax</span><span class="p">:</span><span class="n">plt</span><span class="o">.</span><span class="n">Axes</span><span class="p">,</span>
+        <span class="n">final_image</span><span class="p">:</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span> 
+        <span class="sd">&quot;&quot;&quot;Bsae method for overlaying artists on top of projected image.</span>
+<span class="sd">        if `self.scale_bar`:</span>
+<span class="sd">            overlays a scale bar by filling the RGB pixel values with white</span>
+<span class="sd">        if `self.noaxis`:</span>
+<span class="sd">            removes the coordinate axes, labels, and ticks</span>
+
+<span class="sd">        will also add `self.figure_label` as text to the image. </span>
+<span class="sd">        See `~firestudio.studios.studio.Studio.set_ImageParams` for details.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        ax : plt.Axes</span>
+<span class="sd">            axis to plot image to </span>
+<span class="sd">        final_image : np.ndarray</span>
+<span class="sd">            array of RGB image pixel values</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1">## fill the pixels of the the scale bar with white</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale_bar</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">addScaleBar</span><span class="p">(</span><span class="n">final_image</span><span class="p">)</span>
+
+        <span class="c1">## main imshow call</span>
+        <span class="n">imgplot</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span>
+            <span class="n">final_image</span><span class="p">,</span> 
+            <span class="n">extent</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Xmin</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">Xmax</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">Ymin</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">Ymax</span><span class="p">),</span>
+            <span class="n">origin</span> <span class="o">=</span> <span class="s1">&#39;lower&#39;</span><span class="p">)</span>
+
+        <span class="c1">## set the y units to equal the x units-- make sure nothing</span>
+        <span class="c1">##  is being skewed. UNRELATED to self.aspect_ratio</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_aspect</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="c1">## turn off the axis if asked</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">noaxis</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;off&#39;</span><span class="p">)</span>
+            <span class="c1">## remove whitespace around the axis, apparently the x/y origin is offset in pixel </span>
+            <span class="c1">## space and so the bounding box doesn&#39;t actually reflect the left/bottom edge of the </span>
+            <span class="c1">## axis</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">set_major_locator</span><span class="p">(</span><span class="n">plt</span><span class="o">.</span><span class="n">NullLocator</span><span class="p">())</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">yaxis</span><span class="o">.</span><span class="n">set_major_locator</span><span class="p">(</span><span class="n">plt</span><span class="o">.</span><span class="n">NullLocator</span><span class="p">())</span>
+
+        <span class="c1">## will check relevant flags internally</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addText</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>
+
+<span class="c1">####### image utilities #######</span>
+    <span class="k">def</span> <span class="nf">addScaleBar</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">image</span><span class="p">:</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;[summary]</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        image : np.ndarray</span>
+<span class="sd">            [description]</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        [type]</span>
+<span class="sd">            [description]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1">## set scale bar length</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scale_label_text</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;$\mathbf{</span><span class="si">%1g</span><span class="s2"> \, \rm</span><span class="si">{kpc}</span><span class="s2">}$&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">scale_line_length</span>
+
+        <span class="c1"># Convert to pixel space</span>
+        <span class="n">length_per_pixel</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Xmax</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">Xmin</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">npix_x</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scale_line_length_px</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scale_line_length</span> <span class="o">/</span> <span class="n">length_per_pixel</span><span class="p">)</span>
+
+        <span class="c1"># Position in terms of image array indices</span>
+        <span class="n">scale_line_x_start</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mf">0.05</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">npix_x</span><span class="p">)</span>
+        <span class="n">scale_line_x_end</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">scale_line_x_start</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale_line_length_px</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">npix_x</span><span class="p">)</span>
+        <span class="n">scale_line_y</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mf">0.02</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">npix_y</span><span class="p">)</span>
+
+        <span class="n">npix_thick</span> <span class="o">=</span> <span class="mi">12</span>
+        <span class="c1"># Go through pixels for scale bar, setting them to white</span>
+        <span class="k">for</span> <span class="n">x_index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">scale_line_x_start</span><span class="p">,</span> <span class="n">scale_line_x_end</span><span class="p">):</span>
+            <span class="n">image</span><span class="p">[</span><span class="n">scale_line_y</span><span class="p">:</span><span class="n">scale_line_y</span><span class="o">+</span><span class="n">npix_thick</span><span class="p">,</span> <span class="n">x_index</span><span class="p">,:</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">font_color</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;w&#39;</span><span class="p">,</span><span class="s1">&#39;white&#39;</span><span class="p">]</span> <span class="k">else</span> <span class="mi">0</span>
+        <span class="k">return</span> <span class="n">image</span>
+
+    <span class="k">def</span> <span class="nf">addText</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">ax</span><span class="p">:</span><span class="n">plt</span><span class="o">.</span><span class="n">Axes</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;[summary]</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        ax : plt.Axes</span>
+<span class="sd">            [description]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1">## handle any text additions</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">figure_label</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1">## plot the  figure label in the top right corner</span>
+            <span class="n">nameAxes</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span><span class="kc">None</span><span class="p">,</span><span class="kc">None</span><span class="p">,</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">supertitle</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">figure_label</span><span class="p">,</span>
+                <span class="n">subfontsize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fontsize</span><span class="p">,</span>
+                <span class="n">font_color</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">font_color</span><span class="p">,</span>
+                <span class="n">swap_annotate_side</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">figure_label_side</span><span class="o">==</span><span class="s1">&#39;right&#39;</span><span class="p">)</span>
+
+        <span class="c1">## Set parameters</span>
+
+        <span class="n">scale_label_position</span> <span class="o">=</span> <span class="mf">0.06</span> 
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale_bar</span><span class="p">:</span> 
+            <span class="c1">## plot the scale bar label</span>
+            <span class="n">label2</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span>
+                <span class="n">scale_label_position</span><span class="p">,</span><span class="mf">0.03</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">scale_label_text</span><span class="p">,</span>
+                <span class="n">fontweight</span> <span class="o">=</span> <span class="s1">&#39;bold&#39;</span><span class="p">,</span>
+                <span class="n">fontsize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fontsize</span><span class="o">*</span><span class="mf">0.75</span><span class="p">,</span>
+                <span class="n">transform</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">transAxes</span><span class="p">,</span>
+                <span class="n">verticalalignment</span><span class="o">=</span><span class="s1">&#39;bottom&#39;</span><span class="p">)</span>
+            <span class="n">label2</span><span class="o">.</span><span class="n">set_color</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">font_color</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">renormalizeTransposeImage</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">image</span><span class="p">:</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">min_val</span><span class="p">:</span><span class="nb">float</span><span class="p">,</span>
+        <span class="n">max_val</span><span class="p">:</span><span class="nb">float</span><span class="p">,</span>
+        <span class="n">quantity_name</span><span class="p">:</span><span class="nb">str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;[summary]</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        image : np.ndarray</span>
+<span class="sd">            [description]</span>
+<span class="sd">        min_val : float</span>
+<span class="sd">            [description]</span>
+<span class="sd">        max_val : float</span>
+<span class="sd">            [description]</span>
+<span class="sd">        quantity_name : str</span>
+<span class="sd">            [description]</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        [type]</span>
+<span class="sd">            [description]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">master_loud</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;min_</span><span class="si">%s</span><span class="s1"> = &#39;</span><span class="o">%</span><span class="n">quantity_name</span><span class="p">,</span><span class="n">min_val</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;max_</span><span class="si">%s</span><span class="s1"> = &#39;</span><span class="o">%</span><span class="n">quantity_name</span><span class="p">,</span><span class="n">max_val</span><span class="p">)</span>
+
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Image range (</span><span class="si">%s</span><span class="s1">): &#39;</span><span class="o">%</span><span class="n">quantity_name</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">nanmin</span><span class="p">(</span><span class="n">image</span><span class="p">),</span><span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">(</span><span class="n">image</span><span class="p">))</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="n">image</span> <span class="o">-</span> <span class="n">min_val</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="n">image</span> <span class="o">/</span> <span class="p">(</span><span class="n">max_val</span> <span class="o">-</span> <span class="n">min_val</span><span class="p">)</span>
+        
+        <span class="c1">## clip anything outside the range</span>
+        <span class="n">image</span><span class="p">[</span><span class="n">image</span> <span class="o">&lt;</span> <span class="mf">0.0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="n">image</span><span class="p">[</span><span class="n">image</span> <span class="o">&gt;</span> <span class="mf">1.0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="n">image</span><span class="o">*</span><span class="mf">255.0</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">master_loud</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Image range (8bit): &#39;</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">nanmin</span><span class="p">(</span><span class="n">image</span><span class="p">),</span><span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">(</span><span class="n">image</span><span class="p">))</span>
+
+        <span class="c1">## cast to integer to use as indices for cmap array</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint16</span><span class="p">)</span> 
+
+        <span class="k">return</span> <span class="n">image</span><span class="o">.</span><span class="n">T</span>
+
+    <span class="k">def</span> <span class="nf">saveFigure</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">fig</span><span class="p">,</span>
+        <span class="n">image_name</span><span class="p">:</span><span class="nb">str</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">savefig_args</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        fig : [type]</span>
+<span class="sd">            [description]</span>
+<span class="sd">        image_name : str, optional</span>
+<span class="sd">            [description], by default None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">noaxis</span><span class="p">:</span>
+            <span class="n">savefig_args</span><span class="p">[</span><span class="s1">&#39;bbox_inches&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;tight&#39;</span>
+            <span class="n">savefig_args</span><span class="p">[</span><span class="s1">&#39;pad_inches&#39;</span><span class="p">]</span><span class="o">=</span><span class="mi">0</span>
+        
+        <span class="k">if</span> <span class="n">image_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">image_name</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%03d</span><span class="s2">_</span><span class="si">%d</span><span class="s2">kpc.pdf&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">snapnum</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">camera_dist</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s1">&#39;png&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">image_name</span> <span class="ow">and</span> <span class="s1">&#39;pdf&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">image_name</span><span class="p">:</span>
+            <span class="n">image_name</span><span class="o">+=</span><span class="s1">&#39;.pdf&#39;</span>
+
+        <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">datadir</span><span class="p">,</span><span class="n">image_name</span><span class="p">),</span>
+            <span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">savefig_args</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">gradientBlendImages</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">image_1</span><span class="p">:</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">image_2</span><span class="p">:</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">gradient_width_percent</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+        <span class="n">angle</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;[summary]</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        image_1 : np.ndarray</span>
+<span class="sd">            [description]</span>
+<span class="sd">        image_2 : np.ndarray, optional</span>
+<span class="sd">            [description], by default None</span>
+<span class="sd">        gradient_width_percent : float, optional</span>
+<span class="sd">            [description], by default 0.1</span>
+<span class="sd">        angle : float, optional</span>
+<span class="sd">            [description], by default None</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        [type]</span>
+<span class="sd">            [description]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">image_2</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="n">image_2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">produceImage</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="c1">## crop images as necessary</span>
+        <span class="n">image_1</span> <span class="o">=</span> <span class="n">image_1</span><span class="p">[:</span><span class="n">image_2</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],:</span><span class="n">image_2</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
+        <span class="n">image_2</span> <span class="o">=</span> <span class="n">image_2</span><span class="p">[:</span><span class="n">image_1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],:</span><span class="n">image_1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
+
+        <span class="k">if</span> <span class="n">image_1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;appending&#39;</span><span class="p">)</span>
+            <span class="n">image_1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">image_1</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">image_1</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])[</span><span class="o">...</span><span class="p">,</span><span class="kc">None</span><span class="p">],</span><span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">image_2</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;appending&#39;</span><span class="p">)</span>
+            <span class="n">image_2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">image_2</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">image_2</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])[</span><span class="o">...</span><span class="p">,</span><span class="kc">None</span><span class="p">],</span><span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="c1">## build the gradient to sample from</span>
+        <span class="n">gradient_edge_length</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">image_1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">image_1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="n">gradient_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">gradient_edge_length</span><span class="p">,</span><span class="n">gradient_edge_length</span><span class="p">))</span>
+        <span class="n">gradient_mask</span><span class="p">[:</span><span class="n">gradient_mask</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">//</span><span class="mi">2</span><span class="p">,:]</span> <span class="o">=</span> <span class="mi">1</span>
+        
+        <span class="c1">## TODO could consider allowing gradient to be offcenter I suppose</span>
+        <span class="n">offset</span> <span class="o">=</span> <span class="p">(</span><span class="n">gradient_mask</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">//</span><span class="mi">2</span><span class="o">-</span><span class="n">image_1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">//</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">gradient_begin_index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">image_1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="p">(</span><span class="mf">0.5</span><span class="o">-</span><span class="n">gradient_width_percent</span><span class="o">/</span><span class="mi">2</span><span class="p">))</span><span class="o">+</span><span class="n">offset</span>
+        <span class="n">gradient_end_index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">image_1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="p">(</span><span class="mf">0.5</span><span class="o">+</span><span class="n">gradient_width_percent</span><span class="o">/</span><span class="mi">2</span><span class="p">))</span><span class="o">+</span><span class="n">offset</span>
+        <span class="n">gradient_mask</span><span class="p">[</span><span class="n">gradient_begin_index</span><span class="p">:</span><span class="n">gradient_end_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="n">gradient_end_index</span><span class="o">-</span><span class="n">gradient_begin_index</span><span class="p">)[:,</span><span class="kc">None</span><span class="p">]</span>
+        
+        <span class="c1">## expect angle in degrees</span>
+        <span class="k">if</span> <span class="n">angle</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span> <span class="n">angle</span><span class="o">*=</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mi">180</span>
+        
+        <span class="c1">## sample gradient but rotate coordinates. this takes a while because it&#39;s a nested for loop over pixels</span>
+        <span class="c1">##  so we can use numba if we have it</span>
+        <span class="n">new_gradient_mask</span> <span class="o">=</span> <span class="n">sample_gradient_at_angle</span><span class="p">(</span><span class="n">gradient_mask</span><span class="p">,</span><span class="n">image_1</span><span class="p">,</span><span class="n">angle</span><span class="p">)</span>
+        
+        <span class="n">final_image</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">image_1</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="c1">## apply the alpha blend from the gradient</span>
+        <span class="n">final_image</span><span class="p">[</span><span class="o">...</span><span class="p">,:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">image_1</span><span class="p">[</span><span class="o">...</span><span class="p">,:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="p">(</span><span class="n">new_gradient_mask</span><span class="o">*</span><span class="n">image_1</span><span class="p">[</span><span class="o">...</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">])[</span><span class="o">...</span><span class="p">,</span><span class="kc">None</span><span class="p">]</span><span class="o">+</span><span class="n">image_2</span><span class="p">[</span><span class="o">...</span><span class="p">,:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="p">(((</span><span class="mi">1</span><span class="o">-</span><span class="n">new_gradient_mask</span><span class="p">)</span><span class="o">*</span><span class="n">image_2</span><span class="p">[</span><span class="o">...</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">])[</span><span class="o">...</span><span class="p">,</span><span class="kc">None</span><span class="p">])</span>
+
+        <span class="c1">## final alpha channel is 1s everywhere</span>
+        <span class="k">return</span> <span class="n">final_image</span>
+<div class="viewcode-block" id="Studio"><a class="viewcode-back" href="../../../reference/api/studios/firestudio.studios.studio.Studio.html#firestudio.studios.studio.Studio">[docs]</a><span class="k">class</span> <span class="nc">Studio</span><span class="p">(</span><span class="n">Drawer</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    `FIREstudio` parent class that regularizes image setup, rotation, </span>
+<span class="sd">        caching, etc between `GasStudio` and `StarStudio` classes. </span>
+
+<span class="sd">    `GasStudio` requires: </span>
+<span class="sd">    ```python</span>
+<span class="sd">        snapdict[&#39;Coordinates&#39;] ## coordinates of the particles</span>
+<span class="sd">    ```</span>
+<span class="sd">    (and ideally `&#39;SmoothingLengths&#39;`, in the same units as coordinates, but these can be calculated). </span>
+
+<span class="sd">    `StarStudio` requires: </span>
+<span class="sd">    ```python</span>
+<span class="sd">    gas_snapdict[&#39;Coordinates&#39;] ## coordinates of the particles</span>
+<span class="sd">    gas_snapdict[&#39;Metallicity&#39;] ## metallicity (mass fractions) of the particles </span>
+<span class="sd">    gas_snapdict[&#39;Masses&#39;] ## masses of the particles in 1e10 solar masses</span>
+<span class="sd">    gas_snapdict[&#39;Temperature&#39;] ## temperature of the gas in K</span>
+
+<span class="sd">    star_snapdict[&#39;Coordinates&#39;] ## coordinates of the particles</span>
+<span class="sd">    star_snapdict[&#39;Metallicity&#39;] ## metallicity (mass fractions) of the particles </span>
+<span class="sd">    star_snapdict[&#39;Masses&#39;] ## masses of the particles in 1e10 solar masses</span>
+<span class="sd">    star_snapdict[&#39;AgeGyr&#39;] ## age of particles in Gyr</span>
+<span class="sd">    ```</span>
+<span class="sd">    (and ideally `&#39;SmoothingLengths&#39;` for both, in the same units as coordinates, but these can be calculated).&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; implementation of built-in __repr__ method for printing.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        str</span>
+<span class="sd">            string to print back to the console</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s1">&#39;Studio instance&#39;</span>
+
+<div class="viewcode-block" id="Studio.__init__"><a class="viewcode-back" href="../../../reference/api/studios/firestudio.studios.studio.Studio.html#firestudio.studios.studio.Studio.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">datadir</span><span class="p">:</span><span class="nb">str</span><span class="p">,</span>  
+        <span class="n">snapnum</span><span class="p">:</span><span class="nb">int</span><span class="p">,</span>  
+        <span class="n">sim_name</span><span class="p">:</span><span class="nb">str</span><span class="p">,</span>
+        <span class="n">cache_file_name</span><span class="p">:</span><span class="nb">str</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+        <span class="n">gas_snapdict</span><span class="p">:</span><span class="nb">dict</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>  
+        <span class="n">star_snapdict</span><span class="p">:</span><span class="nb">dict</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+        <span class="n">galaxy_kwargs</span><span class="p">:</span><span class="nb">dict</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">master_loud</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">setup_id_append</span><span class="p">:</span><span class="nb">str</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span>
+        <span class="p">):</span> 
+        <span class="sd">&quot;&quot;&quot; Base class that handles camera manipulation and data caching. </span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        datadir : str</span>
+<span class="sd">            directory to put intermediate and output files, &#39;firestudio&#39; is appended</span>
+<span class="sd">            if the directory contains sim_name</span>
+<span class="sd">        snapnum : int</span>
+<span class="sd">            snapshot number (feel free to lie if you aren&#39;t using</span>
+<span class="sd">            FIRE_studio to open a snapshot, it is needed for cache file name though)</span>
+<span class="sd">        sim_name : str</span>
+<span class="sd">            name of the simulation, i.e. m12i_res7100. prepends the cache_file_name</span>
+<span class="sd">            if the sim_name isn&#39;t already in the path to disambiguate caches.  </span>
+<span class="sd">        cache_file_name : str, optional</span>
+<span class="sd">            the name of the file to save maps to,</span>
+<span class="sd">            by default &#39;proj_maps_%03d.hdf5&#39;%snapnum</span>
+<span class="sd">        gas_snapdict : dict, optional</span>
+<span class="sd">            a dictionary containing gas data (or that which should be treated as </span>
+<span class="sd">            gas data, depending on the context), by default None</span>
+<span class="sd">        star_snapdict : dict, optional</span>
+<span class="sd">            a dictionary containing collisionless particle data (i.e. star particles, or</span>
+<span class="sd">            that which should be treated as star data, depending on the context),</span>
+<span class="sd">            by default None</span>
+<span class="sd">        galaxy_kwargs : dict, optional</span>
+<span class="sd">            dictionary that contains kwargs that should be passed to the opened</span>
+<span class="sd">            abg_python.galaxy.Galaxy instance that is used to load snapshot data from disk,</span>
+<span class="sd">            by default None</span>
+<span class="sd">        master_loud : bool, optional</span>
+<span class="sd">            flag for enabling/disabling *all* print statements, by default True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1">## bind loud flag</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">master_loud</span> <span class="o">=</span> <span class="n">master_loud</span>
+
+        <span class="k">if</span> <span class="n">cache_file_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">cache_file_name</span> <span class="o">=</span> <span class="s2">&quot;proj_maps&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">cache_file_name</span> <span class="o">=</span> <span class="n">cache_file_name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cache_file</span> <span class="o">=</span> <span class="kc">None</span>
+        
+        <span class="c1">## IO stuff</span>
+        <span class="c1">##  append &#39;firestudio&#39; if we&#39;re living in a folder that belongs to a Galaxy</span>
+        <span class="k">if</span> <span class="s1">&#39;firestudio&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">datadir</span> <span class="ow">and</span> <span class="n">sim_name</span> <span class="ow">in</span> <span class="n">datadir</span><span class="p">:</span>
+            <span class="n">datadir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">datadir</span><span class="p">,</span><span class="s1">&#39;firestudio&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">datadir</span> <span class="o">=</span> <span class="n">datadir</span>
+
+        <span class="c1">## make the datadirectory if it doesn&#39;t exist</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">datadir</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">datadir</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">gas_snapdict</span> <span class="o">=</span> <span class="n">gas_snapdict</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">star_snapdict</span> <span class="o">=</span> <span class="n">star_snapdict</span>
+        
+        <span class="c1">## {}.update enforces that galaxy_kwargs is a dictionary, lol...</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">galaxy_kwargs</span> <span class="o">=</span> <span class="p">{}</span> <span class="k">if</span> <span class="n">galaxy_kwargs</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">{}</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">galaxy_kwargs</span><span class="p">)</span>
+
+        <span class="c1">## create, if necessary, directories to store intermediate and output files,</span>
+        <span class="c1">##  this could get crowded! sets self.image_dir and self.projection_dir</span>
+        <span class="c1">#self.makeOutputDirectories(datadir)</span>
+ 
+        <span class="k">if</span> <span class="s1">&#39;camera&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span> <span class="ow">or</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;camera&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">camera_kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;camera_pos&#39;</span><span class="p">:[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">15</span><span class="p">],</span><span class="s1">&#39;camera_focus&#39;</span><span class="p">:[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span><span class="s1">&#39;camera_north&#39;</span><span class="p">:</span><span class="kc">None</span><span class="p">}</span>
+            <span class="k">for</span> <span class="n">ckwarg</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">camera_kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="o">+</span><span class="p">[</span><span class="s1">&#39;quaternion&#39;</span><span class="p">]:</span>
+                <span class="k">if</span> <span class="n">ckwarg</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span> <span class="n">camera_kwargs</span><span class="p">[</span><span class="n">ckwarg</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">ckwarg</span><span class="p">)</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;camera&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Camera</span><span class="p">(</span><span class="o">**</span><span class="n">camera_kwargs</span><span class="p">)</span>
+
+        <span class="c1">## initialize the object with some default image params that will</span>
+        <span class="c1">##  make a face-on image of a galaxy, can always set these manually</span>
+        <span class="c1">##  with  external calls to set_ImageParams</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_ImageParams</span><span class="p">(</span><span class="n">use_defaults</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">snapnum</span><span class="o">=</span><span class="n">snapnum</span><span class="p">,</span><span class="n">sim_name</span><span class="o">=</span><span class="n">sim_name</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">this_setup_id</span><span class="o">+=</span><span class="n">setup_id_append</span></div>
+
+<span class="c1">####### I/O functions #######</span>
+    <span class="k">def</span> <span class="nf">load_SnapshotData</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">gas_mask</span><span class="p">:</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">star_mask</span><span class="p">:</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Binds simulation output to self.gas_snapdict and self.star_snapdict.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        gas_mask : bool np.ndarray, optional</span>
+<span class="sd">            boolean mask that should be applied to the galaxy.sub_snap, by default None</span>
+<span class="sd">        star_mask : bool np.ndarry, optional</span>
+<span class="sd">            boolean mask that should be applied to the galaxy.sub_star_snap, by default None</span>
+<span class="sd">        </span>
+<span class="sd">        Keywords</span>
+<span class="sd">        --------</span>
+<span class="sd">            use_saved_subsnapshots: bool, optional</span>
+<span class="sd">                save/load subsnapshots, uncompressed copies of the snapshot</span>
+<span class="sd">                oriented on the main disk with particles within the virial radius. This can </span>
+<span class="sd">                take up lots of disk space, by default False</span>
+<span class="sd">            del_galaxy: bool, optional </span>
+<span class="sd">                flag for whether the abg_python.galaxy.gal_utils.Galaxy object should be deleted after </span>
+<span class="sd">                being used to get the snapshot dictionaries.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ``abg_python.galaxy.Galaxy``</span>
+<span class="sd">            None/abg_python.galaxy.Galaxy object -- if del_galaxy == False then returns the galaxy object, </span>
+<span class="sd">            otherwise returns None.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        
+
+        <span class="c1">## determine if we need to open any snapshot data</span>
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gas_snapdict</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> 
+            <span class="bp">self</span><span class="o">.</span><span class="n">gas_snapdict</span><span class="p">[</span><span class="s1">&#39;snapnum&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">snapnum</span> <span class="p">):</span> <span class="c1">## haven&#39;t loaded this data yet, or we are replacing it</span>
+            <span class="n">return_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__get_snapdicts</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="s1">&#39;masked_gas_snapdict&#39;</span><span class="p">):</span>
+                <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">masked_gas_snapdict</span>
+
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="s1">&#39;masked_star_snapdict&#39;</span><span class="p">):</span>
+                <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">masked_star_snapdict</span>
+    
+
+        <span class="c1">## apply a mask to the snapdict if requested to</span>
+        <span class="k">if</span> <span class="n">gas_mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">masked_gas_snapdict</span> <span class="o">=</span> <span class="n">filterDictionary</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gas_snapdict</span><span class="p">,</span><span class="n">gas_mask</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">star_mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">masked_star_snapdict</span> <span class="o">=</span> <span class="n">filterDictionary</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">star_snapdict</span><span class="p">,</span><span class="n">star_mask</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">return_value</span>
+
+    <span class="k">def</span> <span class="nf">get_HSML</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">snapdict_name</span><span class="p">:</span><span class="nb">str</span><span class="p">,</span>
+        <span class="n">use_metadata</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">save_meta</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">assert_cached</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">loud</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span> 
+        <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Compute smoothing lengths for particles that don&#39;t have them,</span>
+<span class="sd">            typically collisionless particles (like stars). </span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        snapdict_name : str</span>
+<span class="sd">            string identifying which snapdict should be used</span>
+<span class="sd">            used to compute smoothing lengths, either &#39;gas&#39; or &#39;star&#39;</span>
+<span class="sd">        use_metadata : bool, optional</span>
+<span class="sd">            flag for whether a cached result should be used (if it exists), by default True</span>
+<span class="sd">        save_meta : bool, optional</span>
+<span class="sd">            flag to save the result in the cache, by default True</span>
+<span class="sd">        assert_cached : bool, optional</span>
+<span class="sd">            flag to require a cache hit and raise an exception otherwise, by default False</span>
+<span class="sd">        loud : bool, optional</span>
+<span class="sd">            flag for whether cache hits/misses should be announced</span>
+<span class="sd">            to the console., by default True</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        np.float32 np.ndarray</span>
+<span class="sd">            estimated smoothing lengths</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        
+
+        <span class="nd">@metadata_cache</span><span class="p">(</span>
+            <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">_data&#39;</span><span class="o">%</span><span class="n">snapdict_name</span><span class="p">,</span>  <span class="c1">## hdf5 file group name</span>
+            <span class="p">[</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">_SmoothingLengths&#39;</span><span class="o">%</span><span class="n">snapdict_name</span><span class="p">],</span>
+            <span class="n">use_metadata</span><span class="o">=</span><span class="n">use_metadata</span><span class="p">,</span>
+            <span class="n">save_meta</span><span class="o">=</span><span class="n">save_meta</span><span class="p">,</span>
+            <span class="n">assert_cached</span><span class="o">=</span><span class="n">assert_cached</span><span class="p">,</span>
+            <span class="n">loud</span><span class="o">=</span><span class="n">loud</span><span class="p">,</span>
+            <span class="n">force_from_file</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="c1">## read from cache file, not attribute of object</span>
+        <span class="k">def</span> <span class="nf">compute_HSML</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="n">snapdict</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">snapdict_name</span><span class="o">+</span><span class="s1">&#39;_snapdict&#39;</span><span class="p">)</span>
+            <span class="n">pos</span> <span class="o">=</span> <span class="n">snapdict</span><span class="p">[</span><span class="s1">&#39;Coordinates&#39;</span><span class="p">]</span>
+            <span class="n">smoothing_lengths</span> <span class="o">=</span> <span class="n">get_particle_hsml</span><span class="p">(</span><span class="n">pos</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span><span class="n">pos</span><span class="p">[:,</span><span class="mi">1</span><span class="p">],</span><span class="n">pos</span><span class="p">[:,</span><span class="mi">2</span><span class="p">])</span>
+            <span class="k">return</span> <span class="n">smoothing_lengths</span>
+
+        <span class="k">return</span> <span class="n">compute_HSML</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__get_snapdicts</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">use_saved_subsnapshots</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">del_galaxy</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Open an abg_python.galaxy.gal_utils.Galaxy instance to load</span>
+<span class="sd">            snapshot data from disk.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        use_saved_subsnapshots : bool, optional</span>
+<span class="sd">            flag to cache particle data within the virial radius by </span>
+<span class="sd">            saving it to disk in a &quot;subsnapshot&quot; hdf5 file, by default False</span>
+<span class="sd">        del_galaxy : bool, optional</span>
+<span class="sd">            delete the Galaxy object after binding the gas and star snapdicts,</span>
+<span class="sd">            else return it, by default True</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        abg_python.galaxy.gal_utils.Galaxy</span>
+<span class="sd">            the Galaxy instance used to open snapshot data, </span>
+<span class="sd">            only returned if `del_galaxy=False`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">these_kwargs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">galaxy_kwargs</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">these_kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="n">galaxy</span> <span class="o">=</span> <span class="n">Galaxy</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sim_name</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">snapnum</span><span class="p">,</span>
+            <span class="n">datadir</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">datadir</span><span class="p">),</span> 
+            <span class="n">loud_metadata</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="c1">## shh don&#39;t let them know</span>
+            <span class="n">save_header_to_table</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">these_kwargs</span><span class="p">)</span>
+
+        <span class="c1">## handles opening the snapshot, centering it, and rotating it to be face-on.</span>
+        <span class="n">galaxy</span><span class="o">.</span><span class="n">extractMainHalo</span><span class="p">(</span>
+            <span class="n">save_meta</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">use_saved_subsnapshots</span><span class="o">=</span><span class="n">use_saved_subsnapshots</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">these_kwargs</span><span class="p">)</span> <span class="c1">## metadata cache will pull only the good keys out</span>
+
+        <span class="c1">## bind the snapshot dictionaries</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gas_snapdict</span> <span class="o">=</span> <span class="n">galaxy</span><span class="o">.</span><span class="n">sub_snap</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">star_snapdict</span> <span class="o">=</span> <span class="n">galaxy</span><span class="o">.</span><span class="n">sub_star_snap</span>
+
+        <span class="c1">## just get rid of it now that we&#39;ve opened it</span>
+        <span class="k">if</span> <span class="n">del_galaxy</span><span class="p">:</span> <span class="k">del</span> <span class="n">galaxy</span>
+        <span class="k">else</span><span class="p">:</span> <span class="k">return</span> <span class="n">galaxy</span>
+
+    <span class="k">def</span> <span class="nf">set_ImageParams</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">this_setup_id</span><span class="p">:</span><span class="nb">str</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">use_defaults</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">loud</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Changes the parameters of the image such as camera orientation, frame size, etc. </span>
+<span class="sd">            If `use_defaults=True` then default values of the parameters will be set and will </span>
+<span class="sd">            overwrite the current state. Leave `use_defaults=False` to adjust only the keywords passed.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        this_setup_id : str, optional</span>
+<span class="sd">            string to use to identify this combination of image parameters. If None, </span>
+<span class="sd">            then the image parameters are stringified and combined, by default None</span>
+<span class="sd">        use_defaults : bool, optional</span>
+<span class="sd">            overwrite current state with default values of each parameter, useful for initialization</span>
+<span class="sd">            or resetting after making changes, by default False</span>
+<span class="sd">        loud : bool, optional</span>
+<span class="sd">            flag to print which parameters are being set/updated, by default True</span>
+<span class="sd">        </span>
+<span class="sd">        Keywords</span>
+<span class="sd">        --------</span>
+<span class="sd">        frame_half_thickness : float</span>
+<span class="sd">            half-thickness of image in z direction, by default self.camera.camera_dist</span>
+<span class="sd">        aspect_ratio: float</span>
+<span class="sd">            ratio of number of pixels in each direction determining </span>
+<span class="sd">            the shape of image, y/x, by default 1</span>
+<span class="sd">        pixels: int</span>
+<span class="sd">            pixels in x direction, resolution of image, by default 1200</span>
+<span class="sd">        figure_label: str</span>
+<span class="sd">            string to be put in upper right corner, by default &#39;&#39;</span>
+<span class="sd">        figure_label_side: str </span>
+<span class="sd">            side of the image to put label in, by default &#39;right&#39; </span>
+<span class="sd">        scale_bar: bool</span>
+<span class="sd">            flag to plot length scale bar in lower left corner, by default True</span>
+<span class="sd">        scale_line_length: float</span>
+<span class="sd">            length of the scale bar in kpc, by default 5</span>
+<span class="sd">        noaxis: bool</span>
+<span class="sd">            turns off axis ticks and labels, by default True</span>
+<span class="sd">        savefig: str</span>
+<span class="sd">            save the image as a png if passed a string or does not save a figure if None, by default None</span>
+<span class="sd">        fontsize: int</span>
+<span class="sd">            fontsize (in pt) of figure label and scale bar text, 12</span>
+<span class="sd">        font_color: str/RGBA tuple</span>
+<span class="sd">            color of the subtitle font, by default &#39;white&#39;</span>
+<span class="sd">        snapdir: str</span>
+<span class="sd">            path to simulation output</span>
+<span class="sd">        snapnum: int</span>
+<span class="sd">            which snapshot to open/use for naming the cache</span>
+<span class="sd">        sim_name: str</span>
+<span class="sd">            name of simulation (i.e. m12i_res7100)</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            if camera=None is passed explicitly, instead pass an open </span>
+<span class="sd">            `firestudio.utils.camera_utils.Camera instance`</span>
+
+<span class="sd">        Example usage</span>
+<span class="sd">        -------------</span>
+<span class="sd">```python</span>
+<span class="sd">studio.set_ImageParams(</span>
+<span class="sd">    this_setup_id=&#39;my_custom_setup&#39;,</span>
+<span class="sd">    scale_bar=False,</span>
+<span class="sd">    figure_label=&#39;high redshift&#39;)</span>
+<span class="sd">```&quot;&quot;&quot;</span>
+        
+
+        <span class="n">default_kwargs</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;camera&#39;</span><span class="p">:</span><span class="kc">None</span><span class="p">,</span>
+            <span class="s1">&#39;frame_half_thickness&#39;</span><span class="p">:</span><span class="kc">None</span><span class="p">,</span> <span class="c1">## half-thickness of image in z direction</span>
+            <span class="s1">&#39;aspect_ratio&#39;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span> <span class="c1">## shape of image, y/x TODO figure out if this is necessary to pass?</span>
+            <span class="s1">&#39;pixels&#39;</span><span class="p">:</span><span class="mi">1200</span><span class="p">,</span> <span class="c1">## pixels in x direction, resolution of image</span>
+            <span class="s1">&#39;figure_label&#39;</span><span class="p">:</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="c1">## string to be put in upper right corner</span>
+            <span class="s1">&#39;figure_label_side&#39;</span><span class="p">:</span><span class="s1">&#39;right&#39;</span><span class="p">,</span> <span class="c1">## corner to put label in</span>
+            <span class="s1">&#39;scale_bar&#39;</span><span class="p">:</span><span class="kc">True</span><span class="p">,</span>  <span class="c1">## flag to plot length scale bar in lower left corner</span>
+            <span class="s1">&#39;scale_line_length&#39;</span><span class="p">:</span><span class="mi">5</span><span class="p">,</span> <span class="c1">## length of the scale line in kpc</span>
+            <span class="s1">&#39;noaxis&#39;</span><span class="p">:</span><span class="kc">True</span><span class="p">,</span> <span class="c1">## turns off axis ticks</span>
+            <span class="s1">&#39;savefig&#39;</span><span class="p">:</span><span class="kc">None</span><span class="p">,</span> <span class="c1">## save the image as a png if passed a string</span>
+            <span class="s1">&#39;fontsize&#39;</span><span class="p">:</span><span class="mi">12</span><span class="p">,</span>  <span class="c1">## font size of scale bar and figure label</span>
+            <span class="s1">&#39;font_color&#39;</span><span class="p">:</span><span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="c1">## font color of scale bar and figure label</span>
+            <span class="s1">&#39;snapdir&#39;</span><span class="p">:</span><span class="kc">None</span><span class="p">,</span>
+            <span class="s1">&#39;snapnum&#39;</span><span class="p">:</span><span class="kc">None</span><span class="p">,</span>
+            <span class="s1">&#39;sim_name&#39;</span><span class="p">:</span><span class="kc">None</span>
+            <span class="p">}</span>
+
+        <span class="k">for</span> <span class="n">kwarg</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="c1">## only set it here if it was passed</span>
+            <span class="k">if</span> <span class="n">kwarg</span> <span class="ow">in</span> <span class="n">default_kwargs</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">kwarg</span><span class="p">]</span>
+                <span class="c1">## remove it from default_kwargs</span>
+                <span class="n">default_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">kwarg</span><span class="p">)</span>
+
+                <span class="c1">## set it to the object</span>
+                <span class="k">if</span> <span class="n">loud</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">master_loud</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;setting&quot;</span><span class="p">,</span><span class="n">kwarg</span><span class="p">,</span>
+                        <span class="s1">&#39;to user value of:&#39;</span><span class="p">,</span><span class="n">value</span><span class="p">)</span>
+                <span class="c1">## set it to the object</span>
+                <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">kwarg</span><span class="p">,</span><span class="n">value</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">master_loud</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="n">kwarg</span><span class="p">,</span><span class="s1">&#39;ignored. Did you mean something else?&#39;</span><span class="p">,</span>
+                        <span class="n">default_kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+        <span class="k">if</span> <span class="n">use_defaults</span><span class="p">:</span>
+            <span class="c1">## if we haven&#39;t already set the camera by passed kwarg</span>
+            <span class="c1">##  need to replace None with [0,0,0]</span>
+            <span class="k">if</span> <span class="p">(</span><span class="s1">&#39;camera&#39;</span> <span class="ow">in</span> <span class="n">default_kwargs</span> <span class="ow">and</span> 
+                <span class="n">default_kwargs</span><span class="p">[</span><span class="s1">&#39;camera&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Cannot explicitly set camera = None,&#39;</span><span class="o">+</span>
+                <span class="s1">&#39; pass a utils.camera_utils.Camera instance instead.&#39;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="s1">&#39;frame_half_thickness&#39;</span> <span class="ow">in</span> <span class="n">default_kwargs</span> <span class="ow">and</span> 
+                <span class="n">default_kwargs</span><span class="p">[</span><span class="s1">&#39;frame_half_thickness&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
+                <span class="n">default_kwargs</span><span class="p">[</span><span class="s1">&#39;frame_half_thickness&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">camera_dist</span>
+             
+            <span class="c1">## set the remaining image parameters to their default values</span>
+            <span class="k">for</span> <span class="n">default_arg</span> <span class="ow">in</span> <span class="n">default_kwargs</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">default_kwargs</span><span class="p">[</span><span class="n">default_arg</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">loud</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">master_loud</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;setting&quot;</span><span class="p">,</span><span class="n">default_arg</span><span class="p">,</span>
+                        <span class="s1">&#39;to default value of:&#39;</span><span class="p">,</span><span class="n">value</span><span class="p">)</span>
+                <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">default_arg</span><span class="p">,</span><span class="n">value</span><span class="p">)</span>
+
+        <span class="c1">## determine the edges of our frame so we can cull the rest later,</span>
+        <span class="c1">##  also set cell area info</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">computeFrameBoundaries</span><span class="p">()</span>
+        
+        <span class="c1">## identify the combination of these parameters</span>
+        <span class="k">if</span> <span class="n">this_setup_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">this_setup_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__identifyThisSetup</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">this_setup_id</span> <span class="o">=</span> <span class="n">this_setup_id</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_CacheFile</span><span class="p">()</span>
+
+    <span class="n">set_ImageParams</span><span class="o">.</span><span class="n">default_kwargs</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;camera&#39;</span><span class="p">:</span><span class="kc">None</span><span class="p">,</span>
+            <span class="s1">&#39;frame_half_thickness&#39;</span><span class="p">:</span><span class="kc">None</span><span class="p">,</span> <span class="c1">## half-thickness of image in z direction</span>
+            <span class="s1">&#39;aspect_ratio&#39;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span> <span class="c1">## shape of image, y/x TODO figure out if this is necessary to pass?</span>
+            <span class="s1">&#39;pixels&#39;</span><span class="p">:</span><span class="mi">1200</span><span class="p">,</span> <span class="c1">## pixels in x direction, resolution of image</span>
+            <span class="s1">&#39;figure_label&#39;</span><span class="p">:</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="c1">## string to be put in upper right/left corner</span>
+            <span class="s1">&#39;figure_label_side&#39;</span><span class="p">:</span><span class="s1">&#39;right&#39;</span><span class="p">,</span> <span class="c1">## corner to put label in</span>
+            <span class="s1">&#39;scale_bar&#39;</span><span class="p">:</span><span class="kc">True</span><span class="p">,</span>  <span class="c1">## flag to plot length scale bar in lower left corner</span>
+            <span class="s1">&#39;scale_line_length&#39;</span><span class="p">:</span><span class="mi">5</span><span class="p">,</span> <span class="c1">## length of the scale line in kpc</span>
+            <span class="s1">&#39;noaxis&#39;</span><span class="p">:</span><span class="kc">True</span><span class="p">,</span> <span class="c1">## turns off axis ticks</span>
+            <span class="s1">&#39;savefig&#39;</span><span class="p">:</span><span class="kc">None</span><span class="p">,</span> <span class="c1">## save the image as a png if passed a string</span>
+            <span class="s1">&#39;fontsize&#39;</span><span class="p">:</span><span class="mi">12</span><span class="p">,</span>  <span class="c1">## font size of scale bar and figure label</span>
+            <span class="s1">&#39;font_color&#39;</span><span class="p">:</span><span class="s1">&#39;w&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;snapdir&#39;</span><span class="p">:</span><span class="kc">None</span><span class="p">,</span>
+            <span class="s1">&#39;snapnum&#39;</span><span class="p">:</span><span class="kc">None</span><span class="p">,</span>
+            <span class="s1">&#39;sim_name&#39;</span><span class="p">:</span><span class="kc">None</span><span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">set_CacheFile</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Creates the cache hdf5 file. Requires self.snapnum and sim_name be set.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ------- </span>
+<span class="sd">        abg_python.galaxy.metadata_utils.Metadata</span>
+<span class="sd">            cache file for storing image maps</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        IOError</span>
+<span class="sd">            if self.snapnum and self.sim_name are not set to disambiguate the cache file</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">snapnum</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> 
+            <span class="bp">self</span><span class="o">.</span><span class="n">sim_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="c1">## read the snapshot number from the end of the metapath</span>
+            <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cache_file</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> 
+                <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cache_file</span><span class="o">.</span><span class="n">metapath</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.hdf5&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">snapnum</span><span class="p">):</span>
+                <span class="n">h5name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cache_file_name</span><span class="o">+</span><span class="s2">&quot;_</span><span class="si">%03d</span><span class="s2">.hdf5&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">snapnum</span>
+                
+                <span class="c1">## disambiguate to ensure simulation data never gets mixed</span>
+                <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sim_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">datadir</span> <span class="ow">and</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">sim_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">h5name</span><span class="p">):</span>
+                    <span class="n">h5name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sim_name</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">h5name</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cache_file</span> <span class="o">=</span> <span class="n">Metadata</span><span class="p">(</span>
+                    <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">datadir</span><span class="p">,</span><span class="n">h5name</span><span class="p">),</span>
+                    <span class="n">loud</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> 
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s2">&quot;Need to set self.snapnum and self.sim_name to disambiguate cache_file&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span>
+
+    <span class="k">def</span> <span class="nf">print_ImageParams</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Prints the current image parameters.&quot;&quot;&quot;</span>
+        <span class="n">default_kwargs</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s1">&#39;frame_half_thickness&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;aspect_ratio&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;pixels&#39;</span><span class="p">,</span> 
+            <span class="s1">&#39;figure_label&#39;</span><span class="p">,</span> 
+            <span class="s1">&#39;figure_label_side&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;scale_bar&#39;</span><span class="p">,</span>  
+            <span class="s1">&#39;noaxis&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;savefig&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;fontsize&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;snapdir&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;snapnum&#39;</span><span class="p">]</span>
+
+        <span class="c1">## print the current value, not the default value</span>
+        <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">default_kwargs</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span><span class="s1">&#39;=&#39;</span><span class="p">,</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">arg</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">__identifyThisSetup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; stringifies image parameters and combines them to &#39;uniquely&#39; </span>
+<span class="sd">            hash this combination of input in the cache file</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        str</span>
+<span class="sd">            a stringified combination of image parameters</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1">## uniquely identify this projection setup using a simple &quot;hash&quot;</span>
+        <span class="n">rotation_string</span> <span class="o">=</span> <span class="s1">&#39;quat_</span><span class="si">%.2f</span><span class="s1">_</span><span class="si">%.2f</span><span class="s1">_</span><span class="si">%.2f</span><span class="s1">_</span><span class="si">%.2f</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">quaternion</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">decimals</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">quaternion</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">decimals</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">quaternion</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span><span class="n">decimals</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">quaternion</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span><span class="n">decimals</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">this_setup_id</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="s2">&quot;npix</span><span class="si">%d</span><span class="s2">_width</span><span class="si">%.2f</span><span class="s2">kpc_depth</span><span class="si">%.2f</span><span class="s2">kpc_x</span><span class="si">%.2f</span><span class="s2">_y</span><span class="si">%.2f</span><span class="s2">_z</span><span class="si">%.2f</span><span class="s2">_</span><span class="si">%s</span><span class="s2">_aspect</span><span class="si">%.2f</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pixels</span><span class="p">,</span> 
+                <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">camera_dist</span><span class="p">,</span><span class="n">decimals</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">frame_half_thickness</span><span class="p">,</span><span class="n">decimals</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">camera_focus</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">decimals</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">camera_focus</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">decimals</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">camera_focus</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span><span class="n">decimals</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span>
+                <span class="n">rotation_string</span><span class="p">,</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">aspect_ratio</span><span class="p">,</span><span class="n">decimals</span><span class="o">=</span><span class="mi">2</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">this_setup_id</span>
+
+    <span class="k">def</span> <span class="nf">computeFrameBoundaries</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Uses the camera to calculate the minimum and maximum </span>
+<span class="sd">            x, y, and z limits as well as the physical resolution of the image.</span>
+<span class="sd">            </span>
+
+<span class="sd">            Attributes set</span>
+<span class="sd">            --------------</span>
+<span class="sd">            self.Xmin, self.Xmax -- </span>
+<span class="sd">            self.Ymin, self.Ymax -- </span>
+<span class="sd">            self.Zmin, self.Zmax -- </span>
+<span class="sd">            self.npix_x, self.npix_y -- </span>
+<span class="sd">            self.Acell -- </span>
+<span class="sd">                </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1">## +- camera_dist limits -&gt; 45 degree FOV</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Xmin</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">Xmax</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">camera_focus</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+            <span class="p">[</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">camera_dist</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">camera_dist</span><span class="p">])</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">Ymin</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">Ymax</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">camera_focus</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+            <span class="p">[</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">camera_dist</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">camera_dist</span><span class="p">])</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">aspect_ratio</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">Zmin</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">Zmax</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">camera_focus</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+            <span class="p">[</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">frame_half_thickness</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">frame_half_thickness</span><span class="p">])</span>
+
+        <span class="c1">## Set image size </span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">npix_x</span>   <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pixels</span> <span class="c1">#1200 by default</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">npix_y</span>   <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pixels</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">aspect_ratio</span><span class="p">)</span> <span class="c1">#1200 by default</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">Acell</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Xmax</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">Xmin</span><span class="p">)</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">npix_x</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Ymax</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">Ymin</span><span class="p">)</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">npix_y</span>
+
+    <span class="k">def</span> <span class="nf">cullFrameIndices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">Coordinates</span><span class="p">:</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; boolean mask of those particles within the volume defined by </span>
+<span class="sd">            Xmin-Xmax, Ymin-Ymax, and Zmin-Zmax</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        Coordinates : (N,3) np.ndarray </span>
+<span class="sd">            array of particle coordinates</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        bool np.ndarray</span>
+<span class="sd">            a boolean mask which is `True` for particles in the extraction volume</span>
+<span class="sd">            and `False` outside.</span>
+<span class="sd">            </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1">## extract a cube of particles that are in relevant area</span>
+        <span class="n">ind_box</span> <span class="o">=</span> <span class="p">((</span><span class="n">Coordinates</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">Xmin</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">Coordinates</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">Xmax</span><span class="p">)</span> <span class="o">&amp;</span>
+                   <span class="p">(</span><span class="n">Coordinates</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">Ymin</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">Coordinates</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">Ymax</span><span class="p">)</span> <span class="o">&amp;</span>
+                   <span class="p">(</span><span class="n">Coordinates</span><span class="p">[:,</span><span class="mi">2</span><span class="p">]</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">Zmin</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">Coordinates</span><span class="p">[:,</span><span class="mi">2</span><span class="p">]</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">Zmax</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">ind_box</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Alex Gurvich.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

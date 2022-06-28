@@ -1,0 +1,35 @@
+﻿firestudio.utils.stellar\_utils
+===============================
+
+.. automodule:: firestudio.utils.stellar_utils
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+
+.. rubric:: Modules
+
+.. autosummary::
+   :toctree:
+   :recursive:
+
+   firestudio.utils.stellar_utils.colors_sps
+   firestudio.utils.stellar_utils.cross_section
+   firestudio.utils.stellar_utils.load_stellar_hsml
+   firestudio.utils.stellar_utils.make_threeband_image
+   firestudio.utils.stellar_utils.raytrace_projection
+

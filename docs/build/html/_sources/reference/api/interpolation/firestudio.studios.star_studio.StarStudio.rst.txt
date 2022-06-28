@@ -1,0 +1,49 @@
+﻿firestudio.studios.star\_studio.StarStudio
+==========================================
+
+.. currentmodule:: firestudio.studios.star_studio
+
+.. autoclass:: StarStudio
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~StarStudio.__init__
+      ~StarStudio.addScaleBar
+      ~StarStudio.addText
+      ~StarStudio.computeFrameBoundaries
+      ~StarStudio.cullFrameIndices
+      ~StarStudio.drawCoordinateAxes
+      ~StarStudio.get_HSML
+      ~StarStudio.get_mockHubbleImage
+      ~StarStudio.gradientBlendImages
+      ~StarStudio.load_SnapshotData
+      ~StarStudio.plotImage
+      ~StarStudio.plotParameterGrid
+      ~StarStudio.predictParameters
+      ~StarStudio.prepareCoordinates
+      ~StarStudio.print_ImageParams
+      ~StarStudio.produceImage
+      ~StarStudio.quick_get_mockHubbleImage
+      ~StarStudio.render
+      ~StarStudio.renormalizeTransposeImage
+      ~StarStudio.saveFigure
+      ~StarStudio.set_CacheFile
+      ~StarStudio.set_ImageParams
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~StarStudio.required_snapdict_keys
+   
+   

@@ -21,13 +21,7 @@ from ..utils.stellar_utils import (
 
 
 class StarStudio(Studio):
-    """ `FIREstudio` class for making mock hubble images with 
-        attenuation along the line of sight. 
-
-* [`StarStudio.get_mockHubbleImage`](#starstudioget_mockhubbleimage) 
-* [`StarStudio.render`](#starstudiorender) 
-* [`Studio.__init__`](#studio__init__) 
-* [`Studio.set_ImageParams`](#studioset_imageparams)"""
+    """ `FIREstudio` class for making mock hubble images with attenuation along the line of sight. """
 
     required_snapdict_keys = [
         'Masses',
@@ -36,6 +30,7 @@ class StarStudio(Studio):
         'Temperature',
         'AgeGyr',
         'Metallicity']
+    """ these are keys that are required for the function to run."""
 
     def __repr__(self):
         return 'StarStudio instance'

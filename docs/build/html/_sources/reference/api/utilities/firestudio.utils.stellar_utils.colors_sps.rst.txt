@@ -1,0 +1,31 @@
+firestudio.utils.stellar\_utils.colors\_sps
+===========================================
+
+.. automodule:: firestudio.utils.stellar_utils.colors_sps
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+
+.. rubric:: Modules
+
+.. autosummary::
+   :toctree:
+   :recursive:
+
+   firestudio.utils.stellar_utils.colors_sps.read_band_lums_from_tables
+

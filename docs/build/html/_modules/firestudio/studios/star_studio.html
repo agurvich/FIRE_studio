@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>firestudio.studios.star_studio &mdash; firestudio 2.0.0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../index.html" class="icon icon-home"> firestudio
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/api/api.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">firestudio</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      <li>firestudio.studios.star_studio</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for firestudio.studios.star_studio</h1><div class="highlight"><pre>
+<span></span><span class="c1">## builtin imports</span>
+<span class="kn">import</span> <span class="nn">matplotlib</span> 
+<span class="n">matplotlib</span><span class="o">.</span><span class="n">use</span><span class="p">(</span><span class="s1">&#39;Agg&#39;</span><span class="p">)</span> 
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span> 
+<span class="kn">import</span> <span class="nn">copy</span>
+
+<span class="c1">## abg_python imports</span>
+<span class="kn">from</span> <span class="nn">abg_python.plot_utils</span> <span class="kn">import</span> <span class="n">addColorbar</span><span class="p">,</span><span class="n">nameAxes</span>
+<span class="kn">from</span> <span class="nn">abg_python</span> <span class="kn">import</span> <span class="n">append_function_docstring</span><span class="p">,</span><span class="n">append_string_docstring</span><span class="p">,</span><span class="n">findIntersection</span>
+<span class="kn">from</span> <span class="nn">abg_python.galaxy.metadata_utils</span> <span class="kn">import</span> <span class="n">metadata_cache</span>
+
+<span class="c1">## firestudio imports</span>
+<span class="kn">from</span> <span class="nn">.studio</span> <span class="kn">import</span> <span class="n">Studio</span>
+
+<span class="kn">from</span> <span class="nn">..utils.stellar_utils</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">opacity_per_solar_metallicity</span><span class="p">,</span> <span class="c1">## calculate dust opacity for arbitrary wavelengths</span>
+    <span class="n">read_band_lums_from_tables</span><span class="p">,</span> <span class="c1">## calculate luminosities in specific tabulated bands</span>
+    <span class="n">stellar_raytrace</span><span class="p">,</span> <span class="c1">## project along the LoS and attenuate by obscuring dust column for 3 bands simultaneously</span>
+    <span class="n">make_threeband_image_process_bandmaps</span><span class="p">)</span> <span class="c1">## take 3 bands, overlay them, and map to RGB to make final image</span>
+
+
+<div class="viewcode-block" id="StarStudio"><a class="viewcode-back" href="../../../reference/api/interpolation/firestudio.studios.star_studio.StarStudio.html#firestudio.studios.star_studio.StarStudio">[docs]</a><span class="k">class</span> <span class="nc">StarStudio</span><span class="p">(</span><span class="n">Studio</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; `FIREstudio` class for making mock hubble images with attenuation along the line of sight. &quot;&quot;&quot;</span>
+
+    <span class="n">required_snapdict_keys</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s1">&#39;Masses&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;Coordinates&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;SmoothingLength&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;Temperature&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;AgeGyr&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;Metallicity&#39;</span><span class="p">]</span>
+    <span class="sd">&quot;&quot;&quot; these are keys that are required for the function to run.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;StarStudio instance&#39;</span>
+
+<span class="c1">####### makeOutputDirectories implementation #######</span>
+    <span class="k">def</span> <span class="nf">set_ImageParams</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">use_defaults</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">loud</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Changes the parameters of the image. </span>
+<span class="sd">         </span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        use_defaults : bool, optional</span>
+<span class="sd">            If `True` then default values of the parameters will be set </span>
+<span class="sd">            (potentially overwriting any previously specified parameters). </span>
+<span class="sd">            If `False` adjust only the keywords passed, by default False</span>
+<span class="sd">        loud : bool, optional</span>
+<span class="sd">            flag to print which parameters are being set/updated, by default True</span>
+<span class="sd">            </span>
+<span class="sd">        Keywords</span>
+<span class="sd">        --------</span>
+<span class="sd">        maxden : float</span>
+<span class="sd">             controls the saturation of the image,</span>
+<span class="sd">            sets the upper limit of the &quot;colorbar&quot; if None uses</span>
+<span class="sd">            the 99 %&#39;ile of the image surface brightness, by default None</span>
+<span class="sd">        dynrange : float</span>
+<span class="sd">            controls the saturation of the image,</span>
+<span class="sd">            sets the lower limit of the &quot;colorbar&quot; with respect to maxden,</span>
+<span class="sd">            if None uses the dynamic range between maxden and the 10th %&#39;ile</span>
+<span class="sd">            of the image surface brightness, by default None</span>
+<span class="sd">        nodust : bool</span>
+<span class="sd">            flag for whether dust attenuantion should be ignored, by default False</span>
+<span class="sd">        age_max_gyr : float</span>
+<span class="sd">            maximum age in Gyr to show stellar emission from. If None then emission from all star</span>
+<span class="sd">            particles is considered, by default None</span>
+<span class="sd">        </span>
+<span class="sd">        color_scheme_nasa : bool</span>
+<span class="sd">            flag for switching between Hubble vs. SDSS false color remapping, by default True</span>
+
+<span class="sd">        Example usage:</span>
+<span class="sd">        --------------</span>
+<span class="sd">        ```python</span>
+<span class="sd">        starStudio.set_ImageParams(</span>
+<span class="sd">            maxden=0.1,</span>
+<span class="sd">            dynrange=10,</span>
+<span class="sd">            figure_label=&#39;Hubble&#39;)</span>
+<span class="sd">        ```</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">default_kwargs</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;maxden&#39;</span><span class="p">:</span><span class="kc">None</span><span class="p">,</span> <span class="c1">## </span>
+            <span class="s1">&#39;dynrange&#39;</span><span class="p">:</span><span class="kc">None</span><span class="p">,</span> <span class="c1">## controls the saturation of the image in a non-obvious way</span>
+            <span class="s1">&#39;color_scheme_nasa&#39;</span><span class="p">:</span><span class="kc">True</span><span class="p">,</span>
+            <span class="s1">&#39;no_dust&#39;</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span>
+            <span class="s1">&#39;age_max_gyr&#39;</span><span class="p">:</span><span class="kc">None</span><span class="p">}</span> <span class="c1">## flag to use nasa colors (vs. SDSS if false)</span>
+
+        <span class="k">for</span> <span class="n">kwarg</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+            <span class="c1">## only set it here if it was passed</span>
+            <span class="k">if</span> <span class="n">kwarg</span> <span class="ow">in</span> <span class="n">default_kwargs</span><span class="p">:</span>
+                <span class="c1">## remove it from default_kwargs</span>
+                <span class="n">default_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">kwarg</span><span class="p">)</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">kwarg</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">loud</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">master_loud</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;setting&quot;</span><span class="p">,</span><span class="n">kwarg</span><span class="p">,</span>
+                        <span class="s1">&#39;to user value of:&#39;</span><span class="p">,</span><span class="n">value</span><span class="p">)</span>
+                <span class="c1">## set it to the object</span>
+                <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">kwarg</span><span class="p">,</span><span class="n">value</span><span class="p">)</span>
+                <span class="c1">## remove this kwarg to prevent a confusing print message</span>
+                <span class="c1">##  suggesting they are being ignored in the parent class</span>
+                <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">kwarg</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">kwarg</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">Studio</span><span class="o">.</span><span class="n">set_ImageParams</span><span class="o">.</span><span class="n">default_kwargs</span> 
+                    <span class="ow">and</span> <span class="n">kwarg</span> <span class="o">!=</span> <span class="s1">&#39;this_setup_id&#39;</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">master_loud</span><span class="p">:</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="n">kwarg</span><span class="p">,</span><span class="s1">&#39;ignored. Did you mean something else?&#39;</span><span class="p">,</span>
+                            <span class="n">default_kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+        <span class="k">if</span> <span class="n">use_defaults</span><span class="p">:</span>
+            <span class="c1">## set the remaining image parameters to their default values</span>
+            <span class="k">for</span> <span class="n">default_arg</span> <span class="ow">in</span> <span class="n">default_kwargs</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">default_kwargs</span><span class="p">[</span><span class="n">default_arg</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">loud</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">master_loud</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;setting&quot;</span><span class="p">,</span><span class="n">default_arg</span><span class="p">,</span>
+                        <span class="s1">&#39;to default value of:&#39;</span><span class="p">,</span><span class="n">value</span><span class="p">)</span>
+                <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">default_arg</span><span class="p">,</span><span class="n">value</span><span class="p">)</span>
+
+        <span class="c1">## set any other image params here</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">set_ImageParams</span><span class="p">(</span><span class="n">use_defaults</span><span class="o">=</span><span class="n">use_defaults</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">no_dust</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">this_setup_id</span><span class="o">+=</span><span class="s1">&#39;_no_dust&#39;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">age_max_gyr</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">this_setup_id</span><span class="o">+=</span><span class="s1">&#39;_age_max</span><span class="si">%0.3f</span><span class="s1">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">age_max_gyr</span>
+
+    <span class="n">append_function_docstring</span><span class="p">(</span><span class="n">set_ImageParams</span><span class="p">,</span><span class="n">Studio</span><span class="o">.</span><span class="n">set_ImageParams</span><span class="p">,</span><span class="n">prepend_string</span><span class="o">=</span><span class="s1">&#39;passes `kwargs` to:</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">print_ImageParams</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Prints current image setup to console.&quot;&quot;&quot;</span>
+
+        <span class="n">default_kwargs</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;maxden&#39;</span> <span class="p">:</span> <span class="mf">1.0e-2</span><span class="p">,</span> <span class="c1">## </span>
+            <span class="s1">&#39;dynrange&#39;</span> <span class="p">:</span> <span class="mf">100.0</span><span class="p">,</span> <span class="c1">## controls the saturation of the image in a non-obvious way</span>
+            <span class="s1">&#39;color_scheme_nasa&#39;</span> <span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="c1">## flag to use nasa colors (vs. SDSS if false)</span>
+            <span class="s1">&#39;no_dust&#39;</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span>
+            <span class="s1">&#39;age_max_gyr&#39;</span><span class="p">:</span><span class="kc">None</span><span class="p">}</span> <span class="c1">## flag to use nasa colors (vs. SDSS if false)</span>
+
+        <span class="c1">## print the current value, not the default value</span>
+        <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">default_kwargs</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span><span class="s1">&#39;=&#39;</span><span class="p">,</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">arg</span><span class="p">))</span>
+
+        <span class="c1">## call the super class&#39; print image params</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">print_ImageParams</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">quick_get_mockHubbleImage</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">lums</span><span class="p">:</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">nu_effs</span><span class="p">:</span><span class="nb">list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">BAND_IDS</span><span class="p">:</span><span class="nb">list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span>
+        <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Approximate the `~firestudio.studios.StarStudio.get_mockHubbleImage` routine using a 2d histogram.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        lums : np.ndarray, optional</span>
+<span class="sd">            array of luminosities for each star particle. If None then luminosities are calculated in</span>
+<span class="sd">            the bands specified by `BAND_IDS`, by default None</span>
+<span class="sd">        nu_effs : list, optional</span>
+<span class="sd">            list of effective frequencies corresponding to the bands of luminosities</span>
+<span class="sd">            provides in the `lums`. If None, uses the frequencies corresponding to the</span>
+<span class="sd">            specified `BAND_IDS`., by default None</span>
+<span class="sd">        BAND_IDS : list, optional</span>
+<span class="sd">            List of indices that identify which bands to model stellar emission in. </span>
+<span class="sd">            If None uses Sloan UGR bands `(1,2,3)`, by default None</span>
+<span class="sd">            ```</span>
+<span class="sd">            lambda_eff=np.array([</span>
+<span class="sd">                ## Bolometric (?)</span>
+<span class="sd">                        1.e-5,  </span>
+<span class="sd">                ## SDSS u       g       r      i      z</span>
+<span class="sd">                        3551. , 4686. , 6165., 7481., 8931.,</span>
+<span class="sd">                ##      U       B       V      R</span>
+<span class="sd">                        3600. , 4400. , 5556., 6940., </span>
+<span class="sd">                ##      I      J       H       K</span>
+<span class="sd">                        8700., 12150., 16540., 21790.])```</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        np.ndarray</span>
+<span class="sd">            metal_mass_map - 2d map of metal mass used to attenuate luminosities</span>
+<span class="sd">            along LOS in pixel, in Msun/kpc^2</span>
+<span class="sd">        np.ndarray</span>
+<span class="sd">            out_0 - 2d map of luminosities in first band in Lsun/kpc^2</span>
+<span class="sd">        np.ndarray</span>
+<span class="sd">            out_1 - 2d map of luminosities in second band in Lsun/kpc^2</span>
+<span class="sd">        np.ndarray</span>
+<span class="sd">            out_2 - 2d map of luminosities in third band in Lsun/kpc^2</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">BAND_IDS</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">BAND_IDS</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">]</span> <span class="c1">## used if corresponding column of lums is all 0s</span>
+       
+        <span class="c1"># apply filters, rotations, unpack snapshot data, etc...</span>
+        <span class="p">(</span><span class="n">kappas</span><span class="p">,</span> <span class="n">lums</span><span class="p">,</span>
+            <span class="n">star_pos</span><span class="p">,</span> <span class="n">h_star</span><span class="p">,</span>
+            <span class="n">gas_pos</span> <span class="p">,</span> <span class="n">mgas</span> <span class="p">,</span> <span class="n">gas_metals</span> <span class="p">,</span>  <span class="n">h_gas</span><span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">prepareCoordinates</span><span class="p">(</span><span class="n">lums</span><span class="p">,</span><span class="n">nu_effs</span><span class="p">,</span><span class="n">BAND_IDS</span><span class="p">)</span>
+
+        <span class="n">star_xs</span><span class="p">,</span><span class="n">star_ys</span><span class="p">,</span><span class="n">star_zs</span> <span class="o">=</span> <span class="n">star_pos</span><span class="o">.</span><span class="n">T</span>
+        <span class="n">gas_xs</span><span class="p">,</span><span class="n">gas_ys</span><span class="p">,</span><span class="n">gas_zs</span> <span class="o">=</span> <span class="n">gas_pos</span><span class="o">.</span><span class="n">T</span>
+
+        <span class="n">xedges</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Xmin</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">Xmax</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">npix_x</span><span class="p">,</span><span class="n">endpoint</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">yedges</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Ymin</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">Ymax</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">npix_y</span><span class="p">,</span><span class="n">endpoint</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1">## area of cell</span>
+        <span class="n">dA</span> <span class="o">=</span> <span class="n">xedges</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">xedges</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">dA</span><span class="o">*=</span><span class="n">dA</span>
+
+        <span class="n">outs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span><span class="n">xedges</span><span class="o">.</span><span class="n">size</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="n">yedges</span><span class="o">.</span><span class="n">size</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+
+        <span class="n">metal_mass_map</span><span class="p">,</span><span class="n">xedges</span><span class="p">,</span><span class="n">yedges</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram2d</span><span class="p">(</span>
+            <span class="n">gas_xs</span><span class="p">,</span><span class="n">gas_ys</span><span class="p">,</span>
+            <span class="n">bins</span><span class="o">=</span><span class="p">[</span><span class="n">xedges</span><span class="p">,</span><span class="n">yedges</span><span class="p">],</span>
+            <span class="n">weights</span><span class="o">=</span><span class="n">mgas</span><span class="o">*</span><span class="n">gas_metals</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">lum</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">lums</span><span class="p">):</span>
+            <span class="n">outs</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="n">xedges</span><span class="p">,</span><span class="n">yedges</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram2d</span><span class="p">(</span>
+                <span class="n">star_xs</span><span class="p">,</span><span class="n">star_ys</span><span class="p">,</span>
+                <span class="n">bins</span><span class="o">=</span><span class="p">[</span><span class="n">xedges</span><span class="p">,</span><span class="n">yedges</span><span class="p">],</span>
+                <span class="n">weights</span><span class="o">=</span><span class="n">lum</span><span class="p">)</span>
+        
+            <span class="n">outs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">*=</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">kappas</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">*</span><span class="n">metal_mass_map</span><span class="o">/</span><span class="n">dA</span><span class="o">*</span><span class="mi">5</span><span class="p">)</span>
+
+        <span class="n">unit_factor</span> <span class="o">=</span> <span class="mf">1e10</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">Acell</span>
+
+        <span class="k">return</span> <span class="n">metal_mass_map</span><span class="o">*</span><span class="n">unit_factor</span><span class="p">,</span><span class="n">outs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">unit_factor</span><span class="p">,</span><span class="n">outs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="n">unit_factor</span><span class="p">,</span><span class="n">outs</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">*</span><span class="n">unit_factor</span>
+
+    <span class="k">def</span> <span class="nf">get_mockHubbleImage</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">use_metadata</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">save_meta</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">assert_cached</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">loud</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span> 
+        <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Projects starlight and approximates attenuatation along line of sight</span>
+<span class="sd">            into SDSS u, g, and r bands. </span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        use_metadata : bool, optional</span>
+<span class="sd">            flag to search cache for result, by default True</span>
+<span class="sd">        save_meta : bool, optional</span>
+<span class="sd">            flag to cache the result, by default True</span>
+<span class="sd">        assert_cached : bool, optional</span>
+<span class="sd">            flag to raise an exception on a cache miss, by default False</span>
+<span class="sd">        loud : bool, optional</span>
+<span class="sd">            whether cache hits/misses should be announced to the console, by default True</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        np.ndarray</span>
+<span class="sd">            metal_mass_map - 2d map of metal mass used to attenuate luminosities</span>
+<span class="sd">            along LOS in pixel, in Msun/kpc^2</span>
+<span class="sd">        np.ndarray</span>
+<span class="sd">            out_0 - 2d map of luminosities in first band in Lsun/kpc^2</span>
+<span class="sd">        np.ndarray</span>
+<span class="sd">            out_1 - 2d map of luminosities in second band in Lsun/kpc^2</span>
+<span class="sd">        np.ndarray</span>
+<span class="sd">            out_2 - 2d map of luminosities in third band in Lsun/kpc^2</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="nd">@metadata_cache</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">this_setup_id</span><span class="p">,</span>  <span class="c1">## hdf5 file group name</span>
+            <span class="p">[</span><span class="s1">&#39;starMassesMap&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;attenUMap&#39;</span><span class="p">,</span> <span class="c1">## TODO naming it this could be confusing if BAND_IDS is different...</span>
+                <span class="s1">&#39;attenGMap&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;attenRMap&#39;</span><span class="p">],</span>
+            <span class="n">use_metadata</span><span class="o">=</span><span class="n">use_metadata</span><span class="p">,</span>
+            <span class="n">save_meta</span><span class="o">=</span><span class="n">save_meta</span><span class="p">,</span>
+            <span class="n">assert_cached</span><span class="o">=</span><span class="n">assert_cached</span><span class="p">,</span>
+            <span class="n">loud</span><span class="o">=</span><span class="n">loud</span><span class="p">,</span>
+            <span class="n">force_from_file</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1">## read from cache file, not attribute of object</span>
+        <span class="k">def</span> <span class="nf">compute_mockHubbleImage</span><span class="p">(</span><span class="bp">self</span><span class="p">:</span><span class="n">StarStudio</span><span class="p">,</span><span class="n">lums</span><span class="p">:</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">nu_effs</span><span class="p">:</span><span class="nb">list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">BAND_IDS</span><span class="p">:</span><span class="nb">list</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+            <span class="k">if</span> <span class="n">BAND_IDS</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">BAND_IDS</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">]</span> <span class="c1">## used if corresponding column of lums is all 0s</span>
+            
+            <span class="c1"># apply filters, rotations, unpack snapshot data, etc...</span>
+            <span class="p">(</span><span class="n">kappas</span><span class="p">,</span> <span class="n">lums</span><span class="p">,</span>
+                <span class="n">star_pos</span><span class="p">,</span> <span class="n">h_star</span><span class="p">,</span>
+                <span class="n">gas_pos</span> <span class="p">,</span> <span class="n">mgas</span> <span class="p">,</span> <span class="n">gas_metals</span> <span class="p">,</span>  <span class="n">h_gas</span><span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">prepareCoordinates</span><span class="p">(</span><span class="n">lums</span><span class="p">,</span><span class="n">nu_effs</span><span class="p">,</span><span class="n">BAND_IDS</span><span class="p">)</span>
+
+            <span class="c1">## do the actual raytracing</span>
+            <span class="n">gas_out</span><span class="p">,</span><span class="n">out_u</span><span class="p">,</span><span class="n">out_g</span><span class="p">,</span><span class="n">out_r</span> <span class="o">=</span> <span class="n">raytrace_ugr_attenuation</span><span class="p">(</span>
+                <span class="n">star_pos</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span><span class="n">star_pos</span><span class="p">[:,</span><span class="mi">1</span><span class="p">],</span><span class="n">star_pos</span><span class="p">[:,</span><span class="mi">2</span><span class="p">],</span>
+                <span class="n">h_star</span><span class="p">,</span>
+                <span class="n">gas_pos</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span><span class="n">gas_pos</span><span class="p">[:,</span><span class="mi">1</span><span class="p">],</span><span class="n">gas_pos</span><span class="p">[:,</span><span class="mi">2</span><span class="p">],</span>
+                <span class="n">mgas</span><span class="p">,</span><span class="n">gas_metals</span><span class="p">,</span><span class="n">h_gas</span><span class="p">,</span>
+                <span class="n">kappas</span><span class="p">,</span><span class="n">lums</span><span class="p">,</span>
+                <span class="n">pixels</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pixels</span><span class="p">,</span>
+                <span class="n">QUIET</span><span class="o">=</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">master_loud</span><span class="p">,</span>
+                <span class="n">xlim</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Xmin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Xmax</span><span class="p">),</span>
+                <span class="n">ylim</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Ymin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Ymax</span><span class="p">),</span>
+                <span class="n">zlim</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Zmin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Zmax</span><span class="p">)</span>
+                <span class="p">)</span>
+
+            <span class="c1">## unit factor, output is in Lsun/kpc^2</span>
+            <span class="n">unit_factor</span> <span class="o">=</span> <span class="mf">1e10</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">Acell</span>
+            <span class="k">return</span> <span class="n">gas_out</span><span class="o">*</span><span class="n">unit_factor</span><span class="p">,</span> <span class="n">out_u</span><span class="o">*</span><span class="n">unit_factor</span><span class="p">,</span> <span class="n">out_g</span><span class="o">*</span><span class="n">unit_factor</span><span class="p">,</span> <span class="n">out_r</span><span class="o">*</span><span class="n">unit_factor</span>
+        <span class="k">return</span> <span class="n">compute_mockHubbleImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+
+    <span class="k">def</span> <span class="nf">prepareCoordinates</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">lums</span><span class="p">:</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">nu_effs</span><span class="p">:</span><span class="nb">list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">BAND_IDS</span><span class="p">:</span><span class="nb">list</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Reads snapshot data from `self.snapdict` and `self.star_snapdict` in the</span>
+<span class="sd">        imaging volume defined by `self.Xmin`,`self.Xmax`,`self.Ymin`,`self.Ymax`,`self.Zmin`,`self.Zmax`.</span>
+<span class="sd">        Unpacks necessary arrays and provides them to the calling imaging routine. </span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        lums : np.ndarray, optional</span>
+<span class="sd">            array of luminosities for each star particle. If None then luminosities are calculated in</span>
+<span class="sd">            the bands specified by `BAND_IDS`, by default None</span>
+<span class="sd">        nu_effs : list, optional</span>
+<span class="sd">            list of effective frequencies corresponding to the bands of luminosities</span>
+<span class="sd">            provides in the `lums`. If None, uses the frequencies corresponding to the</span>
+<span class="sd">            specified `BAND_IDS`., by default None</span>
+<span class="sd">        BAND_IDS : list, optional</span>
+<span class="sd">            List of indices that identify which bands to model stellar emission in. </span>
+<span class="sd">            If None uses Sloan UGR bands `(1,2,3)`, by default None</span>
+<span class="sd">            ```</span>
+<span class="sd">            lambda_eff=np.array([</span>
+<span class="sd">                ## Bolometric (?)</span>
+<span class="sd">                        1.e-5,  </span>
+<span class="sd">                ## SDSS u       g       r      i      z</span>
+<span class="sd">                        3551. , 4686. , 6165., 7481., 8931.,</span>
+<span class="sd">                ##      U       B       V      R</span>
+<span class="sd">                        3600. , 4400. , 5556., 6940., </span>
+<span class="sd">                ##      I      J       H       K</span>
+<span class="sd">                        8700., 12150., 16540., 21790.])```</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        np.ndarray(3)</span>
+<span class="sd">            kappas : array of effective cross sections in each band</span>
+<span class="sd">        np.ndarray(Nstar,3)</span>
+<span class="sd">            lums :  array of luminosities in each band</span>
+<span class="sd">        np.ndarray(Nstar,3)</span>
+<span class="sd">            star_pos : coordinate data for emitting stars in kpc </span>
+<span class="sd">        np.ndarray(Ngas)</span>
+<span class="sd">            h_star : effective smoothing length/radius for each star particle in kpc</span>
+<span class="sd">        np.ndarray(Ngas,3)</span>
+<span class="sd">            gas_pos : coordinate data for attenuating gas in kpc</span>
+<span class="sd">        np.ndarray(Ngas)</span>
+<span class="sd">            mgas : mass data for attenuating gas in 10^10 Msun</span>
+<span class="sd">        np.ndarray(Ngas)</span>
+<span class="sd">            gas_metals : total metal mass fraction for each gas particle</span>
+<span class="sd">        np.ndarray(Ngas)</span>
+<span class="sd">            h_gas : smoothing length/radius for each gas particle in kpc</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1">## unpack the star information</span>
+        <span class="c1">## dont&#39; filter star positions just yet</span>
+        <span class="n">star_pos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">star_snapdict</span><span class="p">[</span><span class="s1">&#39;Coordinates&#39;</span><span class="p">]</span>
+
+        <span class="c1">## rotate by euler angles if necessary</span>
+        <span class="n">star_pos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">rotate_array</span><span class="p">(</span><span class="n">star_pos</span><span class="p">,</span><span class="n">offset</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1">## cull the particles outside the frame and cast to float32</span>
+        <span class="n">star_ind_box</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cullFrameIndices</span><span class="p">(</span><span class="n">star_pos</span><span class="p">)</span>
+        <span class="n">ages</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">star_snapdict</span><span class="p">[</span><span class="s1">&#39;AgeGyr&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">age_max_gyr</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">star_ind_box</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">star_ind_box</span><span class="p">,</span><span class="n">ages</span><span class="o">&lt;</span><span class="bp">self</span><span class="o">.</span><span class="n">age_max_gyr</span><span class="p">)</span>
+        <span class="n">ages</span> <span class="o">=</span> <span class="n">ages</span><span class="p">[</span><span class="n">star_ind_box</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">master_loud</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">star_ind_box</span><span class="p">),</span><span class="s1">&#39;many star particles in volume&#39;</span><span class="p">)</span>
+        
+        <span class="c1">## try opening the stellar smoothing lengths, if we fail</span>
+        <span class="c1">##  let&#39;s calculate them and save them to the projection </span>
+        <span class="c1">##  file</span>
+
+        <span class="k">if</span> <span class="s2">&quot;SmoothingLength&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">star_snapdict</span><span class="p">:</span>
+            <span class="n">Hsml</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_HSML</span><span class="p">(</span><span class="s1">&#39;star&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">Hsml</span><span class="o">.</span><span class="n">size</span> <span class="o">!=</span> <span class="n">star_pos</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+                <span class="n">Hsml</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_HSML</span><span class="p">(</span><span class="s1">&#39;star&#39;</span><span class="p">,</span><span class="n">use_metadata</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span><span class="n">save_meta</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">Hsml</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">star_snapdict</span><span class="p">[</span><span class="s1">&#39;SmoothingLength&#39;</span><span class="p">]</span> <span class="c1">## kpc</span>
+        <span class="c1">## attempt to pass these indices along</span>
+        <span class="n">h_star</span> <span class="o">=</span> <span class="n">Hsml</span><span class="p">[</span><span class="n">star_ind_box</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+
+        <span class="c1">## and now filter the positions</span>
+        <span class="n">star_pos</span> <span class="o">=</span> <span class="n">star_pos</span><span class="p">[</span><span class="n">star_ind_box</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+
+        <span class="n">mstar</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">star_snapdict</span><span class="p">[</span><span class="s1">&#39;Masses&#39;</span><span class="p">][</span><span class="n">star_ind_box</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="n">metals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">star_snapdict</span><span class="p">[</span><span class="s1">&#39;Metallicity&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">metals</span><span class="p">))</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span> <span class="n">metals</span> <span class="o">=</span> <span class="n">metals</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">metals</span> <span class="o">=</span> <span class="n">metals</span><span class="p">[</span><span class="n">star_ind_box</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+
+        <span class="c1">## apply frame mask to band luminosities</span>
+        <span class="k">if</span> <span class="n">lums</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">lums</span> <span class="o">=</span> <span class="n">lums</span><span class="p">[:,</span><span class="n">star_ind_box</span><span class="p">]</span>
+
+        <span class="c1">## will fill any columns of lums with appropriate BAND_ID </span>
+        <span class="c1">##  if nu_eff for that column is not None</span>
+        <span class="n">lums</span><span class="p">,</span><span class="n">nu_effs</span> <span class="o">=</span> <span class="n">read_band_lums_from_tables</span><span class="p">(</span>
+            <span class="n">BAND_IDS</span><span class="p">,</span> 
+            <span class="n">mstar</span><span class="p">,</span><span class="n">ages</span><span class="p">,</span><span class="n">metals</span><span class="p">,</span>
+            <span class="c1">## flag to return luminosity in each band requested without projecting</span>
+            <span class="n">nu_effs</span><span class="o">=</span><span class="n">nu_effs</span><span class="p">,</span>
+            <span class="n">lums</span><span class="o">=</span><span class="n">lums</span><span class="p">,</span>
+            <span class="n">QUIET</span><span class="o">=</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">master_loud</span><span class="p">)</span>
+
+        <span class="c1">## calculate the kappa in this band using:</span>
+        <span class="c1">##  Thompson scattering + </span>
+        <span class="c1">##  Pei (1992) + -- 304 &lt; lambda[Angstroms] &lt; 2e7</span>
+        <span class="c1">##  Morrison &amp; McCammon (1983) -- 1.2 &lt; lambda[Angstroms] &lt; 413</span>
+        <span class="c1">## get opacities and luminosities at frequencies we need:</span>
+
+        <span class="c1">## important to set KAPPA_UNITS appropriately: code loads opacity (kappa) for </span>
+        <span class="c1">##   the bands of interest in cgs (cm^2/g), must be converted to match units of input </span>
+        <span class="c1">##   mass and size. the default it to assume gadget units (M=10^10 M_sun, l=kpc)</span>
+        <span class="n">KAPPA_UNITS</span><span class="o">=</span><span class="mf">2.08854068444</span> <span class="c1">## cm^2/g -&gt; kpc^2/mcode</span>
+        <span class="n">kappas</span> <span class="o">=</span> <span class="p">[</span><span class="n">KAPPA_UNITS</span><span class="o">*</span><span class="n">opacity_per_solar_metallicity</span><span class="p">(</span><span class="n">nu_eff</span><span class="p">)</span> <span class="k">for</span> <span class="n">nu_eff</span> <span class="ow">in</span> <span class="n">nu_effs</span><span class="p">]</span>
+
+
+        <span class="c1">## rotate by euler angles if necessary</span>
+        <span class="n">gas_pos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">rotate_array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gas_snapdict</span><span class="p">[</span><span class="s1">&#39;Coordinates&#39;</span><span class="p">],</span><span class="n">offset</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1">## cull the particles outside the frame and cast to float32</span>
+        <span class="n">gas_ind_box</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cullFrameIndices</span><span class="p">(</span><span class="n">gas_pos</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">master_loud</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">gas_ind_box</span><span class="p">),</span><span class="s1">&#39;many gas particles in volume&#39;</span><span class="p">)</span>
+
+        <span class="c1">## unpack the gas information</span>
+        <span class="n">gas_pos</span> <span class="o">=</span> <span class="n">gas_pos</span><span class="p">[</span><span class="n">gas_ind_box</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+
+
+        <span class="n">mgas</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gas_snapdict</span><span class="p">[</span><span class="s1">&#39;Masses&#39;</span><span class="p">][</span><span class="n">gas_ind_box</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="n">gas_metals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gas_snapdict</span><span class="p">[</span><span class="s1">&#39;Metallicity&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">gas_metals</span><span class="p">))</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span> <span class="n">gas_metals</span> <span class="o">=</span> <span class="n">gas_metals</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">gas_metals</span> <span class="o">=</span> <span class="n">gas_metals</span><span class="p">[</span><span class="n">gas_ind_box</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+
+        <span class="c1">## set metallicity of hot gas to 0 so there is no dust extinction</span>
+        <span class="n">temperatures</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gas_snapdict</span><span class="p">[</span><span class="s1">&#39;Temperature&#39;</span><span class="p">][</span><span class="n">gas_ind_box</span><span class="p">]</span>
+        <span class="n">gas_metals</span><span class="p">[</span><span class="n">temperatures</span><span class="o">&gt;</span><span class="mf">1e5</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="k">if</span> <span class="s2">&quot;SmoothingLength&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">gas_snapdict</span><span class="p">:</span>
+            <span class="n">h_gas</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_HSML</span><span class="p">(</span><span class="s1">&#39;gas&#39;</span><span class="p">)[</span><span class="n">gas_ind_box</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">h_gas</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gas_snapdict</span><span class="p">[</span><span class="s1">&#39;SmoothingLength&#39;</span><span class="p">][</span><span class="n">gas_ind_box</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">no_dust</span><span class="p">:</span> 
+            <span class="n">mgas</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">gas_pos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span>
+            <span class="n">gas_metals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">h_gas</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1e-3</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="n">kappas</span><span class="p">,</span> <span class="n">lums</span><span class="p">,</span>
+                <span class="n">star_pos</span><span class="p">,</span> <span class="n">h_star</span><span class="p">,</span>
+                <span class="n">gas_pos</span> <span class="p">,</span> <span class="n">mgas</span> <span class="p">,</span> <span class="n">gas_metals</span> <span class="p">,</span>  <span class="n">h_gas</span><span class="p">)</span>
+
+<span class="c1">####### produceImage implementation #######</span>
+    <span class="k">def</span> <span class="nf">produceImage</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">quick</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Generates a mock hubble image, along with any annotations/scale bars,</span>
+<span class="sd">            using the stored image parameters.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        quick : bool, optional</span>
+<span class="sd">            flag to use a simple 2d histogram (for comparison or for quick iteration </span>
+<span class="sd">            as you choose image parameters), by default False</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        np.ndarray(npix_x,npix_y,3)</span>
+<span class="sd">            RGB pixel array of the produced image</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">quick</span><span class="p">:</span>
+            <span class="n">gas_out</span><span class="p">,</span><span class="n">out_u</span><span class="p">,</span><span class="n">out_g</span><span class="p">,</span><span class="n">out_r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_mockHubbleImage</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">gas_out</span><span class="p">,</span><span class="n">out_u</span><span class="p">,</span><span class="n">out_g</span><span class="p">,</span><span class="n">out_r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">quick_get_mockHubbleImage</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="n">L_sfc_densities</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">out_u</span><span class="p">,</span><span class="n">out_g</span><span class="p">,</span><span class="n">out_r</span><span class="p">])</span>
+        <span class="n">maxden_guess</span><span class="p">,</span><span class="n">dynrange_guess</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">predictParameters</span><span class="p">(</span><span class="n">L_sfc_densities</span><span class="o">=</span><span class="n">L_sfc_densities</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxden</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;setting maxden to best guess </span><span class="si">%.2g</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">maxden_guess</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_ImageParams</span><span class="p">(</span>
+                <span class="n">maxden</span><span class="o">=</span><span class="n">maxden_guess</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dynrange</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;setting dynrange to best guess </span><span class="si">%.2g</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">dynrange_guess</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_ImageParams</span><span class="p">(</span>
+                <span class="n">dynrange</span><span class="o">=</span><span class="n">dynrange_guess</span><span class="p">)</span>
+
+        <span class="c1">## open the hdf5 file and load the maps</span>
+        <span class="n">image24</span><span class="p">,</span> <span class="n">massmap</span> <span class="o">=</span> <span class="n">make_threeband_image_process_bandmaps</span><span class="p">(</span>
+            <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">out_r</span><span class="p">),</span><span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">out_g</span><span class="p">),</span><span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">out_u</span><span class="p">),</span>
+            <span class="n">maxden</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">maxden</span><span class="p">,</span>
+            <span class="n">dynrange</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dynrange</span><span class="p">,</span>
+            <span class="n">color_scheme_nasa</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">color_scheme_nasa</span><span class="p">,</span>
+            <span class="n">color_scheme_sdss</span><span class="o">=</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">color_scheme_nasa</span><span class="p">,</span>
+            <span class="n">QUIET</span><span class="o">=</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">master_loud</span><span class="p">)</span>
+
+        <span class="c1">## for some reason it&#39;s rotated 90 degrees...? kind of like transposed but different</span>
+        <span class="c1">##  need to take the rows of the output image and make them the columns, iteratively,</span>
+        <span class="c1">##  for now... </span>
+        <span class="c1">#image24=np.rot90(image24,k=1,axes=(0,1))</span>
+        <span class="n">final_image</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">image24</span><span class="p">,</span><span class="n">axes</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">final_image</span> <span class="o">=</span> <span class="n">final_image</span>
+
+        <span class="k">return</span> <span class="n">final_image</span>
+
+    <span class="k">def</span> <span class="nf">predictParameters</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">left_percentile</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+        <span class="n">right_percentile</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="mf">0.99</span><span class="p">,</span>
+        <span class="n">L_sfc_densities</span><span class="p">:</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">ax</span><span class="p">:</span><span class="n">plt</span><span class="o">.</span><span class="n">Axes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">quick</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Guesses what the &quot;best&quot; values for maxden and dynrange are from</span>
+<span class="sd">            the distribution of surface brightnesses in the current image. </span>
+<span class="sd">            Looks for the left_percentile and right_percentile and returns</span>
+<span class="sd">            right_percentile and the distance between it and left_percentile</span>
+<span class="sd">            (in log space). </span>
+<span class="sd">            </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        left_percentile : float, optional</span>
+<span class="sd">            lower bound on image surface brightness percentile, by default 0.1</span>
+<span class="sd">        right_percentile : float, optional</span>
+<span class="sd">            upper bound on image surface brightness percentile, by default 0.99</span>
+<span class="sd">        L_sfc_densities : np.ndarray, optional</span>
+<span class="sd">            surface densities to find the percentiles of. If None uses </span>
+<span class="sd">            `~firestudio.studios.star_studio.StarStudio.get_mockHubbleImage` to </span>
+<span class="sd">            retrieve the surface densities of the projected mock hubble image, by default None</span>
+<span class="sd">        ax : plt.Axes, optional</span>
+<span class="sd">            axis to plot distribution of surface brightnesses</span>
+<span class="sd">            with overlay of percentiles and such to, by default None</span>
+<span class="sd">        quick : bool, optional</span>
+<span class="sd">            flag to use `~firestudio.studios.star_studio.StarStudio.quick_get_mockHubbleImage`, by default False</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            maxden : maximum surface brightness of the image</span>
+<span class="sd">        float</span>
+<span class="sd">            dynrange : distance between maximum and minimum surface brightness</span>
+<span class="sd">                     in log space.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">L_sfc_densities</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="c1">## read the luminosity maps</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">quick</span><span class="p">:</span>
+                <span class="n">gas_out</span><span class="p">,</span><span class="n">out_u</span><span class="p">,</span><span class="n">out_g</span><span class="p">,</span><span class="n">out_r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_mockHubbleImage</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">gas_out</span><span class="p">,</span><span class="n">out_u</span><span class="p">,</span><span class="n">out_g</span><span class="p">,</span><span class="n">out_r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">quick_get_mockHubbleImage</span><span class="p">()</span>
+
+            <span class="n">L_sfc_densities</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">out_u</span><span class="p">,</span><span class="n">out_g</span><span class="p">,</span><span class="n">out_r</span><span class="p">])</span>
+
+        <span class="c1">## concatenate the luminosity maps and take the log of the non-empty ones</span>
+        <span class="n">rats</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">L_sfc_densities</span><span class="o">.</span><span class="n">flatten</span><span class="p">())</span>
+        <span class="n">rats</span> <span class="o">=</span> <span class="n">rats</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">rats</span><span class="p">)]</span>
+        <span class="n">h</span><span class="p">,</span><span class="n">edges</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="n">rats</span><span class="p">,</span><span class="n">bins</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+    
+        <span class="c1">## take the CDF to find left and right percentiles</span>
+        <span class="n">cumulative</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">h</span><span class="p">))</span>
+        <span class="n">cumulative</span><span class="o">=</span><span class="n">cumulative</span><span class="o">/</span><span class="n">cumulative</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="c1">## find left and right percentiles</span>
+        <span class="n">bottom</span><span class="p">,</span><span class="n">y</span> <span class="o">=</span> <span class="n">findIntersection</span><span class="p">(</span>
+            <span class="n">edges</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span>
+            <span class="n">cumulative</span><span class="p">,</span>
+            <span class="n">left_percentile</span><span class="p">)</span>
+
+        <span class="n">top</span><span class="p">,</span><span class="n">y</span> <span class="o">=</span> <span class="n">findIntersection</span><span class="p">(</span>
+            <span class="n">edges</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span>
+            <span class="n">cumulative</span><span class="p">,</span>
+            <span class="n">right_percentile</span><span class="p">)</span>
+
+        <span class="n">top</span> <span class="o">=</span> <span class="mi">10</span><span class="o">**</span><span class="n">top</span>
+        <span class="n">bottom</span> <span class="o">=</span> <span class="mi">10</span><span class="o">**</span><span class="n">bottom</span>
+
+        <span class="n">maxden</span> <span class="o">=</span> <span class="n">top</span>
+        <span class="n">dynrange</span> <span class="o">=</span> <span class="n">top</span><span class="o">/</span><span class="n">bottom</span>
+
+        <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="mi">10</span><span class="o">**</span><span class="n">edges</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span><span class="n">h</span><span class="o">/</span><span class="n">h</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">/</span><span class="p">(</span><span class="n">edges</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">edges</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">top</span><span class="o">*</span><span class="mf">1.05</span><span class="p">,</span><span class="mf">0.5</span><span class="p">,</span><span class="s1">&#39;maxden&#39;</span><span class="p">,</span><span class="n">rotation</span><span class="o">=</span><span class="mi">90</span><span class="p">,</span><span class="n">va</span><span class="o">=</span><span class="s1">&#39;center&#39;</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="n">bottom</span><span class="p">,</span><span class="n">top</span><span class="p">],[</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">0.5</span><span class="p">])</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">bottom</span><span class="p">,</span><span class="n">c</span><span class="o">=</span><span class="s1">&#39;C1&#39;</span><span class="p">,</span><span class="n">ls</span><span class="o">=</span><span class="s1">&#39;--&#39;</span><span class="p">,</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.25</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">top</span><span class="p">,</span><span class="n">c</span><span class="o">=</span><span class="s1">&#39;C1&#39;</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">bottom</span><span class="o">*</span><span class="n">top</span><span class="p">),</span><span class="mf">0.5</span><span class="o">/</span><span class="mf">1.1</span><span class="p">,</span><span class="s1">&#39;dynrange&#39;</span><span class="p">,</span><span class="n">ha</span><span class="o">=</span><span class="s1">&#39;center&#39;</span><span class="p">)</span>
+            <span class="n">nameAxes</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span><span class="kc">None</span><span class="p">,</span><span class="s2">&quot;&#39;den&#39; (L$_\odot$ kpc$^{-2}$)&quot;</span><span class="p">,</span><span class="s2">&quot;1/N dN/d(&#39;den&#39;)&quot;</span><span class="p">,</span><span class="n">logflag</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span>
+                <span class="n">supertitle</span><span class="o">=</span><span class="s2">&quot;maxden=</span><span class="si">%.2g</span><span class="se">\n</span><span class="s2">dynrange=</span><span class="si">%2d</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">maxden</span><span class="p">,</span><span class="n">dynrange</span><span class="p">))</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">get_figure</span><span class="p">()</span><span class="o">.</span><span class="n">set_dpi</span><span class="p">(</span><span class="mi">120</span><span class="p">)</span>
+
+            <span class="n">this_maxden</span> <span class="o">=</span> <span class="n">top</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxden</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="c1">#ax.text(self.maxden*1.05,0.5,&#39;maxden&#39;,rotation=90,va=&#39;center&#39;)</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">maxden</span><span class="p">,</span><span class="n">c</span><span class="o">=</span><span class="s1">&#39;C2&#39;</span><span class="p">,</span><span class="n">ls</span><span class="o">=</span><span class="s1">&#39;--&#39;</span><span class="p">,</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.25</span><span class="p">)</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">maxden</span><span class="p">,</span><span class="n">c</span><span class="o">=</span><span class="s1">&#39;C2&#39;</span><span class="p">)</span>
+                <span class="n">this_maxden</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxden</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dynrange</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="n">this_maxden</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">dynrange</span><span class="p">,</span><span class="n">this_maxden</span><span class="p">],[</span><span class="mf">0.4</span><span class="p">,</span><span class="mf">0.4</span><span class="p">],</span><span class="n">c</span><span class="o">=</span><span class="s1">&#39;C2&#39;</span><span class="p">)</span>
+                <span class="c1">#ax.text(np.sqrt(this_maxden**2/self.dynrange),0.4/1.1,&#39;dynrange&#39;,ha=&#39;center&#39;)</span>
+        <span class="k">return</span> <span class="n">maxden</span><span class="p">,</span><span class="n">dynrange</span>
+
+    <span class="k">def</span> <span class="nf">plotParameterGrid</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">dynrange_init</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="mf">1e2</span><span class="p">,</span>
+        <span class="n">maxden_init</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="mf">1e-2</span><span class="p">,</span>
+        <span class="n">dynrange_step</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">maxden_step</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">nsteps</span><span class="p">:</span><span class="nb">int</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Plots a grid of images that steps in maxden and dynrange to help the user decide</span>
+<span class="sd">            what values to use, based on their aesthetic preference. Step is applied</span>
+<span class="sd">            multiplicatively. Accepts keyword arguments for </span>
+<span class="sd">            `~firestudio.studios.star_studio.StarStudio.set_ImageParams`</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dynrange_init : float, optional</span>
+<span class="sd">            initial value in top left corner of grid, by default 1e2</span>
+<span class="sd">        maxden_init : float, optional</span>
+<span class="sd">            initial value in top left corner of grid, by default 1e-2</span>
+<span class="sd">        dynrange_step : float, optional</span>
+<span class="sd">            step between grid thumbnails, by default sqrt(10), by default None</span>
+<span class="sd">        maxden_step : float, optional</span>
+<span class="sd">            step between grid thumbnails, by default sqrt(10), by default None</span>
+<span class="sd">        nsteps : int, optional</span>
+<span class="sd">            number of steps in (square) thumbnail grid, by default 4</span>
+<span class="sd">        </span>
+<span class="sd">        Keywords</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        plt.figure</span>
+<span class="sd">            fig : the matplotlib figure drawn to</span>
+<span class="sd">        list of plt.Axes</span>
+<span class="sd">            axs : the matplotlib axes in the grid</span>
+
+
+<span class="sd">        Example usage:</span>
+<span class="sd">        --------------</span>
+<span class="sd">        ```python</span>
+<span class="sd">        starStudio.plotParameterGrid(</span>
+<span class="sd">            dynrange_init=1e3,</span>
+<span class="sd">            maxden_init=1,</span>
+<span class="sd">            dynrange_step=.1,</span>
+<span class="sd">            maxden_step=.1,</span>
+<span class="sd">            nsteps=2,</span>
+<span class="sd">            use_colorscheme_nasa=False)```</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1">## initialize the steps for each thumbnail in the grid</span>
+        <span class="n">dynrange_step</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span> <span class="k">if</span> <span class="n">dynrange_step</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">dynrange_step</span>
+        <span class="n">maxden_step</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span> <span class="k">if</span> <span class="n">maxden_step</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">maxden_step</span>
+
+        <span class="c1">## initialize the figure and axes</span>
+        <span class="n">fig</span><span class="p">,</span><span class="n">axs</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">nrows</span><span class="o">=</span><span class="n">nsteps</span><span class="p">,</span><span class="n">ncols</span><span class="o">=</span><span class="n">nsteps</span><span class="p">)</span>
+
+        <span class="c1">## loop through the grid and set the parameters according to the initial</span>
+        <span class="c1">##  parameters and their steps</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">axs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">axs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+                <span class="n">ax</span> <span class="o">=</span> <span class="n">axs</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span>
+
+                <span class="c1">## compute this step&#39;s parameters</span>
+                <span class="n">dynrange</span> <span class="o">=</span> <span class="n">dynrange_init</span> <span class="o">*</span> <span class="n">dynrange_step</span><span class="o">**</span><span class="n">i</span>
+                <span class="n">maxden</span> <span class="o">=</span> <span class="n">maxden_init</span> <span class="o">*</span> <span class="n">maxden_step</span><span class="o">**</span><span class="n">j</span>
+
+                <span class="c1">## set parameters</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">set_ImageParams</span><span class="p">(</span>
+                    <span class="n">dynrange</span><span class="o">=</span><span class="n">dynrange</span><span class="p">,</span>
+                    <span class="n">maxden</span><span class="o">=</span><span class="n">maxden</span><span class="p">,</span>
+                    <span class="n">loud</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+                <span class="c1">## actual call to render</span>
+                <span class="n">pixels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>
+
+                <span class="c1">## annotate the parameters on top of the thumbnail</span>
+                <span class="n">nameAxes</span><span class="p">(</span>
+                    <span class="n">ax</span><span class="p">,</span><span class="kc">None</span><span class="p">,</span><span class="kc">None</span><span class="p">,</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="n">supertitle</span><span class="o">=</span><span class="s1">&#39;maxden=$</span><span class="si">%1g</span><span class="s1">x</span><span class="si">%.2g</span><span class="s1">^{</span><span class="si">%d</span><span class="s1">}$</span><span class="se">\n</span><span class="s1">dynrange=$</span><span class="si">%1g</span><span class="s1">x</span><span class="si">%.2g</span><span class="s1">^{</span><span class="si">%d</span><span class="s1">}$&#39;</span><span class="o">%</span><span class="p">(</span>
+                        <span class="n">maxden_init</span><span class="p">,</span><span class="n">maxden_step</span><span class="p">,</span><span class="n">j</span><span class="p">,</span>
+                        <span class="n">dynrange_init</span><span class="p">,</span><span class="n">dynrange_step</span><span class="p">,</span><span class="n">i</span><span class="p">),</span>
+                    <span class="n">subtextkwargs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;color&#39;</span><span class="p">:</span><span class="s1">&#39;white&#39;</span><span class="p">},</span><span class="n">subfontsize</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+
+        <span class="n">fig</span><span class="o">.</span><span class="n">set_size_inches</span><span class="p">(</span><span class="mi">4</span><span class="o">*</span><span class="n">nsteps</span><span class="p">,</span><span class="mi">4</span><span class="o">*</span><span class="n">nsteps</span><span class="p">)</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">wspace</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">hspace</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">left</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">right</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">bottom</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">top</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">fig</span><span class="p">,</span><span class="n">axs</span></div>
+        <span class="c1">#fig.savefig(&#39;../src/hubble_grid.pdf&#39;,pad_inches=0,bbox_inches=&#39;tight&#39;)</span>
+
+<span class="n">append_function_docstring</span><span class="p">(</span><span class="n">StarStudio</span><span class="p">,</span><span class="n">StarStudio</span><span class="o">.</span><span class="n">set_ImageParams</span><span class="p">)</span>
+<span class="n">append_function_docstring</span><span class="p">(</span><span class="n">StarStudio</span><span class="p">,</span><span class="n">StarStudio</span><span class="o">.</span><span class="n">get_mockHubbleImage</span><span class="p">)</span>
+<span class="n">append_function_docstring</span><span class="p">(</span><span class="n">StarStudio</span><span class="p">,</span><span class="n">StarStudio</span><span class="o">.</span><span class="n">render</span><span class="p">)</span>
+<span class="n">append_function_docstring</span><span class="p">(</span><span class="n">StarStudio</span><span class="p">,</span><span class="n">StarStudio</span><span class="o">.</span><span class="n">predictParameters</span><span class="p">)</span>
+<span class="n">append_function_docstring</span><span class="p">(</span><span class="n">StarStudio</span><span class="p">,</span><span class="n">StarStudio</span><span class="o">.</span><span class="n">plotParameterGrid</span><span class="p">)</span>
+<span class="n">append_function_docstring</span><span class="p">(</span><span class="n">StarStudio</span><span class="p">,</span><span class="n">Studio</span><span class="p">)</span>
+
+<span class="c1">##### Image projection stuff</span>
+<span class="c1">## Stellar light attenuation projection</span>
+<span class="k">def</span> <span class="nf">raytrace_ugr_attenuation</span><span class="p">(</span>
+    <span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">z</span><span class="p">,</span>
+    <span class="n">h_star</span><span class="p">,</span> 
+    <span class="n">gx</span><span class="p">,</span><span class="n">gy</span><span class="p">,</span><span class="n">gz</span><span class="p">,</span>
+    <span class="n">mgas</span><span class="p">,</span> <span class="n">gas_metals</span><span class="p">,</span>
+    <span class="n">h_gas</span><span class="p">,</span>
+    <span class="n">kappas</span><span class="p">,</span><span class="n">lums</span><span class="p">,</span>
+    <span class="n">pixels</span> <span class="o">=</span> <span class="mi">1200</span><span class="p">,</span>
+    <span class="n">xlim</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">ylim</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">zlim</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">QUIET</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">):</span>
+
+    <span class="c1">## setup boundaries to cut-out gas particles that lay outside</span>
+    <span class="c1">## range</span>
+    <span class="k">if</span> <span class="n">xlim</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">xlim</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">x</span><span class="p">),</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">x</span><span class="p">)]</span>
+    <span class="k">if</span> <span class="n">ylim</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">ylim</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">y</span><span class="p">),</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">y</span><span class="p">)]</span>
+    <span class="k">if</span> <span class="n">zlim</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">zlim</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">z</span><span class="p">),</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">z</span><span class="p">)]</span>
+
+    <span class="k">return</span> <span class="n">stellar_raytrace</span><span class="p">(</span>
+        <span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">z</span><span class="p">,</span>
+        <span class="n">h_star</span><span class="p">,</span>
+        <span class="n">gx</span><span class="p">,</span><span class="n">gy</span><span class="p">,</span><span class="n">gz</span><span class="p">,</span>
+        <span class="n">mgas</span><span class="p">,</span><span class="n">gas_metals</span><span class="p">,</span>
+        <span class="n">h_gas</span><span class="p">,</span>
+        <span class="n">kappas</span><span class="p">,</span><span class="n">lums</span><span class="p">,</span>
+        <span class="n">xlim</span><span class="o">=</span><span class="n">xlim</span><span class="p">,</span><span class="n">ylim</span><span class="o">=</span><span class="n">ylim</span><span class="p">,</span><span class="n">zlim</span><span class="o">=</span><span class="n">zlim</span><span class="p">,</span>
+        <span class="n">pixels</span><span class="o">=</span><span class="n">pixels</span><span class="p">,</span>
+        <span class="n">QUIET</span><span class="o">=</span><span class="n">QUIET</span><span class="p">)</span> 
+
+<span class="vm">__doc__</span>  <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+<span class="vm">__doc__</span> <span class="o">=</span> <span class="n">append_string_docstring</span><span class="p">(</span><span class="vm">__doc__</span><span class="p">,</span><span class="n">StarStudio</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Alex Gurvich.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

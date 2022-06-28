@@ -1,0 +1,31 @@
+firestudio.utils.stellar\_utils.colors\_sps.read\_band\_lums\_from\_tables
+==========================================================================
+
+.. automodule:: firestudio.utils.stellar_utils.colors_sps.read_band_lums_from_tables
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      colors_table
+      read_band_lums_from_tables
+      renormalize_band_luminosity
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+
