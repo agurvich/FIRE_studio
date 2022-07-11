@@ -255,6 +255,7 @@ def get_single_snap(
         force_theta_TB=force_theta_TB,
         force_phi_TB=force_phi_TB,
         use_saved_subsnapshots=use_saved_subsnapshots,
+        save_meta=use_saved_subsnapshots,
         loud=False,
         extract_DM=extract_DM, ## force to be true
         jhat_coords=False)
@@ -322,7 +323,6 @@ def get_interpolated_snaps(
     ##  make a new one if necessary.
     #changed = True
     if changed:
-
         ## create the gas dataframes if necessary
         if load_gas: 
             prev_gas_df = convertToDF(prev_galaxy.sub_snap,keys_to_extract,polar)
@@ -395,8 +395,8 @@ def get_interpolated_snaps(
             ## fill values w. extrapolation in both directions
             ##  add polar coordinates and velocities, and drop any remaining nans or duplicates
             merged_star_df = finalize_df(
-                merged_star_df,
                 t0,t1,
+                merged_star_df,
                 polar=polar,
                 take_avg_L=take_avg_L)
     else: pass ## [ if changed: ] 
@@ -405,14 +405,12 @@ def get_interpolated_snaps(
     if load_gas: interp_gas_snapdict = make_interpolated_snap(
         t0,t1,
         merged_gas_df,
-        this_time,
-        polar=polar) 
+        this_time) 
     else: interp_gas_snapdict = {}            
     if load_star: interp_star_snapdict = make_interpolated_snap(
         t0,t1,
         merged_star_df,
-        this_time,
-        polar=polar)
+        this_time)
     else: interp_star_snapdict = {}
 
     ## keep outside the conditional b.c. worker function
@@ -481,6 +479,7 @@ def load_gals_from_disk(
                 force_theta_TB=force_theta_TB,
                 force_phi_TB=force_phi_TB,
                 use_saved_subsnapshots=use_saved_subsnapshots,
+                save_meta=use_saved_subsnapshots,
                 loud=False,
                 extract_DM=extract_DM,
                 jhat_coords=False)
@@ -502,6 +501,7 @@ def load_gals_from_disk(
                 force_theta_TB=force_theta_TB,
                 force_phi_TB=force_phi_TB,
                 use_saved_subsnapshots=use_saved_subsnapshots,
+                save_meta=use_saved_subsnapshots,
                 loud=False,
                 extract_DM=extract_DM,
                 jhat_coords=False)
