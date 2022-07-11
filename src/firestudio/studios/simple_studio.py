@@ -48,12 +48,15 @@ class SimpleStudio(Studio):
 
         if not fancy:
 
+            if cmap is None: cmap = 'C0'
             ax.scatter(
                 xs,
                 ys,
                 alpha=0.2,
                 rasterized=True,
-                s=1)
+                s=1,
+                c=cmap)
+
         else:
 
             ## TO-DO for Alex:
@@ -126,6 +129,7 @@ class SimpleStudio(Studio):
         snapdict_name='star',
         age_max_gyr=None,
         colorby=None,
+        fixed_hsml=None,
         **kwargs):
 
         full_snapdict_name = '%s_snapdict'%snapdict_name
@@ -148,8 +152,11 @@ class SimpleStudio(Studio):
         ## cull the particles outside the frame and cast to float32
         box_mask = self.cullFrameIndices(coords)
 
-        if "SmoothingLength" not in snapdict: hs = self.get_HSML(snapdict_name)
-        else: hs = snapdict['SmoothingLength']
+        if fixed_hsml is not None:
+            hs = np.repeat(fixed_hsml,coords.shape[0]) ## kpc
+        else:
+            if "SmoothingLength"  in snapdict: hs = snapdict['SmoothingLength']
+            else: hs = self.get_HSML(snapdict_name)
 
 
         return (

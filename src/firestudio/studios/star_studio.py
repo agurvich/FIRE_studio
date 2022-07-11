@@ -277,7 +277,12 @@ class StarStudio(Studio):
             assert_cached=assert_cached,
             loud=loud,
             force_from_file=True)  ## read from cache file, not attribute of object
-        def compute_mockHubbleImage(self:StarStudio,lums:np.ndarray=None,nu_effs:list=None,BAND_IDS:list=None):
+        def compute_mockHubbleImage(
+            self:StarStudio,
+            lums:np.ndarray=None,
+            nu_effs:list=None,
+            BAND_IDS:list=None,
+            fixed_star_hsml=0.028):
 
             if BAND_IDS is None:
                 BAND_IDS=[1,2,3] ## used if corresponding column of lums is all 0s
@@ -285,7 +290,7 @@ class StarStudio(Studio):
             # apply filters, rotations, unpack snapshot data, etc...
             (kappas, lums,
                 star_pos, h_star,
-                gas_pos , mgas , gas_metals ,  h_gas) = self.prepareCoordinates(lums,nu_effs,BAND_IDS)
+                gas_pos , mgas , gas_metals ,  h_gas) = self.prepareCoordinates(lums,nu_effs,BAND_IDS,fixed_star_hsml)
 
             ## do the actual raytracing
             gas_out,out_u,out_g,out_r = raytrace_ugr_attenuation(
@@ -311,7 +316,8 @@ class StarStudio(Studio):
         self,
         lums:np.ndarray=None,
         nu_effs:list=None,
-        BAND_IDS:list=None):
+        BAND_IDS:list=None,
+        fixed_star_hsml:float=None):
         """Reads snapshot data from `self.snapdict` and `self.star_snapdict` in the
         imaging volume defined by `self.Xmin`,`self.Xmax`,`self.Ymin`,`self.Ymax`,`self.Zmin`,`self.Zmax`.
         Unpacks necessary arrays and provides them to the calling imaging routine. 
@@ -379,12 +385,16 @@ class StarStudio(Studio):
         ##  let's calculate them and save them to the projection 
         ##  file
 
-        if "SmoothingLength" not in self.star_snapdict:
-            Hsml = self.get_HSML('star')
-            if Hsml.size != star_pos.shape[0]:
-                Hsml = self.get_HSML('star',use_metadata=False,save_meta=True)
+        if 'SmoothingLength' in self.star_snapdict:
+            Hsml = self.star_snapdict['SmoothingLength'] 
         else:
-            Hsml = self.star_snapdict['SmoothingLength'] ## kpc
+            if fixed_star_hsml is not None:
+                Hsml = np.repeat(fixed_star_hsml,star_pos.shape[0]) ## kpc
+            else:
+                Hsml = self.get_HSML('star')
+                if Hsml.size != star_pos.shape[0]:
+                    Hsml = self.get_HSML('star',use_metadata=False,save_meta=True)
+
         ## attempt to pass these indices along
         h_star = Hsml[star_ind_box].astype(np.float32)
 
