@@ -325,6 +325,7 @@ def get_interpolated_snaps(
     if changed:
         ## create the gas dataframes if necessary
         if load_gas: 
+            #print("converting gas to DF")
             prev_gas_df = convertToDF(prev_galaxy.sub_snap,keys_to_extract,polar)
             next_gas_df = convertToDF(next_galaxy.sub_snap,keys_to_extract,polar)
             ## add AgeGyr arrays which will be used to disappear gas particles
@@ -334,12 +335,14 @@ def get_interpolated_snaps(
         
         ## create the star dataframes if necessary
         if load_star:
+            #print("converting stars to DF")
             prev_star_df = convertToDF(prev_galaxy.sub_star_snap,keys_to_extract,polar)
             next_star_df = convertToDF(next_galaxy.sub_star_snap,keys_to_extract,polar)
 
         ## if we have both, we can try to cross-match the positions
         ##  of particles between them
         if load_gas and load_star:
+            #print("cross-matching starformed gas")
             (prev_gas_df,
             next_gas_df,
             prev_star_df,
