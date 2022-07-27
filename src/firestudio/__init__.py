@@ -1,7 +1,8 @@
 import os
 import subprocess
 
-def build_C_routines(prepend=''):
+def build_C_routines():
+    """ builds C routines from source. """
     ## cd to whichever folder contains this file
     os.chdir(os.path.dirname(__file__))
     C_routine_subdir = 'utils/C_routines'
