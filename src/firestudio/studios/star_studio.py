@@ -58,9 +58,9 @@ class StarStudio(Studio):
                 sets the upper limit of the "colorbar" if ``None`` uses\
                 the 99 %'ile of the image surface brightness, defaults to ``None``
             * **dynrange** (`float`, `optional`) -- \
-                controls the saturation of the image,
-                sets the lower limit of the "colorbar" with respect to maxden,
-                if None uses the dynamic range between maxden and the 10th %'ile
+                controls the saturation of the image,\
+                sets the lower limit of the "colorbar" with respect to maxden,\
+                if None uses the dynamic range between maxden and the 10th %'ile\
                 of the image surface brightness, defaults to ``None``
             * **nodust** (`bool`, `optional`) --\
                 flag for whether dust attenuantion should be ignored, defaults to ``False``

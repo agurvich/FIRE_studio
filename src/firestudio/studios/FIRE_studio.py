@@ -1,7 +1,6 @@
 import scipy
 import numpy as np
 
-from abg_python.function_utils import append_function_docstring
 from abg_python.array_utils import findIntersection
 from abg_python.galaxy.metadata_utils import metadata_cache
 from abg_python.plot_utils import plt,nameAxes
@@ -15,6 +14,7 @@ from ..utils.stellar_utils import (
 class FIREStudio(Studio):
 
     required_snapdict_keys = ['Masses','Coordinates','SmoothingLength','Temperature']
+    """ these are minimum required keys for :func:`~firestudio.studios.FIRE_studio.FIREStudio.render` function to run."""
 
     def __repr__(self):
         return 'FIREStudio instance'
@@ -24,27 +24,38 @@ class FIREStudio(Studio):
         use_defaults=False,
         loud=True,
         **kwargs):
-        """Changes the parameters of the image. If `use_defaults=True` then 
-            default values of the parameters will be set. Leave `use_defaults=False`
-            to adjust only the keywords passed. 
+        """ Changes the parameters of the image. Also calls :class:`~firestudio.studios.studio.Studio`'s\
+            :func:`~firestudio.studios.studio.Studio.set_ImageParams`, passing along any unmatched kwargs.
 
-            Input: 
+        :param use_defaults: 
+            If ``True`` then default values of the parameters will be set\
+            (potentially overwriting any previously specified parameters).\
+            If ``False`` adjust only the keywords passed, defaults to ``False``
+        :type use_defaults: bool, optional
+        :param loud: 
+            flag to print which parameters are being set/updated, defaults to ``True``
+        :type loud: bool, optional 
 
-                use_defaults = False -- 
-                loud = True -- 
+        :kwargs:
+            * **tcuts** (`tuple`, `optional`) -- \
+                temperature cuts for each of the three RGB bands
+            * **maxden** (`float`, `optional`) -- \
+                controls the saturation of the image,\
+                sets the upper limit of the "colorbar" if ``None`` uses\
+                the 99 %'ile of the image surface brightness, defaults to ``None``
+            * **dynrange** (`float`, `optional`) -- \
+                controls the saturation of the image,\
+                sets the lower limit of the "colorbar" with respect to maxden,\
+                if ``None`` uses the dynamic range between ``maxden`` and the 10th %'ile\
+                of the image surface brightness, defaults to ``None``
+            
+        :Example usage:
+            .. code-block:: python
 
-                tcuts
-
-            Output:
-
-                None
-
-Example usage:
-```python 
-fireStudio.set_ImageParams(
-    tcuts = (300,2e4,3e5)
-    figure_label='t = 13.8 Gyr')
-```"""
+                fireStudio.set_ImageParams(
+                    tcuts = (300,2e4,3e5)
+                    figure_label='t = 13.8 Gyr')
+"""
 
         default_kwargs = {
             'tcuts':(300,2e4,3e5),
@@ -95,19 +106,8 @@ fireStudio.set_ImageParams(
     set_ImageParams.default_kwargs.update(
         Studio.set_ImageParams.default_kwargs)
 
-    append_function_docstring(set_ImageParams,Studio.set_ImageParams,prepend_string='passes `kwargs` to:\n')
-
-
     def print_ImageParams(self):
-        """ Prints current image setup to console.
-
-            Input:
-
-                None
-
-            Output:
-
-                None """
+        """ Prints current image setup to console."""
 
         default_kwargs = {
             'tcuts':(300,4000,10000),
@@ -128,23 +128,32 @@ fireStudio.set_ImageParams(
         loud=True,
         **kwargs, 
         ):
-        """ 
+        """ routine to use ``raytrace_projection_compute`` to make mock gas images, with three color channels for different temperature ranges
 
-            ## 
-            ## routine to use 'raytrace_projection_compute' to make mock gas images, 
-            ##   with three color channels for different temperature ranges
+        :param use_metadata: flag for whether a cached result should be used (if it exists), defaults to ``True``
+        :type use_metadata: bool, optional
+        :param save_meta: flag to save the result in the cache, defaults to ``True``
+        :type save_meta: bool, optional
+        :param assert_cached: flag to require a cache hit and raise an exception otherwise, defaults to ``False``
+        :type assert_cached: bool, optional
+        :param loud: flag for whether cache hits/misses should be announced to the console, defaults to ``True``
+        :type loud: bool, optional
 
-            Input:
+        :kwargs:
+            * **use_log_t** (`bool`, `optional`) -- \
+                defaults to ``True``
+            * **isosurfaces** (`bool`, `optional`) -- \
+                defaults to ``False``
+            * **add_temperature_weights** (`bool`, `optional`) -- \
+                defaults to ``False``
 
-                use_metadata = True -- flag to search cache for result
-                save_meta = True -- flag to cache the result
-                assert_cached = False -- flag to require a cache hit
-                loud = True -- whether cache hits/misses should be announced
-                    to the console.
-
-            Output:
-
-                    """
+        :return: 
+            | ``out_all`` -\
+            | ``out_cold`` -\
+            | ``out_warm`` -\
+            | ``out_hot`` -
+        :rtype: np.ndarray, np.ndarray, np.ndarray, np.ndarray
+        """
 
         @metadata_cache(
             self.this_setup_id,  ## hdf5 file group name
@@ -186,22 +195,24 @@ fireStudio.set_ImageParams(
 
     def prepareCoordinates(
         self,
-        use_log_t=1 ,
-        isosurfaces=0,
-        add_temperature_weights=0):
-        """ snapshot dictionary keys required to function:
-            Coordinates
-            SmoothingLength (optional, will compute though otherwise)
-            Temperature
-            Masses
+        use_log_t=True,
+        isosurfaces=False,
+        add_temperature_weights=False):
+        """ many experiments here: doing gas isosurfaces with broad kernels\
+            and overlaying a custom set of color tables after the fact seems\
+            best. adjust opacity (kappa_units) and kernel width as needed. \
+            also, can set 'dynrange=0' to automatically produce a given \
+            fraction of saturated/unsaturated pixels
+            
+        :param use_log_t: _description_, defaults to ``True``
+        :type use_log_t: bool, optional
+        :param isosurfaces: _description_, defaults to ``False``
+        :type isosurfaces: bool, optional
+        :param add_temperature_weights: _description_, defaults to ``False``
+        :type add_temperature_weights: bool, optional
+        :return: _description_
+        :rtype: _type_
         """
-
-        ##  -- many experiments here: doing gas isosurfaces with broad kernels
-            ##       and overlaying a custom set of color tables after the fact seems
-            ##       best. adjust opacity (kappa_units) and kernel width as needed. 
-            ##       also, can set 'dynrange=0' to automatically produce a given 
-            ##       fraction of saturated/unsaturated pixels
-            ##
 
         #if KAPPA_UNITS is None: KAPPA_UNITS = 2.0885*np.array([1.1,2.0,1.5])
         #if kernel_widths is None: kernel_widths=np.array([0.8,0.3,0.6])
@@ -271,10 +282,12 @@ fireStudio.set_ImageParams(
             wt1,wt2,wt3,
             kappa)
 
-    def __get_gasThreebandImage_quick(
-        self,
-        **kwargs, 
-        ):
+    def quick_get_gasThreebandImage(self,**kwargs):
+        """ Approximates :func:`~firestudio.studios.FIRE_studio.FIREStudio.get_gasThreebandImage` but using 2d histograms
+
+        :return: _description_
+        :rtype: _type_
+        """
 
         # apply filters, rotations, unpack snapshot data, etc...
         (coords,hsml,mass,
@@ -309,29 +322,23 @@ fireStudio.set_ImageParams(
 
         return out_all,out_cold,out_warm,out_hot
 
-
-
-
 ####### produceImage implementation #######
-    def render(
-        self,
-        ax=None,
-        **kwargs):
-        """Plots a projected image using the stored image parameters.
+    def render(self,ax:plt.Axes=None,**kwargs):
+        """ Plots a projected image using the stored image parameters.
 
-            Input: 
+        :param ax: axis to plot image to, if ``None`` will create a new figure, defaults to ``None``
+        :type ax: plt.Axes, optional
+        :raises NotImplementedError: _description_
+        :return:
+            |  ``ax`` -- the axis the image was plotted to
+            |  ``final_image`` -- output RGB pixel array
+        :rtype: plt.Axes, np.ndarray(Npix_x,Npix_y,3)
 
-                ax = None -- axis to plot image to, if None will create a new figure
+        :Example usage:
+            .. code-block:: python
 
-            Output:
-
-                ax -- the axis the image was plotted to
-                final_image -- Npix_x x Npix_y x 3 RGB pixel array
-
-Example usage:
-```python
-fireStudio.render()
-```"""
+                fireStudio.render()
+        """
 
 
         if ax is None: fig,ax = plt.figure(),plt.gca()
@@ -355,7 +362,7 @@ fireStudio.render()
         ):
 
         if not quick: out_all,out_cold,out_warm,out_hot = self.get_gasThreebandImage(**kwargs)
-        else: out_all,out_cold,out_warm,out_hot = self.__get_gasThreebandImage_quick(**kwargs)
+        else: out_all,out_cold,out_warm,out_hot = self.quick_get_gasThreebandImage(**kwargs)
 
         if self.maxden is None:
             maxden_guess,dynrange_guess = self.predictParameters()
@@ -382,46 +389,46 @@ fireStudio.render()
 
         return np.transpose(final_image,axes=(1,0,2))
 
-    def predictParameters(self,all_bands=None,**kwargs):
-
-
-        return self.__predictParameters(all_bands=all_bands,**kwargs)
-
-    def __predictParameters(
+    def predictParameters(
         self,
-        left_percentile=0.1,
-        right_percentile=0.99,
-        all_bands=None,
-        ax=None,
-        quick=False):
-        """ Guesses what the "best" values for maxden and dynrange are from
-            the distribution of surface brightnesses in the current image. 
-            Looks for the left_percentile and right_percentile and returns
-            right_percentile and the distance between it and left_percentile
-            (in log space). 
-            
-            Input:
+        left_percentile:float=0.1,
+        right_percentile:float=0.99,
+        all_bands:np.ndarray=None,
+        ax:plt.Axes=None,
+        quick:bool=False):
+        """ Guesses what the "best" values for maxden and dynrange are from\
+            the distribution of surface brightnesses in the current image.\
+            Looks for the left_percentile and right_percentile and return\
+            right_percentile and the distance between it and left_percentil\
+            (in log space).
 
-                left_percentile = 0.1 -- lower bound on image surface brightness percentile
-                right_percentile = 0.99 --  upper bound on image surface brightness percentile
-                ax = None -- optionally plots distribution of surface brightnesses
-                    (in some units...) with overlay of percentiles and such.
-                quick = False -- flag to use a simple 2d histogram (for comparison or
-                    for quick iteration as the user defines the image parameters)
-            
-            Output:
-                
-                maxden -- maximum surface brightness of the image
-                dynrange -- distance between maximum and minimum surface brightness
-                     in log space. 
+        :param left_percentile: 
+            lower bound on image surface brightness percentile, defaults to ``0.1``
+        :type left_percentile: float, optional
+        :param right_percentile: 
+            upper bound on image surface brightness percentile, defaults to ``0.99``
+        :type right_percentile: float, optional
+        :param all_bands: 
+            optionally plots distribution of surface brightnesses\
+            (in some units...) with overlay of percentiles and such, defaults to ``None``
+        :type all_bands: _type_, optional
+        :param ax: _description_, defaults to None
+        :type ax: _type_, optional
+        :param quick: 
+                flag to use a simple 2d histogram (for comparison or for quick iteration\
+                as the user defines the image parameters), defaults to ``False``
+        :type quick: bool, optional
+        :raises NotImplementedError: if ``quick``
+        :return: 
+            |  ``maxden`` -- maximum surface brightness of the image
+            |  ``dynrange`` -- distance between maximum and minimum surface brightness in log space. 
+        :rtype: float, float
         """
 
         if (all_bands is None):
             ## read the luminosity maps
-            if not quick:
-                all_bands = np.concatenate(self.get_gasThreebandImage(assert_cached=True,loud=False)[1:])
-            else:
-                raise NotImplementedError
+            if not quick: all_bands = np.concatenate(self.get_gasThreebandImage(assert_cached=True,loud=False)[1:])
+            else: raise NotImplementedError("Can't generate all_bands with quick.")
 
         ## concatenate the luminosity maps and take the log of the non-empty ones
         rats = np.log10(all_bands.flatten())

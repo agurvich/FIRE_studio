@@ -828,14 +828,12 @@ class Studio(Drawer):
             x, y, and z limits as well as the physical resolution of the image.
             
 
-            Sets following attributes
-            -------------------------
-
-            ``self.Xmin``, ``self.Xmax`` -- 
-            ``self.Ymin``, ``self.Ymax`` -- 
-            ``self.Zmin``, ``self.Zmax`` -- 
-            ``self.npix_x``, ``self.npix_y`` -- 
-            ``self.Acell`` -- 
+            :Sets following attributes:
+                ``self.Xmin``, ``self.Xmax`` -- \
+                ``self.Ymin``, ``self.Ymax`` -- \
+                ``self.Zmin``, ``self.Zmax`` -- \
+                ``self.npix_x``, ``self.npix_y`` -- \
+                ``self.Acell`` -- 
                 
         """
         ## +- camera_dist limits -> 45 degree FOV
