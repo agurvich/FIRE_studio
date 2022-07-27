@@ -46,19 +46,16 @@ class Drawer(object):
         **kwargs):
         """ Generates an image with the `produceImage` method and then plots it with the `plotImage` method.
 
-            Input: 
+        :param ax: axis to plot image to, if None will create a new figure, defaults to ``None``
+        :type ax: plt.Axes, optional
+        :return: 
+            ax -- the axis the image was plotted to
+            final_image -- Npixels x Npixels x 3 RGB pixel array
+        :rtype: plt.Axes, np.ndarray
+        """
 
-                ax = None -- axis to plot image to, if None will create a new figure
-
-            Output:
-
-                ax -- the axis the image was plotted to
-                final_image -- Npixels x Npixels x 3 RGB pixel array"""
-
-        if ax is None:
-            fig,ax = plt.figure(),plt.gca()
-        else:
-            fig = ax.get_figure()
+        if ax is None: fig,ax = plt.figure(),plt.gca()
+        else: fig = ax.get_figure()
 
         ## remap the C output to RGB space
         final_image = self.produceImage(**kwargs)
@@ -78,27 +75,21 @@ class Drawer(object):
         spacing:float=1,
         length:float=10,
         colors:list=None):
-        """[summary]
+        """ _summary_
 
-        Parameters
-        ----------
-        ax : plt.Axes
-            [description]
-        spacing : float, optional
-            [description], by default 1
-        length : float, optional
-            [description], by default 10
-        colors : list, optional
-            [description], by default None
-
-        Returns
-        -------
-        [type]
-            [description]
+        :param ax: _description_
+        :type ax: plt.Axes
+        :param spacing: _description_, defaults to ``1``
+        :type spacing: float, optional
+        :param length: _description_, defaults to ``10``
+        :type length: float, optional
+        :param colors: _description_, defaults to ``None``
+        :type colors: list, optional
+        :return: _description_
+        :rtype: _type_
         """
 
-        if colors is None:
-            colors = ['red','blue','green']
+        if colors is None: colors = ['red','blue','green']
         
         ## create the axis lines
         points = np.arange(spacing,length+spacing,spacing)
@@ -130,21 +121,18 @@ class Drawer(object):
         ax:plt.Axes,
         final_image:np.ndarray,
         **kwargs): 
-        """Bsae method for overlaying artists on top of projected image.
-        if `self.scale_bar`:
-            overlays a scale bar by filling the RGB pixel values with white
-        if `self.noaxis`:
-            removes the coordinate axes, labels, and ticks
+        """ Base method for overlaying artists on top of projected image.
 
-        will also add `self.figure_label` as text to the image. 
-        See `~firestudio.studios.studio.Studio.set_ImageParams` for details.
+        if `self.scale_bar`: overlays a scale bar by filling the RGB pixel values with white
+        if `self.noaxis`: removes the coordinate axes, labels, and ticks
 
-        Parameters
-        ----------
-        ax : plt.Axes
-            axis to plot image to 
-        final_image : np.ndarray
-            array of RGB image pixel values
+        Will also add `self.figure_label` as text to the image. 
+        See :func:`~firestudio.studios.studio.Studio.set_ImageParams` for details.
+
+        :param ax: axis to plot image to 
+        :type ax: plt.Axes
+        :param final_image: array of RGB image pixel values
+        :type final_image: np.ndarray
         """
 
         ## fill the pixels of the the scale bar with white
@@ -175,17 +163,12 @@ class Drawer(object):
 
 ####### image utilities #######
     def addScaleBar(self,image:np.ndarray):
-        """[summary]
+        """_summary_
 
-        Parameters
-        ----------
-        image : np.ndarray
-            [description]
-
-        Returns
-        -------
-        [type]
-            [description]
+        :param image: array of RGB image pixel values
+        :type image: np.ndarray
+        :return: image
+        :rtype: np.ndarray
         """
 
         ## set scale bar length
@@ -207,13 +190,12 @@ class Drawer(object):
         return image
 
     def addText(self,ax:plt.Axes):
-        """[summary]
+        """_summary_
 
-        Parameters
-        ----------
-        ax : plt.Axes
-            [description]
+        :param ax: _description_
+        :type ax: plt.Axes
         """
+
         ## handle any text additions
         if self.figure_label is not None:
         ## plot the  figure label in the top right corner
@@ -244,23 +226,18 @@ class Drawer(object):
         min_val:float,
         max_val:float,
         quantity_name:str):
-        """[summary]
+        """_summary_
 
-        Parameters
-        ----------
-        image : np.ndarray
-            [description]
-        min_val : float
-            [description]
-        max_val : float
-            [description]
-        quantity_name : str
-            [description]
-
-        Returns
-        -------
-        [type]
-            [description]
+        :param image: _description_
+        :type image: np.ndarray
+        :param min_val: _description_
+        :type min_val: float
+        :param max_val: _description_
+        :type max_val: float
+        :param quantity_name: _description_
+        :type quantity_name: str
+        :return: _description_
+        :rtype: _type_
         """
 
         if self.master_loud:
@@ -289,14 +266,12 @@ class Drawer(object):
         fig,
         image_name:str=None,
         **savefig_args):
-        """
+        """_summary_
 
-        Parameters
-        ----------
-        fig : [type]
-            [description]
-        image_name : str, optional
-            [description], by default None
+        :param fig: _description_
+        :type fig: _type_
+        :param image_name: _description_, defaults to ``None``
+        :type image_name: str, optional
         """
 
         if self.noaxis:
@@ -321,23 +296,18 @@ class Drawer(object):
         gradient_width_percent:float=0.1,
         angle:float=None,
         **kwargs):
-        """[summary]
+        """_summary_
 
-        Parameters
-        ----------
-        image_1 : np.ndarray
-            [description]
-        image_2 : np.ndarray, optional
-            [description], by default None
-        gradient_width_percent : float, optional
-            [description], by default 0.1
-        angle : float, optional
-            [description], by default None
-
-        Returns
-        -------
-        [type]
-            [description]
+        :param image_1: _description_
+        :type image_1: np.ndarray
+        :param image_2: _description_, defaults to ``None``
+        :type image_2: np.ndarray, optional
+        :param gradient_width_percent: _description_, defaults to ``0.1``
+        :type gradient_width_percent: float, optional
+        :param angle: _description_, defaults to ``None``
+        :type angle: float, optional
+        :return: _description_
+        :rtype: _type_
         """
 
         if image_2 is None: image_2 = self.produceImage(**kwargs)
@@ -382,34 +352,37 @@ class Studio(Drawer):
     `FIREstudio` parent class that regularizes image setup, rotation, 
         caching, etc between `GasStudio` and `StarStudio` classes. 
 
-    `GasStudio` requires: 
-    ```python
+    :class:`~firestudio.studios.gas_studio.GasStudio` requires: 
+
+    .. code-block:: python
+
         snapdict['Coordinates'] ## coordinates of the particles
-    ```
-    (and ideally `'SmoothingLengths'`, in the same units as coordinates, but these can be calculated). 
 
-    `StarStudio` requires: 
-    ```python
-    gas_snapdict['Coordinates'] ## coordinates of the particles
-    gas_snapdict['Metallicity'] ## metallicity (mass fractions) of the particles 
-    gas_snapdict['Masses'] ## masses of the particles in 1e10 solar masses
-    gas_snapdict['Temperature'] ## temperature of the gas in K
+    (and ideally ``'SmoothingLengths'``, in the same units as coordinates, but these can be calculated). 
 
-    star_snapdict['Coordinates'] ## coordinates of the particles
-    star_snapdict['Metallicity'] ## metallicity (mass fractions) of the particles 
-    star_snapdict['Masses'] ## masses of the particles in 1e10 solar masses
-    star_snapdict['AgeGyr'] ## age of particles in Gyr
-    ```
-    (and ideally `'SmoothingLengths'` for both, in the same units as coordinates, but these can be calculated)."""
+    ``StarStudio`` requires: 
+
+    .. code-block:: python
+
+        gas_snapdict['Coordinates'] ## coordinates of the particles
+        gas_snapdict['Metallicity'] ## metallicity (mass fractions) of the particles 
+        gas_snapdict['Masses'] ## masses of the particles in 1e10 solar masses
+        gas_snapdict['Temperature'] ## temperature of the gas in K
+
+        star_snapdict['Coordinates'] ## coordinates of the particles
+        star_snapdict['Metallicity'] ## metallicity (mass fractions) of the particles 
+        star_snapdict['Masses'] ## masses of the particles in 1e10 solar masses
+        star_snapdict['AgeGyr'] ## age of particles in Gyr
+
+    (and ideally ``'SmoothingLengths'`` for both, in the same units as coordinates, but these can be calculated)."""
 
     def __repr__(self):
-        """ implementation of built-in __repr__ method for printing.
+        """_summary_
 
-        Returns
-        -------
-        str
-            string to print back to the console
+        :return: _description_
+        :rtype: _type_
         """
+        
         return 'Studio instance'
 
     def __init__(
@@ -425,35 +398,32 @@ class Studio(Drawer):
         setup_id_append:str='',
         **kwargs
         ): 
-        """ Base class that handles camera manipulation and data caching. 
+        """Base class that handles camera manipulation and data caching. 
 
-        Parameters
-        ----------
-        datadir : str
-            directory to put intermediate and output files, 'firestudio' is appended
-            if the directory contains sim_name
-        snapnum : int
-            snapshot number (feel free to lie if you aren't using
-            FIRE_studio to open a snapshot, it is needed for cache file name though)
-        sim_name : str
-            name of the simulation, i.e. m12i_res7100. prepends the cache_file_name
-            if the sim_name isn't already in the path to disambiguate caches.  
-        cache_file_name : str, optional
-            the name of the file to save maps to,
-            by default 'proj_maps_%03d.hdf5'%snapnum
-        gas_snapdict : dict, optional
-            a dictionary containing gas data (or that which should be treated as 
-            gas data, depending on the context), by default None
-        star_snapdict : dict, optional
-            a dictionary containing collisionless particle data (i.e. star particles, or
-            that which should be treated as star data, depending on the context),
-            by default None
-        galaxy_kwargs : dict, optional
-            dictionary that contains kwargs that should be passed to the opened
-            abg_python.galaxy.Galaxy instance that is used to load snapshot data from disk,
-            by default None
-        master_loud : bool, optional
-            flag for enabling/disabling *all* print statements, by default True
+        :param datadir:
+            directory to put intermediate and output files, ``'firestudio'``\
+            is appended if the directory contains sim_name
+        :type datadir: str
+        :param snapnum: 
+            snapshot number (feel free to lie if you aren't using FIRE_studio\
+            to open a snapshot, it is needed for cache file name though)
+        :type snapnum: int
+        :param sim_name: 
+            name of the simulation, i.e. ``'m12i_res7100'``.\
+            prepends the cache_file_name if the sim_name isn't already in the path to disambiguate caches.  
+        :type sim_name: str
+        :param cache_file_name: the name of the file to save maps to, if None ``'proj_maps_%03d.hdf5'%snapnum``, defaults to ``None``
+        :type cache_file_name: str, optional
+        :param gas_snapdict: a dictionary containing SPH data, defaults to ``None``
+        :type gas_snapdict: dict, optional
+        :param star_snapdict: a dictionary containing collisionless particle data, defaults to ``None``
+        :type star_snapdict: dict, optional
+        :param galaxy_kwargs: dictionary that contains kwargs that should be passed to the opened ``abg_python.galaxy.Galaxy`` instance that is used to load snapshot data from disk, defaults to ``None``
+        :type galaxy_kwargs: dict, optional
+        :param master_loud: flag for enabling/disabling *all* print statements, defaults to True
+        :type master_loud: bool, optional
+        :param setup_id_append: suffix to append to the ``setup_id`` in the cache file, defaults to ''
+        :type setup_id_append: str, optional
         """
         
         ## bind loud flag
@@ -503,52 +473,41 @@ class Studio(Drawer):
         gas_mask:np.ndarray=None,
         star_mask:np.ndarray=None,
         **kwargs):
-        """ Binds simulation output to self.gas_snapdict and self.star_snapdict.
+        """ Binds simulation output to ``self.gas_snapdict`` and ``self.star_snapdict``.
 
-        Parameters
-        ----------
-        gas_mask : bool np.ndarray, optional
-            boolean mask that should be applied to the galaxy.sub_snap, by default None
-        star_mask : bool np.ndarry, optional
-            boolean mask that should be applied to the galaxy.sub_star_snap, by default None
+        :param gas_mask: 
+            boolean mask that should be applied to the ``galaxy.sub_snap``, defaults to ``None``
+        :type gas_mask: np.ndarray, optional
+        :param star_mask:
+            boolean mask that should be applied to the ``galaxy.sub_star_snap``, defaults to ``None``
+        :type star_mask: np.ndarray, optional
         
-        Keywords
-        --------
-            use_saved_subsnapshots: bool, optional
-                save/load subsnapshots, uncompressed copies of the snapshot
-                oriented on the main disk with particles within the virial radius. This can 
-                take up lots of disk space, by default False
-            del_galaxy: bool, optional 
-                flag for whether the abg_python.galaxy.gal_utils.Galaxy object should be deleted after 
-                being used to get the snapshot dictionaries.
 
-        Returns
-        -------
-        ``abg_python.galaxy.Galaxy``
-            None/abg_python.galaxy.Galaxy object -- if del_galaxy == False then returns the galaxy object, 
-            otherwise returns None.
+        :kwargs:
+            * **fuse_saved_subsnapshots** (`bool`, `optional`) -- \
+                save/load subsnapshots, uncompressed copies of the snapshot\
+                oriented on the main disk with particles within the virial radius.\
+                This can take up lots of disk space, defaults to ``False``
+            * **del_galaxy** (`bool`, `optional`) -- \
+                flag for whether the abg_python.galaxy.gal_utils.Galaxy object should be deleted after\
+                being used to get the snapshot dictionaries, defaults to ``True``
 
+        :return: 
+            ``abg_python.galaxy.Galaxy`` if ``del_galaxy == False``, otherwise returns ``None``
+        :rtype: ``None``/``abg_python.galaxy.Galaxy`` object
         """
-
-        
 
         ## determine if we need to open any snapshot data
         if (self.gas_snapdict is None or 
             self.gas_snapdict['snapnum'] != self.snapnum ): ## haven't loaded this data yet, or we are replacing it
             return_value = self.__get_snapdicts(**kwargs)
 
-            if hasattr(self,'masked_gas_snapdict'):
-                del self.masked_gas_snapdict
-
-            if hasattr(self,'masked_star_snapdict'):
-                del self.masked_star_snapdict
-    
+            if hasattr(self,'masked_gas_snapdict'): del self.masked_gas_snapdict
+            if hasattr(self,'masked_star_snapdict'): del self.masked_star_snapdict
 
         ## apply a mask to the snapdict if requested to
-        if gas_mask is not None:
-            self.masked_gas_snapdict = filterDictionary(self.gas_snapdict,gas_mask)
-        if star_mask is not None:
-            self.masked_star_snapdict = filterDictionary(self.star_snapdict,star_mask)
+        if gas_mask is not None: self.masked_gas_snapdict = filterDictionary(self.gas_snapdict,gas_mask)
+        if star_mask is not None: self.masked_star_snapdict = filterDictionary(self.star_snapdict,star_mask)
 
         return return_value
 
@@ -561,31 +520,24 @@ class Studio(Drawer):
         loud:bool=True,
         **kwargs, 
         ):
-        """ Compute smoothing lengths for particles that don't have them,
+        """ Compute smoothing lengths for particles that don't have them,\
             typically collisionless particles (like stars). 
 
-        Parameters
-        ----------
-        snapdict_name : str
-            string identifying which snapdict should be used
-            used to compute smoothing lengths, either 'gas' or 'star'
-        use_metadata : bool, optional
-            flag for whether a cached result should be used (if it exists), by default True
-        save_meta : bool, optional
-            flag to save the result in the cache, by default True
-        assert_cached : bool, optional
-            flag to require a cache hit and raise an exception otherwise, by default False
-        loud : bool, optional
-            flag for whether cache hits/misses should be announced
-            to the console., by default True
-
-        Returns
-        -------
-        np.float32 np.ndarray
-            estimated smoothing lengths
+        :param snapdict_name: 
+            string identifying which snapdict should be used\
+            to compute smoothing lengths, either ``'gas'`` or ``'star'``
+        :type snapdict_name: str
+        :param use_metadata: flag for whether a cached result should be used (if it exists), defaults to ``True``
+        :type use_metadata: bool, optional
+        :param save_meta: flag to save the result in the cache, defaults to ``True``
+        :type save_meta: bool, optional
+        :param assert_cached: flag to require a cache hit and raise an exception otherwise, defaults to ``False``
+        :type assert_cached: bool, optional
+        :param loud: flag for whether cache hits/misses should be announced to the console, defaults to ``True``
+        :type loud: bool, optional
+        :return: estimated smoothing lengths
+        :rtype: ``np.float32`` ``np.ndarray``
         """
-
-        
 
         @metadata_cache(
             '%s_data'%snapdict_name,  ## hdf5 file group name
@@ -608,23 +560,18 @@ class Studio(Drawer):
         use_saved_subsnapshots:bool=False,
         del_galaxy:bool=True,
         **kwargs):
-        """ Open an abg_python.galaxy.gal_utils.Galaxy instance to load
-            snapshot data from disk.
+        """ Open an abg_python.galaxy.gal_utils.Galaxy instance to load snapshot data from disk.
 
-        Parameters
-        ----------
-        use_saved_subsnapshots : bool, optional
-            flag to cache particle data within the virial radius by 
-            saving it to disk in a "subsnapshot" hdf5 file, by default False
-        del_galaxy : bool, optional
-            delete the Galaxy object after binding the gas and star snapdicts,
-            else return it, by default True
-
-        Returns
-        -------
-        abg_python.galaxy.gal_utils.Galaxy
-            the Galaxy instance used to open snapshot data, 
-            only returned if `del_galaxy=False`
+        :param use_saved_subsnapshots:
+            flag to cache particle data within the virial radius by saving\
+            it to disk in a "subsnapshot" hdf5 file, defaults to ``False``
+        :type use_saved_subsnapshots: bool, optional
+        :param del_galaxy: 
+            delete the Galaxy object after binding the gas and\
+            star snapdicts, else return it, defaults to ``True``
+        :type del_galaxy: bool, optional
+        :return: ``abg_python.galaxy.Galaxy`` if ``del_galaxy == False``, otherwise returns None.
+        :rtype: ``None``/``abg_python.galaxy.Galaxy`` object
         """
 
         these_kwargs = self.galaxy_kwargs.copy()
@@ -658,67 +605,64 @@ class Studio(Drawer):
         use_defaults:bool=False,
         loud:bool=True,
         **kwargs):
-        """ Changes the parameters of the image such as camera orientation, frame size, etc. 
-            If `use_defaults=True` then default values of the parameters will be set and will 
-            overwrite the current state. Leave `use_defaults=False` to adjust only the keywords passed.
+        """ Changes the parameters of the image such as camera orientation, frame size, etc.\
+        If ``use_defaults=True`` then default values of the parameters will be set and will overwrite the current state. \
+        Leave ``use_defaults=False`` to adjust only the keywords passed.
 
-        Parameters
-        ----------
-        this_setup_id : str, optional
-            string to use to identify this combination of image parameters. If None, 
-            then the image parameters are stringified and combined, by default None
-        use_defaults : bool, optional
-            overwrite current state with default values of each parameter, useful for initialization
-            or resetting after making changes, by default False
-        loud : bool, optional
-            flag to print which parameters are being set/updated, by default True
-        
-        Keywords
-        --------
-        frame_half_thickness : float
-            half-thickness of image in z direction, by default self.camera.camera_dist
-        aspect_ratio: float
-            ratio of number of pixels in each direction determining 
-            the shape of image, y/x, by default 1
-        pixels: int
-            pixels in x direction, resolution of image, by default 1200
-        figure_label: str
-            string to be put in upper right corner, by default ''
-        figure_label_side: str 
-            side of the image to put label in, by default 'right' 
-        scale_bar: bool
-            flag to plot length scale bar in lower left corner, by default True
-        scale_line_length: float
-            length of the scale bar in kpc, by default 5
-        noaxis: bool
-            turns off axis ticks and labels, by default True
-        savefig: str
-            save the image as a png if passed a string or does not save a figure if None, by default None
-        fontsize: int
-            fontsize (in pt) of figure label and scale bar text, 12
-        font_color: str/RGBA tuple
-            color of the subtitle font, by default 'white'
-        snapdir: str
-            path to simulation output
-        snapnum: int
-            which snapshot to open/use for naming the cache
-        sim_name: str
-            name of simulation (i.e. m12i_res7100)
+        :param this_setup_id: 
+            string to use to identify this combination of image parameters. If ``None``,\
+            then the image parameters are stringified and combined, defaults to ``None``
+        :type this_setup_id: str, optional
+        :param use_defaults: 
+            overwrite current state with default values of each parameter,\
+            useful for initialization or resetting after making changes, defaults to ``False``
+        :type use_defaults: bool, optional
+        :param loud: 
+            flag to print which parameters are being set/updated, defaults to ``True``
+        :type loud: bool, optional
 
-        Raises
-        ------
-        ValueError
-            if camera=None is passed explicitly, instead pass an open 
-            `firestudio.utils.camera_utils.Camera instance`
+        :kwargs:
+            * **frame_half_thickness** (`float`, `optional`) -- \
+                half-thickness of image in z direction, defaults to ``self.camera.camera_dist``
+            * **aspect_ratio** (`float`, `optional`) -- \
+                ratio of number of pixels in each direction determining the shape of image, y/x, defaults to ``1``
+            * **pixels** (`int`, `optional`) -- \
+                pixels in x direction, resolution of image, defaults to ``1200``
+            * **figure_label** (`str`, `optional`) -- \
+                string to be put in upper right corner, defaults to ``''``
+            * **figure_label_side** (`str`, `optional`) -- \
+                side of the image to put label in, defaults to ``'right'``
+            * **scale_bar** (`bool`, `optional`) -- \
+                flag to plot length scale bar in lower left corner, defaults to ``True``
+            * **scale_line_length** (`float`, `optional`) -- \
+                length of the scale bar in kpc, defaults to ``5``
+            * **noaxis** (`bool`, `optional`) -- \
+                turns off axis ticks and labels, defaults to ``True``
+            * **savefig** (`str`, `optional`) -- \
+                save the image as a png if passed a string or does not save a figure if ``None``, defaults to ``None``
+            * **fontsize** (`int`, `optional`) -- \
+                fontsize (in pt) of figure label and scale bar text, defaults to ``12``
+            * **font_color** (`str/RGBA tuple`, `optional`) -- \
+                color of the subtitle font, defaults to ``'white'``
+            * **snapdir** (`str`, `optional`) -- \
+                path to simulation output
+            * **snapnum** (`int`, `optional`) -- \
+                which snapshot to open/use for naming the cache
+            * **sim_name** (`str`, `optional`) -- \
+                name of simulation (i.e. ``'m12i_res7100'``)
 
-        Example usage
-        -------------
-```python
-studio.set_ImageParams(
-    this_setup_id='my_custom_setup',
-    scale_bar=False,
-    figure_label='high redshift')
-```"""
+        :raises ValueError: if ``camera=None`` is passed explicitly, instead pass an open :class:`firestudio.utils.camera_utils.Camera` instance
+
+        :Example usage:
+        ---------------
+
+        .. code-block:: python
+
+            studio.set_ImageParams(
+                this_setup_id='my_custom_setup',
+                scale_bar=False,
+                figure_label='high redshift')
+        """
         
 
         default_kwargs = {
@@ -809,15 +753,9 @@ studio.set_ImageParams(
     def set_CacheFile(self):
         """ Creates the cache hdf5 file. Requires self.snapnum and sim_name be set.
 
-        Returns
-        ------- 
-        abg_python.galaxy.metadata_utils.Metadata
-            cache file for storing image maps
-
-        Raises
-        ------
-        IOError
-            if self.snapnum and self.sim_name are not set to disambiguate the cache file
+        :raises IOError: if self.snapnum and self.sim_name are not set to disambiguate the cache file
+        :return: cache file for storing image maps
+        :rtype: ``abg_python.galaxy.metadata_utils.Metadata``
         """
         
 
@@ -843,6 +781,7 @@ studio.set_ImageParams(
 
     def print_ImageParams(self):
         """ Prints the current image parameters."""
+
         default_kwargs = [
             'frame_half_thickness',
             'aspect_ratio',
@@ -861,14 +800,12 @@ studio.set_ImageParams(
             print(arg,'=',getattr(self,arg))
 
     def __identifyThisSetup(self):
-        """ stringifies image parameters and combines them to 'uniquely' 
-            hash this combination of input in the cache file
+        """ stringifies image parameters and combines them to 'uniquely' hash this combination of input in the cache file
 
-        Returns
-        -------
-        str
-            a stringified combination of image parameters
+        :return: a stringified combination of image parameters
+        :rtype: str
         """
+
         ## uniquely identify this projection setup using a simple "hash"
         rotation_string = 'quat_%.2f_%.2f_%.2f_%.2f'%(
             np.round(self.camera.quaternion[0],decimals=2),
@@ -893,13 +830,14 @@ studio.set_ImageParams(
             x, y, and z limits as well as the physical resolution of the image.
             
 
-            Attributes set
-            --------------
-            self.Xmin, self.Xmax -- 
-            self.Ymin, self.Ymax -- 
-            self.Zmin, self.Zmax -- 
-            self.npix_x, self.npix_y -- 
-            self.Acell -- 
+            Sets following attributes
+            -------------------------
+
+            ``self.Xmin``, ``self.Xmax`` -- 
+            ``self.Ymin``, ``self.Ymax`` -- 
+            ``self.Zmin``, ``self.Zmax`` -- 
+            ``self.npix_x``, ``self.npix_y`` -- 
+            ``self.Acell`` -- 
                 
         """
         ## +- camera_dist limits -> 45 degree FOV
@@ -913,27 +851,20 @@ studio.set_ImageParams(
             [-self.frame_half_thickness,self.frame_half_thickness])
 
         ## Set image size 
-        self.npix_x   = self.pixels #1200 by default
-        self.npix_y   = int(self.pixels*self.aspect_ratio) #1200 by default
+        self.npix_x   = self.pixels #1200 defaults to
+        self.npix_y   = int(self.pixels*self.aspect_ratio) #1200 defaults to
 
         self.Acell = (self.Xmax-self.Xmin)/self.npix_x * (self.Ymax-self.Ymin)/self.npix_y
 
     def cullFrameIndices(self,Coordinates:np.ndarray):
-        """ boolean mask of those particles within the volume defined by 
-            Xmin-Xmax, Ymin-Ymax, and Zmin-Zmax
+        """ boolean mask of those particles within the volume defined by Xmin-Xmax, Ymin-Ymax, and Zmin-Zmax
 
-        Parameters
-        ----------
-        Coordinates : (N,3) np.ndarray 
-            array of particle coordinates
-
-        Returns
-        -------
-        bool np.ndarray
-            a boolean mask which is `True` for particles in the extraction volume
-            and `False` outside.
-            
+        :param Coordinates: array of particle coordinates
+        :type Coordinates: np.ndarray
+        :return: a boolean mask which is `True` for particles in the extraction volume and `False` outside.
+        :rtype: bool np.ndarray
         """
+        
 
         ## extract a cube of particles that are in relevant area
         ind_box = ((Coordinates[:,0] > self.Xmin) & (Coordinates[:,0] < self.Xmax) &
