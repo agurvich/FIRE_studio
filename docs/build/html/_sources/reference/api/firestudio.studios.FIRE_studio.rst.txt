@@ -1,0 +1,31 @@
+﻿firestudio.studios.FIRE\_studio
+===============================
+
+.. automodule:: firestudio.studios.FIRE_studio
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class.rst
+   
+      FIREStudio
+   
+   
+
+   
+   
+   
+
+
+

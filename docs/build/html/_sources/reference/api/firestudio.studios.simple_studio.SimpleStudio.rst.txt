@@ -1,0 +1,48 @@
+firestudio.studios.simple\_studio.SimpleStudio
+==============================================
+
+.. currentmodule:: firestudio.studios.simple_studio
+
+.. autoclass:: SimpleStudio
+   :members:
+   :show-inheritance:
+   :inherited-members:
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~SimpleStudio.__init__
+      ~SimpleStudio.addScaleBar
+      ~SimpleStudio.addText
+      ~SimpleStudio.computeFrameBoundaries
+      ~SimpleStudio.cullFrameIndices
+      ~SimpleStudio.drawCoordinateAxes
+      ~SimpleStudio.get_HSML
+      ~SimpleStudio.gradientBlendImages
+      ~SimpleStudio.load_SnapshotData
+      ~SimpleStudio.plotImage
+      ~SimpleStudio.prepareCoordinates
+      ~SimpleStudio.print_ImageParams
+      ~SimpleStudio.produceImage
+      ~SimpleStudio.render
+      ~SimpleStudio.renormalizeTransposeImage
+      ~SimpleStudio.saveFigure
+      ~SimpleStudio.set_CacheFile
+      ~SimpleStudio.set_ImageParams
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~SimpleStudio.required_snapdict_keys
+   
+   

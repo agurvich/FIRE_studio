@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>firestudio.utils.camera_utils &mdash; firestudio 2.0.0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../index.html" class="icon icon-home"> firestudio
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../gas_projection.html">Gas projections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mock_hubble.html">Mock hubble images</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/index.html">Tutorial Notebooks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/api/api.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">firestudio</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      <li>firestudio.utils.camera_utils</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for firestudio.utils.camera_utils</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">abg_python.math_utils</span> <span class="kn">import</span> <span class="n">getThetasTaitBryan</span><span class="p">,</span><span class="n">construct_quaternion</span><span class="p">,</span><span class="n">q_to_rotation_matrix</span><span class="p">,</span><span class="n">q_mult</span><span class="p">,</span><span class="n">rotateQuaternion</span>
+
+<div class="viewcode-block" id="Camera"><a class="viewcode-back" href="../../../reference/api/firestudio.utils.camera_utils.Camera.html#firestudio.utils.camera_utils.Camera">[docs]</a><span class="k">class</span> <span class="nc">Camera</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;Camera(</span><span class="si">%s</span><span class="s2">,</span><span class="si">%s</span><span class="s2">) - </span><span class="si">%s</span><span class="s2"> &quot;</span><span class="o">%</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">camera_pos</span><span class="p">),</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">camera_focus</span><span class="p">),</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">quaternion</span><span class="p">))</span>
+
+<div class="viewcode-block" id="Camera.__init__"><a class="viewcode-back" href="../../../reference/api/firestudio.utils.camera_utils.Camera.html#firestudio.utils.camera_utils.Camera.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">camera_pos</span><span class="p">,</span><span class="n">camera_focus</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">camera_north</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">quaternion</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">camera_pos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">camera_pos</span><span class="p">,</span><span class="n">ndmin</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="c1">## default to looking at the center</span>
+        <span class="k">if</span> <span class="n">camera_focus</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="n">camera_focus</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span> <span class="n">camera_focus</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">camera_focus</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">camera_focus</span> <span class="o">=</span> <span class="n">camera_focus</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">camera_pos</span> <span class="o">=</span> <span class="n">camera_pos</span>
+
+        <span class="n">camera_normal</span> <span class="o">=</span> <span class="n">camera_pos</span><span class="o">-</span><span class="n">camera_focus</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">camera_dist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">camera_normal</span><span class="p">)</span>
+        <span class="n">camera_normal</span> <span class="o">=</span> <span class="n">camera_normal</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">camera_dist</span>
+
+        <span class="k">if</span> <span class="n">quaternion</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+
+            <span class="c1">## rotate to match camera orientation-- there&#39;s a negative sign here</span>
+            <span class="c1">##  based on my definition of getThetasTaitBryan which was originally </span>
+            <span class="c1">##  designed to align along angular momentum vector which pointed from </span>
+            <span class="c1">##  the origin to the camera rather than from the camera to the origin</span>
+            <span class="n">theta</span><span class="p">,</span> <span class="n">phi</span> <span class="o">=</span> <span class="n">getThetasTaitBryan</span><span class="p">(</span><span class="n">camera_normal</span><span class="p">)</span>
+
+            <span class="c1">#https://yt-project.org/doc/_modules/yt/visualization/volume_rendering/off_axis_projection.html#off_axis_projection</span>
+            <span class="c1">##  the below is some voodoo from yt which figures out the &quot;appropriate&quot; camera north</span>
+            <span class="c1">##  somehow it nails it and gives intuitive results but i do not understand why</span>
+            <span class="k">if</span> <span class="n">camera_north</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">vecs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+                <span class="n">t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">vecs</span><span class="p">,</span> <span class="n">camera_normal</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                <span class="n">ax</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">argmax</span><span class="p">()</span>
+                <span class="n">east_vector</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">vecs</span><span class="p">[</span><span class="n">ax</span><span class="p">,</span> <span class="p">:],</span> <span class="n">camera_normal</span><span class="p">)</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+                <span class="n">camera_north</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">camera_normal</span><span class="p">,</span> <span class="n">east_vector</span><span class="p">)</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">camera_north</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">camera_north</span><span class="p">)</span>
+                <span class="n">camera_north</span> <span class="o">=</span> <span class="n">camera_north</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">camera_north</span><span class="p">)</span>
+
+            <span class="c1">## consider the rotation minus psi</span>
+            <span class="n">temp_quaternion</span> <span class="o">=</span> <span class="n">construct_quaternion</span><span class="p">([</span><span class="n">theta</span><span class="p">,</span><span class="n">phi</span><span class="p">],</span><span class="s1">&#39;xy&#39;</span><span class="p">)</span>
+
+            <span class="c1">## rotate the north vector into this temporary frame</span>
+            <span class="n">foo</span> <span class="o">=</span> <span class="n">rotateQuaternion</span><span class="p">(</span><span class="n">temp_quaternion</span><span class="p">,</span><span class="n">camera_north</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
+
+            <span class="c1">## find the angle between the rotated north vector and the y-axis</span>
+            <span class="n">psi</span> <span class="o">=</span> <span class="mi">90</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">arctan2</span><span class="p">(</span><span class="n">foo</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">foo</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">*</span><span class="mi">180</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">quaternion</span> <span class="o">=</span> <span class="n">construct_quaternion</span><span class="p">([</span><span class="n">theta</span><span class="p">,</span><span class="n">phi</span><span class="p">,</span><span class="n">psi</span><span class="p">],</span><span class="s1">&#39;xyz&#39;</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">quaternion</span> <span class="o">=</span> <span class="n">quaternion</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">quat_rot_matrix</span> <span class="o">=</span> <span class="n">q_to_rotation_matrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">quaternion</span><span class="p">)</span></div>
+    
+    <span class="k">def</span> <span class="nf">convolve_quaternion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">new_quat</span><span class="p">):</span>
+        <span class="n">quaternion</span> <span class="o">=</span> <span class="n">q_mult</span><span class="p">(</span><span class="n">new_quat</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">quaternion</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">replace_quaternion</span><span class="p">(</span><span class="n">quaternion</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">replace_quaternion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">new_quat</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">quaternion</span> <span class="o">=</span> <span class="n">new_quat</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">quat_rot_matrix</span> <span class="o">=</span> <span class="n">q_to_rotation_matrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">quaternion</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">rotate_array</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">arr</span><span class="p">,</span><span class="n">offset</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="n">rotated_positions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">quat_rot_matrix</span><span class="p">,</span>
+                <span class="n">arr</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">,</span>
+            <span class="n">order</span><span class="o">=</span><span class="s1">&#39;C&#39;</span><span class="p">,</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">offset</span><span class="p">:</span> <span class="n">rotated_center</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">quat_rot_matrix</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">camera_focus</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">T</span><span class="p">,</span>
+            <span class="n">order</span><span class="o">=</span><span class="s1">&#39;C&#39;</span><span class="p">,</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span> <span class="n">rotated_center</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="k">return</span> <span class="n">rotated_positions</span> <span class="o">-</span> <span class="n">rotated_center</span>
+
+    <span class="k">def</span> <span class="nf">clip</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">coords</span><span class="p">,</span><span class="n">vels</span><span class="p">):</span>
+
+        <span class="n">new_coords</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rotate_array</span><span class="p">(</span><span class="n">coords</span><span class="p">,</span><span class="n">offset</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">new_vels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rotate_array</span><span class="p">(</span><span class="n">vels</span><span class="p">)</span> <span class="k">if</span> <span class="n">vels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+
+        <span class="c1">## then determine the camera distance from the camera focus</span>
+        <span class="c1">##  and take FOV = 45 degrees left + 45 degrees right i.e. </span>
+        <span class="c1">##  xmin,xmax = -z,+z</span>
+        <span class="c1">##  ymin,ymax = -z,+z</span>
+        <span class="c1">##  where z is measured as the distance from the camera to the camera focus</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">new_coords</span><span class="p">[:,</span><span class="mi">0</span><span class="p">])</span><span class="o">&lt;</span><span class="bp">self</span><span class="o">.</span><span class="n">camera_dist</span><span class="p">,</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">new_coords</span><span class="p">[:,</span><span class="mi">1</span><span class="p">])</span><span class="o">&lt;</span><span class="bp">self</span><span class="o">.</span><span class="n">camera_dist</span><span class="p">)</span>
+
+        <span class="n">new_coords</span> <span class="o">=</span> <span class="n">new_coords</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">new_vels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span> <span class="n">new_vels</span> <span class="o">=</span> <span class="n">new_vels</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">new_coords</span><span class="p">,</span> <span class="n">new_vels</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Alex Gurvich.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

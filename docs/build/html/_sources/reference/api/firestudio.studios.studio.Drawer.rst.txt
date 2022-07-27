@@ -1,0 +1,33 @@
+firestudio.studios.studio.Drawer
+================================
+
+.. currentmodule:: firestudio.studios.studio
+
+.. autoclass:: Drawer
+   :members:
+   :show-inheritance:
+   :inherited-members:
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Drawer.__init__
+      ~Drawer.addScaleBar
+      ~Drawer.addText
+      ~Drawer.drawCoordinateAxes
+      ~Drawer.gradientBlendImages
+      ~Drawer.plotImage
+      ~Drawer.render
+      ~Drawer.renormalizeTransposeImage
+      ~Drawer.saveFigure
+   
+   
+
+   
+   
+   

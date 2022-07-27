@@ -19,8 +19,8 @@
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="firestudio.studios.studio.Studio" href="studios/firestudio.studios.studio.Studio.html" />
-    <link rel="prev" title="Welcome to firestudio’s documentation!" href="../../index.html" /> 
+    <link rel="next" title="firestudio.studios.studio" href="firestudio.studios.studio.html" />
+    <link rel="prev" title="Untitled.ipynb" href="../../tutorials/Untitled.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -39,17 +39,21 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../gas_projection.html">Gas projections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../mock_hubble.html">Mock hubble images</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/index.html">Tutorial Notebooks</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">API Reference</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#base-classes">Base classes</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="studios/firestudio.studios.studio.Studio.html">firestudio.studios.studio.Studio</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#studios">Studios</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="firestudio.studios.studio.html">firestudio.studios.studio</a></li>
+<li class="toctree-l3"><a class="reference internal" href="firestudio.studios.gas_studio.html">firestudio.studios.gas_studio</a></li>
+<li class="toctree-l3"><a class="reference internal" href="firestudio.studios.star_studio.html">firestudio.studios.star_studio</a></li>
+<li class="toctree-l3"><a class="reference internal" href="firestudio.studios.FIRE_studio.html">firestudio.studios.FIRE_studio</a></li>
+<li class="toctree-l3"><a class="reference internal" href="firestudio.studios.simple_studio.html">firestudio.studios.simple_studio</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#utility-functions">utility functions</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="utilities/firestudio.utils.stellar_utils.html">firestudio.utils.stellar_utils</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#interpolation">interpolation</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="interpolation/firestudio.studios.star_studio.StarStudio.html">firestudio.studios.star_studio.StarStudio</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#utilities">Utilities</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="firestudio.utils.camera_utils.html">firestudio.utils.camera_utils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="firestudio.utils.stellar_utils.html">firestudio.utils.stellar_utils</a></li>
 </ul>
 </li>
 </ul>
@@ -106,52 +110,45 @@
 </style>
 <section id="api-reference">
 <span id="api"></span><h1>API Reference<a class="headerlink" href="#api-reference" title="Permalink to this headline"></a></h1>
-<section id="base-classes">
-<span id="studios-api"></span><h2>Base classes<a class="headerlink" href="#base-classes" title="Permalink to this headline"></a></h2>
+<section id="studios">
+<span id="studios-api"></span><h2>Studios<a class="headerlink" href="#studios" title="Permalink to this headline"></a></h2>
 <table class="longtable docutils align-default">
 <colgroup>
 <col style="width: 10%" />
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="studios/firestudio.studios.studio.Studio.html#firestudio.studios.studio.Studio" title="firestudio.studios.studio.Studio"><code class="xref py py-obj docutils literal notranslate"><span class="pre">firestudio.studios.studio.Studio</span></code></a>(datadir, ...)</p></td>
-<td><p><cite>FIREstudio</cite> parent class that regularizes image setup, rotation,</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="firestudio.studios.studio.html#module-firestudio.studios.studio" title="firestudio.studios.studio"><code class="xref py py-obj docutils literal notranslate"><span class="pre">firestudio.studios.studio</span></code></a></p></td>
+<td><p></p></td>
 </tr>
-</tbody>
-</table>
-</section>
-<section id="utility-functions">
-<h2>utility functions<a class="headerlink" href="#utility-functions" title="Permalink to this headline"></a></h2>
-<table class="longtable docutils align-default">
-<colgroup>
-<col style="width: 10%" />
-<col style="width: 90%" />
-</colgroup>
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="utilities/firestudio.utils.stellar_utils.html#module-firestudio.utils.stellar_utils" title="firestudio.utils.stellar_utils"><code class="xref py py-obj docutils literal notranslate"><span class="pre">firestudio.utils.stellar_utils</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="firestudio.studios.gas_studio.html#module-firestudio.studios.gas_studio" title="firestudio.studios.gas_studio"><code class="xref py py-obj docutils literal notranslate"><span class="pre">firestudio.studios.gas_studio</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="firestudio.studios.star_studio.html#module-firestudio.studios.star_studio" title="firestudio.studios.star_studio"><code class="xref py py-obj docutils literal notranslate"><span class="pre">firestudio.studios.star_studio</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="firestudio.studios.FIRE_studio.html#module-firestudio.studios.FIRE_studio" title="firestudio.studios.FIRE_studio"><code class="xref py py-obj docutils literal notranslate"><span class="pre">firestudio.studios.FIRE_studio</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="firestudio.studios.simple_studio.html#module-firestudio.studios.simple_studio" title="firestudio.studios.simple_studio"><code class="xref py py-obj docutils literal notranslate"><span class="pre">firestudio.studios.simple_studio</span></code></a></p></td>
 <td><p></p></td>
 </tr>
 </tbody>
 </table>
 </section>
-<section id="interpolation">
-<span id="interpolation-api"></span><h2>interpolation<a class="headerlink" href="#interpolation" title="Permalink to this headline"></a></h2>
+<section id="utilities">
+<h2>Utilities<a class="headerlink" href="#utilities" title="Permalink to this headline"></a></h2>
 <table class="longtable docutils align-default">
 <colgroup>
 <col style="width: 10%" />
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="interpolation/firestudio.studios.star_studio.StarStudio.html#firestudio.studios.star_studio.StarStudio" title="firestudio.studios.star_studio.StarStudio"><code class="xref py py-obj docutils literal notranslate"><span class="pre">firestudio.studios.star_studio.StarStudio</span></code></a>(...)</p></td>
-<td><p>FIREstudio class for making mock hubble images with attenuation along the line of sight.
-
-:2: (WARNING/2) Title underline too short.
-
-<cite>FIREstudio</cite> class for making mock hubble images with attenuation along the line of sight.
---------
-
-### StarStudio.set_ImageParams:
-Changes the parameters of the image.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="firestudio.utils.camera_utils.html#module-firestudio.utils.camera_utils" title="firestudio.utils.camera_utils"><code class="xref py py-obj docutils literal notranslate"><span class="pre">firestudio.utils.camera_utils</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="firestudio.utils.stellar_utils.html#module-firestudio.utils.stellar_utils" title="firestudio.utils.stellar_utils"><code class="xref py py-obj docutils literal notranslate"><span class="pre">firestudio.utils.stellar_utils</span></code></a></p></td>
+<td><p></p></td>
 </tr>
 </tbody>
 </table>
@@ -162,8 +159,8 @@ Changes the parameters of the image.</p></td>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="../../index.html" class="btn btn-neutral float-left" title="Welcome to firestudio’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="studios/firestudio.studios.studio.Studio.html" class="btn btn-neutral float-right" title="firestudio.studios.studio.Studio" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../../tutorials/Untitled.html" class="btn btn-neutral float-left" title="Untitled.ipynb" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="firestudio.studios.studio.html" class="btn btn-neutral float-right" title="firestudio.studios.studio" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

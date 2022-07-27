@@ -5,31 +5,25 @@ API Reference
 
 .. _studios api:
 
-Base classes
-------------
-.. autosummary::
-    :toctree: studios
+Studios
+-------
+.. autosummary:: 
+    :toctree:
+    :template: custom-module.rst
     :recursive:
 
-    firestudio.studios.studio.Studio
+    firestudio.studios.studio
+    firestudio.studios.gas_studio
+    firestudio.studios.star_studio
+    firestudio.studios.FIRE_studio
+    firestudio.studios.simple_studio
 
-
-utility functions
------------------
-
-.. autosummary::
-    :toctree: utilities
+Utilities
+---------
+.. autosummary:: 
+    :toctree:
+    :template: custom-module.rst
     :recursive:
 
+    firestudio.utils.camera_utils
     firestudio.utils.stellar_utils
-
-.. _interpolation api:
-
-interpolation
--------------
-
-.. autosummary::
-    :toctree: interpolation
-    :recursive:
-
-    firestudio.studios.star_studio.StarStudio

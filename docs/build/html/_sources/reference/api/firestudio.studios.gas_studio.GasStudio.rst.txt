@@ -1,0 +1,50 @@
+firestudio.studios.gas\_studio.GasStudio
+========================================
+
+.. currentmodule:: firestudio.studios.gas_studio
+
+.. autoclass:: GasStudio
+   :members:
+   :show-inheritance:
+   :inherited-members:
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~GasStudio.__init__
+      ~GasStudio.addScaleBar
+      ~GasStudio.addText
+      ~GasStudio.computeFrameBoundaries
+      ~GasStudio.cullFrameIndices
+      ~GasStudio.drawCoordinateAxes
+      ~GasStudio.get_HSML
+      ~GasStudio.gradientBlendImages
+      ~GasStudio.load_SnapshotData
+      ~GasStudio.plotImage
+      ~GasStudio.prepareCoordinates
+      ~GasStudio.print_ImageParams
+      ~GasStudio.produceImage
+      ~GasStudio.projectAlongLOS
+      ~GasStudio.quick_projectAlongLOS
+      ~GasStudio.render
+      ~GasStudio.renormalizeTransposeImage
+      ~GasStudio.saveFigure
+      ~GasStudio.set_CacheFile
+      ~GasStudio.set_ImageParams
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~GasStudio.required_snapdict_keys
+   
+   

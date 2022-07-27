@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>firestudio.studios.star_studio.StarStudio &mdash; firestudio 2.0.0 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="firestudio.studios.FIRE_studio" href="firestudio.studios.FIRE_studio.html" />
+    <link rel="prev" title="firestudio.studios.star_studio" href="firestudio.studios.star_studio.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html" class="icon icon-home"> firestudio
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../gas_projection.html">Gas projections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../mock_hubble.html">Mock hubble images</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/index.html">Tutorial Notebooks</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="api.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="api.html#studios">Studios</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="firestudio.studios.studio.html">firestudio.studios.studio</a></li>
+<li class="toctree-l3"><a class="reference internal" href="firestudio.studios.gas_studio.html">firestudio.studios.gas_studio</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="firestudio.studios.star_studio.html">firestudio.studios.star_studio</a><ul class="current">
+<li class="toctree-l4 current"><a class="current reference internal" href="#">firestudio.studios.star_studio.StarStudio</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="firestudio.studios.FIRE_studio.html">firestudio.studios.FIRE_studio</a></li>
+<li class="toctree-l3"><a class="reference internal" href="firestudio.studios.simple_studio.html">firestudio.studios.simple_studio</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#utilities">Utilities</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">firestudio</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="api.html">API Reference</a> &raquo;</li>
+          <li><a href="firestudio.studios.star_studio.html">firestudio.studios.star_studio</a> &raquo;</li>
+      <li>firestudio.studios.star_studio.StarStudio</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/reference/api/firestudio.studios.star_studio.StarStudio.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<section id="firestudio-studios-star-studio-starstudio">
+<h1>firestudio.studios.star_studio.StarStudio<a class="headerlink" href="#firestudio-studios-star-studio-starstudio" title="Permalink to this headline"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="firestudio.studios.star_studio.StarStudio">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">firestudio.studios.star_studio.</span></span><span class="sig-name descname"><span class="pre">StarStudio</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">datadir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">snapnum</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sim_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_file_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gas_snapdict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">star_snapdict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">galaxy_kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">master_loud</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">setup_id_append</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/firestudio/studios/star_studio.html#StarStudio"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#firestudio.studios.star_studio.StarStudio" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="firestudio.studios.studio.Studio.html#firestudio.studios.studio.Studio" title="firestudio.studios.studio.Studio"><code class="xref py py-class docutils literal notranslate"><span class="pre">firestudio.studios.studio.Studio</span></code></a></p>
+<p><a class="reference internal" href="firestudio.studios.studio.Studio.html#firestudio.studios.studio.Studio" title="firestudio.studios.studio.Studio"><code class="xref py py-class docutils literal notranslate"><span class="pre">Studio</span></code></a> class for making mock hubble images with attenuation along the line of sight.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="firestudio.studios.star_studio.StarStudio.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">datadir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">snapnum</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sim_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_file_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gas_snapdict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">star_snapdict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">galaxy_kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">master_loud</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">setup_id_append</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#firestudio.studios.star_studio.StarStudio.__init__" title="Permalink to this definition"></a></dt>
+<dd><p>Base class that handles camera manipulation and data caching.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>datadir</strong> (<em>str</em>) – directory to put intermediate and output files, <code class="docutils literal notranslate"><span class="pre">'firestudio'</span></code>            is appended if the directory contains sim_name</p></li>
+<li><p><strong>snapnum</strong> (<em>int</em>) – snapshot number (feel free to lie if you aren’t using FIRE_studio            to open a snapshot, it is needed for cache file name though)</p></li>
+<li><p><strong>sim_name</strong> (<em>str</em>) – name of the simulation, i.e. <code class="docutils literal notranslate"><span class="pre">'m12i_res7100'</span></code>.            prepends the cache_file_name if the sim_name isn’t already in the path to disambiguate caches.</p></li>
+<li><p><strong>cache_file_name</strong> (<em>str</em><em>, </em><em>optional</em>) – the name of the file to save maps to, if None <code class="docutils literal notranslate"><span class="pre">'proj_maps_%03d.hdf5'%snapnum</span></code>, defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+<li><p><strong>gas_snapdict</strong> (<em>dict</em><em>, </em><em>optional</em>) – a dictionary containing SPH data, defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+<li><p><strong>star_snapdict</strong> (<em>dict</em><em>, </em><em>optional</em>) – a dictionary containing collisionless particle data, defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+<li><p><strong>galaxy_kwargs</strong> (<em>dict</em><em>, </em><em>optional</em>) – dictionary that contains kwargs that should be passed to the opened <code class="docutils literal notranslate"><span class="pre">abg_python.galaxy.Galaxy</span></code> instance that is used to load snapshot data from disk, defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+<li><p><strong>master_loud</strong> (<em>bool</em><em>, </em><em>optional</em>) – flag for enabling/disabling <em>all</em> print statements, defaults to True</p></li>
+<li><p><strong>setup_id_append</strong> (<em>str</em><em>, </em><em>optional</em>) – suffix to append to the <code class="docutils literal notranslate"><span class="pre">setup_id</span></code> in the cache file, defaults to ‘’</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#firestudio.studios.star_studio.StarStudio.__init__" title="firestudio.studios.star_studio.StarStudio.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(datadir, snapnum, sim_name[, ...])</p></td>
+<td><p>Base class that handles camera manipulation and data caching.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#firestudio.studios.star_studio.StarStudio.addScaleBar" title="firestudio.studios.star_studio.StarStudio.addScaleBar"><code class="xref py py-obj docutils literal notranslate"><span class="pre">addScaleBar</span></code></a>(image)</p></td>
+<td><p>_summary_</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#firestudio.studios.star_studio.StarStudio.addText" title="firestudio.studios.star_studio.StarStudio.addText"><code class="xref py py-obj docutils literal notranslate"><span class="pre">addText</span></code></a>(ax)</p></td>
+<td><p>_summary_</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#firestudio.studios.star_studio.StarStudio.computeFrameBoundaries" title="firestudio.studios.star_studio.StarStudio.computeFrameBoundaries"><code class="xref py py-obj docutils literal notranslate"><span class="pre">computeFrameBoundaries</span></code></a>()</p></td>
+<td><p>Uses the camera to calculate the minimum and maximum  x, y, and z limits as well as the physical resolution of the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#firestudio.studios.star_studio.StarStudio.cullFrameIndices" title="firestudio.studios.star_studio.StarStudio.cullFrameIndices"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cullFrameIndices</span></code></a>(Coordinates)</p></td>
+<td><p>boolean mask of those particles within the volume defined by Xmin-Xmax, Ymin-Ymax, and Zmin-Zmax</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#firestudio.studios.star_studio.StarStudio.drawCoordinateAxes" title="firestudio.studios.star_studio.StarStudio.drawCoordinateAxes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">drawCoordinateAxes</span></code></a>(ax[, spacing, length, colors])</p></td>
+<td><p>_summary_</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#firestudio.studios.star_studio.StarStudio.get_HSML" title="firestudio.studios.star_studio.StarStudio.get_HSML"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_HSML</span></code></a>(snapdict_name[, use_metadata, ...])</p></td>
+<td><p>Compute smoothing lengths for particles that don't have them,            typically collisionless particles (like stars).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#firestudio.studios.star_studio.StarStudio.get_mockHubbleImage" title="firestudio.studios.star_studio.StarStudio.get_mockHubbleImage"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_mockHubbleImage</span></code></a>([use_metadata, ...])</p></td>
+<td><p>Projects starlight and approximates attenuatation along line of sight into SDSS u, g, and r bands.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#firestudio.studios.star_studio.StarStudio.gradientBlendImages" title="firestudio.studios.star_studio.StarStudio.gradientBlendImages"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gradientBlendImages</span></code></a>(image_1[, image_2, ...])</p></td>
+<td><p>_summary_</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#firestudio.studios.star_studio.StarStudio.load_SnapshotData" title="firestudio.studios.star_studio.StarStudio.load_SnapshotData"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_SnapshotData</span></code></a>([gas_mask, star_mask])</p></td>
+<td><p>Binds simulation output to <code class="docutils literal notranslate"><span class="pre">self.gas_snapdict</span></code> and <code class="docutils literal notranslate"><span class="pre">self.star_snapdict</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#firestudio.studios.star_studio.StarStudio.plotImage" title="firestudio.studios.star_studio.StarStudio.plotImage"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plotImage</span></code></a>(ax, final_image, **kwargs)</p></td>
+<td><p>Base method for overlaying artists on top of projected image.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#firestudio.studios.star_studio.StarStudio.plotParameterGrid" title="firestudio.studios.star_studio.StarStudio.plotParameterGrid"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plotParameterGrid</span></code></a>([dynrange_init, ...])</p></td>
+<td><p>Plots a grid of images that steps in maxden and dynrange to help the user decide             what values to use, based on their aesthetic preference.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#firestudio.studios.star_studio.StarStudio.predictParameters" title="firestudio.studios.star_studio.StarStudio.predictParameters"><code class="xref py py-obj docutils literal notranslate"><span class="pre">predictParameters</span></code></a>([left_percentile, ...])</p></td>
+<td><p>Guesses what the &quot;best&quot; values for maxden and dynrange are from            the distribution of surface brightnesses in the current image.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#firestudio.studios.star_studio.StarStudio.prepareCoordinates" title="firestudio.studios.star_studio.StarStudio.prepareCoordinates"><code class="xref py py-obj docutils literal notranslate"><span class="pre">prepareCoordinates</span></code></a>([lums, nu_effs, BAND_IDS])</p></td>
+<td><p>Reads snapshot data from <cite>self.snapdict</cite> and <cite>self.star_snapdict</cite> in the            imaging volume defined by <cite>self.Xmin</cite>,`self.Xmax`,`self.Ymin`,`self.Ymax`,`self.Zmin`,`self.Zmax`.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#firestudio.studios.star_studio.StarStudio.print_ImageParams" title="firestudio.studios.star_studio.StarStudio.print_ImageParams"><code class="xref py py-obj docutils literal notranslate"><span class="pre">print_ImageParams</span></code></a>()</p></td>
+<td><p>Prints current image setup to console.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#firestudio.studios.star_studio.StarStudio.produceImage" title="firestudio.studios.star_studio.StarStudio.produceImage"><code class="xref py py-obj docutils literal notranslate"><span class="pre">produceImage</span></code></a>([quick])</p></td>
+<td><p>Generates a mock hubble image, along with any annotations/scale bars, using the stored image parameters.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#firestudio.studios.star_studio.StarStudio.quick_get_mockHubbleImage" title="firestudio.studios.star_studio.StarStudio.quick_get_mockHubbleImage"><code class="xref py py-obj docutils literal notranslate"><span class="pre">quick_get_mockHubbleImage</span></code></a>([lums, nu_effs, ...])</p></td>
+<td><p>Approximate the <cite>~firestudio.studios.StarStudio.get_mockHubbleImage</cite> routine using a 2d histogram.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#firestudio.studios.star_studio.StarStudio.render" title="firestudio.studios.star_studio.StarStudio.render"><code class="xref py py-obj docutils literal notranslate"><span class="pre">render</span></code></a>([ax])</p></td>
+<td><p>Generates an image with the <cite>produceImage</cite> method and then plots it with the <cite>plotImage</cite> method.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#firestudio.studios.star_studio.StarStudio.renormalizeTransposeImage" title="firestudio.studios.star_studio.StarStudio.renormalizeTransposeImage"><code class="xref py py-obj docutils literal notranslate"><span class="pre">renormalizeTransposeImage</span></code></a>(image, min_val, ...)</p></td>
+<td><p>_summary_</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#firestudio.studios.star_studio.StarStudio.saveFigure" title="firestudio.studios.star_studio.StarStudio.saveFigure"><code class="xref py py-obj docutils literal notranslate"><span class="pre">saveFigure</span></code></a>(fig[, image_name])</p></td>
+<td><p>_summary_</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#firestudio.studios.star_studio.StarStudio.set_CacheFile" title="firestudio.studios.star_studio.StarStudio.set_CacheFile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_CacheFile</span></code></a>()</p></td>
+<td><p>Creates the cache hdf5 file.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#firestudio.studios.star_studio.StarStudio.set_ImageParams" title="firestudio.studios.star_studio.StarStudio.set_ImageParams"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_ImageParams</span></code></a>([use_defaults, loud])</p></td>
+<td><p>Changes the parameters of the image.</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#firestudio.studios.star_studio.StarStudio.required_snapdict_keys" title="firestudio.studios.star_studio.StarStudio.required_snapdict_keys"><code class="xref py py-obj docutils literal notranslate"><span class="pre">required_snapdict_keys</span></code></a></p></td>
+<td><p>these are minimum required keys for <a class="reference internal" href="#firestudio.studios.star_studio.StarStudio.render" title="firestudio.studios.star_studio.StarStudio.render"><code class="xref py py-func docutils literal notranslate"><span class="pre">render()</span></code></a> function to run.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="firestudio.studios.star_studio.StarStudio.addScaleBar">
+<span class="sig-name descname"><span class="pre">addScaleBar</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#firestudio.studios.star_studio.StarStudio.addScaleBar" title="Permalink to this definition"></a></dt>
+<dd><p>_summary_</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>image</strong> (<em>np.ndarray</em>) – array of RGB image pixel values</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>image</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="firestudio.studios.star_studio.StarStudio.addText">
+<span class="sig-name descname"><span class="pre">addText</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">matplotlib.axes._axes.Axes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#firestudio.studios.star_studio.StarStudio.addText" title="Permalink to this definition"></a></dt>
+<dd><p>_summary_</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>ax</strong> (<em>plt.Axes</em>) – _description_</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="firestudio.studios.star_studio.StarStudio.computeFrameBoundaries">
+<span class="sig-name descname"><span class="pre">computeFrameBoundaries</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#firestudio.studios.star_studio.StarStudio.computeFrameBoundaries" title="Permalink to this definition"></a></dt>
+<dd><p>Uses the camera to calculate the minimum and maximum 
+x, y, and z limits as well as the physical resolution of the image.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Sets following attributes</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">self.Xmin</span></code>, <code class="docutils literal notranslate"><span class="pre">self.Xmax</span></code> –                 <code class="docutils literal notranslate"><span class="pre">self.Ymin</span></code>, <code class="docutils literal notranslate"><span class="pre">self.Ymax</span></code> –                 <code class="docutils literal notranslate"><span class="pre">self.Zmin</span></code>, <code class="docutils literal notranslate"><span class="pre">self.Zmax</span></code> –                 <code class="docutils literal notranslate"><span class="pre">self.npix_x</span></code>, <code class="docutils literal notranslate"><span class="pre">self.npix_y</span></code> –                 <code class="docutils literal notranslate"><span class="pre">self.Acell</span></code> –</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="firestudio.studios.star_studio.StarStudio.cullFrameIndices">
+<span class="sig-name descname"><span class="pre">cullFrameIndices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Coordinates</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#firestudio.studios.star_studio.StarStudio.cullFrameIndices" title="Permalink to this definition"></a></dt>
+<dd><p>boolean mask of those particles within the volume defined by Xmin-Xmax, Ymin-Ymax, and Zmin-Zmax</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>Coordinates</strong> (<em>np.ndarray</em>) – array of particle coordinates</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a boolean mask which is <cite>True</cite> for particles in the extraction volume and <cite>False</cite> outside.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>bool np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="firestudio.studios.star_studio.StarStudio.drawCoordinateAxes">
+<span class="sig-name descname"><span class="pre">drawCoordinateAxes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">matplotlib.axes._axes.Axes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spacing</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">length</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">colors</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">list</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#firestudio.studios.star_studio.StarStudio.drawCoordinateAxes" title="Permalink to this definition"></a></dt>
+<dd><p>_summary_</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ax</strong> (<em>plt.Axes</em>) – _description_</p></li>
+<li><p><strong>spacing</strong> (<em>float</em><em>, </em><em>optional</em>) – _description_, defaults to <code class="docutils literal notranslate"><span class="pre">1</span></code></p></li>
+<li><p><strong>length</strong> (<em>float</em><em>, </em><em>optional</em>) – _description_, defaults to <code class="docutils literal notranslate"><span class="pre">10</span></code></p></li>
+<li><p><strong>colors</strong> (<em>list</em><em>, </em><em>optional</em>) – _description_, defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>_description_</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>_type_</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="firestudio.studios.star_studio.StarStudio.get_HSML">
+<span class="sig-name descname"><span class="pre">get_HSML</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">snapdict_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_metadata</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_meta</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">assert_cached</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loud</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#firestudio.studios.star_studio.StarStudio.get_HSML" title="Permalink to this definition"></a></dt>
+<dd><p>Compute smoothing lengths for particles that don’t have them,            typically collisionless particles (like stars).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>snapdict_name</strong> (<em>str</em>) – string identifying which snapdict should be used            to compute smoothing lengths, either <code class="docutils literal notranslate"><span class="pre">'gas'</span></code> or <code class="docutils literal notranslate"><span class="pre">'star'</span></code></p></li>
+<li><p><strong>use_metadata</strong> (<em>bool</em><em>, </em><em>optional</em>) – flag for whether a cached result should be used (if it exists), defaults to <code class="docutils literal notranslate"><span class="pre">True</span></code></p></li>
+<li><p><strong>save_meta</strong> (<em>bool</em><em>, </em><em>optional</em>) – flag to save the result in the cache, defaults to <code class="docutils literal notranslate"><span class="pre">True</span></code></p></li>
+<li><p><strong>assert_cached</strong> (<em>bool</em><em>, </em><em>optional</em>) – flag to require a cache hit and raise an exception otherwise, defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
+<li><p><strong>loud</strong> (<em>bool</em><em>, </em><em>optional</em>) – flag for whether cache hits/misses should be announced to the console, defaults to <code class="docutils literal notranslate"><span class="pre">True</span></code></p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>estimated smoothing lengths</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">np.float32</span></code> <code class="docutils literal notranslate"><span class="pre">np.ndarray</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="firestudio.studios.star_studio.StarStudio.get_mockHubbleImage">
+<span class="sig-name descname"><span class="pre">get_mockHubbleImage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">use_metadata</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_meta</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">assert_cached</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loud</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/firestudio/studios/star_studio.html#StarStudio.get_mockHubbleImage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#firestudio.studios.star_studio.StarStudio.get_mockHubbleImage" title="Permalink to this definition"></a></dt>
+<dd><p>Projects starlight and approximates attenuatation along line of sight into SDSS u, g, and r bands.</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">BAND_IDS</span></code> indexes the following list:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">lambda_eff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
+    <span class="c1">## Bolometric (?)</span>
+            <span class="mf">1.e-5</span><span class="p">,</span>  
+    <span class="c1">## SDSS u       g       r      i      z</span>
+            <span class="mf">3551.</span> <span class="p">,</span> <span class="mf">4686.</span> <span class="p">,</span> <span class="mf">6165.</span><span class="p">,</span> <span class="mf">7481.</span><span class="p">,</span> <span class="mf">8931.</span><span class="p">,</span>
+    <span class="c1">##      U       B       V      R</span>
+            <span class="mf">3600.</span> <span class="p">,</span> <span class="mf">4400.</span> <span class="p">,</span> <span class="mf">5556.</span><span class="p">,</span> <span class="mf">6940.</span><span class="p">,</span> 
+    <span class="c1">##      I      J       H       K</span>
+            <span class="mf">8700.</span><span class="p">,</span> <span class="mf">12150.</span><span class="p">,</span> <span class="mf">16540.</span><span class="p">,</span> <span class="mf">21790.</span><span class="p">])</span>
+</pre></div>
+</div>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>use_metadata</strong> (<em>bool</em><em>, </em><em>optional</em>) – flag for whether a cached result should be used (if it exists), defaults to <code class="docutils literal notranslate"><span class="pre">True</span></code></p></li>
+<li><p><strong>save_meta</strong> (<em>bool</em><em>, </em><em>optional</em>) – flag to save the result in the cache, defaults to <code class="docutils literal notranslate"><span class="pre">True</span></code></p></li>
+<li><p><strong>assert_cached</strong> (<em>bool</em><em>, </em><em>optional</em>) – flag to require a cache hit and raise an exception otherwise, defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
+<li><p><strong>loud</strong> (<em>bool</em><em>, </em><em>optional</em>) – flag for whether cache hits/misses should be announced to the console, defaults to <code class="docutils literal notranslate"><span class="pre">True</span></code></p></li>
+</ul>
+</dd>
+<dt class="field-even">Kwargs</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>lums</strong> (<cite>np.ndarray</cite>, <cite>optional</cite>) –                 array of luminosities for each star particle. If None then luminosities are calculated in                the bands specified by <code class="docutils literal notranslate"><span class="pre">BAND_IDS</span></code>, defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+<li><p><strong>nu_effs</strong> (<cite>list</cite>, <cite>optional</cite>) –                 list of effective frequencies corresponding to the bands of luminosities                provides in the <code class="docutils literal notranslate"><span class="pre">lums</span></code>. If None, uses the frequencies corresponding to the                specified <code class="docutils literal notranslate"><span class="pre">BAND_IDS</span></code>, defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+<li><p><strong>BAND_IDS</strong> (<cite>list</cite>, <cite>optional</cite>) –                 List of indices that identify which bands to model stellar emission in.                If <code class="docutils literal notranslate"><span class="pre">None</span></code> uses Sloan UGR bands <code class="docutils literal notranslate"><span class="pre">(1,2,3)</span></code>, defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+</ul>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">metal_mass_map</span></code> - 2d map of metal mass used to attenuate luminosities along LOS in pixel, in Msun/kpc^2</div>
+<div class="line"><code class="docutils literal notranslate"><span class="pre">out_0</span></code> - 2d map of luminosities in first band in Lsun/kpc^2</div>
+<div class="line"><code class="docutils literal notranslate"><span class="pre">out_1</span></code> - 2d map of luminosities in second band in Lsun/kpc^2</div>
+<div class="line"><code class="docutils literal notranslate"><span class="pre">out_2</span></code> - 2d map of luminosities in third band in Lsun/kpc^2</div>
+</div>
+</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>np.ndarray, np.ndarray, np.ndarray, np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="firestudio.studios.star_studio.StarStudio.gradientBlendImages">
+<span class="sig-name descname"><span class="pre">gradientBlendImages</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gradient_width_percent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">angle</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#firestudio.studios.star_studio.StarStudio.gradientBlendImages" title="Permalink to this definition"></a></dt>
+<dd><p>_summary_</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>image_1</strong> (<em>np.ndarray</em>) – _description_</p></li>
+<li><p><strong>image_2</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) – _description_, defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+<li><p><strong>gradient_width_percent</strong> (<em>float</em><em>, </em><em>optional</em>) – _description_, defaults to <code class="docutils literal notranslate"><span class="pre">0.1</span></code></p></li>
+<li><p><strong>angle</strong> (<em>float</em><em>, </em><em>optional</em>) – _description_, defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>_description_</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>_type_</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="firestudio.studios.star_studio.StarStudio.load_SnapshotData">
+<span class="sig-name descname"><span class="pre">load_SnapshotData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gas_mask</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">star_mask</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#firestudio.studios.star_studio.StarStudio.load_SnapshotData" title="Permalink to this definition"></a></dt>
+<dd><p>Binds simulation output to <code class="docutils literal notranslate"><span class="pre">self.gas_snapdict</span></code> and <code class="docutils literal notranslate"><span class="pre">self.star_snapdict</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>gas_mask</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) – boolean mask that should be applied to the <code class="docutils literal notranslate"><span class="pre">galaxy.sub_snap</span></code>, defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+<li><p><strong>star_mask</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) – boolean mask that should be applied to the <code class="docutils literal notranslate"><span class="pre">galaxy.sub_star_snap</span></code>, defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+</ul>
+</dd>
+<dt class="field-even">Kwargs</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>fuse_saved_subsnapshots</strong> (<cite>bool</cite>, <cite>optional</cite>) –                 save/load subsnapshots, uncompressed copies of the snapshot                oriented on the main disk with particles within the virial radius.                This can take up lots of disk space, defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
+<li><p><strong>del_galaxy</strong> (<cite>bool</cite>, <cite>optional</cite>) –                 flag for whether the abg_python.galaxy.gal_utils.Galaxy object should be deleted after                being used to get the snapshot dictionaries, defaults to <code class="docutils literal notranslate"><span class="pre">True</span></code></p></li>
+</ul>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">abg_python.galaxy.Galaxy</span></code> if <code class="docutils literal notranslate"><span class="pre">del_galaxy</span> <span class="pre">==</span> <span class="pre">False</span></code>, otherwise returns <code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code>/<code class="docutils literal notranslate"><span class="pre">abg_python.galaxy.Galaxy</span></code> object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="firestudio.studios.star_studio.StarStudio.plotImage">
+<span class="sig-name descname"><span class="pre">plotImage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">matplotlib.axes._axes.Axes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">final_image</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#firestudio.studios.star_studio.StarStudio.plotImage" title="Permalink to this definition"></a></dt>
+<dd><p>Base method for overlaying artists on top of projected image.</p>
+<p>if <cite>self.scale_bar</cite>: overlays a scale bar by filling the RGB pixel values with white
+if <cite>self.noaxis</cite>: removes the coordinate axes, labels, and ticks</p>
+<p>Will also add <cite>self.figure_label</cite> as text to the image. 
+See <a class="reference internal" href="firestudio.studios.studio.Studio.html#firestudio.studios.studio.Studio.set_ImageParams" title="firestudio.studios.studio.Studio.set_ImageParams"><code class="xref py py-func docutils literal notranslate"><span class="pre">set_ImageParams()</span></code></a> for details.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ax</strong> (<em>plt.Axes</em>) – axis to plot image to</p></li>
+<li><p><strong>final_image</strong> (<em>np.ndarray</em>) – array of RGB image pixel values</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="firestudio.studios.star_studio.StarStudio.plotParameterGrid">
+<span class="sig-name descname"><span class="pre">plotParameterGrid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dynrange_init</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">100.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxden_init</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dynrange_step</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxden_step</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nsteps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/firestudio/studios/star_studio.html#StarStudio.plotParameterGrid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#firestudio.studios.star_studio.StarStudio.plotParameterGrid" title="Permalink to this definition"></a></dt>
+<dd><p>Plots a grid of images that steps in maxden and dynrange to help the user decide             what values to use, based on their aesthetic preference. Step is applied             multiplicatively. Accepts keyword arguments for             <a class="reference internal" href="#firestudio.studios.star_studio.StarStudio.set_ImageParams" title="firestudio.studios.star_studio.StarStudio.set_ImageParams"><code class="xref py py-func docutils literal notranslate"><span class="pre">set_ImageParams()</span></code></a></p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dynrange_init</strong> (<em>float</em><em>, </em><em>optional</em>) – initial value in top left corner of grid, defaults to <code class="docutils literal notranslate"><span class="pre">1e2</span></code></p></li>
+<li><p><strong>maxden_init</strong> (<em>float</em><em>, </em><em>optional</em>) – initial value in top left corner of grid, defaults to <code class="docutils literal notranslate"><span class="pre">1e-2</span></code></p></li>
+<li><p><strong>dynrange_step</strong> (<em>float</em><em>, </em><em>optional</em>) – step between grid thumbnails, defaults to sqrt(10), defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+<li><p><strong>maxden_step</strong> (<em>float</em><em>, </em><em>optional</em>) – step between grid thumbnails, defaults to sqrt(10), defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+<li><p><strong>nsteps</strong> (<em>int</em><em>, </em><em>optional</em>) – number of steps in (square) thumbnail grid, defaults to <code class="docutils literal notranslate"><span class="pre">4</span></code></p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">fig</span></code> - the matplotlib figure drawn to</div>
+<div class="line"><code class="docutils literal notranslate"><span class="pre">axs</span></code> - the matplotlib axes in the grid</div>
+</div>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>plt.figure, list of plt.Axes</p>
+</dd>
+<dt class="field-even">Example usage</dt>
+<dd class="field-even"><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">starStudio</span><span class="o">.</span><span class="n">plotParameterGrid</span><span class="p">(</span>
+    <span class="n">dynrange_init</span><span class="o">=</span><span class="mf">1e3</span><span class="p">,</span>
+    <span class="n">maxden_init</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">dynrange_step</span><span class="o">=</span><span class="mf">.1</span><span class="p">,</span>
+    <span class="n">maxden_step</span><span class="o">=</span><span class="mf">.1</span><span class="p">,</span>
+    <span class="n">nsteps</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+    <span class="n">use_colorscheme_nasa</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="firestudio.studios.star_studio.StarStudio.predictParameters">
+<span class="sig-name descname"><span class="pre">predictParameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">left_percentile</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">right_percentile</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.99</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">L_sfc_densities</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">matplotlib.axes._axes.Axes</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quick</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/firestudio/studios/star_studio.html#StarStudio.predictParameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#firestudio.studios.star_studio.StarStudio.predictParameters" title="Permalink to this definition"></a></dt>
+<dd><p>Guesses what the “best” values for maxden and dynrange are from            the distribution of surface brightnesses in the current image.            Looks for the left_percentile and right_percentile and returns            right_percentile and the distance between it and left_percentile            (in log space).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>left_percentile</strong> (<em>float</em><em>, </em><em>optional</em>) – lower bound on image surface brightness percentile, defaults to <code class="docutils literal notranslate"><span class="pre">0.1</span></code></p></li>
+<li><p><strong>right_percentile</strong> (<em>float</em><em>, </em><em>optional</em>) – upper bound on image surface brightness percentile, defaults to <code class="docutils literal notranslate"><span class="pre">0.99</span></code></p></li>
+<li><p><strong>L_sfc_densities</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) – surface densities to find the percentiles of. If <code class="docutils literal notranslate"><span class="pre">None</span></code> uses            <a class="reference internal" href="#firestudio.studios.star_studio.StarStudio.get_mockHubbleImage" title="firestudio.studios.star_studio.StarStudio.get_mockHubbleImage"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_mockHubbleImage()</span></code></a> to            retrieve the surface densities of the projected mock hubble image, defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+<li><p><strong>ax</strong> (<em>plt.Axes</em><em>, </em><em>optional</em>) – axis to plot distribution of surface brightnesses            with overlay of percentiles and such to, defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+<li><p><strong>quick</strong> (<em>bool</em><em>, </em><em>optional</em>) – flag to use <cite>~firestudio.studios.star_studio.StarStudio.quick_get_mockHubbleImage</cite>, defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">maxden</span></code> - maximum surface brightness of the image</div>
+<div class="line"><code class="docutils literal notranslate"><span class="pre">dynrange</span></code> - distance between maximum and minimum surface brightness in log space.</div>
+</div>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>float, float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="firestudio.studios.star_studio.StarStudio.prepareCoordinates">
+<span class="sig-name descname"><span class="pre">prepareCoordinates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lums</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nu_effs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">list</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">BAND_IDS</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">list</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/firestudio/studios/star_studio.html#StarStudio.prepareCoordinates"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#firestudio.studios.star_studio.StarStudio.prepareCoordinates" title="Permalink to this definition"></a></dt>
+<dd><p>Reads snapshot data from <cite>self.snapdict</cite> and <cite>self.star_snapdict</cite> in the            imaging volume defined by <cite>self.Xmin</cite>,`self.Xmax`,`self.Ymin`,`self.Ymax`,`self.Zmin`,`self.Zmax`.            Unpacks necessary arrays and provides them to the calling imaging routine.</p>
+<p><code class="docutils literal notranslate"><span class="pre">BAND_IDS</span></code> indexes the following list:</p>
+<blockquote>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">lambda_eff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
+    <span class="c1">## Bolometric (?)</span>
+            <span class="mf">1.e-5</span><span class="p">,</span>  
+    <span class="c1">## SDSS u       g       r      i      z</span>
+            <span class="mf">3551.</span> <span class="p">,</span> <span class="mf">4686.</span> <span class="p">,</span> <span class="mf">6165.</span><span class="p">,</span> <span class="mf">7481.</span><span class="p">,</span> <span class="mf">8931.</span><span class="p">,</span>
+    <span class="c1">##      U       B       V      R</span>
+            <span class="mf">3600.</span> <span class="p">,</span> <span class="mf">4400.</span> <span class="p">,</span> <span class="mf">5556.</span><span class="p">,</span> <span class="mf">6940.</span><span class="p">,</span> 
+    <span class="c1">##      I      J       H       K</span>
+            <span class="mf">8700.</span><span class="p">,</span> <span class="mf">12150.</span><span class="p">,</span> <span class="mf">16540.</span><span class="p">,</span> <span class="mf">21790.</span><span class="p">])</span>
+</pre></div>
+</div>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>lums</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) – array of luminosities for each star particle. If None then luminosities are calculated in            the bands specified by <code class="docutils literal notranslate"><span class="pre">BAND_IDS</span></code>, defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+<li><p><strong>nu_effs</strong> (<em>list</em><em>, </em><em>optional</em>) – list of effective frequencies corresponding to the bands of luminosities            provides in the <code class="docutils literal notranslate"><span class="pre">lums</span></code>. If None, uses the frequencies corresponding to the            specified <code class="docutils literal notranslate"><span class="pre">BAND_IDS</span></code>, defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+<li><p><strong>BAND_IDS</strong> (<em>list</em><em>, </em><em>optional</em>) – List of indices that identify which bands to model stellar emission in.            If <code class="docutils literal notranslate"><span class="pre">None</span></code> uses Sloan UGR bands <code class="docutils literal notranslate"><span class="pre">(1,2,3)</span></code>, defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">kappas</span></code> - array of effective cross sections in each band</div>
+<div class="line"><code class="docutils literal notranslate"><span class="pre">lums</span></code> -  array of luminosities in each band</div>
+<div class="line"><code class="docutils literal notranslate"><span class="pre">star_pos</span></code> - coordinate data for emitting stars in kpc </div>
+<div class="line"><code class="docutils literal notranslate"><span class="pre">h_star</span></code> - effective smoothing length/radius for each star particle in kpc</div>
+<div class="line"><code class="docutils literal notranslate"><span class="pre">gas_pos</span></code> - coordinate data for attenuating gas in kpc</div>
+<div class="line"><code class="docutils literal notranslate"><span class="pre">mgas</span></code> - mass data for attenuating gas in 10^10 Msun</div>
+<div class="line"><code class="docutils literal notranslate"><span class="pre">gas_metals</span></code> - total metal mass fraction for each gas particle</div>
+<div class="line"><code class="docutils literal notranslate"><span class="pre">h_gas</span></code> - smoothing length/radius for each gas particle in kpc</div>
+</div>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.ndarray(3), np.ndarray(Nstar,3), np.ndarray(Nstar,3),             np.ndarray(Ngas), np.ndarray(Ngas,3), np.ndarray(Ngas),             np.ndarray(Ngas), np.ndarray(Ngas)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="firestudio.studios.star_studio.StarStudio.print_ImageParams">
+<span class="sig-name descname"><span class="pre">print_ImageParams</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/firestudio/studios/star_studio.html#StarStudio.print_ImageParams"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#firestudio.studios.star_studio.StarStudio.print_ImageParams" title="Permalink to this definition"></a></dt>
+<dd><p>Prints current image setup to console.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="firestudio.studios.star_studio.StarStudio.produceImage">
+<span class="sig-name descname"><span class="pre">produceImage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">quick</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/firestudio/studios/star_studio.html#StarStudio.produceImage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#firestudio.studios.star_studio.StarStudio.produceImage" title="Permalink to this definition"></a></dt>
+<dd><p>Generates a mock hubble image, along with any annotations/scale bars, using the stored image parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>quick</strong> (<em>bool</em><em>, </em><em>optional</em>) – flag to use a simple 2d histogram (for comparison or for quick iteration            as you choose image parameters), defaults to False</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>RGB pixel array of the produced image</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.ndarray(npix_x,npix_y,3)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="firestudio.studios.star_studio.StarStudio.quick_get_mockHubbleImage">
+<span class="sig-name descname"><span class="pre">quick_get_mockHubbleImage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lums</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nu_effs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">list</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">BAND_IDS</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">list</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/firestudio/studios/star_studio.html#StarStudio.quick_get_mockHubbleImage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#firestudio.studios.star_studio.StarStudio.quick_get_mockHubbleImage" title="Permalink to this definition"></a></dt>
+<dd><p>Approximate the <cite>~firestudio.studios.StarStudio.get_mockHubbleImage</cite> routine using a 2d histogram.</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">BAND_IDS</span></code> indexes the following list:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">lambda_eff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
+    <span class="c1">## Bolometric (?)</span>
+            <span class="mf">1.e-5</span><span class="p">,</span>  
+    <span class="c1">## SDSS u       g       r      i      z</span>
+            <span class="mf">3551.</span> <span class="p">,</span> <span class="mf">4686.</span> <span class="p">,</span> <span class="mf">6165.</span><span class="p">,</span> <span class="mf">7481.</span><span class="p">,</span> <span class="mf">8931.</span><span class="p">,</span>
+    <span class="c1">##      U       B       V      R</span>
+            <span class="mf">3600.</span> <span class="p">,</span> <span class="mf">4400.</span> <span class="p">,</span> <span class="mf">5556.</span><span class="p">,</span> <span class="mf">6940.</span><span class="p">,</span> 
+    <span class="c1">##      I      J       H       K</span>
+            <span class="mf">8700.</span><span class="p">,</span> <span class="mf">12150.</span><span class="p">,</span> <span class="mf">16540.</span><span class="p">,</span> <span class="mf">21790.</span><span class="p">])</span>
+</pre></div>
+</div>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>lums</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) – array of luminosities for each star particle. If None then luminosities are calculated in            the bands specified by <code class="docutils literal notranslate"><span class="pre">BAND_IDS</span></code>, defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+<li><p><strong>nu_effs</strong> (<em>list</em><em>, </em><em>optional</em>) – list of effective frequencies corresponding to the bands of luminosities            provides in the <code class="docutils literal notranslate"><span class="pre">lums</span></code>. If None, uses the frequencies corresponding to the            specified <code class="docutils literal notranslate"><span class="pre">BAND_IDS</span></code>, defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+<li><p><strong>BAND_IDS</strong> (<em>list</em><em>, </em><em>optional</em>) – List of indices that identify which bands to model stellar emission in.            If <code class="docutils literal notranslate"><span class="pre">None</span></code> uses Sloan UGR bands <code class="docutils literal notranslate"><span class="pre">(1,2,3)</span></code>, defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">metal_mass_map</span></code> - 2d map of metal mass used to attenuate luminosities along LOS in pixel, in Msun/kpc^2</div>
+<div class="line"><code class="docutils literal notranslate"><span class="pre">out_0</span></code> - 2d map of luminosities in first band in Lsun/kpc^2</div>
+<div class="line"><code class="docutils literal notranslate"><span class="pre">out_1</span></code> - 2d map of luminosities in second band in Lsun/kpc^2</div>
+<div class="line"><code class="docutils literal notranslate"><span class="pre">out_2</span></code> - 2d map of luminosities in third band in Lsun/kpc^2</div>
+</div>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.ndarray, np.ndarray, np.ndarray, np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="firestudio.studios.star_studio.StarStudio.render">
+<span class="sig-name descname"><span class="pre">render</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">matplotlib.axes._axes.Axes</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#firestudio.studios.star_studio.StarStudio.render" title="Permalink to this definition"></a></dt>
+<dd><p>Generates an image with the <cite>produceImage</cite> method and then plots it with the <cite>plotImage</cite> method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>ax</strong> (<em>plt.Axes</em><em>, </em><em>optional</em>) – axis to plot image to, if None will create a new figure, defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>ax – the axis the image was plotted to
+final_image – Npixels x Npixels x 3 RGB pixel array</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>plt.Axes, np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="firestudio.studios.star_studio.StarStudio.renormalizeTransposeImage">
+<span class="sig-name descname"><span class="pre">renormalizeTransposeImage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_val</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_val</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quantity_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#firestudio.studios.star_studio.StarStudio.renormalizeTransposeImage" title="Permalink to this definition"></a></dt>
+<dd><p>_summary_</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>image</strong> (<em>np.ndarray</em>) – _description_</p></li>
+<li><p><strong>min_val</strong> (<em>float</em>) – _description_</p></li>
+<li><p><strong>max_val</strong> (<em>float</em>) – _description_</p></li>
+<li><p><strong>quantity_name</strong> (<em>str</em>) – _description_</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>_description_</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>_type_</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="firestudio.studios.star_studio.StarStudio.required_snapdict_keys">
+<span class="sig-name descname"><span class="pre">required_snapdict_keys</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">['Masses',</span> <span class="pre">'Coordinates',</span> <span class="pre">'SmoothingLength',</span> <span class="pre">'Temperature',</span> <span class="pre">'AgeGyr',</span> <span class="pre">'Metallicity']</span></em><a class="headerlink" href="#firestudio.studios.star_studio.StarStudio.required_snapdict_keys" title="Permalink to this definition"></a></dt>
+<dd><p>these are minimum required keys for <a class="reference internal" href="#firestudio.studios.star_studio.StarStudio.render" title="firestudio.studios.star_studio.StarStudio.render"><code class="xref py py-func docutils literal notranslate"><span class="pre">render()</span></code></a> function to run.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="firestudio.studios.star_studio.StarStudio.saveFigure">
+<span class="sig-name descname"><span class="pre">saveFigure</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fig</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">savefig_args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#firestudio.studios.star_studio.StarStudio.saveFigure" title="Permalink to this definition"></a></dt>
+<dd><p>_summary_</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fig</strong> (<em>_type_</em>) – _description_</p></li>
+<li><p><strong>image_name</strong> (<em>str</em><em>, </em><em>optional</em>) – _description_, defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="firestudio.studios.star_studio.StarStudio.set_CacheFile">
+<span class="sig-name descname"><span class="pre">set_CacheFile</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#firestudio.studios.star_studio.StarStudio.set_CacheFile" title="Permalink to this definition"></a></dt>
+<dd><p>Creates the cache hdf5 file. Requires self.snapnum and sim_name be set.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>IOError</strong> – if self.snapnum and self.sim_name are not set to disambiguate the cache file</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>cache file for storing image maps</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">abg_python.galaxy.metadata_utils.Metadata</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="firestudio.studios.star_studio.StarStudio.set_ImageParams">
+<span class="sig-name descname"><span class="pre">set_ImageParams</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">use_defaults</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loud</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/firestudio/studios/star_studio.html#StarStudio.set_ImageParams"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#firestudio.studios.star_studio.StarStudio.set_ImageParams" title="Permalink to this definition"></a></dt>
+<dd><p>Changes the parameters of the image. Also calls <a class="reference internal" href="firestudio.studios.studio.Studio.html#firestudio.studios.studio.Studio" title="firestudio.studios.studio.Studio"><code class="xref py py-class docutils literal notranslate"><span class="pre">Studio</span></code></a>’s            <a class="reference internal" href="firestudio.studios.studio.Studio.html#firestudio.studios.studio.Studio.set_ImageParams" title="firestudio.studios.studio.Studio.set_ImageParams"><code class="xref py py-func docutils literal notranslate"><span class="pre">set_ImageParams()</span></code></a>, passing along any unmatched kwargs.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>use_defaults</strong> (<em>bool</em><em>, </em><em>optional</em>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code> then default values of the parameters will be set            (potentially overwriting any previously specified parameters).            If <code class="docutils literal notranslate"><span class="pre">False</span></code> adjust only the keywords passed, defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
+<li><p><strong>loud</strong> (<em>bool</em><em>, </em><em>optional</em>) – flag to print which parameters are being set/updated, defaults to <code class="docutils literal notranslate"><span class="pre">True</span></code></p></li>
+</ul>
+</dd>
+<dt class="field-even">Kwargs</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>maxden</strong> (<cite>float</cite>, <cite>optional</cite>) –                 controls the saturation of the image,                sets the upper limit of the “colorbar” if <code class="docutils literal notranslate"><span class="pre">None</span></code> uses                the 99 %’ile of the image surface brightness, defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+<li><p><strong>dynrange</strong> (<cite>float</cite>, <cite>optional</cite>) –                 controls the saturation of the image,                sets the lower limit of the “colorbar” with respect to maxden,                if None uses the dynamic range between maxden and the 10th %’ile                of the image surface brightness, defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+<li><p><strong>nodust</strong> (<cite>bool</cite>, <cite>optional</cite>) –                flag for whether dust attenuantion should be ignored, defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
+<li><p><strong>age_max_gyr</strong> (<cite>float</cite>, <cite>optional</cite>) –                maximum age in Gyr to show stellar emission from. If <code class="docutils literal notranslate"><span class="pre">None</span></code> then emission from all star                particles is considered, defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+<li><p><strong>color_scheme_nasa</strong> (<cite>bool</cite>, <cite>optional</cite>) –                flag for switching between Hubble vs. SDSS false color remapping, defaults to <code class="docutils literal notranslate"><span class="pre">True</span></code></p></li>
+</ul>
+</dd>
+<dt class="field-odd">Example usage</dt>
+<dd class="field-odd"><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">starStudio</span><span class="o">.</span><span class="n">set_ImageParams</span><span class="p">(</span>
+    <span class="n">maxden</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+    <span class="n">dynrange</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+    <span class="n">figure_label</span><span class="o">=</span><span class="s1">&#39;Hubble&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="firestudio.studios.star_studio.html" class="btn btn-neutral float-left" title="firestudio.studios.star_studio" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="firestudio.studios.FIRE_studio.html" class="btn btn-neutral float-right" title="firestudio.studios.FIRE_studio" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Alex Gurvich.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

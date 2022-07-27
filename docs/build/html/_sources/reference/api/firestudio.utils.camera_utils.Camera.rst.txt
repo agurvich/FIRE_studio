@@ -1,0 +1,29 @@
+firestudio.utils.camera\_utils.Camera
+=====================================
+
+.. currentmodule:: firestudio.utils.camera_utils
+
+.. autoclass:: Camera
+   :members:
+   :show-inheritance:
+   :inherited-members:
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Camera.__init__
+      ~Camera.clip
+      ~Camera.convolve_quaternion
+      ~Camera.replace_quaternion
+      ~Camera.rotate_array
+   
+   
+
+   
+   
+   

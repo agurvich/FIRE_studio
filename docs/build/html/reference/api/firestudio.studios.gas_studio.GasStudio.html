@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>firestudio.studios.gas_studio.GasStudio &mdash; firestudio 2.0.0 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="firestudio.studios.star_studio" href="firestudio.studios.star_studio.html" />
+    <link rel="prev" title="firestudio.studios.gas_studio" href="firestudio.studios.gas_studio.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html" class="icon icon-home"> firestudio
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../gas_projection.html">Gas projections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../mock_hubble.html">Mock hubble images</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/index.html">Tutorial Notebooks</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="api.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="api.html#studios">Studios</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="firestudio.studios.studio.html">firestudio.studios.studio</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="firestudio.studios.gas_studio.html">firestudio.studios.gas_studio</a><ul class="current">
+<li class="toctree-l4 current"><a class="current reference internal" href="#">firestudio.studios.gas_studio.GasStudio</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="firestudio.studios.star_studio.html">firestudio.studios.star_studio</a></li>
+<li class="toctree-l3"><a class="reference internal" href="firestudio.studios.FIRE_studio.html">firestudio.studios.FIRE_studio</a></li>
+<li class="toctree-l3"><a class="reference internal" href="firestudio.studios.simple_studio.html">firestudio.studios.simple_studio</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#utilities">Utilities</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">firestudio</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="api.html">API Reference</a> &raquo;</li>
+          <li><a href="firestudio.studios.gas_studio.html">firestudio.studios.gas_studio</a> &raquo;</li>
+      <li>firestudio.studios.gas_studio.GasStudio</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/reference/api/firestudio.studios.gas_studio.GasStudio.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<section id="firestudio-studios-gas-studio-gasstudio">
+<h1>firestudio.studios.gas_studio.GasStudio<a class="headerlink" href="#firestudio-studios-gas-studio-gasstudio" title="Permalink to this headline"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="firestudio.studios.gas_studio.GasStudio">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">firestudio.studios.gas_studio.</span></span><span class="sig-name descname"><span class="pre">GasStudio</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">datadir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">snapnum</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sim_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_file_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gas_snapdict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">star_snapdict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">galaxy_kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">master_loud</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">setup_id_append</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/firestudio/studios/gas_studio.html#GasStudio"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#firestudio.studios.gas_studio.GasStudio" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="firestudio.studios.studio.Studio.html#firestudio.studios.studio.Studio" title="firestudio.studios.studio.Studio"><code class="xref py py-class docutils literal notranslate"><span class="pre">firestudio.studios.studio.Studio</span></code></a></p>
+<p><a class="reference internal" href="firestudio.studios.studio.Studio.html#firestudio.studios.studio.Studio" title="firestudio.studios.studio.Studio"><code class="xref py py-class docutils literal notranslate"><span class="pre">Studio</span></code></a> class for making gas projection images.        Can be used for stars (or other collisionless particles), but you will either have to pass smoothing lengths        or allow FIRE Studio to calculate them itself, which can take a long time.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="firestudio.studios.gas_studio.GasStudio.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">datadir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">snapnum</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sim_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_file_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gas_snapdict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">star_snapdict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">galaxy_kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">master_loud</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">setup_id_append</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#firestudio.studios.gas_studio.GasStudio.__init__" title="Permalink to this definition"></a></dt>
+<dd><p>Base class that handles camera manipulation and data caching.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>datadir</strong> (<em>str</em>) – directory to put intermediate and output files, <code class="docutils literal notranslate"><span class="pre">'firestudio'</span></code>            is appended if the directory contains sim_name</p></li>
+<li><p><strong>snapnum</strong> (<em>int</em>) – snapshot number (feel free to lie if you aren’t using FIRE_studio            to open a snapshot, it is needed for cache file name though)</p></li>
+<li><p><strong>sim_name</strong> (<em>str</em>) – name of the simulation, i.e. <code class="docutils literal notranslate"><span class="pre">'m12i_res7100'</span></code>.            prepends the cache_file_name if the sim_name isn’t already in the path to disambiguate caches.</p></li>
+<li><p><strong>cache_file_name</strong> (<em>str</em><em>, </em><em>optional</em>) – the name of the file to save maps to, if None <code class="docutils literal notranslate"><span class="pre">'proj_maps_%03d.hdf5'%snapnum</span></code>, defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+<li><p><strong>gas_snapdict</strong> (<em>dict</em><em>, </em><em>optional</em>) – a dictionary containing SPH data, defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+<li><p><strong>star_snapdict</strong> (<em>dict</em><em>, </em><em>optional</em>) – a dictionary containing collisionless particle data, defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+<li><p><strong>galaxy_kwargs</strong> (<em>dict</em><em>, </em><em>optional</em>) – dictionary that contains kwargs that should be passed to the opened <code class="docutils literal notranslate"><span class="pre">abg_python.galaxy.Galaxy</span></code> instance that is used to load snapshot data from disk, defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+<li><p><strong>master_loud</strong> (<em>bool</em><em>, </em><em>optional</em>) – flag for enabling/disabling <em>all</em> print statements, defaults to True</p></li>
+<li><p><strong>setup_id_append</strong> (<em>str</em><em>, </em><em>optional</em>) – suffix to append to the <code class="docutils literal notranslate"><span class="pre">setup_id</span></code> in the cache file, defaults to ‘’</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#firestudio.studios.gas_studio.GasStudio.__init__" title="firestudio.studios.gas_studio.GasStudio.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(datadir, snapnum, sim_name[, ...])</p></td>
+<td><p>Base class that handles camera manipulation and data caching.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#firestudio.studios.gas_studio.GasStudio.addScaleBar" title="firestudio.studios.gas_studio.GasStudio.addScaleBar"><code class="xref py py-obj docutils literal notranslate"><span class="pre">addScaleBar</span></code></a>(image)</p></td>
+<td><p>_summary_</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#firestudio.studios.gas_studio.GasStudio.addText" title="firestudio.studios.gas_studio.GasStudio.addText"><code class="xref py py-obj docutils literal notranslate"><span class="pre">addText</span></code></a>(ax)</p></td>
+<td><p>_summary_</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#firestudio.studios.gas_studio.GasStudio.computeFrameBoundaries" title="firestudio.studios.gas_studio.GasStudio.computeFrameBoundaries"><code class="xref py py-obj docutils literal notranslate"><span class="pre">computeFrameBoundaries</span></code></a>()</p></td>
+<td><p>Uses the camera to calculate the minimum and maximum  x, y, and z limits as well as the physical resolution of the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#firestudio.studios.gas_studio.GasStudio.cullFrameIndices" title="firestudio.studios.gas_studio.GasStudio.cullFrameIndices"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cullFrameIndices</span></code></a>(Coordinates)</p></td>
+<td><p>boolean mask of those particles within the volume defined by Xmin-Xmax, Ymin-Ymax, and Zmin-Zmax</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#firestudio.studios.gas_studio.GasStudio.drawCoordinateAxes" title="firestudio.studios.gas_studio.GasStudio.drawCoordinateAxes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">drawCoordinateAxes</span></code></a>(ax[, spacing, length, colors])</p></td>
+<td><p>_summary_</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#firestudio.studios.gas_studio.GasStudio.get_HSML" title="firestudio.studios.gas_studio.GasStudio.get_HSML"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_HSML</span></code></a>(snapdict_name[, use_metadata, ...])</p></td>
+<td><p>Compute smoothing lengths for particles that don't have them,            typically collisionless particles (like stars).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#firestudio.studios.gas_studio.GasStudio.gradientBlendImages" title="firestudio.studios.gas_studio.GasStudio.gradientBlendImages"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gradientBlendImages</span></code></a>(image_1[, image_2, ...])</p></td>
+<td><p>_summary_</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#firestudio.studios.gas_studio.GasStudio.load_SnapshotData" title="firestudio.studios.gas_studio.GasStudio.load_SnapshotData"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_SnapshotData</span></code></a>([gas_mask, star_mask])</p></td>
+<td><p>Binds simulation output to <code class="docutils literal notranslate"><span class="pre">self.gas_snapdict</span></code> and <code class="docutils literal notranslate"><span class="pre">self.star_snapdict</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#firestudio.studios.gas_studio.GasStudio.plotImage" title="firestudio.studios.gas_studio.GasStudio.plotImage"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plotImage</span></code></a>(ax, final_image)</p></td>
+<td><p>Implementation of overlaying artists on top of projected image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#firestudio.studios.gas_studio.GasStudio.prepareCoordinates" title="firestudio.studios.gas_studio.GasStudio.prepareCoordinates"><code class="xref py py-obj docutils literal notranslate"><span class="pre">prepareCoordinates</span></code></a>(snapdict_name, weights, ...)</p></td>
+<td><p>_summary_</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#firestudio.studios.gas_studio.GasStudio.print_ImageParams" title="firestudio.studios.gas_studio.GasStudio.print_ImageParams"><code class="xref py py-obj docutils literal notranslate"><span class="pre">print_ImageParams</span></code></a>()</p></td>
+<td><p>Prints the current image parameters.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#firestudio.studios.gas_studio.GasStudio.produceImage" title="firestudio.studios.gas_studio.GasStudio.produceImage"><code class="xref py py-obj docutils literal notranslate"><span class="pre">produceImage</span></code></a>([weight_name, quantity_name, ...])</p></td>
+<td><p>Generates a projected image using the stored image parameters.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#firestudio.studios.gas_studio.GasStudio.projectAlongLOS" title="firestudio.studios.gas_studio.GasStudio.projectAlongLOS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">projectAlongLOS</span></code></a>(weights, weight_name, ...[, ...])</p></td>
+<td><p>Projects a weighted quantity along the LOS into pixels.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#firestudio.studios.gas_studio.GasStudio.quick_projectAlongLOS" title="firestudio.studios.gas_studio.GasStudio.quick_projectAlongLOS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">quick_projectAlongLOS</span></code></a>(weights, weight_name, ...)</p></td>
+<td><p>Approximates the projection of a weighted quantity along the LOS into pixels.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#firestudio.studios.gas_studio.GasStudio.render" title="firestudio.studios.gas_studio.GasStudio.render"><code class="xref py py-obj docutils literal notranslate"><span class="pre">render</span></code></a>([ax])</p></td>
+<td><p>Generates an image with the <cite>produceImage</cite> method and then plots it with the <cite>plotImage</cite> method.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#firestudio.studios.gas_studio.GasStudio.renormalizeTransposeImage" title="firestudio.studios.gas_studio.GasStudio.renormalizeTransposeImage"><code class="xref py py-obj docutils literal notranslate"><span class="pre">renormalizeTransposeImage</span></code></a>(image, min_val, ...)</p></td>
+<td><p>_summary_</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#firestudio.studios.gas_studio.GasStudio.saveFigure" title="firestudio.studios.gas_studio.GasStudio.saveFigure"><code class="xref py py-obj docutils literal notranslate"><span class="pre">saveFigure</span></code></a>(fig[, image_name])</p></td>
+<td><p>_summary_</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#firestudio.studios.gas_studio.GasStudio.set_CacheFile" title="firestudio.studios.gas_studio.GasStudio.set_CacheFile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_CacheFile</span></code></a>()</p></td>
+<td><p>Creates the cache hdf5 file.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#firestudio.studios.gas_studio.GasStudio.set_ImageParams" title="firestudio.studios.gas_studio.GasStudio.set_ImageParams"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_ImageParams</span></code></a>([use_defaults, loud])</p></td>
+<td><p>Changes the parameters of the image.</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#firestudio.studios.gas_studio.GasStudio.required_snapdict_keys" title="firestudio.studios.gas_studio.GasStudio.required_snapdict_keys"><code class="xref py py-obj docutils literal notranslate"><span class="pre">required_snapdict_keys</span></code></a></p></td>
+<td><p>these are minimum required keys for <a class="reference internal" href="#firestudio.studios.gas_studio.GasStudio.render" title="firestudio.studios.gas_studio.GasStudio.render"><code class="xref py py-func docutils literal notranslate"><span class="pre">render()</span></code></a> function to run.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="firestudio.studios.gas_studio.GasStudio.addScaleBar">
+<span class="sig-name descname"><span class="pre">addScaleBar</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#firestudio.studios.gas_studio.GasStudio.addScaleBar" title="Permalink to this definition"></a></dt>
+<dd><p>_summary_</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>image</strong> (<em>np.ndarray</em>) – array of RGB image pixel values</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>image</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="firestudio.studios.gas_studio.GasStudio.addText">
+<span class="sig-name descname"><span class="pre">addText</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">matplotlib.axes._axes.Axes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#firestudio.studios.gas_studio.GasStudio.addText" title="Permalink to this definition"></a></dt>
+<dd><p>_summary_</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>ax</strong> (<em>plt.Axes</em>) – _description_</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="firestudio.studios.gas_studio.GasStudio.computeFrameBoundaries">
+<span class="sig-name descname"><span class="pre">computeFrameBoundaries</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#firestudio.studios.gas_studio.GasStudio.computeFrameBoundaries" title="Permalink to this definition"></a></dt>
+<dd><p>Uses the camera to calculate the minimum and maximum 
+x, y, and z limits as well as the physical resolution of the image.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Sets following attributes</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">self.Xmin</span></code>, <code class="docutils literal notranslate"><span class="pre">self.Xmax</span></code> –                 <code class="docutils literal notranslate"><span class="pre">self.Ymin</span></code>, <code class="docutils literal notranslate"><span class="pre">self.Ymax</span></code> –                 <code class="docutils literal notranslate"><span class="pre">self.Zmin</span></code>, <code class="docutils literal notranslate"><span class="pre">self.Zmax</span></code> –                 <code class="docutils literal notranslate"><span class="pre">self.npix_x</span></code>, <code class="docutils literal notranslate"><span class="pre">self.npix_y</span></code> –                 <code class="docutils literal notranslate"><span class="pre">self.Acell</span></code> –</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="firestudio.studios.gas_studio.GasStudio.cullFrameIndices">
+<span class="sig-name descname"><span class="pre">cullFrameIndices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Coordinates</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#firestudio.studios.gas_studio.GasStudio.cullFrameIndices" title="Permalink to this definition"></a></dt>
+<dd><p>boolean mask of those particles within the volume defined by Xmin-Xmax, Ymin-Ymax, and Zmin-Zmax</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>Coordinates</strong> (<em>np.ndarray</em>) – array of particle coordinates</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a boolean mask which is <cite>True</cite> for particles in the extraction volume and <cite>False</cite> outside.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>bool np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="firestudio.studios.gas_studio.GasStudio.drawCoordinateAxes">
+<span class="sig-name descname"><span class="pre">drawCoordinateAxes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">matplotlib.axes._axes.Axes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spacing</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">length</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">colors</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">list</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#firestudio.studios.gas_studio.GasStudio.drawCoordinateAxes" title="Permalink to this definition"></a></dt>
+<dd><p>_summary_</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ax</strong> (<em>plt.Axes</em>) – _description_</p></li>
+<li><p><strong>spacing</strong> (<em>float</em><em>, </em><em>optional</em>) – _description_, defaults to <code class="docutils literal notranslate"><span class="pre">1</span></code></p></li>
+<li><p><strong>length</strong> (<em>float</em><em>, </em><em>optional</em>) – _description_, defaults to <code class="docutils literal notranslate"><span class="pre">10</span></code></p></li>
+<li><p><strong>colors</strong> (<em>list</em><em>, </em><em>optional</em>) – _description_, defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>_description_</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>_type_</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="firestudio.studios.gas_studio.GasStudio.get_HSML">
+<span class="sig-name descname"><span class="pre">get_HSML</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">snapdict_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_metadata</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_meta</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">assert_cached</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loud</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#firestudio.studios.gas_studio.GasStudio.get_HSML" title="Permalink to this definition"></a></dt>
+<dd><p>Compute smoothing lengths for particles that don’t have them,            typically collisionless particles (like stars).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>snapdict_name</strong> (<em>str</em>) – string identifying which snapdict should be used            to compute smoothing lengths, either <code class="docutils literal notranslate"><span class="pre">'gas'</span></code> or <code class="docutils literal notranslate"><span class="pre">'star'</span></code></p></li>
+<li><p><strong>use_metadata</strong> (<em>bool</em><em>, </em><em>optional</em>) – flag for whether a cached result should be used (if it exists), defaults to <code class="docutils literal notranslate"><span class="pre">True</span></code></p></li>
+<li><p><strong>save_meta</strong> (<em>bool</em><em>, </em><em>optional</em>) – flag to save the result in the cache, defaults to <code class="docutils literal notranslate"><span class="pre">True</span></code></p></li>
+<li><p><strong>assert_cached</strong> (<em>bool</em><em>, </em><em>optional</em>) – flag to require a cache hit and raise an exception otherwise, defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
+<li><p><strong>loud</strong> (<em>bool</em><em>, </em><em>optional</em>) – flag for whether cache hits/misses should be announced to the console, defaults to <code class="docutils literal notranslate"><span class="pre">True</span></code></p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>estimated smoothing lengths</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">np.float32</span></code> <code class="docutils literal notranslate"><span class="pre">np.ndarray</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="firestudio.studios.gas_studio.GasStudio.gradientBlendImages">
+<span class="sig-name descname"><span class="pre">gradientBlendImages</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gradient_width_percent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">angle</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#firestudio.studios.gas_studio.GasStudio.gradientBlendImages" title="Permalink to this definition"></a></dt>
+<dd><p>_summary_</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>image_1</strong> (<em>np.ndarray</em>) – _description_</p></li>
+<li><p><strong>image_2</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) – _description_, defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+<li><p><strong>gradient_width_percent</strong> (<em>float</em><em>, </em><em>optional</em>) – _description_, defaults to <code class="docutils literal notranslate"><span class="pre">0.1</span></code></p></li>
+<li><p><strong>angle</strong> (<em>float</em><em>, </em><em>optional</em>) – _description_, defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>_description_</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>_type_</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="firestudio.studios.gas_studio.GasStudio.load_SnapshotData">
+<span class="sig-name descname"><span class="pre">load_SnapshotData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gas_mask</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">star_mask</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#firestudio.studios.gas_studio.GasStudio.load_SnapshotData" title="Permalink to this definition"></a></dt>
+<dd><p>Binds simulation output to <code class="docutils literal notranslate"><span class="pre">self.gas_snapdict</span></code> and <code class="docutils literal notranslate"><span class="pre">self.star_snapdict</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>gas_mask</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) – boolean mask that should be applied to the <code class="docutils literal notranslate"><span class="pre">galaxy.sub_snap</span></code>, defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+<li><p><strong>star_mask</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) – boolean mask that should be applied to the <code class="docutils literal notranslate"><span class="pre">galaxy.sub_star_snap</span></code>, defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+</ul>
+</dd>
+<dt class="field-even">Kwargs</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>fuse_saved_subsnapshots</strong> (<cite>bool</cite>, <cite>optional</cite>) –                 save/load subsnapshots, uncompressed copies of the snapshot                oriented on the main disk with particles within the virial radius.                This can take up lots of disk space, defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
+<li><p><strong>del_galaxy</strong> (<cite>bool</cite>, <cite>optional</cite>) –                 flag for whether the abg_python.galaxy.gal_utils.Galaxy object should be deleted after                being used to get the snapshot dictionaries, defaults to <code class="docutils literal notranslate"><span class="pre">True</span></code></p></li>
+</ul>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">abg_python.galaxy.Galaxy</span></code> if <code class="docutils literal notranslate"><span class="pre">del_galaxy</span> <span class="pre">==</span> <span class="pre">False</span></code>, otherwise returns <code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code>/<code class="docutils literal notranslate"><span class="pre">abg_python.galaxy.Galaxy</span></code> object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="firestudio.studios.gas_studio.GasStudio.plotImage">
+<span class="sig-name descname"><span class="pre">plotImage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">matplotlib.axes._axes.Axes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">final_image</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/firestudio/studios/gas_studio.html#GasStudio.plotImage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#firestudio.studios.gas_studio.GasStudio.plotImage" title="Permalink to this definition"></a></dt>
+<dd><p>Implementation of overlaying artists on top of projected image.         Also calls the base method <a class="reference internal" href="firestudio.studios.studio.Studio.html#firestudio.studios.studio.Studio.plotImage" title="firestudio.studios.studio.Studio.plotImage"><code class="xref py py-func docutils literal notranslate"><span class="pre">plotImage()</span></code></a>.         If <code class="docutils literal notranslate"><span class="pre">self.use_colorbar</span></code> we add a colorbar to the image,         see <a class="reference internal" href="#firestudio.studios.gas_studio.GasStudio.set_ImageParams" title="firestudio.studios.gas_studio.GasStudio.set_ImageParams"><code class="xref py py-func docutils literal notranslate"><span class="pre">set_ImageParams()</span></code></a> for details.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ax</strong> (<em>plt.Axes</em>) – matplotlib axis to plot image to</p></li>
+<li><p><strong>final_image</strong> (<em>np.ndarray</em>) – array of RGB image pixel values</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="firestudio.studios.gas_studio.GasStudio.prepareCoordinates">
+<span class="sig-name descname"><span class="pre">prepareCoordinates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">snapdict_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quantities</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quantity_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/firestudio/studios/gas_studio.html#GasStudio.prepareCoordinates"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#firestudio.studios.gas_studio.GasStudio.prepareCoordinates" title="Permalink to this definition"></a></dt>
+<dd><p>_summary_</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>snapdict_name</strong> (<em>str</em>) – one of <code class="docutils literal notranslate"><span class="pre">gas</span></code> or <code class="docutils literal notranslate"><span class="pre">star</span></code> to identify which of <code class="docutils literal notranslate"><span class="pre">self.gas_snapdict</span></code> or <code class="docutils literal notranslate"><span class="pre">self.star_snapdict</span></code> to read data from.</p></li>
+<li><p><strong>weights</strong> (<em>np.ndarray</em>) – array of weights to use alongside the smoothing kernel            (typically <code class="docutils literal notranslate"><span class="pre">self.snapdict['Masses']</span></code>).</p></li>
+<li><p><strong>weight_name</strong> – Name of the key in the snapdict that should be used as the weights            if weights are not passed.            special weight_names are <code class="docutils literal notranslate"><span class="pre">Volumes</span></code> and <code class="docutils literal notranslate"><span class="pre">Ones</span></code>, which do not             have to be present in the snapdict.        :type weight_name: str</p></li>
+<li><p><strong>quantities</strong> (<em>np.ndarray</em>) – array of quantities to project along the line of sight.</p></li>
+<li><p><strong>quantity_name</strong> (<em>str</em>) – Name of the field that is being projected, should be in the snapdict if             quantities is not passed.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>KeyError</strong> – if <code class="docutils literal notranslate"><span class="pre">snapdict_name</span></code> is not <code class="docutils literal notranslate"><span class="pre">'gas'</span></code> or <code class="docutils literal notranslate"><span class="pre">'star'</span></code></p></li>
+<li><p><strong>KeyError</strong> – if <code class="docutils literal notranslate"><span class="pre">weight_name</span></code> is not in <code class="docutils literal notranslate"><span class="pre">snapdict.keys()</span></code></p></li>
+<li><p><strong>KeyError</strong> – if <code class="docutils literal notranslate"><span class="pre">quantity_name</span></code> is not in <code class="docutils literal notranslate"><span class="pre">snapdict.keys()</span></code></p></li>
+</ul>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">self.Xmin</span></code> - minimum x value of coordinates, already applied just returned for convenience</div>
+<div class="line"><code class="docutils literal notranslate"><span class="pre">self.Xmax</span></code> - maximum x value of coordinates, already applied just returned for convenience</div>
+<div class="line"><code class="docutils literal notranslate"><span class="pre">self.Ymin</span></code> - minimum y value of coordinates, already applied just returned for convenience</div>
+<div class="line"><code class="docutils literal notranslate"><span class="pre">self.Ymax</span></code> - maximum y value of coordinates, already applied just returned for convenience</div>
+<div class="line"><code class="docutils literal notranslate"><span class="pre">self.npix_x</span></code> - number of pixels along the x axis</div>
+<div class="line"><code class="docutils literal notranslate"><span class="pre">self.npix_y</span></code> - number of pixels along the y axis</div>
+<div class="line"><code class="docutils literal notranslate"><span class="pre">pos</span></code> - coordinate data for particles in kpc </div>
+<div class="line"><code class="docutils literal notranslate"><span class="pre">weights</span></code> - filtered array of weights to use alongside the smoothing kernel (typically <code class="docutils literal notranslate"><span class="pre">self.snapdict['Masses']</span></code>).</div>
+<div class="line"><code class="docutils literal notranslate"><span class="pre">quantities</span></code> - filtered array of quantities to project along the line of sight.</div>
+<div class="line"><code class="docutils literal notranslate"><span class="pre">hsml</span></code> - filtered array of smoothing lengths/radii for each particle</div>
+</div>
+</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float, float, float, float, float, float, np.ndarray, np.ndarray, np.ndarray, np.ndarry</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="firestudio.studios.gas_studio.GasStudio.print_ImageParams">
+<span class="sig-name descname"><span class="pre">print_ImageParams</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/firestudio/studios/gas_studio.html#GasStudio.print_ImageParams"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#firestudio.studios.gas_studio.GasStudio.print_ImageParams" title="Permalink to this definition"></a></dt>
+<dd><p>Prints the current image parameters.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="firestudio.studios.gas_studio.GasStudio.produceImage">
+<span class="sig-name descname"><span class="pre">produceImage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">weight_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'Masses'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quantity_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'Temperature'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quantities</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_weight</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_weight</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_quantity</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_quantity</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight_adjustment_function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quantity_adjustment_function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cmap</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'viridis'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quick</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/firestudio/studios/gas_studio.html#GasStudio.produceImage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#firestudio.studios.gas_studio.GasStudio.produceImage" title="Permalink to this definition"></a></dt>
+<dd><p>Generates a projected image using the stored image parameters.            Specify whether the image should be “one-color” (i.e. a simple projection map)            or “two-color” (a projection map where the hue is set by the            LOS projected weighted quantity and the saturation is set by the LOS projected weight)            by passing values for <code class="docutils literal notranslate"><span class="pre">min_weight</span></code>, <code class="docutils literal notranslate"><span class="pre">max_weight</span></code>, <code class="docutils literal notranslate"><span class="pre">min_quantity</span></code>, and <code class="docutils literal notranslate"><span class="pre">max_quantity</span></code>.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>weight_name</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of the key in the snapdict that should be used as the weights            if weights are not passed. Special weight_names are <code class="docutils literal notranslate"><span class="pre">Volumes</span></code> and <code class="docutils literal notranslate"><span class="pre">Ones</span></code>,            which do not have to be present in the snapdict, defaults to <code class="docutils literal notranslate"><span class="pre">'Masses'</span></code></p></li>
+<li><p><strong>quantity_name</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of the field that is being projected, should be in the snapdict if 
+quantities is not passed, defaults to <code class="docutils literal notranslate"><span class="pre">'Temperature'</span></code></p></li>
+<li><p><strong>weights</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) – array of weights to use alongside the smoothing kernel            (typically <code class="docutils literal notranslate"><span class="pre">self.snapdict['Masses']</span></code>).             If <code class="docutils literal notranslate"><span class="pre">None</span></code> searches <code class="docutils literal notranslate"><span class="pre">self.snapdict</span></code> for <code class="docutils literal notranslate"><span class="pre">weight_name</span></code>, defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+<li><p><strong>quantities</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) – array of quantities to project along the line of sight.            If <code class="docutils literal notranslate"><span class="pre">None</span></code> searches <code class="docutils literal notranslate"><span class="pre">self.snapdict</span></code> for <code class="docutils literal notranslate"><span class="pre">weight_name</span></code>, defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+<li><p><strong>min_weight</strong> (<em>float</em><em>, </em><em>optional</em>) – minimum value to use for the colorbar of weight projection maps
+and saturation for two-color images, defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+<li><p><strong>max_weight</strong> (<em>float</em><em>, </em><em>optional</em>) – maximum value to use for the colorbar of weight projection maps            and saturation for two-color images, defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+<li><p><strong>min_quantity</strong> (<em>float</em><em>, </em><em>optional</em>) – minimum value to use for the colorbar of weighted quantity projection maps            and hue for two-color images, defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+<li><p><strong>max_quantity</strong> (<em>float</em><em>, </em><em>optional</em>) – maximum value to use for the colorbar of weighted quantity projection maps            and hue for two-color images, defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+<li><p><strong>weight_adjustment_function</strong> (<em>_type_</em><em>, </em><em>optional</em>) – function to apply to the <code class="docutils literal notranslate"><span class="pre">weightMap</span></code> after it is            returned by <a class="reference internal" href="#firestudio.studios.gas_studio.GasStudio.projectAlongLOS" title="firestudio.studios.gas_studio.GasStudio.projectAlongLOS"><code class="xref py py-func docutils literal notranslate"><span class="pre">projectAlongLOS()</span></code></a>
+for the purposes of specifying <code class="docutils literal notranslate"><span class="pre">min_weight</span></code> and <code class="docutils literal notranslate"><span class="pre">max_weight</span></code>, defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+<li><p><strong>quantity_adjustment_function</strong> (<em>_type_</em><em>, </em><em>optional</em>) – function to apply to the <code class="docutils literal notranslate"><span class="pre">weightWeightedQuantityMap</span></code> after it is            returned by <a class="reference internal" href="#firestudio.studios.gas_studio.GasStudio.projectAlongLOS" title="firestudio.studios.gas_studio.GasStudio.projectAlongLOS"><code class="xref py py-func docutils literal notranslate"><span class="pre">projectAlongLOS()</span></code></a>            for the purposes of specifying <code class="docutils literal notranslate"><span class="pre">min_quantity</span></code> and <code class="docutils literal notranslate"><span class="pre">max_quantity</span></code>, defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+<li><p><strong>cmap</strong> (<em>str</em><em>, </em><em>optional</em>) – name of colormap to apply to image, defaults to <code class="docutils literal notranslate"><span class="pre">'viridis'</span></code></p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>ValueError</strong> – if an invalid combination of min/max weight/quantity parameters are passed.</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>array of RGB image pixel values</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>np.ndarray(npix_x,npix_y,3)</p>
+</dd>
+<dt class="field-odd">Example usage</dt>
+<dd class="field-odd"><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1">## makes a gas surface density map</span>
+<span class="n">gasStudio</span><span class="o">.</span><span class="n">render</span><span class="p">(</span>
+    <span class="n">weight_name</span><span class="o">=</span><span class="s1">&#39;Masses&#39;</span><span class="p">,</span>
+    <span class="n">min_weight</span><span class="o">=-</span><span class="mf">0.1</span><span class="p">,</span>
+    <span class="n">max_weight</span><span class="o">=</span><span class="mf">1.5</span><span class="p">,</span>
+    <span class="n">weight_adjustment_function</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">x</span><span class="o">/</span><span class="n">gasStudio</span><span class="o">.</span><span class="n">Acell</span><span class="p">)</span><span class="o">+</span><span class="mi">10</span><span class="o">-</span><span class="mi">6</span><span class="p">)</span> <span class="c1">## log10(msun/pc^2)</span>
+
+<span class="c1">## makes a mass weighted temperature map</span>
+<span class="n">gasStudio</span><span class="o">.</span><span class="n">render</span><span class="p">(</span>
+    <span class="n">weight_name</span><span class="o">=</span><span class="s1">&#39;Masses&#39;</span><span class="p">,</span>
+    <span class="n">quantity_name</span><span class="o">=</span><span class="s1">&#39;Temperature&#39;</span><span class="p">,</span>
+    <span class="n">min_quantity</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+    <span class="n">max_quantity</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span>
+    <span class="n">quantity_adjustment_function</span><span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span>
+    <span class="p">)</span>
+
+<span class="c1">## makes a saturation-hue gas surface density + Temperature map</span>
+<span class="n">gasStudio</span><span class="o">.</span><span class="n">render</span><span class="p">(</span>
+    <span class="n">weight_name</span><span class="o">=</span><span class="s1">&#39;Masses&#39;</span><span class="p">,</span>
+    <span class="n">min_weight</span><span class="o">=-</span><span class="mf">0.1</span><span class="p">,</span>
+    <span class="n">max_weight</span><span class="o">=</span><span class="mf">1.5</span><span class="p">,</span>
+    <span class="n">weight_adjustment_function</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">x</span><span class="o">/</span><span class="n">gasStudio</span><span class="o">.</span><span class="n">Acell</span><span class="p">)</span><span class="o">+</span><span class="mi">10</span><span class="o">-</span><span class="mi">6</span> <span class="c1">## log10(msun/pc^2)</span>
+    <span class="n">quantity_name</span><span class="o">=</span><span class="s1">&#39;Temperature&#39;</span><span class="p">,</span>
+    <span class="n">min_quantity</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+    <span class="n">max_quantity</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span>
+    <span class="n">quantity_adjustment_function</span><span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="firestudio.studios.gas_studio.GasStudio.projectAlongLOS">
+<span class="sig-name descname"><span class="pre">projectAlongLOS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">weights</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quantities</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quantity_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_metadata</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_meta</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">assert_cached</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loud</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/firestudio/studios/gas_studio.html#GasStudio.projectAlongLOS"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#firestudio.studios.gas_studio.GasStudio.projectAlongLOS" title="Permalink to this definition"></a></dt>
+<dd><p>Projects a weighted quantity along the LOS into pixels. Projection is             done with a cubic spline kernel that is renormalized to conserve mass.</p>
+<p>I.e.  <code class="docutils literal notranslate"><span class="pre">renorm_i</span> <span class="pre">=</span> <span class="pre">sum_j</span> <span class="pre">(</span> <span class="pre">k(r_ij,h_i))</span></code> where j is a sum over the pixels particle i contributes to.         The maps computed in the flattened pixel array at index j are then:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">W</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">sum_i</span><span class="p">(</span> <span class="n">k</span><span class="p">(</span><span class="n">r_ij</span><span class="p">,</span><span class="n">h_i</span><span class="p">)</span><span class="o">/</span><span class="n">renorm_i</span> <span class="o">*</span> <span class="n">weight</span><span class="p">)</span>
+<span class="n">Q</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">sum_i</span><span class="p">(</span> <span class="n">k</span><span class="p">(</span><span class="n">r_ij</span><span class="p">,</span><span class="n">h_i</span><span class="p">)</span><span class="o">/</span><span class="n">renorm_i</span> <span class="o">*</span> <span class="n">weight</span> <span class="o">*</span> <span class="n">quantity</span><span class="p">)</span> <span class="o">/</span> <span class="n">W</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>weights</strong> (<em>np.ndarray</em>) – array of weights to use alongside the smoothing kernel            (typically <code class="docutils literal notranslate"><span class="pre">self.snapdict['Masses']</span></code>).</p></li>
+<li><p><strong>weight_name</strong> – Name of the key in the snapdict that should be used as the weights            if weights are not passed.            special weight_names are <code class="docutils literal notranslate"><span class="pre">Volumes</span></code> and <code class="docutils literal notranslate"><span class="pre">Ones</span></code>, which do not             have to be present in the snapdict.        :type weight_name: str</p></li>
+<li><p><strong>quantities</strong> (<em>np.ndarray</em>) – array of quantities to project along the line of sight.</p></li>
+<li><p><strong>quantity_name</strong> (<em>str</em>) – Name of the field that is being projected, should be in the snapdict if             quantities is not passed.</p></li>
+<li><p><strong>use_metadata</strong> (<em>bool</em><em>, </em><em>optional</em>) – flag for whether a cached result should be used (if it exists), defaults to <code class="docutils literal notranslate"><span class="pre">True</span></code></p></li>
+<li><p><strong>save_meta</strong> (<em>bool</em><em>, </em><em>optional</em>) – flag to save the result in the cache, defaults to <code class="docutils literal notranslate"><span class="pre">True</span></code></p></li>
+<li><p><strong>assert_cached</strong> (<em>bool</em><em>, </em><em>optional</em>) – flag to require a cache hit and raise an exception otherwise, defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
+<li><p><strong>loud</strong> (<em>bool</em><em>, </em><em>optional</em>) – flag for whether cache hits/misses should be announced            to the console, defaults to <code class="docutils literal notranslate"><span class="pre">True</span></code></p></li>
+</ul>
+</dd>
+<dt class="field-even">Kwargs</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>snapdict_name</strong> (<cite>str</cite>, <cite>optional</cite>) –                one of <code class="docutils literal notranslate"><span class="pre">gas</span></code> or <code class="docutils literal notranslate"><span class="pre">star</span></code> to identify which of <code class="docutils literal notranslate"><span class="pre">self.gas_snapdict</span></code> or <code class="docutils literal notranslate"><span class="pre">self.star_snapdict</span></code> to read data from.</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">weightMap</span></code> - image of <code class="docutils literal notranslate"><span class="pre">sum(weights)</span></code> along the line of sight in each pixel</div>
+<div class="line"><code class="docutils literal notranslate"><span class="pre">weightWeightedQuantityMap</span></code> - image of <code class="docutils literal notranslate"><span class="pre">sum(weights*quantity)</span></code> along the line of sight in each pixel</div>
+</div>
+</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>np.ndarray, np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="firestudio.studios.gas_studio.GasStudio.quick_projectAlongLOS">
+<span class="sig-name descname"><span class="pre">quick_projectAlongLOS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">weights</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quantities</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quantity_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">snapdict_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'gas'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/firestudio/studios/gas_studio.html#GasStudio.quick_projectAlongLOS"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#firestudio.studios.gas_studio.GasStudio.quick_projectAlongLOS" title="Permalink to this definition"></a></dt>
+<dd><p>Approximates the projection of a weighted quantity along the LOS into pixels.            using a 2d histogram and assuming particles have 0 extent. much faster than the             real thing and useful for quick and dirty testing.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>weights</strong> (<em>np.ndarray</em>) – array of weights to use alongside the smoothing kernel            (typically <code class="docutils literal notranslate"><span class="pre">self.snapdict['Masses']</span></code>).</p></li>
+<li><p><strong>weight_name</strong> – Name of the key in the snapdict that should be used as the weights            if weights are not passed.            special weight_names are <code class="docutils literal notranslate"><span class="pre">Volumes</span></code> and <code class="docutils literal notranslate"><span class="pre">Ones</span></code>, which do not             have to be present in the snapdict.        :type weight_name: str</p></li>
+<li><p><strong>quantities</strong> (<em>np.ndarray</em>) – array of quantities to project along the line of sight.</p></li>
+<li><p><strong>quantity_name</strong> (<em>str</em>) – Name of the field that is being projected, should be in the snapdict if             quantities is not passed.</p></li>
+<li><p><strong>snapdict_name</strong> (<em>str</em><em>, </em><em>optional</em>) – one of <code class="docutils literal notranslate"><span class="pre">gas</span></code> or <code class="docutils literal notranslate"><span class="pre">star</span></code> to identify which of <code class="docutils literal notranslate"><span class="pre">self.gas_snapdict</span></code> or <code class="docutils literal notranslate"><span class="pre">self.star_snapdict</span></code> to read data from.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">weightMap</span></code> - image of <code class="docutils literal notranslate"><span class="pre">sum(weights)</span></code> along the line of sight in each pixel</div>
+<div class="line"><code class="docutils literal notranslate"><span class="pre">weightWeightedQuantityMap</span></code> - image of <code class="docutils literal notranslate"><span class="pre">sum(weights*quantity)</span></code> along the line of sight in each pixel</div>
+</div>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.ndarray, np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="firestudio.studios.gas_studio.GasStudio.render">
+<span class="sig-name descname"><span class="pre">render</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">matplotlib.axes._axes.Axes</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#firestudio.studios.gas_studio.GasStudio.render" title="Permalink to this definition"></a></dt>
+<dd><p>Generates an image with the <cite>produceImage</cite> method and then plots it with the <cite>plotImage</cite> method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>ax</strong> (<em>plt.Axes</em><em>, </em><em>optional</em>) – axis to plot image to, if None will create a new figure, defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>ax – the axis the image was plotted to
+final_image – Npixels x Npixels x 3 RGB pixel array</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>plt.Axes, np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="firestudio.studios.gas_studio.GasStudio.renormalizeTransposeImage">
+<span class="sig-name descname"><span class="pre">renormalizeTransposeImage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_val</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_val</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quantity_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#firestudio.studios.gas_studio.GasStudio.renormalizeTransposeImage" title="Permalink to this definition"></a></dt>
+<dd><p>_summary_</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>image</strong> (<em>np.ndarray</em>) – _description_</p></li>
+<li><p><strong>min_val</strong> (<em>float</em>) – _description_</p></li>
+<li><p><strong>max_val</strong> (<em>float</em>) – _description_</p></li>
+<li><p><strong>quantity_name</strong> (<em>str</em>) – _description_</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>_description_</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>_type_</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="firestudio.studios.gas_studio.GasStudio.required_snapdict_keys">
+<span class="sig-name descname"><span class="pre">required_snapdict_keys</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">['Coordinates',</span> <span class="pre">'Masses',</span> <span class="pre">'SmoothingLength',</span> <span class="pre">'Temperature',</span> <span class="pre">'Velocities']</span></em><a class="headerlink" href="#firestudio.studios.gas_studio.GasStudio.required_snapdict_keys" title="Permalink to this definition"></a></dt>
+<dd><p>these are minimum required keys for <a class="reference internal" href="#firestudio.studios.gas_studio.GasStudio.render" title="firestudio.studios.gas_studio.GasStudio.render"><code class="xref py py-func docutils literal notranslate"><span class="pre">render()</span></code></a> function to run.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="firestudio.studios.gas_studio.GasStudio.saveFigure">
+<span class="sig-name descname"><span class="pre">saveFigure</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fig</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">savefig_args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#firestudio.studios.gas_studio.GasStudio.saveFigure" title="Permalink to this definition"></a></dt>
+<dd><p>_summary_</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fig</strong> (<em>_type_</em>) – _description_</p></li>
+<li><p><strong>image_name</strong> (<em>str</em><em>, </em><em>optional</em>) – _description_, defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="firestudio.studios.gas_studio.GasStudio.set_CacheFile">
+<span class="sig-name descname"><span class="pre">set_CacheFile</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#firestudio.studios.gas_studio.GasStudio.set_CacheFile" title="Permalink to this definition"></a></dt>
+<dd><p>Creates the cache hdf5 file. Requires self.snapnum and sim_name be set.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>IOError</strong> – if self.snapnum and self.sim_name are not set to disambiguate the cache file</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>cache file for storing image maps</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">abg_python.galaxy.metadata_utils.Metadata</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="firestudio.studios.gas_studio.GasStudio.set_ImageParams">
+<span class="sig-name descname"><span class="pre">set_ImageParams</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">use_defaults</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loud</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/firestudio/studios/gas_studio.html#GasStudio.set_ImageParams"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#firestudio.studios.gas_studio.GasStudio.set_ImageParams" title="Permalink to this definition"></a></dt>
+<dd><p>Changes the parameters of the image. Also calls <a class="reference internal" href="firestudio.studios.studio.Studio.html#firestudio.studios.studio.Studio" title="firestudio.studios.studio.Studio"><code class="xref py py-class docutils literal notranslate"><span class="pre">Studio</span></code></a>’s            <a class="reference internal" href="firestudio.studios.studio.Studio.html#firestudio.studios.studio.Studio.set_ImageParams" title="firestudio.studios.studio.Studio.set_ImageParams"><code class="xref py py-func docutils literal notranslate"><span class="pre">set_ImageParams()</span></code></a>, passing along any unmatched kwargs.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>use_defaults</strong> (<em>bool</em><em>, </em><em>optional</em>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code> then default values of the parameters will be set            (potentially overwriting any previously specified parameters).            If <code class="docutils literal notranslate"><span class="pre">False</span></code> adjust only the keywords passed, defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
+<li><p><strong>loud</strong> (<em>bool</em><em>, </em><em>optional</em>) – flag to print which parameters are being set/updated, defaults to <code class="docutils literal notranslate"><span class="pre">True</span></code></p></li>
+</ul>
+</dd>
+<dt class="field-even">Kwargs</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>use_colorbar</strong> (<cite>bool</cite>, <cite>optional</cite>) –                flag to add a colorbar to the image. not currently implemented for                 two-color images, defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
+<li><p><strong>cbar_label</strong> (<cite>str</cite>, <cite>optional</cite>) –                 label for the colorbar, defaults to ‘’</p></li>
+<li><p><strong>cbar_logspace</strong> (<cite>bool</cite>, <cite>optional</cite>) –                flag for whether ticks on the colorbar should be log-spaced, defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
+</ul>
+</dd>
+<dt class="field-odd">Example usage</dt>
+<dd class="field-odd"><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">gasStudio</span><span class="o">.</span><span class="n">set_ImageParams</span><span class="p">(</span>
+    <span class="n">use_colorbar</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">cbar_label</span><span class="o">=</span><span class="s1">&#39;Temperature&#39;</span><span class="p">,</span>
+    <span class="n">cbar_logspace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">figure_label</span><span class="o">=</span><span class="s1">&#39;t = 13.8 Gyr&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="firestudio.studios.gas_studio.html" class="btn btn-neutral float-left" title="firestudio.studios.gas_studio" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="firestudio.studios.star_studio.html" class="btn btn-neutral float-right" title="firestudio.studios.star_studio" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Alex Gurvich.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -36,6 +36,9 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../gas_projection.html">Gas projections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mock_hubble.html">Mock hubble images</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/index.html">Tutorial Notebooks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/api/api.html">API Reference</a></li>
 </ul>
 
@@ -72,8 +75,8 @@
 <span class="kn">import</span> <span class="nn">copy</span>
 
 <span class="c1">## abg_python imports</span>
-<span class="kn">from</span> <span class="nn">abg_python.plot_utils</span> <span class="kn">import</span> <span class="n">addColorbar</span><span class="p">,</span><span class="n">nameAxes</span>
-<span class="kn">from</span> <span class="nn">abg_python</span> <span class="kn">import</span> <span class="n">append_function_docstring</span><span class="p">,</span><span class="n">append_string_docstring</span><span class="p">,</span><span class="n">findIntersection</span>
+<span class="kn">from</span> <span class="nn">abg_python.plot_utils</span> <span class="kn">import</span> <span class="n">nameAxes</span>
+<span class="kn">from</span> <span class="nn">abg_python</span> <span class="kn">import</span> <span class="n">findIntersection</span>
 <span class="kn">from</span> <span class="nn">abg_python.galaxy.metadata_utils</span> <span class="kn">import</span> <span class="n">metadata_cache</span>
 
 <span class="c1">## firestudio imports</span>
@@ -86,8 +89,8 @@
     <span class="n">make_threeband_image_process_bandmaps</span><span class="p">)</span> <span class="c1">## take 3 bands, overlay them, and map to RGB to make final image</span>
 
 
-<div class="viewcode-block" id="StarStudio"><a class="viewcode-back" href="../../../reference/api/interpolation/firestudio.studios.star_studio.StarStudio.html#firestudio.studios.star_studio.StarStudio">[docs]</a><span class="k">class</span> <span class="nc">StarStudio</span><span class="p">(</span><span class="n">Studio</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot; `FIREstudio` class for making mock hubble images with attenuation along the line of sight. &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="StarStudio"><a class="viewcode-back" href="../../../reference/api/firestudio.studios.star_studio.StarStudio.html#firestudio.studios.star_studio.StarStudio">[docs]</a><span class="k">class</span> <span class="nc">StarStudio</span><span class="p">(</span><span class="n">Studio</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;:class:`~firestudio.studios.studio.Studio` class for making mock hubble images with attenuation along the line of sight. &quot;&quot;&quot;</span>
 
     <span class="n">required_snapdict_keys</span> <span class="o">=</span> <span class="p">[</span>
         <span class="s1">&#39;Masses&#39;</span><span class="p">,</span>
@@ -96,57 +99,53 @@
         <span class="s1">&#39;Temperature&#39;</span><span class="p">,</span>
         <span class="s1">&#39;AgeGyr&#39;</span><span class="p">,</span>
         <span class="s1">&#39;Metallicity&#39;</span><span class="p">]</span>
-    <span class="sd">&quot;&quot;&quot; these are keys that are required for the function to run.&quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot; these are minimum required keys for :func:`~firestudio.studios.star_studio.StarStudio.render` function to run.&quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s1">&#39;StarStudio instance&#39;</span>
 
-<span class="c1">####### makeOutputDirectories implementation #######</span>
-    <span class="k">def</span> <span class="nf">set_ImageParams</span><span class="p">(</span>
+<div class="viewcode-block" id="StarStudio.set_ImageParams"><a class="viewcode-back" href="../../../reference/api/firestudio.studios.star_studio.StarStudio.html#firestudio.studios.star_studio.StarStudio.set_ImageParams">[docs]</a>    <span class="k">def</span> <span class="nf">set_ImageParams</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">use_defaults</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="n">loud</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Changes the parameters of the image. </span>
+        <span class="sd">&quot;&quot;&quot; Changes the parameters of the image. Also calls :class:`~firestudio.studios.studio.Studio`&#39;s\</span>
+<span class="sd">            :func:`~firestudio.studios.studio.Studio.set_ImageParams`, passing along any unmatched kwargs.</span>
+
+<span class="sd">        :param use_defaults: </span>
+<span class="sd">            If ``True`` then default values of the parameters will be set\</span>
+<span class="sd">            (potentially overwriting any previously specified parameters).\</span>
+<span class="sd">            If ``False`` adjust only the keywords passed, defaults to ``False``</span>
+<span class="sd">        :type use_defaults: bool, optional</span>
+<span class="sd">        :param loud: </span>
+<span class="sd">            flag to print which parameters are being set/updated, defaults to ``True``</span>
+<span class="sd">        :type loud: bool, optional</span>
 <span class="sd">         </span>
+<span class="sd">        :kwargs:</span>
+<span class="sd">            * **maxden** (`float`, `optional`) -- \</span>
+<span class="sd">                controls the saturation of the image,\</span>
+<span class="sd">                sets the upper limit of the &quot;colorbar&quot; if ``None`` uses\</span>
+<span class="sd">                the 99 %&#39;ile of the image surface brightness, defaults to ``None``</span>
+<span class="sd">            * **dynrange** (`float`, `optional`) -- \</span>
+<span class="sd">                controls the saturation of the image,\</span>
+<span class="sd">                sets the lower limit of the &quot;colorbar&quot; with respect to maxden,\</span>
+<span class="sd">                if None uses the dynamic range between maxden and the 10th %&#39;ile\</span>
+<span class="sd">                of the image surface brightness, defaults to ``None``</span>
+<span class="sd">            * **nodust** (`bool`, `optional`) --\</span>
+<span class="sd">                flag for whether dust attenuantion should be ignored, defaults to ``False``</span>
+<span class="sd">            * **age_max_gyr** (`float`, `optional`) --\</span>
+<span class="sd">                maximum age in Gyr to show stellar emission from. If ``None`` then emission from all star\</span>
+<span class="sd">                particles is considered, defaults to ``None``</span>
+<span class="sd">            * **color_scheme_nasa** (`bool`, `optional`) --\</span>
+<span class="sd">                flag for switching between Hubble vs. SDSS false color remapping, defaults to ``True``</span>
 
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        use_defaults : bool, optional</span>
-<span class="sd">            If `True` then default values of the parameters will be set </span>
-<span class="sd">            (potentially overwriting any previously specified parameters). </span>
-<span class="sd">            If `False` adjust only the keywords passed, by default False</span>
-<span class="sd">        loud : bool, optional</span>
-<span class="sd">            flag to print which parameters are being set/updated, by default True</span>
-<span class="sd">            </span>
-<span class="sd">        Keywords</span>
-<span class="sd">        --------</span>
-<span class="sd">        maxden : float</span>
-<span class="sd">             controls the saturation of the image,</span>
-<span class="sd">            sets the upper limit of the &quot;colorbar&quot; if None uses</span>
-<span class="sd">            the 99 %&#39;ile of the image surface brightness, by default None</span>
-<span class="sd">        dynrange : float</span>
-<span class="sd">            controls the saturation of the image,</span>
-<span class="sd">            sets the lower limit of the &quot;colorbar&quot; with respect to maxden,</span>
-<span class="sd">            if None uses the dynamic range between maxden and the 10th %&#39;ile</span>
-<span class="sd">            of the image surface brightness, by default None</span>
-<span class="sd">        nodust : bool</span>
-<span class="sd">            flag for whether dust attenuantion should be ignored, by default False</span>
-<span class="sd">        age_max_gyr : float</span>
-<span class="sd">            maximum age in Gyr to show stellar emission from. If None then emission from all star</span>
-<span class="sd">            particles is considered, by default None</span>
-<span class="sd">        </span>
-<span class="sd">        color_scheme_nasa : bool</span>
-<span class="sd">            flag for switching between Hubble vs. SDSS false color remapping, by default True</span>
+<span class="sd">        :Example usage:</span>
+<span class="sd">            .. code-block:: python</span>
 
-<span class="sd">        Example usage:</span>
-<span class="sd">        --------------</span>
-<span class="sd">        ```python</span>
-<span class="sd">        starStudio.set_ImageParams(</span>
-<span class="sd">            maxden=0.1,</span>
-<span class="sd">            dynrange=10,</span>
-<span class="sd">            figure_label=&#39;Hubble&#39;)</span>
-<span class="sd">        ```</span>
+<span class="sd">                starStudio.set_ImageParams(</span>
+<span class="sd">                    maxden=0.1,</span>
+<span class="sd">                    dynrange=10,</span>
+<span class="sd">                    figure_label=&#39;Hubble&#39;)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">default_kwargs</span> <span class="o">=</span> <span class="p">{</span>
@@ -189,11 +188,9 @@
         <span class="c1">## set any other image params here</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">set_ImageParams</span><span class="p">(</span><span class="n">use_defaults</span><span class="o">=</span><span class="n">use_defaults</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">no_dust</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">this_setup_id</span><span class="o">+=</span><span class="s1">&#39;_no_dust&#39;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">age_max_gyr</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">this_setup_id</span><span class="o">+=</span><span class="s1">&#39;_age_max</span><span class="si">%0.3f</span><span class="s1">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">age_max_gyr</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">age_max_gyr</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">this_setup_id</span><span class="o">+=</span><span class="s1">&#39;_age_max</span><span class="si">%0.3f</span><span class="s1">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">age_max_gyr</span></div>
 
-    <span class="n">append_function_docstring</span><span class="p">(</span><span class="n">set_ImageParams</span><span class="p">,</span><span class="n">Studio</span><span class="o">.</span><span class="n">set_ImageParams</span><span class="p">,</span><span class="n">prepend_string</span><span class="o">=</span><span class="s1">&#39;passes `kwargs` to:</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">print_ImageParams</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="StarStudio.print_ImageParams"><a class="viewcode-back" href="../../../reference/api/firestudio.studios.star_studio.StarStudio.html#firestudio.studios.star_studio.StarStudio.print_ImageParams">[docs]</a>    <span class="k">def</span> <span class="nf">print_ImageParams</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot; Prints current image setup to console.&quot;&quot;&quot;</span>
 
         <span class="n">default_kwargs</span> <span class="o">=</span> <span class="p">{</span>
@@ -208,51 +205,50 @@
             <span class="nb">print</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span><span class="s1">&#39;=&#39;</span><span class="p">,</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">arg</span><span class="p">))</span>
 
         <span class="c1">## call the super class&#39; print image params</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">print_ImageParams</span><span class="p">()</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">print_ImageParams</span><span class="p">()</span></div>
 
-    <span class="k">def</span> <span class="nf">quick_get_mockHubbleImage</span><span class="p">(</span>
+<div class="viewcode-block" id="StarStudio.quick_get_mockHubbleImage"><a class="viewcode-back" href="../../../reference/api/firestudio.studios.star_studio.StarStudio.html#firestudio.studios.star_studio.StarStudio.quick_get_mockHubbleImage">[docs]</a>    <span class="k">def</span> <span class="nf">quick_get_mockHubbleImage</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">lums</span><span class="p">:</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">nu_effs</span><span class="p">:</span><span class="nb">list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">BAND_IDS</span><span class="p">:</span><span class="nb">list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span>
         <span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Approximate the `~firestudio.studios.StarStudio.get_mockHubbleImage` routine using a 2d histogram.</span>
+        <span class="sd">&quot;&quot;&quot; Approximate the `~firestudio.studios.StarStudio.get_mockHubbleImage` routine using a 2d histogram.</span>
 
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        lums : np.ndarray, optional</span>
-<span class="sd">            array of luminosities for each star particle. If None then luminosities are calculated in</span>
-<span class="sd">            the bands specified by `BAND_IDS`, by default None</span>
-<span class="sd">        nu_effs : list, optional</span>
-<span class="sd">            list of effective frequencies corresponding to the bands of luminosities</span>
-<span class="sd">            provides in the `lums`. If None, uses the frequencies corresponding to the</span>
-<span class="sd">            specified `BAND_IDS`., by default None</span>
-<span class="sd">        BAND_IDS : list, optional</span>
-<span class="sd">            List of indices that identify which bands to model stellar emission in. </span>
-<span class="sd">            If None uses Sloan UGR bands `(1,2,3)`, by default None</span>
-<span class="sd">            ```</span>
-<span class="sd">            lambda_eff=np.array([</span>
-<span class="sd">                ## Bolometric (?)</span>
-<span class="sd">                        1.e-5,  </span>
-<span class="sd">                ## SDSS u       g       r      i      z</span>
-<span class="sd">                        3551. , 4686. , 6165., 7481., 8931.,</span>
-<span class="sd">                ##      U       B       V      R</span>
-<span class="sd">                        3600. , 4400. , 5556., 6940., </span>
-<span class="sd">                ##      I      J       H       K</span>
-<span class="sd">                        8700., 12150., 16540., 21790.])```</span>
+<span class="sd">            ``BAND_IDS`` indexes the following list:</span>
 
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        np.ndarray</span>
-<span class="sd">            metal_mass_map - 2d map of metal mass used to attenuate luminosities</span>
-<span class="sd">            along LOS in pixel, in Msun/kpc^2</span>
-<span class="sd">        np.ndarray</span>
-<span class="sd">            out_0 - 2d map of luminosities in first band in Lsun/kpc^2</span>
-<span class="sd">        np.ndarray</span>
-<span class="sd">            out_1 - 2d map of luminosities in second band in Lsun/kpc^2</span>
-<span class="sd">        np.ndarray</span>
-<span class="sd">            out_2 - 2d map of luminosities in third band in Lsun/kpc^2</span>
+<span class="sd">            .. code-block:: python</span>
+
+<span class="sd">                lambda_eff = np.array([</span>
+<span class="sd">                    ## Bolometric (?)</span>
+<span class="sd">                            1.e-5,  </span>
+<span class="sd">                    ## SDSS u       g       r      i      z</span>
+<span class="sd">                            3551. , 4686. , 6165., 7481., 8931.,</span>
+<span class="sd">                    ##      U       B       V      R</span>
+<span class="sd">                            3600. , 4400. , 5556., 6940., </span>
+<span class="sd">                    ##      I      J       H       K</span>
+<span class="sd">                            8700., 12150., 16540., 21790.])</span>
+
+<span class="sd">        :param lums: </span>
+<span class="sd">            array of luminosities for each star particle. If None then luminosities are calculated in\</span>
+<span class="sd">            the bands specified by ``BAND_IDS``, defaults to ``None``</span>
+<span class="sd">        :type lums: np.ndarray, optional</span>
+<span class="sd">        :param nu_effs: </span>
+<span class="sd">            list of effective frequencies corresponding to the bands of luminosities\</span>
+<span class="sd">            provides in the ``lums``. If None, uses the frequencies corresponding to the\</span>
+<span class="sd">            specified ``BAND_IDS``, defaults to ``None``</span>
+<span class="sd">        :type nu_effs: list, optional</span>
+<span class="sd">        :param BAND_IDS: </span>
+<span class="sd">            List of indices that identify which bands to model stellar emission in.\</span>
+<span class="sd">            If ``None`` uses Sloan UGR bands ``(1,2,3)``, defaults to ``None``</span>
+<span class="sd">        :type BAND_IDS: list, optional</span>
+<span class="sd">        :return: \</span>
+<span class="sd">            |  ``metal_mass_map`` - 2d map of metal mass used to attenuate luminosities along LOS in pixel, in Msun/kpc^2</span>
+<span class="sd">            |  ``out_0`` - 2d map of luminosities in first band in Lsun/kpc^2</span>
+<span class="sd">            |  ``out_1`` - 2d map of luminosities in second band in Lsun/kpc^2</span>
+<span class="sd">            |  ``out_2`` - 2d map of luminosities in third band in Lsun/kpc^2</span>
+<span class="sd">        :rtype: np.ndarray, np.ndarray, np.ndarray, np.ndarray</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="n">BAND_IDS</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -290,9 +286,9 @@
 
         <span class="n">unit_factor</span> <span class="o">=</span> <span class="mf">1e10</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">Acell</span>
 
-        <span class="k">return</span> <span class="n">metal_mass_map</span><span class="o">*</span><span class="n">unit_factor</span><span class="p">,</span><span class="n">outs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">unit_factor</span><span class="p">,</span><span class="n">outs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="n">unit_factor</span><span class="p">,</span><span class="n">outs</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">*</span><span class="n">unit_factor</span>
+        <span class="k">return</span> <span class="n">metal_mass_map</span><span class="o">*</span><span class="n">unit_factor</span><span class="p">,</span><span class="n">outs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">unit_factor</span><span class="p">,</span><span class="n">outs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="n">unit_factor</span><span class="p">,</span><span class="n">outs</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">*</span><span class="n">unit_factor</span></div>
 
-    <span class="k">def</span> <span class="nf">get_mockHubbleImage</span><span class="p">(</span>
+<div class="viewcode-block" id="StarStudio.get_mockHubbleImage"><a class="viewcode-back" href="../../../reference/api/firestudio.studios.star_studio.StarStudio.html#firestudio.studios.star_studio.StarStudio.get_mockHubbleImage">[docs]</a>    <span class="k">def</span> <span class="nf">get_mockHubbleImage</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">use_metadata</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="n">save_meta</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
@@ -300,31 +296,49 @@
         <span class="n">loud</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span> 
         <span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Projects starlight and approximates attenuatation along line of sight</span>
-<span class="sd">            into SDSS u, g, and r bands. </span>
+        <span class="sd">&quot;&quot;&quot; Projects starlight and approximates attenuatation along line of sight into SDSS u, g, and r bands. </span>
 
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        use_metadata : bool, optional</span>
-<span class="sd">            flag to search cache for result, by default True</span>
-<span class="sd">        save_meta : bool, optional</span>
-<span class="sd">            flag to cache the result, by default True</span>
-<span class="sd">        assert_cached : bool, optional</span>
-<span class="sd">            flag to raise an exception on a cache miss, by default False</span>
-<span class="sd">        loud : bool, optional</span>
-<span class="sd">            whether cache hits/misses should be announced to the console, by default True</span>
+<span class="sd">            ``BAND_IDS`` indexes the following list:</span>
 
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        np.ndarray</span>
-<span class="sd">            metal_mass_map - 2d map of metal mass used to attenuate luminosities</span>
-<span class="sd">            along LOS in pixel, in Msun/kpc^2</span>
-<span class="sd">        np.ndarray</span>
-<span class="sd">            out_0 - 2d map of luminosities in first band in Lsun/kpc^2</span>
-<span class="sd">        np.ndarray</span>
-<span class="sd">            out_1 - 2d map of luminosities in second band in Lsun/kpc^2</span>
-<span class="sd">        np.ndarray</span>
-<span class="sd">            out_2 - 2d map of luminosities in third band in Lsun/kpc^2</span>
+<span class="sd">            .. code-block:: python</span>
+
+<span class="sd">                lambda_eff = np.array([</span>
+<span class="sd">                    ## Bolometric (?)</span>
+<span class="sd">                            1.e-5,  </span>
+<span class="sd">                    ## SDSS u       g       r      i      z</span>
+<span class="sd">                            3551. , 4686. , 6165., 7481., 8931.,</span>
+<span class="sd">                    ##      U       B       V      R</span>
+<span class="sd">                            3600. , 4400. , 5556., 6940., </span>
+<span class="sd">                    ##      I      J       H       K</span>
+<span class="sd">                            8700., 12150., 16540., 21790.])</span>
+
+<span class="sd">        :param use_metadata: flag for whether a cached result should be used (if it exists), defaults to ``True``</span>
+<span class="sd">        :type use_metadata: bool, optional</span>
+<span class="sd">        :param save_meta: flag to save the result in the cache, defaults to ``True``</span>
+<span class="sd">        :type save_meta: bool, optional</span>
+<span class="sd">        :param assert_cached: flag to require a cache hit and raise an exception otherwise, defaults to ``False``</span>
+<span class="sd">        :type assert_cached: bool, optional</span>
+<span class="sd">        :param loud: flag for whether cache hits/misses should be announced to the console, defaults to ``True``</span>
+<span class="sd">        :type loud: bool, optional</span>
+
+<span class="sd">        :kwargs:</span>
+<span class="sd">            * **lums** (`np.ndarray`, `optional`) -- \</span>
+<span class="sd">                array of luminosities for each star particle. If None then luminosities are calculated in\</span>
+<span class="sd">                the bands specified by ``BAND_IDS``, defaults to ``None``</span>
+<span class="sd">            * **nu_effs** (`list`, `optional`) -- \</span>
+<span class="sd">                list of effective frequencies corresponding to the bands of luminosities\</span>
+<span class="sd">                provides in the ``lums``. If None, uses the frequencies corresponding to the\</span>
+<span class="sd">                specified ``BAND_IDS``, defaults to ``None``</span>
+<span class="sd">            * **BAND_IDS** (`list`, `optional`) -- \</span>
+<span class="sd">                List of indices that identify which bands to model stellar emission in.\</span>
+<span class="sd">                If ``None`` uses Sloan UGR bands ``(1,2,3)``, defaults to ``None``</span>
+
+<span class="sd">        :return: \</span>
+<span class="sd">            |  ``metal_mass_map`` - 2d map of metal mass used to attenuate luminosities along LOS in pixel, in Msun/kpc^2</span>
+<span class="sd">            |  ``out_0`` - 2d map of luminosities in first band in Lsun/kpc^2</span>
+<span class="sd">            |  ``out_1`` - 2d map of luminosities in second band in Lsun/kpc^2</span>
+<span class="sd">            |  ``out_2`` - 2d map of luminosities in third band in Lsun/kpc^2</span>
+<span class="sd">        :rtype: np.ndarray, np.ndarray, np.ndarray, np.ndarray</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="nd">@metadata_cache</span><span class="p">(</span>
@@ -349,7 +363,7 @@
                 <span class="n">gas_pos</span> <span class="p">,</span> <span class="n">mgas</span> <span class="p">,</span> <span class="n">gas_metals</span> <span class="p">,</span>  <span class="n">h_gas</span><span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">prepareCoordinates</span><span class="p">(</span><span class="n">lums</span><span class="p">,</span><span class="n">nu_effs</span><span class="p">,</span><span class="n">BAND_IDS</span><span class="p">)</span>
 
             <span class="c1">## do the actual raytracing</span>
-            <span class="n">gas_out</span><span class="p">,</span><span class="n">out_u</span><span class="p">,</span><span class="n">out_g</span><span class="p">,</span><span class="n">out_r</span> <span class="o">=</span> <span class="n">raytrace_ugr_attenuation</span><span class="p">(</span>
+            <span class="n">gas_out</span><span class="p">,</span><span class="n">out_u</span><span class="p">,</span><span class="n">out_g</span><span class="p">,</span><span class="n">out_r</span> <span class="o">=</span> <span class="n">_raytrace_ugr_attenuation</span><span class="p">(</span>
                 <span class="n">star_pos</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span><span class="n">star_pos</span><span class="p">[:,</span><span class="mi">1</span><span class="p">],</span><span class="n">star_pos</span><span class="p">[:,</span><span class="mi">2</span><span class="p">],</span>
                 <span class="n">h_star</span><span class="p">,</span>
                 <span class="n">gas_pos</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span><span class="n">gas_pos</span><span class="p">[:,</span><span class="mi">1</span><span class="p">],</span><span class="n">gas_pos</span><span class="p">[:,</span><span class="mi">2</span><span class="p">],</span>
@@ -365,59 +379,59 @@
             <span class="c1">## unit factor, output is in Lsun/kpc^2</span>
             <span class="n">unit_factor</span> <span class="o">=</span> <span class="mf">1e10</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">Acell</span>
             <span class="k">return</span> <span class="n">gas_out</span><span class="o">*</span><span class="n">unit_factor</span><span class="p">,</span> <span class="n">out_u</span><span class="o">*</span><span class="n">unit_factor</span><span class="p">,</span> <span class="n">out_g</span><span class="o">*</span><span class="n">unit_factor</span><span class="p">,</span> <span class="n">out_r</span><span class="o">*</span><span class="n">unit_factor</span>
-        <span class="k">return</span> <span class="n">compute_mockHubbleImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">compute_mockHubbleImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
 
-    <span class="k">def</span> <span class="nf">prepareCoordinates</span><span class="p">(</span>
+<div class="viewcode-block" id="StarStudio.prepareCoordinates"><a class="viewcode-back" href="../../../reference/api/firestudio.studios.star_studio.StarStudio.html#firestudio.studios.star_studio.StarStudio.prepareCoordinates">[docs]</a>    <span class="k">def</span> <span class="nf">prepareCoordinates</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">lums</span><span class="p">:</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">nu_effs</span><span class="p">:</span><span class="nb">list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">BAND_IDS</span><span class="p">:</span><span class="nb">list</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Reads snapshot data from `self.snapdict` and `self.star_snapdict` in the</span>
-<span class="sd">        imaging volume defined by `self.Xmin`,`self.Xmax`,`self.Ymin`,`self.Ymax`,`self.Zmin`,`self.Zmax`.</span>
-<span class="sd">        Unpacks necessary arrays and provides them to the calling imaging routine. </span>
+        <span class="sd">&quot;&quot;&quot; Reads snapshot data from `self.snapdict` and `self.star_snapdict` in the\</span>
+<span class="sd">            imaging volume defined by `self.Xmin`,`self.Xmax`,`self.Ymin`,`self.Ymax`,`self.Zmin`,`self.Zmax`.\</span>
+<span class="sd">            Unpacks necessary arrays and provides them to the calling imaging routine. </span>
 
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        lums : np.ndarray, optional</span>
-<span class="sd">            array of luminosities for each star particle. If None then luminosities are calculated in</span>
-<span class="sd">            the bands specified by `BAND_IDS`, by default None</span>
-<span class="sd">        nu_effs : list, optional</span>
-<span class="sd">            list of effective frequencies corresponding to the bands of luminosities</span>
-<span class="sd">            provides in the `lums`. If None, uses the frequencies corresponding to the</span>
-<span class="sd">            specified `BAND_IDS`., by default None</span>
-<span class="sd">        BAND_IDS : list, optional</span>
-<span class="sd">            List of indices that identify which bands to model stellar emission in. </span>
-<span class="sd">            If None uses Sloan UGR bands `(1,2,3)`, by default None</span>
-<span class="sd">            ```</span>
-<span class="sd">            lambda_eff=np.array([</span>
-<span class="sd">                ## Bolometric (?)</span>
-<span class="sd">                        1.e-5,  </span>
-<span class="sd">                ## SDSS u       g       r      i      z</span>
-<span class="sd">                        3551. , 4686. , 6165., 7481., 8931.,</span>
-<span class="sd">                ##      U       B       V      R</span>
-<span class="sd">                        3600. , 4400. , 5556., 6940., </span>
-<span class="sd">                ##      I      J       H       K</span>
-<span class="sd">                        8700., 12150., 16540., 21790.])```</span>
+<span class="sd">        ``BAND_IDS`` indexes the following list:</span>
 
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        np.ndarray(3)</span>
-<span class="sd">            kappas : array of effective cross sections in each band</span>
-<span class="sd">        np.ndarray(Nstar,3)</span>
-<span class="sd">            lums :  array of luminosities in each band</span>
-<span class="sd">        np.ndarray(Nstar,3)</span>
-<span class="sd">            star_pos : coordinate data for emitting stars in kpc </span>
-<span class="sd">        np.ndarray(Ngas)</span>
-<span class="sd">            h_star : effective smoothing length/radius for each star particle in kpc</span>
-<span class="sd">        np.ndarray(Ngas,3)</span>
-<span class="sd">            gas_pos : coordinate data for attenuating gas in kpc</span>
-<span class="sd">        np.ndarray(Ngas)</span>
-<span class="sd">            mgas : mass data for attenuating gas in 10^10 Msun</span>
-<span class="sd">        np.ndarray(Ngas)</span>
-<span class="sd">            gas_metals : total metal mass fraction for each gas particle</span>
-<span class="sd">        np.ndarray(Ngas)</span>
-<span class="sd">            h_gas : smoothing length/radius for each gas particle in kpc</span>
+<span class="sd">            .. code-block:: python</span>
+
+<span class="sd">                lambda_eff = np.array([</span>
+<span class="sd">                    ## Bolometric (?)</span>
+<span class="sd">                            1.e-5,  </span>
+<span class="sd">                    ## SDSS u       g       r      i      z</span>
+<span class="sd">                            3551. , 4686. , 6165., 7481., 8931.,</span>
+<span class="sd">                    ##      U       B       V      R</span>
+<span class="sd">                            3600. , 4400. , 5556., 6940., </span>
+<span class="sd">                    ##      I      J       H       K</span>
+<span class="sd">                            8700., 12150., 16540., 21790.])</span>
+
+<span class="sd">        :param lums: </span>
+<span class="sd">            array of luminosities for each star particle. If None then luminosities are calculated in\</span>
+<span class="sd">            the bands specified by ``BAND_IDS``, defaults to ``None``</span>
+<span class="sd">        :type lums: np.ndarray, optional</span>
+<span class="sd">        :param nu_effs: </span>
+<span class="sd">            list of effective frequencies corresponding to the bands of luminosities\</span>
+<span class="sd">            provides in the ``lums``. If None, uses the frequencies corresponding to the\</span>
+<span class="sd">            specified ``BAND_IDS``, defaults to ``None``</span>
+<span class="sd">        :type nu_effs: list, optional</span>
+<span class="sd">        :param BAND_IDS: </span>
+<span class="sd">            List of indices that identify which bands to model stellar emission in.\</span>
+<span class="sd">            If ``None`` uses Sloan UGR bands ``(1,2,3)``, defaults to ``None``</span>
+<span class="sd">        :type BAND_IDS: list, optional</span>
+
+<span class="sd">        :return: \</span>
+<span class="sd">            |  ``kappas`` - array of effective cross sections in each band</span>
+<span class="sd">            |  ``lums`` -  array of luminosities in each band</span>
+<span class="sd">            |  ``star_pos`` - coordinate data for emitting stars in kpc </span>
+<span class="sd">            |  ``h_star`` - effective smoothing length/radius for each star particle in kpc</span>
+<span class="sd">            |  ``gas_pos`` - coordinate data for attenuating gas in kpc</span>
+<span class="sd">            |  ``mgas`` - mass data for attenuating gas in 10^10 Msun</span>
+<span class="sd">            |  ``gas_metals`` - total metal mass fraction for each gas particle</span>
+<span class="sd">            |  ``h_gas`` - smoothing length/radius for each gas particle in kpc</span>
+<span class="sd">        :rtype: </span>
+<span class="sd">            np.ndarray(3), np.ndarray(Nstar,3), np.ndarray(Nstar,3), \</span>
+<span class="sd">            np.ndarray(Ngas), np.ndarray(Ngas,3), np.ndarray(Ngas), \</span>
+<span class="sd">            np.ndarray(Ngas), np.ndarray(Ngas)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         
         <span class="c1">## unpack the star information</span>
@@ -518,26 +532,21 @@
 
         <span class="k">return</span> <span class="p">(</span><span class="n">kappas</span><span class="p">,</span> <span class="n">lums</span><span class="p">,</span>
                 <span class="n">star_pos</span><span class="p">,</span> <span class="n">h_star</span><span class="p">,</span>
-                <span class="n">gas_pos</span> <span class="p">,</span> <span class="n">mgas</span> <span class="p">,</span> <span class="n">gas_metals</span> <span class="p">,</span>  <span class="n">h_gas</span><span class="p">)</span>
+                <span class="n">gas_pos</span> <span class="p">,</span> <span class="n">mgas</span> <span class="p">,</span> <span class="n">gas_metals</span> <span class="p">,</span>  <span class="n">h_gas</span><span class="p">)</span></div>
 
 <span class="c1">####### produceImage implementation #######</span>
-    <span class="k">def</span> <span class="nf">produceImage</span><span class="p">(</span>
+<div class="viewcode-block" id="StarStudio.produceImage"><a class="viewcode-back" href="../../../reference/api/firestudio.studios.star_studio.StarStudio.html#firestudio.studios.star_studio.StarStudio.produceImage">[docs]</a>    <span class="k">def</span> <span class="nf">produceImage</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">quick</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Generates a mock hubble image, along with any annotations/scale bars,</span>
-<span class="sd">            using the stored image parameters.</span>
+        <span class="sd">&quot;&quot;&quot; Generates a mock hubble image, along with any annotations/scale bars, using the stored image parameters.</span>
 
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        quick : bool, optional</span>
-<span class="sd">            flag to use a simple 2d histogram (for comparison or for quick iteration </span>
-<span class="sd">            as you choose image parameters), by default False</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        np.ndarray(npix_x,npix_y,3)</span>
-<span class="sd">            RGB pixel array of the produced image</span>
+<span class="sd">        :param quick: </span>
+<span class="sd">            flag to use a simple 2d histogram (for comparison or for quick iteration\</span>
+<span class="sd">            as you choose image parameters), defaults to False</span>
+<span class="sd">        :type quick: bool, optional</span>
+<span class="sd">        :return: RGB pixel array of the produced image</span>
+<span class="sd">        :rtype: np.ndarray(npix_x,npix_y,3)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">quick</span><span class="p">:</span>
@@ -573,44 +582,43 @@
         <span class="n">final_image</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">image24</span><span class="p">,</span><span class="n">axes</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">final_image</span> <span class="o">=</span> <span class="n">final_image</span>
 
-        <span class="k">return</span> <span class="n">final_image</span>
+        <span class="k">return</span> <span class="n">final_image</span></div>
 
-    <span class="k">def</span> <span class="nf">predictParameters</span><span class="p">(</span>
+<div class="viewcode-block" id="StarStudio.predictParameters"><a class="viewcode-back" href="../../../reference/api/firestudio.studios.star_studio.StarStudio.html#firestudio.studios.star_studio.StarStudio.predictParameters">[docs]</a>    <span class="k">def</span> <span class="nf">predictParameters</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">left_percentile</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
         <span class="n">right_percentile</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="mf">0.99</span><span class="p">,</span>
         <span class="n">L_sfc_densities</span><span class="p">:</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">ax</span><span class="p">:</span><span class="n">plt</span><span class="o">.</span><span class="n">Axes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">quick</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Guesses what the &quot;best&quot; values for maxden and dynrange are from</span>
-<span class="sd">            the distribution of surface brightnesses in the current image. </span>
-<span class="sd">            Looks for the left_percentile and right_percentile and returns</span>
-<span class="sd">            right_percentile and the distance between it and left_percentile</span>
-<span class="sd">            (in log space). </span>
-<span class="sd">            </span>
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        left_percentile : float, optional</span>
-<span class="sd">            lower bound on image surface brightness percentile, by default 0.1</span>
-<span class="sd">        right_percentile : float, optional</span>
-<span class="sd">            upper bound on image surface brightness percentile, by default 0.99</span>
-<span class="sd">        L_sfc_densities : np.ndarray, optional</span>
-<span class="sd">            surface densities to find the percentiles of. If None uses </span>
-<span class="sd">            `~firestudio.studios.star_studio.StarStudio.get_mockHubbleImage` to </span>
-<span class="sd">            retrieve the surface densities of the projected mock hubble image, by default None</span>
-<span class="sd">        ax : plt.Axes, optional</span>
-<span class="sd">            axis to plot distribution of surface brightnesses</span>
-<span class="sd">            with overlay of percentiles and such to, by default None</span>
-<span class="sd">        quick : bool, optional</span>
-<span class="sd">            flag to use `~firestudio.studios.star_studio.StarStudio.quick_get_mockHubbleImage`, by default False</span>
+        <span class="sd">&quot;&quot;&quot; Guesses what the &quot;best&quot; values for maxden and dynrange are from\</span>
+<span class="sd">            the distribution of surface brightnesses in the current image.\</span>
+<span class="sd">            Looks for the left_percentile and right_percentile and returns\</span>
+<span class="sd">            right_percentile and the distance between it and left_percentile\</span>
+<span class="sd">            (in log space).</span>
 
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        float</span>
-<span class="sd">            maxden : maximum surface brightness of the image</span>
-<span class="sd">        float</span>
-<span class="sd">            dynrange : distance between maximum and minimum surface brightness</span>
-<span class="sd">                     in log space.</span>
+<span class="sd">        :param left_percentile: </span>
+<span class="sd">            lower bound on image surface brightness percentile, defaults to ``0.1``</span>
+<span class="sd">        :type left_percentile: float, optional</span>
+<span class="sd">        :param right_percentile: </span>
+<span class="sd">            upper bound on image surface brightness percentile, defaults to ``0.99``</span>
+<span class="sd">        :type right_percentile: float, optional</span>
+<span class="sd">        :param L_sfc_densities: </span>
+<span class="sd">            surface densities to find the percentiles of. If ``None`` uses\</span>
+<span class="sd">            :func:`~firestudio.studios.star_studio.StarStudio.get_mockHubbleImage` to\</span>
+<span class="sd">            retrieve the surface densities of the projected mock hubble image, defaults to ``None``</span>
+<span class="sd">        :type L_sfc_densities: np.ndarray, optional</span>
+<span class="sd">        :param ax: </span>
+<span class="sd">            axis to plot distribution of surface brightnesses\</span>
+<span class="sd">            with overlay of percentiles and such to, defaults to ``None``</span>
+<span class="sd">        :type ax: plt.Axes, optional</span>
+<span class="sd">        :param quick: </span>
+<span class="sd">            flag to use `~firestudio.studios.star_studio.StarStudio.quick_get_mockHubbleImage`, defaults to ``False``</span>
+<span class="sd">        :type quick: bool, optional</span>
+<span class="sd">        :return: </span>
+<span class="sd">            |  ``maxden`` - maximum surface brightness of the image</span>
+<span class="sd">            |  ``dynrange`` - distance between maximum and minimum surface brightness in log space.</span>
+<span class="sd">        :rtype: float, float</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="p">(</span><span class="n">L_sfc_densities</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
@@ -669,9 +677,9 @@
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dynrange</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="n">this_maxden</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">dynrange</span><span class="p">,</span><span class="n">this_maxden</span><span class="p">],[</span><span class="mf">0.4</span><span class="p">,</span><span class="mf">0.4</span><span class="p">],</span><span class="n">c</span><span class="o">=</span><span class="s1">&#39;C2&#39;</span><span class="p">)</span>
                 <span class="c1">#ax.text(np.sqrt(this_maxden**2/self.dynrange),0.4/1.1,&#39;dynrange&#39;,ha=&#39;center&#39;)</span>
-        <span class="k">return</span> <span class="n">maxden</span><span class="p">,</span><span class="n">dynrange</span>
+        <span class="k">return</span> <span class="n">maxden</span><span class="p">,</span><span class="n">dynrange</span></div>
 
-    <span class="k">def</span> <span class="nf">plotParameterGrid</span><span class="p">(</span>
+<div class="viewcode-block" id="StarStudio.plotParameterGrid"><a class="viewcode-back" href="../../../reference/api/firestudio.studios.star_studio.StarStudio.html#firestudio.studios.star_studio.StarStudio.plotParameterGrid">[docs]</a>    <span class="k">def</span> <span class="nf">plotParameterGrid</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">dynrange_init</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="mf">1e2</span><span class="p">,</span>
         <span class="n">maxden_init</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="mf">1e-2</span><span class="p">,</span>
@@ -679,44 +687,42 @@
         <span class="n">maxden_step</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">nsteps</span><span class="p">:</span><span class="nb">int</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; Plots a grid of images that steps in maxden and dynrange to help the user decide</span>
-<span class="sd">            what values to use, based on their aesthetic preference. Step is applied</span>
-<span class="sd">            multiplicatively. Accepts keyword arguments for </span>
-<span class="sd">            `~firestudio.studios.star_studio.StarStudio.set_ImageParams`</span>
+        <span class="sd">&quot;&quot;&quot; Plots a grid of images that steps in maxden and dynrange to help the user decide \</span>
+<span class="sd">            what values to use, based on their aesthetic preference. Step is applied \</span>
+<span class="sd">            multiplicatively. Accepts keyword arguments for \</span>
+<span class="sd">            :func:`~firestudio.studios.star_studio.StarStudio.set_ImageParams`</span>
 
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        dynrange_init : float, optional</span>
-<span class="sd">            initial value in top left corner of grid, by default 1e2</span>
-<span class="sd">        maxden_init : float, optional</span>
-<span class="sd">            initial value in top left corner of grid, by default 1e-2</span>
-<span class="sd">        dynrange_step : float, optional</span>
-<span class="sd">            step between grid thumbnails, by default sqrt(10), by default None</span>
-<span class="sd">        maxden_step : float, optional</span>
-<span class="sd">            step between grid thumbnails, by default sqrt(10), by default None</span>
-<span class="sd">        nsteps : int, optional</span>
-<span class="sd">            number of steps in (square) thumbnail grid, by default 4</span>
-<span class="sd">        </span>
-<span class="sd">        Keywords</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        plt.figure</span>
-<span class="sd">            fig : the matplotlib figure drawn to</span>
-<span class="sd">        list of plt.Axes</span>
-<span class="sd">            axs : the matplotlib axes in the grid</span>
+<span class="sd">        :param dynrange_init: </span>
+<span class="sd">            initial value in top left corner of grid, defaults to ``1e2``</span>
+<span class="sd">        :type dynrange_init: float, optional</span>
+<span class="sd">        :param maxden_init: </span>
+<span class="sd">            initial value in top left corner of grid, defaults to ``1e-2``</span>
+<span class="sd">        :type maxden_init: float, optional</span>
+<span class="sd">        :param dynrange_step: </span>
+<span class="sd">            step between grid thumbnails, defaults to sqrt(10), defaults to ``None``</span>
+<span class="sd">        :type dynrange_step: float, optional</span>
+<span class="sd">        :param maxden_step: </span>
+<span class="sd">            step between grid thumbnails, defaults to sqrt(10), defaults to ``None``</span>
+<span class="sd">        :type maxden_step: float, optional</span>
+<span class="sd">        :param nsteps: </span>
+<span class="sd">            number of steps in (square) thumbnail grid, defaults to ``4``</span>
+<span class="sd">        :type nsteps: int, optional</span>
+<span class="sd">        :return: </span>
+<span class="sd">            |  ``fig`` - the matplotlib figure drawn to</span>
+<span class="sd">            |  ``axs`` - the matplotlib axes in the grid</span>
+<span class="sd">        :rtype: plt.figure, list of plt.Axes</span>
 
 
-<span class="sd">        Example usage:</span>
-<span class="sd">        --------------</span>
-<span class="sd">        ```python</span>
-<span class="sd">        starStudio.plotParameterGrid(</span>
-<span class="sd">            dynrange_init=1e3,</span>
-<span class="sd">            maxden_init=1,</span>
-<span class="sd">            dynrange_step=.1,</span>
-<span class="sd">            maxden_step=.1,</span>
-<span class="sd">            nsteps=2,</span>
-<span class="sd">            use_colorscheme_nasa=False)```</span>
+<span class="sd">        :Example usage:</span>
+<span class="sd">            .. code-block:: python</span>
+
+<span class="sd">                starStudio.plotParameterGrid(</span>
+<span class="sd">                    dynrange_init=1e3,</span>
+<span class="sd">                    maxden_init=1,</span>
+<span class="sd">                    dynrange_step=.1,</span>
+<span class="sd">                    maxden_step=.1,</span>
+<span class="sd">                    nsteps=2,</span>
+<span class="sd">                    use_colorscheme_nasa=False)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         
         <span class="c1">## initialize the steps for each thumbnail in the grid</span>
@@ -756,19 +762,12 @@
 
         <span class="n">fig</span><span class="o">.</span><span class="n">set_size_inches</span><span class="p">(</span><span class="mi">4</span><span class="o">*</span><span class="n">nsteps</span><span class="p">,</span><span class="mi">4</span><span class="o">*</span><span class="n">nsteps</span><span class="p">)</span>
         <span class="n">fig</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">wspace</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">hspace</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">left</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">right</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">bottom</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">top</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">fig</span><span class="p">,</span><span class="n">axs</span></div>
+        <span class="k">return</span> <span class="n">fig</span><span class="p">,</span><span class="n">axs</span></div></div>
         <span class="c1">#fig.savefig(&#39;../src/hubble_grid.pdf&#39;,pad_inches=0,bbox_inches=&#39;tight&#39;)</span>
-
-<span class="n">append_function_docstring</span><span class="p">(</span><span class="n">StarStudio</span><span class="p">,</span><span class="n">StarStudio</span><span class="o">.</span><span class="n">set_ImageParams</span><span class="p">)</span>
-<span class="n">append_function_docstring</span><span class="p">(</span><span class="n">StarStudio</span><span class="p">,</span><span class="n">StarStudio</span><span class="o">.</span><span class="n">get_mockHubbleImage</span><span class="p">)</span>
-<span class="n">append_function_docstring</span><span class="p">(</span><span class="n">StarStudio</span><span class="p">,</span><span class="n">StarStudio</span><span class="o">.</span><span class="n">render</span><span class="p">)</span>
-<span class="n">append_function_docstring</span><span class="p">(</span><span class="n">StarStudio</span><span class="p">,</span><span class="n">StarStudio</span><span class="o">.</span><span class="n">predictParameters</span><span class="p">)</span>
-<span class="n">append_function_docstring</span><span class="p">(</span><span class="n">StarStudio</span><span class="p">,</span><span class="n">StarStudio</span><span class="o">.</span><span class="n">plotParameterGrid</span><span class="p">)</span>
-<span class="n">append_function_docstring</span><span class="p">(</span><span class="n">StarStudio</span><span class="p">,</span><span class="n">Studio</span><span class="p">)</span>
 
 <span class="c1">##### Image projection stuff</span>
 <span class="c1">## Stellar light attenuation projection</span>
-<span class="k">def</span> <span class="nf">raytrace_ugr_attenuation</span><span class="p">(</span>
+<span class="k">def</span> <span class="nf">_raytrace_ugr_attenuation</span><span class="p">(</span>
     <span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">z</span><span class="p">,</span>
     <span class="n">h_star</span><span class="p">,</span> 
     <span class="n">gx</span><span class="p">,</span><span class="n">gy</span><span class="p">,</span><span class="n">gz</span><span class="p">,</span>
@@ -799,9 +798,6 @@
         <span class="n">xlim</span><span class="o">=</span><span class="n">xlim</span><span class="p">,</span><span class="n">ylim</span><span class="o">=</span><span class="n">ylim</span><span class="p">,</span><span class="n">zlim</span><span class="o">=</span><span class="n">zlim</span><span class="p">,</span>
         <span class="n">pixels</span><span class="o">=</span><span class="n">pixels</span><span class="p">,</span>
         <span class="n">QUIET</span><span class="o">=</span><span class="n">QUIET</span><span class="p">)</span> 
-
-<span class="vm">__doc__</span>  <span class="o">=</span> <span class="s1">&#39;&#39;</span>
-<span class="vm">__doc__</span> <span class="o">=</span> <span class="n">append_string_docstring</span><span class="p">(</span><span class="vm">__doc__</span><span class="p">,</span><span class="n">StarStudio</span><span class="p">)</span>
 </pre></div>
 
            </div>

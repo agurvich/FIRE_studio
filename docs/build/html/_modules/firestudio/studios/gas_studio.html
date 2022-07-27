@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>firestudio.studios.gas_studio &mdash; firestudio 2.0.0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../index.html" class="icon icon-home"> firestudio
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../gas_projection.html">Gas projections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mock_hubble.html">Mock hubble images</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/index.html">Tutorial Notebooks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/api/api.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">firestudio</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      <li>firestudio.studios.gas_studio</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for firestudio.studios.gas_studio</h1><div class="highlight"><pre>
+<span></span><span class="c1">## builtin imports</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span> 
+<span class="kn">import</span> <span class="nn">ctypes</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+
+
+<span class="c1">## abg_python imports</span>
+<span class="kn">from</span> <span class="nn">abg_python.plot_utils</span> <span class="kn">import</span> <span class="n">plt</span><span class="p">,</span><span class="n">addColorbar</span><span class="p">,</span><span class="n">get_cmap</span>
+<span class="kn">from</span> <span class="nn">abg_python.galaxy.metadata_utils</span> <span class="kn">import</span> <span class="n">metadata_cache</span>
+
+<span class="c1">## firestudio imports</span>
+<span class="kn">from</span> <span class="nn">.studio</span> <span class="kn">import</span> <span class="n">Studio</span>
+
+<span class="k">def</span> <span class="nf">_vfloat</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">x</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">POINTER</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_float</span><span class="p">))</span>
+
+<div class="viewcode-block" id="GasStudio"><a class="viewcode-back" href="../../../reference/api/firestudio.studios.gas_studio.GasStudio.html#firestudio.studios.gas_studio.GasStudio">[docs]</a><span class="k">class</span> <span class="nc">GasStudio</span><span class="p">(</span><span class="n">Studio</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; :class:`~firestudio.studios.studio.Studio` class for making gas projection images.\</span>
+<span class="sd">        Can be used for stars (or other collisionless particles), but you will either have to pass smoothing lengths\</span>
+<span class="sd">        or allow FIRE Studio to calculate them itself, which can take a long time.  &quot;&quot;&quot;</span>
+
+    <span class="n">required_snapdict_keys</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Coordinates&#39;</span><span class="p">,</span><span class="s1">&#39;Masses&#39;</span><span class="p">,</span><span class="s1">&#39;SmoothingLength&#39;</span><span class="p">,</span><span class="s1">&#39;Temperature&#39;</span><span class="p">,</span><span class="s1">&#39;Velocities&#39;</span><span class="p">]</span>
+    <span class="sd">&quot;&quot;&quot; these are minimum required keys for :func:`~firestudio.studios.gas_studio.GasStudio.render` function to run.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; implementation of built-in __repr__ method for printing.</span>
+
+<span class="sd">        :return: ``__repr__`` string</span>
+<span class="sd">        :rtype: str</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s1">&#39;GasStudio instance&#39;</span>
+
+<div class="viewcode-block" id="GasStudio.set_ImageParams"><a class="viewcode-back" href="../../../reference/api/firestudio.studios.gas_studio.GasStudio.html#firestudio.studios.gas_studio.GasStudio.set_ImageParams">[docs]</a>    <span class="k">def</span> <span class="nf">set_ImageParams</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">use_defaults</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">loud</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Changes the parameters of the image. Also calls :class:`~firestudio.studios.studio.Studio`&#39;s\</span>
+<span class="sd">            :func:`~firestudio.studios.studio.Studio.set_ImageParams`, passing along any unmatched kwargs.</span>
+
+<span class="sd">        :param use_defaults: </span>
+<span class="sd">            If ``True`` then default values of the parameters will be set\</span>
+<span class="sd">            (potentially overwriting any previously specified parameters).\</span>
+<span class="sd">            If ``False`` adjust only the keywords passed, defaults to ``False``</span>
+<span class="sd">        :type use_defaults: bool, optional</span>
+<span class="sd">        :param loud: </span>
+<span class="sd">            flag to print which parameters are being set/updated, defaults to ``True``</span>
+<span class="sd">        :type loud: bool, optional</span>
+
+<span class="sd">        :kwargs:</span>
+<span class="sd">            * **use_colorbar** (`bool`, `optional`) --\</span>
+<span class="sd">                flag to add a colorbar to the image. not currently implemented for \</span>
+<span class="sd">                two-color images, defaults to ``False``</span>
+<span class="sd">            * **cbar_label** (`str`, `optional`) -- \</span>
+<span class="sd">                label for the colorbar, defaults to &#39;&#39;</span>
+<span class="sd">            * **cbar_logspace** (`bool`, `optional`) --\</span>
+<span class="sd">                flag for whether ticks on the colorbar should be log-spaced, defaults to ``False``</span>
+
+<span class="sd">        :Example usage:</span>
+<span class="sd">            .. code-block:: python</span>
+
+<span class="sd">                gasStudio.set_ImageParams(</span>
+<span class="sd">                    use_colorbar=True,</span>
+<span class="sd">                    cbar_label=&#39;Temperature&#39;,</span>
+<span class="sd">                    cbar_logspace=True,</span>
+<span class="sd">                    figure_label=&#39;t = 13.8 Gyr&#39;)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">default_kwargs</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;use_colorbar&#39;</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span>
+            <span class="s1">&#39;cbar_label&#39;</span><span class="p">:</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;cbar_logspace&#39;</span><span class="p">:</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">}</span>
+
+        <span class="k">for</span> <span class="n">kwarg</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">kwargs</span><span class="p">):</span>
+            <span class="c1">## only set it here if it was passed</span>
+            <span class="k">if</span> <span class="n">kwarg</span> <span class="ow">in</span> <span class="n">default_kwargs</span><span class="p">:</span>
+                <span class="c1">## remove it from default_kwargs</span>
+                <span class="n">default_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">kwarg</span><span class="p">)</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">kwarg</span><span class="p">]</span>
+
+                <span class="k">if</span> <span class="n">loud</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">master_loud</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;setting&quot;</span><span class="p">,</span><span class="n">kwarg</span><span class="p">,</span>
+                        <span class="s1">&#39;to user value of:&#39;</span><span class="p">,</span><span class="n">value</span><span class="p">)</span>
+                <span class="c1">## set it to the object</span>
+                <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">kwarg</span><span class="p">,</span><span class="n">value</span><span class="p">)</span>
+
+                <span class="c1">## remove this kwarg to prevent a confusing print message</span>
+                <span class="c1">##  suggesting they are being ignored in the parent class</span>
+                <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">kwarg</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">kwarg</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">Studio</span><span class="o">.</span><span class="n">set_ImageParams</span><span class="o">.</span><span class="n">default_kwargs</span>
+                    <span class="ow">and</span> <span class="n">kwarg</span> <span class="o">!=</span> <span class="s1">&#39;this_setup_id&#39;</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">master_loud</span><span class="p">:</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="n">kwarg</span><span class="p">,</span><span class="s1">&#39;ignored. Did you mean something else?&#39;</span><span class="p">,</span>
+                            <span class="n">default_kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+        <span class="k">if</span> <span class="n">use_defaults</span><span class="p">:</span>
+            <span class="c1">## set the remaining image parameters to their default values</span>
+            <span class="k">for</span> <span class="n">default_arg</span> <span class="ow">in</span> <span class="n">default_kwargs</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">default_kwargs</span><span class="p">[</span><span class="n">default_arg</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">loud</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">master_loud</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;setting&quot;</span><span class="p">,</span><span class="n">default_arg</span><span class="p">,</span>
+                        <span class="s1">&#39;to default value of:&#39;</span><span class="p">,</span><span class="n">value</span><span class="p">)</span>
+                <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">default_arg</span><span class="p">,</span><span class="n">value</span><span class="p">)</span>
+
+
+        <span class="c1">## set any other image params here</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">set_ImageParams</span><span class="p">(</span><span class="n">use_defaults</span><span class="o">=</span><span class="n">use_defaults</span><span class="p">,</span><span class="n">loud</span><span class="o">=</span><span class="n">loud</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+    <span class="n">set_ImageParams</span><span class="o">.</span><span class="n">default_kwargs</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;use_colorbar&#39;</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span>
+            <span class="s1">&#39;cbar_label&#39;</span><span class="p">:</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;cbar_logspace&#39;</span><span class="p">:</span><span class="kc">True</span><span class="p">}</span>
+    <span class="n">set_ImageParams</span><span class="o">.</span><span class="n">default_kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+        <span class="n">Studio</span><span class="o">.</span><span class="n">set_ImageParams</span><span class="o">.</span><span class="n">default_kwargs</span><span class="p">)</span>
+
+<div class="viewcode-block" id="GasStudio.print_ImageParams"><a class="viewcode-back" href="../../../reference/api/firestudio.studios.gas_studio.GasStudio.html#firestudio.studios.gas_studio.GasStudio.print_ImageParams">[docs]</a>    <span class="k">def</span> <span class="nf">print_ImageParams</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Prints the current image parameters.&quot;&quot;&quot;</span>
+
+        <span class="n">default_kwargs</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;use_colorbar&#39;</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span>
+            <span class="s1">&#39;cbar_label&#39;</span><span class="p">:</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;cbar_logspace&#39;</span><span class="p">:</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">}</span>
+
+        <span class="c1">## print the current value, not the default value</span>
+        <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">default_kwargs</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span><span class="s1">&#39;=&#39;</span><span class="p">,</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">arg</span><span class="p">))</span>
+
+        <span class="c1">## call the super class&#39; print image params</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">print_ImageParams</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="GasStudio.projectAlongLOS"><a class="viewcode-back" href="../../../reference/api/firestudio.studios.gas_studio.GasStudio.html#firestudio.studios.gas_studio.GasStudio.projectAlongLOS">[docs]</a>    <span class="k">def</span> <span class="nf">projectAlongLOS</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">weights</span><span class="p">:</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">weight_name</span><span class="p">:</span><span class="nb">str</span><span class="p">,</span>
+        <span class="n">quantities</span><span class="p">:</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">quantity_name</span><span class="p">:</span><span class="nb">str</span><span class="p">,</span>
+        <span class="n">use_metadata</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">save_meta</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">assert_cached</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">loud</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span> 
+        <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Projects a weighted quantity along the LOS into pixels. Projection is \</span>
+<span class="sd">            done with a cubic spline kernel that is renormalized to conserve mass. </span>
+
+<span class="sd">        I.e.  ``renorm_i = sum_j ( k(r_ij,h_i))`` where j is a sum over the pixels particle i contributes to. \</span>
+<span class="sd">        The maps computed in the flattened pixel array at index j are then:</span>
+
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            W[j] = sum_i( k(r_ij,h_i)/renorm_i * weight)</span>
+<span class="sd">            Q[j] = sum_i( k(r_ij,h_i)/renorm_i * weight * quantity) / W[j]</span>
+
+<span class="sd">        :param weights: </span>
+<span class="sd">            array of weights to use alongside the smoothing kernel\</span>
+<span class="sd">            (typically ``self.snapdict[&#39;Masses&#39;]``).</span>
+<span class="sd">        :type weights: np.ndarray</span>
+<span class="sd">        :param weight_name: </span>
+<span class="sd">            Name of the key in the snapdict that should be used as the weights\</span>
+<span class="sd">            if weights are not passed.\</span>
+<span class="sd">            special weight_names are ``Volumes`` and ``Ones``, which do not \</span>
+<span class="sd">            have to be present in the snapdict.\</span>
+<span class="sd">        :type weight_name: str</span>
+<span class="sd">        :param quantities: </span>
+<span class="sd">            array of quantities to project along the line of sight.</span>
+<span class="sd">        :type quantities: np.ndarray</span>
+<span class="sd">        :param quantity_name: </span>
+<span class="sd">            Name of the field that is being projected, should be in the snapdict if \</span>
+<span class="sd">            quantities is not passed.</span>
+<span class="sd">        :type quantity_name: str</span>
+<span class="sd">        :param use_metadata: </span>
+<span class="sd">            flag for whether a cached result should be used (if it exists), defaults to ``True``</span>
+<span class="sd">        :type use_metadata: bool, optional</span>
+<span class="sd">        :param save_meta: </span>
+<span class="sd">            flag to save the result in the cache, defaults to ``True``</span>
+<span class="sd">        :type save_meta: bool, optional</span>
+<span class="sd">        :param assert_cached: </span>
+<span class="sd">            flag to require a cache hit and raise an exception otherwise, defaults to ``False``</span>
+<span class="sd">        :type assert_cached: bool, optional</span>
+<span class="sd">        :param loud: </span>
+<span class="sd">            flag for whether cache hits/misses should be announced\</span>
+<span class="sd">            to the console, defaults to ``True``</span>
+<span class="sd">        :type loud: bool, optional</span>
+
+<span class="sd">        :kwargs:</span>
+<span class="sd">            * **snapdict_name** (`str`, `optional`) --\</span>
+<span class="sd">                one of ``gas`` or ``star`` to identify which of ``self.gas_snapdict`` or ``self.star_snapdict`` to read data from.</span>
+
+<span class="sd">        :return: </span>
+<span class="sd">            | ``weightMap`` - image of ``sum(weights)`` along the line of sight in each pixel</span>
+<span class="sd">            | ``weightWeightedQuantityMap`` - image of ``sum(weights*quantity)`` along the line of sight in each pixel</span>
+<span class="sd">        :rtype: np.ndarray, np.ndarray</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+
+        <span class="nd">@metadata_cache</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">this_setup_id</span><span class="p">,</span>  <span class="c1">## hdf5 file group name</span>
+            <span class="p">[</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">Map&#39;</span><span class="o">%</span><span class="n">weight_name</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span>
+                <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">Weighted</span><span class="si">%s</span><span class="s1">Map&#39;</span><span class="o">%</span><span class="p">(</span>
+                <span class="n">weight_name</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span>
+                <span class="n">quantity_name</span><span class="o">.</span><span class="n">title</span><span class="p">())],</span>
+            <span class="n">use_metadata</span><span class="o">=</span><span class="n">use_metadata</span><span class="p">,</span>
+            <span class="n">save_meta</span><span class="o">=</span><span class="n">save_meta</span><span class="p">,</span>
+            <span class="n">assert_cached</span><span class="o">=</span><span class="n">assert_cached</span><span class="p">,</span>
+            <span class="n">loud</span><span class="o">=</span><span class="n">loud</span><span class="p">,</span>
+            <span class="n">force_from_file</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="c1">## read from cache file, not attribute of object</span>
+        <span class="k">def</span> <span class="nf">inner_projectAlongLOS</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">:</span><span class="n">GasStudio</span><span class="p">,</span>
+            <span class="n">weights</span><span class="p">:</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+            <span class="n">weight_name</span><span class="p">:</span><span class="nb">str</span><span class="p">,</span>
+            <span class="n">quantities</span><span class="p">:</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+            <span class="n">quantity_name</span><span class="p">:</span><span class="nb">str</span><span class="p">,</span>
+            <span class="n">snapdict_name</span><span class="p">:</span><span class="nb">str</span><span class="o">=</span><span class="s1">&#39;gas&#39;</span><span class="p">):</span>
+
+            <span class="c1">## make the actual C call</span>
+            <span class="n">weightMap</span><span class="p">,</span> <span class="n">weightWeightedQuantityMap</span> <span class="o">=</span> <span class="n">_getImageGrid</span><span class="p">(</span>
+                <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">prepareCoordinates</span><span class="p">(</span> <span class="c1">## extract coordinates, weights, quantities from snapdict</span>
+                    <span class="n">snapdict_name</span><span class="p">,</span>
+                    <span class="n">weights</span><span class="p">,</span>
+                    <span class="n">weight_name</span><span class="p">,</span>
+                    <span class="n">quantities</span><span class="p">,</span>
+                    <span class="n">quantity_name</span><span class="p">),</span>
+                    <span class="n">loud</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">master_loud</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">master_loud</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;-done&#39;</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">weightMap</span><span class="p">,</span> <span class="n">weightWeightedQuantityMap</span>
+
+        <span class="k">return</span> <span class="n">inner_projectAlongLOS</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">weights</span><span class="p">,</span>
+            <span class="n">weight_name</span><span class="p">,</span>
+            <span class="n">quantities</span><span class="p">,</span>
+            <span class="n">quantity_name</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="GasStudio.prepareCoordinates"><a class="viewcode-back" href="../../../reference/api/firestudio.studios.gas_studio.GasStudio.html#firestudio.studios.gas_studio.GasStudio.prepareCoordinates">[docs]</a>    <span class="k">def</span> <span class="nf">prepareCoordinates</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">snapdict_name</span><span class="p">:</span><span class="nb">str</span><span class="p">,</span>
+        <span class="n">weights</span><span class="p">:</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">weight_name</span><span class="p">:</span><span class="nb">str</span><span class="p">,</span>
+        <span class="n">quantities</span><span class="p">:</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">quantity_name</span><span class="p">:</span><span class="nb">str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;_summary_</span>
+
+<span class="sd">        :param snapdict_name: </span>
+<span class="sd">            one of ``gas`` or ``star`` to identify which of ``self.gas_snapdict`` or ``self.star_snapdict`` to read data from.</span>
+<span class="sd">        :type snapdict_name: str</span>
+<span class="sd">        :param weights: </span>
+<span class="sd">            array of weights to use alongside the smoothing kernel\</span>
+<span class="sd">            (typically ``self.snapdict[&#39;Masses&#39;]``).</span>
+<span class="sd">        :type weights: np.ndarray</span>
+<span class="sd">        :param weight_name: </span>
+<span class="sd">            Name of the key in the snapdict that should be used as the weights\</span>
+<span class="sd">            if weights are not passed.\</span>
+<span class="sd">            special weight_names are ``Volumes`` and ``Ones``, which do not \</span>
+<span class="sd">            have to be present in the snapdict.\</span>
+<span class="sd">        :type weight_name: str</span>
+<span class="sd">        :param quantities: </span>
+<span class="sd">            array of quantities to project along the line of sight.</span>
+<span class="sd">        :type quantities: np.ndarray</span>
+<span class="sd">        :param quantity_name: </span>
+<span class="sd">            Name of the field that is being projected, should be in the snapdict if \</span>
+<span class="sd">            quantities is not passed.</span>
+<span class="sd">        :type quantity_name: str</span>
+
+<span class="sd">        :raises KeyError: if ``snapdict_name`` is not ``&#39;gas&#39;`` or ``&#39;star&#39;``</span>
+<span class="sd">        :raises KeyError: if ``weight_name`` is not in ``snapdict.keys()``</span>
+<span class="sd">        :raises KeyError: if ``quantity_name`` is not in ``snapdict.keys()``</span>
+
+<span class="sd">        :return: </span>
+<span class="sd">            |  ``self.Xmin`` - minimum x value of coordinates, already applied just returned for convenience</span>
+<span class="sd">            |  ``self.Xmax`` - maximum x value of coordinates, already applied just returned for convenience</span>
+<span class="sd">            |  ``self.Ymin`` - minimum y value of coordinates, already applied just returned for convenience</span>
+<span class="sd">            |  ``self.Ymax`` - maximum y value of coordinates, already applied just returned for convenience</span>
+<span class="sd">            |  ``self.npix_x`` - number of pixels along the x axis</span>
+<span class="sd">            |  ``self.npix_y`` - number of pixels along the y axis</span>
+<span class="sd">            |  ``pos`` - coordinate data for particles in kpc </span>
+<span class="sd">            |  ``weights`` - filtered array of weights to use alongside the smoothing kernel (typically ``self.snapdict[&#39;Masses&#39;]``).</span>
+<span class="sd">            |  ``quantities`` - filtered array of quantities to project along the line of sight.</span>
+<span class="sd">            |  ``hsml`` - filtered array of smoothing lengths/radii for each particle</span>
+<span class="sd">        :rtype: float, float, float, float, float, float, np.ndarray, np.ndarray, np.ndarray, np.ndarry</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+
+        <span class="c1">## pick which particle type we&#39;re projecting, </span>
+        <span class="k">if</span> <span class="n">snapdict_name</span> <span class="o">!=</span> <span class="s1">&#39;gas&#39;</span> <span class="ow">and</span> <span class="n">snapdict_name</span> <span class="o">!=</span> <span class="s1">&#39;star&#39;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">&quot;Choose between &#39;gas&#39; or &#39;star&#39; snapdict!&quot;</span><span class="p">)</span>
+        
+        <span class="n">full_snapdict_name</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">_snapdict&#39;</span><span class="o">%</span><span class="n">snapdict_name</span>
+        
+        <span class="c1">## use the masked version of the snapdict if it was passed</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="s1">&#39;masked_&#39;</span><span class="o">+</span><span class="n">full_snapdict_name</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">master_loud</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Used masked_snapdict, delete it if you don&#39;t want it anymore&quot;</span><span class="p">)</span>
+            <span class="n">full_snapdict_name</span> <span class="o">=</span> <span class="s1">&#39;masked_&#39;</span><span class="o">+</span><span class="n">full_snapdict_name</span>
+
+        <span class="n">snapdict</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">full_snapdict_name</span><span class="p">)</span>
+
+        <span class="c1">## unpack the snapshot data from the snapdict</span>
+        <span class="n">Coordinates</span> <span class="o">=</span> <span class="n">snapdict</span><span class="p">[</span><span class="s1">&#39;Coordinates&#39;</span><span class="p">]</span> <span class="c1">## kpc</span>
+
+        <span class="k">if</span> <span class="s2">&quot;SmoothingLength&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">snapdict</span><span class="p">:</span>
+            <span class="n">Hsml</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_HSML</span><span class="p">(</span><span class="n">snapdict_name</span><span class="p">)</span>
+            <span class="k">if</span> <span class="s1">&#39;masked_&#39;</span> <span class="ow">in</span> <span class="n">full_snapdict_name</span><span class="p">:</span>
+                <span class="n">Hsml</span> <span class="o">=</span> <span class="n">Hsml</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">Hsml</span> <span class="o">=</span> <span class="n">snapdict</span><span class="p">[</span><span class="s1">&#39;SmoothingLength&#39;</span><span class="p">]</span> <span class="c1">## kpc</span>
+
+        <span class="c1">## only important if you are neighbor finding and you want a periodic box.</span>
+        <span class="c1">##  for most purposes, you don&#39;t. </span>
+        <span class="n">BoxSize</span> <span class="o">=</span> <span class="mi">1000</span> <span class="c1">#snapdict[&#39;BoxSize&#39;] </span>
+
+        <span class="k">if</span> <span class="n">weights</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1">## account for possibility of volume weighting</span>
+            <span class="k">if</span> <span class="n">weight_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">snapdict</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">weight_name</span> <span class="o">==</span> <span class="s1">&#39;Volume&#39;</span><span class="p">:</span>
+                    <span class="n">weights</span> <span class="o">=</span> <span class="mi">4</span><span class="o">/</span><span class="mi">3</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">Hsml</span><span class="o">**</span><span class="mi">3</span> <span class="o">/</span> <span class="mi">32</span> <span class="c1">## kpc^3</span>
+                <span class="k">elif</span> <span class="n">weight_name</span> <span class="o">==</span> <span class="s1">&#39;Ones&#39;</span><span class="p">:</span>
+                    <span class="n">weights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">Coordinates</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">weight_name</span><span class="p">,</span><span class="sa">f</span><span class="s1">&#39;is not in </span><span class="si">{</span><span class="n">full_snapdict_name</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">weights</span> <span class="o">=</span> <span class="n">snapdict</span><span class="p">[</span><span class="n">weight_name</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">quantities</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">quantity_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">snapdict</span><span class="p">:</span>
+                <span class="c1">## need to rotate the velocities in here</span>
+                <span class="k">if</span> <span class="n">quantity_name</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;Vx&#39;</span><span class="p">,</span><span class="s1">&#39;Vy&#39;</span><span class="p">,</span><span class="s1">&#39;Vz&#39;</span><span class="p">]:</span>
+                    <span class="n">vels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">rotate_array</span><span class="p">(</span><span class="n">snapdict</span><span class="p">[</span><span class="s1">&#39;Velocities&#39;</span><span class="p">])</span>
+                    <span class="n">quantities</span> <span class="o">=</span> <span class="n">vels</span><span class="p">[:,[</span><span class="s1">&#39;Vx&#39;</span><span class="p">,</span><span class="s1">&#39;Vy&#39;</span><span class="p">,</span><span class="s1">&#39;Vz&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">quantity_name</span><span class="p">)]</span>
+                <span class="c1">## was passed something that we don&#39;t know what to do with</span>
+                <span class="k">elif</span> <span class="s1">&#39;Log&#39;</span> <span class="ow">in</span> <span class="n">quantity_name</span> <span class="ow">or</span> <span class="s1">&#39;log&#39;</span> <span class="ow">in</span> <span class="n">quantity_name</span><span class="p">:</span>
+                    <span class="n">upper</span> <span class="o">=</span> <span class="n">quantity_name</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;Log&#39;</span><span class="p">,</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+                    <span class="n">lower</span> <span class="o">=</span> <span class="n">quantity_name</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">,</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">upper</span> <span class="ow">in</span> <span class="n">snapdict</span><span class="p">:</span>
+                        <span class="n">quantities</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">snapdict</span><span class="p">[</span><span class="n">upper</span><span class="p">])</span>
+                    <span class="k">elif</span> <span class="n">lower</span> <span class="ow">in</span> <span class="n">snapdict</span><span class="p">:</span>
+                        <span class="n">quantities</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">snapdict</span><span class="p">[</span><span class="n">lower</span><span class="p">])</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">quantity_name</span><span class="p">,</span><span class="sa">f</span><span class="s1">&#39;is not in </span><span class="si">{</span><span class="n">full_snapdict_name</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">quantity_name</span><span class="p">,</span><span class="sa">f</span><span class="s1">&#39;is not in </span><span class="si">{</span><span class="n">full_snapdict_name</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">quantities</span> <span class="o">=</span> <span class="n">snapdict</span><span class="p">[</span><span class="n">quantity_name</span><span class="p">]</span>
+
+        <span class="c1">## rotate by euler angles if necessary</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">rotate_array</span><span class="p">(</span><span class="n">Coordinates</span><span class="p">,</span><span class="n">offset</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1">## cull the particles outside the frame and cast to float32</span>
+        <span class="n">box_mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cullFrameIndices</span><span class="p">(</span><span class="n">pos</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">master_loud</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;projecting </span><span class="si">%d</span><span class="s2"> particles&quot;</span><span class="o">%</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">box_mask</span><span class="p">))</span>
+
+        <span class="n">pos</span> <span class="o">=</span> <span class="n">pos</span><span class="p">[</span><span class="n">box_mask</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="n">weights</span> <span class="o">=</span> <span class="n">weights</span><span class="p">[</span><span class="n">box_mask</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="n">quantities</span> <span class="o">=</span> <span class="n">quantities</span><span class="p">[</span><span class="n">box_mask</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="n">hsml</span> <span class="o">=</span> <span class="n">Hsml</span><span class="p">[</span><span class="n">box_mask</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">Xmin</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">Xmax</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">Ymin</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">Ymax</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">npix_x</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">npix_y</span><span class="p">,</span>
+            <span class="n">pos</span><span class="p">,</span><span class="n">weights</span><span class="p">,</span><span class="n">quantities</span><span class="p">,</span>
+            <span class="n">hsml</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="GasStudio.quick_projectAlongLOS"><a class="viewcode-back" href="../../../reference/api/firestudio.studios.gas_studio.GasStudio.html#firestudio.studios.gas_studio.GasStudio.quick_projectAlongLOS">[docs]</a>    <span class="k">def</span> <span class="nf">quick_projectAlongLOS</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">weights</span><span class="p">:</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">weight_name</span><span class="p">:</span><span class="nb">str</span><span class="p">,</span>
+        <span class="n">quantities</span><span class="p">:</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">quantity_name</span><span class="p">:</span><span class="nb">str</span><span class="p">,</span>
+        <span class="n">snapdict_name</span><span class="o">=</span><span class="s1">&#39;gas&#39;</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Approximates the projection of a weighted quantity along the LOS into pixels.\</span>
+<span class="sd">            using a 2d histogram and assuming particles have 0 extent. much faster than the \</span>
+<span class="sd">            real thing and useful for quick and dirty testing.</span>
+
+<span class="sd">        :param weights: </span>
+<span class="sd">            array of weights to use alongside the smoothing kernel\</span>
+<span class="sd">            (typically ``self.snapdict[&#39;Masses&#39;]``).</span>
+<span class="sd">        :type weights: np.ndarray</span>
+<span class="sd">        :param weight_name: </span>
+<span class="sd">            Name of the key in the snapdict that should be used as the weights\</span>
+<span class="sd">            if weights are not passed.\</span>
+<span class="sd">            special weight_names are ``Volumes`` and ``Ones``, which do not \</span>
+<span class="sd">            have to be present in the snapdict.\</span>
+<span class="sd">        :type weight_name: str</span>
+<span class="sd">        :param quantities: </span>
+<span class="sd">            array of quantities to project along the line of sight.</span>
+<span class="sd">        :type quantities: np.ndarray</span>
+<span class="sd">        :param quantity_name: </span>
+<span class="sd">            Name of the field that is being projected, should be in the snapdict if \</span>
+<span class="sd">            quantities is not passed.</span>
+<span class="sd">        :type quantity_name: str</span>
+<span class="sd">        :param snapdict_name: one of ``gas`` or ``star`` to identify which of ``self.gas_snapdict`` or ``self.star_snapdict`` to read data from.</span>
+<span class="sd">        :type snapdict_name: str, optional</span>
+
+<span class="sd">        :return: </span>
+<span class="sd">            | ``weightMap`` - image of ``sum(weights)`` along the line of sight in each pixel</span>
+<span class="sd">            | ``weightWeightedQuantityMap`` - image of ``sum(weights*quantity)`` along the line of sight in each pixel</span>
+<span class="sd">        :rtype: np.ndarray, np.ndarray</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="p">(</span><span class="n">Xmin</span><span class="p">,</span><span class="n">Xmax</span><span class="p">,</span>
+        <span class="n">Ymin</span><span class="p">,</span><span class="n">Ymax</span><span class="p">,</span>
+        <span class="n">npix_x</span><span class="p">,</span><span class="n">npix_y</span><span class="p">,</span>
+        <span class="n">prep_pos</span><span class="p">,</span><span class="n">prep_weights</span><span class="p">,</span><span class="n">prep_quantities</span><span class="p">,</span>
+        <span class="n">prep_hsml</span><span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">prepareCoordinates</span><span class="p">(</span>
+            <span class="n">snapdict_name</span><span class="p">,</span>
+            <span class="n">weights</span><span class="p">,</span>
+            <span class="n">weight_name</span><span class="p">,</span>
+            <span class="n">quantities</span><span class="p">,</span>
+            <span class="n">quantity_name</span><span class="p">)</span>
+
+        <span class="n">xedges</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">Xmin</span><span class="p">,</span><span class="n">Xmax</span><span class="p">,</span><span class="n">npix_x</span><span class="p">,</span><span class="n">endpoint</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">yedges</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">Ymin</span><span class="p">,</span><span class="n">Ymax</span><span class="p">,</span><span class="n">npix_y</span><span class="p">,</span><span class="n">endpoint</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">xs</span><span class="p">,</span><span class="n">ys</span><span class="p">,</span><span class="n">_</span> <span class="o">=</span> <span class="n">prep_pos</span><span class="o">.</span><span class="n">T</span>
+        <span class="n">weightMap</span><span class="p">,</span><span class="n">xedges</span><span class="p">,</span><span class="n">yedges</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram2d</span><span class="p">(</span>
+            <span class="n">xs</span><span class="p">,</span><span class="n">ys</span><span class="p">,</span>
+            <span class="n">bins</span><span class="o">=</span><span class="p">[</span><span class="n">xedges</span><span class="p">,</span><span class="n">yedges</span><span class="p">],</span>
+            <span class="n">weights</span><span class="o">=</span><span class="n">prep_weights</span><span class="p">)</span>
+
+        <span class="n">weightWeightedQuantityMap</span><span class="p">,</span><span class="n">xedges</span><span class="p">,</span><span class="n">yedges</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram2d</span><span class="p">(</span>
+            <span class="n">xs</span><span class="p">,</span><span class="n">ys</span><span class="p">,</span>
+            <span class="n">bins</span><span class="o">=</span><span class="p">[</span><span class="n">xedges</span><span class="p">,</span><span class="n">yedges</span><span class="p">],</span>
+            <span class="n">weights</span><span class="o">=</span><span class="n">prep_weights</span><span class="o">*</span><span class="n">prep_quantities</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">weightMap</span><span class="p">,</span> <span class="n">weightWeightedQuantityMap</span><span class="o">/</span><span class="n">weightMap</span></div>
+
+<span class="c1">####### produceImage implementation #######</span>
+<div class="viewcode-block" id="GasStudio.produceImage"><a class="viewcode-back" href="../../../reference/api/firestudio.studios.gas_studio.GasStudio.html#firestudio.studios.gas_studio.GasStudio.produceImage">[docs]</a>    <span class="k">def</span> <span class="nf">produceImage</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">weight_name</span><span class="p">:</span><span class="nb">str</span><span class="o">=</span><span class="s1">&#39;Masses&#39;</span><span class="p">,</span>
+        <span class="n">quantity_name</span><span class="p">:</span><span class="nb">str</span><span class="o">=</span><span class="s1">&#39;Temperature&#39;</span><span class="p">,</span>
+        <span class="n">weights</span><span class="p">:</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">quantities</span><span class="p">:</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">min_weight</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">max_weight</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">min_quantity</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">max_quantity</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">weight_adjustment_function</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">quantity_adjustment_function</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">cmap</span><span class="p">:</span><span class="nb">str</span><span class="o">=</span><span class="s1">&#39;viridis&#39;</span><span class="p">,</span> <span class="c1">## what colormap to use</span>
+        <span class="n">quick</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span>
+        <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Generates a projected image using the stored image parameters.\</span>
+<span class="sd">            Specify whether the image should be &quot;one-color&quot; (i.e. a simple projection map)\</span>
+<span class="sd">            or &quot;two-color&quot; (a projection map where the hue is set by the\</span>
+<span class="sd">            LOS projected weighted quantity and the saturation is set by the LOS projected weight)\</span>
+<span class="sd">            by passing values for ``min_weight``, ``max_weight``, ``min_quantity``, and ``max_quantity``.</span>
+
+<span class="sd">        :param weight_name: </span>
+<span class="sd">            Name of the key in the snapdict that should be used as the weights\</span>
+<span class="sd">            if weights are not passed. Special weight_names are ``Volumes`` and ``Ones``,\</span>
+<span class="sd">            which do not have to be present in the snapdict, defaults to ``&#39;Masses&#39;``</span>
+<span class="sd">        :type weight_name: str, optional</span>
+<span class="sd">        :param quantity_name: </span>
+<span class="sd">            Name of the field that is being projected, should be in the snapdict if </span>
+<span class="sd">            quantities is not passed, defaults to ``&#39;Temperature&#39;``</span>
+<span class="sd">        :type quantity_name: str, optional</span>
+<span class="sd">        :param weights: </span>
+<span class="sd">            array of weights to use alongside the smoothing kernel\</span>
+<span class="sd">            (typically ``self.snapdict[&#39;Masses&#39;]``). \</span>
+<span class="sd">            If ``None`` searches ``self.snapdict`` for ``weight_name``, defaults to ``None``</span>
+<span class="sd">        :type weights: np.ndarray, optional</span>
+<span class="sd">        :param quantities: </span>
+<span class="sd">            array of quantities to project along the line of sight.\</span>
+<span class="sd">            If ``None`` searches ``self.snapdict`` for ``weight_name``, defaults to ``None``</span>
+<span class="sd">        :type quantities: np.ndarray, optional</span>
+<span class="sd">        :param min_weight: </span>
+<span class="sd">            minimum value to use for the colorbar of weight projection maps</span>
+<span class="sd">            and saturation for two-color images, defaults to ``None``</span>
+<span class="sd">        :type min_weight: float, optional</span>
+<span class="sd">        :param max_weight: </span>
+<span class="sd">            maximum value to use for the colorbar of weight projection maps\</span>
+<span class="sd">            and saturation for two-color images, defaults to ``None``</span>
+<span class="sd">        :type max_weight: float, optional</span>
+<span class="sd">        :param min_quantity: </span>
+<span class="sd">            minimum value to use for the colorbar of weighted quantity projection maps\</span>
+<span class="sd">            and hue for two-color images, defaults to ``None``</span>
+<span class="sd">        :type min_quantity: float, optional</span>
+<span class="sd">        :param max_quantity: </span>
+<span class="sd">            maximum value to use for the colorbar of weighted quantity projection maps\</span>
+<span class="sd">            and hue for two-color images, defaults to ``None``</span>
+<span class="sd">        :type max_quantity: float, optional</span>
+<span class="sd">        :param weight_adjustment_function: </span>
+<span class="sd">            function to apply to the ``weightMap`` after it is\</span>
+<span class="sd">            returned by :func:`~firestudio.studios.gas_studio.GasStudio.projectAlongLOS`</span>
+<span class="sd">            for the purposes of specifying ``min_weight`` and ``max_weight``, defaults to ``None``</span>
+<span class="sd">        :type weight_adjustment_function: _type_, optional</span>
+<span class="sd">        :param quantity_adjustment_function: </span>
+<span class="sd">            function to apply to the ``weightWeightedQuantityMap`` after it is\</span>
+<span class="sd">            returned by :func:`~firestudio.studios.gas_studio.GasStudio.projectAlongLOS`\</span>
+<span class="sd">            for the purposes of specifying ``min_quantity`` and ``max_quantity``, defaults to ``None``</span>
+<span class="sd">        :type quantity_adjustment_function: _type_, optional</span>
+<span class="sd">        :param cmap: </span>
+<span class="sd">            name of colormap to apply to image, defaults to ``&#39;viridis&#39;``</span>
+<span class="sd">        :type cmap: str, optional</span>
+<span class="sd">        :raises ValueError: if an invalid combination of min/max weight/quantity parameters are passed.</span>
+
+<span class="sd">        :return: array of RGB image pixel values</span>
+<span class="sd">        :rtype: np.ndarray(npix_x,npix_y,3)</span>
+
+<span class="sd">        :Example usage:</span>
+<span class="sd">            .. code-block:: python</span>
+
+<span class="sd">                ## makes a gas surface density map</span>
+<span class="sd">                gasStudio.render(</span>
+<span class="sd">                    weight_name=&#39;Masses&#39;,</span>
+<span class="sd">                    min_weight=-0.1,</span>
+<span class="sd">                    max_weight=1.5,</span>
+<span class="sd">                    weight_adjustment_function=lambda x:</span>
+<span class="sd">                        np.log10(x/gasStudio.Acell)+10-6) ## log10(msun/pc^2)</span>
+
+<span class="sd">                ## makes a mass weighted temperature map</span>
+<span class="sd">                gasStudio.render(</span>
+<span class="sd">                    weight_name=&#39;Masses&#39;,</span>
+<span class="sd">                    quantity_name=&#39;Temperature&#39;,</span>
+<span class="sd">                    min_quantity=2,</span>
+<span class="sd">                    max_quantity=7,</span>
+<span class="sd">                    quantity_adjustment_function= np.log10</span>
+<span class="sd">                    )</span>
+
+<span class="sd">                ## makes a saturation-hue gas surface density + Temperature map</span>
+<span class="sd">                gasStudio.render(</span>
+<span class="sd">                    weight_name=&#39;Masses&#39;,</span>
+<span class="sd">                    min_weight=-0.1,</span>
+<span class="sd">                    max_weight=1.5,</span>
+<span class="sd">                    weight_adjustment_function=lambda x:</span>
+<span class="sd">                        np.log10(x/gasStudio.Acell)+10-6 ## log10(msun/pc^2)</span>
+<span class="sd">                    quantity_name=&#39;Temperature&#39;,</span>
+<span class="sd">                    min_quantity=2,</span>
+<span class="sd">                    max_quantity=7,</span>
+<span class="sd">                    quantity_adjustment_function= np.log10)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">cmap</span> <span class="o">=</span> <span class="n">cmap</span>
+
+
+        <span class="c1">## load the requested maps</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">quick</span><span class="p">:</span>
+            <span class="n">weightMap</span><span class="p">,</span> <span class="n">weightWeightedQuantityMap</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">projectAlongLOS</span><span class="p">(</span>
+                <span class="n">weights</span><span class="p">,</span>
+                <span class="n">weight_name</span><span class="p">,</span>
+                <span class="n">quantities</span><span class="p">,</span>
+                <span class="n">quantity_name</span><span class="p">,</span>
+                <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">weightMap</span><span class="p">,</span> <span class="n">weightWeightedQuantityMap</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">quick_projectAlongLOS</span><span class="p">(</span>
+                <span class="n">weights</span><span class="p">,</span>
+                <span class="n">weight_name</span><span class="p">,</span>
+                <span class="n">quantities</span><span class="p">,</span>
+                <span class="n">quantity_name</span><span class="p">,</span>
+                <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="c1">## apply any unit corrections, take logs, etc...</span>
+        <span class="k">if</span> <span class="n">weight_adjustment_function</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">weightMap</span> <span class="o">=</span> <span class="n">weight_adjustment_function</span><span class="p">(</span><span class="n">weightMap</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">quantity_adjustment_function</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span> 
+            <span class="n">weightWeightedQuantityMap</span> <span class="o">=</span> <span class="n">quantity_adjustment_function</span><span class="p">(</span><span class="n">weightWeightedQuantityMap</span><span class="p">)</span>
+
+        <span class="c1">## plot a hue-brightness image, convert to 0-&gt;1 space</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">min_weight</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> 
+            <span class="n">max_weight</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> 
+            <span class="n">min_quantity</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span>
+            <span class="n">max_quantity</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">):</span>
+
+            <span class="n">image_W</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">renormalizeTransposeImage</span><span class="p">(</span>
+                <span class="n">weightMap</span><span class="p">,</span> 
+                <span class="n">min_weight</span><span class="p">,</span><span class="n">max_weight</span><span class="p">,</span>
+                <span class="n">weight_name</span><span class="p">)</span>
+
+            <span class="n">image_Q</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">renormalizeTransposeImage</span><span class="p">(</span>
+                <span class="n">weightWeightedQuantityMap</span><span class="p">,</span>
+                <span class="n">min_quantity</span><span class="p">,</span><span class="n">max_quantity</span><span class="p">,</span>
+                <span class="n">quantity_name</span><span class="p">)</span>
+
+            <span class="c1">#self.cbar_label = &#39;ERROR&#39;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cbar_min</span> <span class="o">=</span> <span class="n">min_quantity</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cbar_max</span> <span class="o">=</span> <span class="n">max_quantity</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">master_loud</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;TODO:Need to create a 2-axis colorbar.&quot;</span><span class="p">)</span>
+
+        <span class="c1">## plot a weight map, convert to 0-&gt;1 space</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">min_weight</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> 
+            <span class="n">max_weight</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">):</span>
+
+            <span class="c1">#self.cbar_label = &#39;los %s &#39; % (</span>
+                <span class="c1">#self.weight_name,</span>
+                <span class="c1">#self.quantity_name.title())</span>
+
+            <span class="n">image_Q</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">renormalizeTransposeImage</span><span class="p">(</span>
+                <span class="n">weightMap</span><span class="p">,</span> 
+                <span class="n">min_weight</span><span class="p">,</span><span class="n">max_weight</span><span class="p">,</span>
+                <span class="n">weight_name</span><span class="p">)</span>
+
+            <span class="n">image_W</span> <span class="o">=</span> <span class="kc">None</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">cbar_min</span> <span class="o">=</span> <span class="n">min_weight</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cbar_max</span> <span class="o">=</span> <span class="n">max_weight</span>
+        
+        <span class="c1">## plot a quantity map, convert to 0-&gt;1 space</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">min_quantity</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span>
+            <span class="n">max_quantity</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">):</span>
+
+            <span class="c1">#self.cbar_label = &#39;los %s-weighted %s&#39; % (</span>
+                <span class="c1">#self.weight_name,</span>
+                <span class="c1">#self.quantity_name.title())</span>
+
+            <span class="n">image_Q</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">renormalizeTransposeImage</span><span class="p">(</span>
+                <span class="n">weightWeightedQuantityMap</span><span class="p">,</span>
+                <span class="n">min_quantity</span><span class="p">,</span><span class="n">max_quantity</span><span class="p">,</span>
+                <span class="n">quantity_name</span><span class="p">)</span>
+
+            <span class="n">image_W</span> <span class="o">=</span> <span class="kc">None</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">cbar_min</span> <span class="o">=</span> <span class="n">min_quantity</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cbar_max</span> <span class="o">=</span> <span class="n">max_quantity</span>
+
+        <span class="k">else</span><span class="p">:</span> <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Use (min/max)_(weight/quantity) kwargs to set image&quot;</span><span class="p">)</span>
+
+        <span class="c1">## convert the images from 0-&gt;1 space to 0-&gt; 255 space</span>
+        <span class="n">final_image</span> <span class="o">=</span> <span class="n">_produce_cmap_hsv_image</span><span class="p">(</span><span class="n">image_Q</span><span class="p">,</span> <span class="n">image_W</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cmap</span><span class="p">)</span> 
+
+        <span class="k">return</span> <span class="n">final_image</span></div>
+
+<span class="c1">####### plotImage implementation #######</span>
+<div class="viewcode-block" id="GasStudio.plotImage"><a class="viewcode-back" href="../../../reference/api/firestudio.studios.gas_studio.GasStudio.html#firestudio.studios.gas_studio.GasStudio.plotImage">[docs]</a>    <span class="k">def</span> <span class="nf">plotImage</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">ax</span><span class="p">:</span><span class="n">plt</span><span class="o">.</span><span class="n">Axes</span><span class="p">,</span>
+        <span class="n">final_image</span><span class="p">:</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Implementation of overlaying artists on top of projected image. \</span>
+<span class="sd">        Also calls the base method :func:`~firestudio.studios.studio.Studio.plotImage`. \</span>
+<span class="sd">        If ``self.use_colorbar`` we add a colorbar to the image, \</span>
+<span class="sd">        see :func:`~firestudio.studios.gas_studio.GasStudio.set_ImageParams` for details.</span>
+
+<span class="sd">        :param ax: matplotlib axis to plot image to </span>
+<span class="sd">        :type ax: plt.Axes</span>
+<span class="sd">        :param final_image: array of RGB image pixel values</span>
+<span class="sd">        :type final_image: np.ndarray</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1">## run Studio&#39;s plotImage method</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">plotImage</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span><span class="n">final_image</span><span class="p">)</span>
+
+        <span class="c1">## colour bar</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_colorbar</span><span class="p">:</span>
+            <span class="c1">## do we need to exponentiate the cbar limits?</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cbar_logspace</span><span class="p">:</span>
+                <span class="n">cbar_min</span><span class="p">,</span><span class="n">cbar_max</span> <span class="o">=</span> <span class="mi">10</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">cbar_min</span><span class="p">,</span><span class="mi">10</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">cbar_max</span> 
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">cbar_min</span><span class="p">,</span><span class="n">cbar_max</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cbar_min</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">cbar_max</span> 
+        
+            <span class="n">addColorbar</span><span class="p">(</span>
+                <span class="n">ax</span><span class="p">,</span><span class="n">get_cmap</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cmap</span><span class="p">),</span>
+                <span class="n">cbar_min</span><span class="p">,</span><span class="n">cbar_max</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cbar_label</span><span class="p">,</span>
+                <span class="n">logflag</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cbar_logspace</span><span class="p">,</span>
+                <span class="n">fontsize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fontsize</span><span class="p">,</span>
+                <span class="n">cmap_number</span><span class="o">=</span><span class="mf">0.25</span><span class="p">)</span></div></div>
+
+<span class="k">def</span> <span class="nf">_getImageGrid</span><span class="p">(</span>
+    <span class="n">Xmin</span><span class="p">,</span><span class="n">Xmax</span><span class="p">,</span>
+    <span class="n">Ymin</span><span class="p">,</span><span class="n">Ymax</span><span class="p">,</span>
+    <span class="n">npix_x</span><span class="p">,</span><span class="n">npix_y</span><span class="p">,</span>
+    <span class="n">pos</span><span class="p">,</span><span class="n">weight</span><span class="p">,</span><span class="n">quantity</span><span class="p">,</span>
+    <span class="n">hsml</span><span class="p">,</span>
+    <span class="n">loud</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+
+    <span class="c1">## set c-routine variables</span>
+    <span class="n">n_smooth</span> <span class="o">=</span> <span class="n">pos</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="c1">## output array for sum along the line of sight</span>
+    <span class="n">weightMap</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">npix_x</span><span class="p">,</span><span class="n">npix_y</span><span class="p">),</span><span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+
+    <span class="c1">## output array for average along the line of sight</span>
+    <span class="n">weightWeightedQuantityMap</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">npix_x</span><span class="p">,</span><span class="n">npix_y</span><span class="p">),</span><span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+    
+    <span class="c1">## create hsml output array</span>
+    <span class="k">if</span> <span class="n">hsml</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;HSML cannot be None and weights != masses.&quot;</span> <span class="o">+</span> 
+            <span class="s2">&quot; We don&#39;t check if weights == masses, so we&#39;ll just assume&quot;</span> <span class="o">+</span>
+            <span class="s2">&quot; they&#39;re not for ultimate safety.&quot;</span><span class="p">)</span>
+    <span class="c1">#else: print(&quot;Using provided smoothing lengths&quot;)</span>
+    
+    <span class="c1">## make sure everything is in single precision lest we</span>
+    <span class="c1">##  make a swiss-cheese magenta nightmare, #neverforget 6/15/17</span>
+    <span class="n">c_f_p</span>      <span class="o">=</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">POINTER</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_float</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">loud</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;------------------------------------------&#39;</span><span class="p">)</span>
+    <span class="n">curpath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">realpath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span>
+    <span class="n">curpath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">curpath</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="c1">#split off this filename</span>
+    <span class="n">curpath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">curpath</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="c1">#split off studios direcotry</span>
+    <span class="n">c_obj_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+        <span class="n">curpath</span><span class="p">,</span>
+        <span class="s1">&#39;utils&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;C_routines&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;HsmlAndProject_cubicSpline/hsml_project.so&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">c_obj_path</span><span class="p">):</span> <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span>
+        <span class="s1">&#39;Missing &#39;</span> <span class="o">+</span> <span class="n">c_obj_path</span> <span class="o">+</span> <span class="s1">&#39; - compile the missing file and restart.&#39;</span><span class="p">)</span>
+
+    <span class="n">c_obj</span> <span class="o">=</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">CDLL</span><span class="p">(</span><span class="n">c_obj_path</span><span class="p">)</span>
+
+    <span class="n">c_obj</span><span class="o">.</span><span class="n">hsml_project</span><span class="p">(</span> 
+        <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">n_smooth</span><span class="p">),</span> <span class="c1">## number of particles</span>
+        <span class="n">_vfloat</span><span class="p">(</span><span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">pos</span><span class="p">[:,</span><span class="mi">0</span><span class="p">])),</span><span class="n">_vfloat</span><span class="p">(</span><span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">pos</span><span class="p">[:,</span><span class="mi">1</span><span class="p">])),</span> <span class="c1">## x-y positions of particles</span>
+        <span class="n">_vfloat</span><span class="p">(</span><span class="n">hsml</span><span class="p">),</span>  <span class="c1">## smoothing lengths of star + gas particles</span>
+        <span class="n">_vfloat</span><span class="p">(</span><span class="n">weight</span><span class="p">),</span> <span class="c1">## attenuation masses of star + gas particles, stars are 0 </span>
+        <span class="c1">## emission in each band of star+gas particles, gas is 0 </span>
+        <span class="n">_vfloat</span><span class="p">(</span><span class="n">quantity</span><span class="p">),</span>  
+        <span class="c1">## x-y limits of the image</span>
+        <span class="n">ctypes</span><span class="o">.</span><span class="n">c_float</span><span class="p">(</span><span class="n">Xmin</span><span class="p">),</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_float</span><span class="p">(</span><span class="n">Xmax</span><span class="p">),</span>
+        <span class="n">ctypes</span><span class="o">.</span><span class="n">c_float</span><span class="p">(</span><span class="n">Ymin</span><span class="p">),</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_float</span><span class="p">(</span><span class="n">Ymax</span><span class="p">),</span> 
+        <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">npix_x</span><span class="p">),</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">npix_y</span><span class="p">),</span> <span class="c1">## output shape</span>
+        <span class="n">weightMap</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">c_f_p</span><span class="p">),</span> <span class="c1">## mass map</span>
+        <span class="n">weightWeightedQuantityMap</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">c_f_p</span><span class="p">))</span>
+    
+    <span class="c1"># convert into Msun/pc^2</span>
+    <span class="c1">#unitmass_in_g = 1.9890000e+43 </span>
+    <span class="c1">#solar_mass    = 1.9890000e+33</span>
+    <span class="c1">#conv_fac = (unitmass_in_g/solar_mass) / (1.0e3)**2 ## Msun/pc^2</span>
+    <span class="c1">#columnDensityMap *= conv_fac</span>
+    <span class="k">if</span> <span class="n">loud</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;------------------------------------------&#39;</span><span class="p">)</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;minmax(weightMap)&#39;</span><span class="p">,</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">weightMap</span><span class="p">),</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">weightMap</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Fraction deposited:&#39;</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">weightMap</span><span class="p">)</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">weight</span><span class="p">))</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;minmax(weightWeightedQuantityMap)&#39;</span><span class="p">,</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">weightWeightedQuantityMap</span><span class="p">),</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">weightWeightedQuantityMap</span><span class="p">))</span>
+   
+    <span class="n">weightWeightedQuantityMap</span> <span class="o">=</span> <span class="n">weightWeightedQuantityMap</span><span class="o">/</span><span class="n">weightMap</span>
+
+    <span class="k">return</span> <span class="n">weightMap</span><span class="p">,</span><span class="n">weightWeightedQuantityMap</span>
+
+<span class="c1">###### Color helper functions</span>
+<span class="kn">from</span> <span class="nn">matplotlib.colors</span> <span class="kn">import</span> <span class="n">rgb_to_hsv</span><span class="p">,</span> <span class="n">hsv_to_rgb</span> 
+<span class="k">def</span> <span class="nf">_produce_colmap</span><span class="p">(</span><span class="n">cmap_name</span><span class="p">):</span>
+    <span class="n">cmap</span> <span class="o">=</span> <span class="n">get_cmap</span><span class="p">(</span><span class="n">cmap_name</span><span class="p">)</span>
+    <span class="c1">## discretize the colormap into 256 parts...</span>
+    <span class="k">return</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">cmap</span><span class="p">(</span><span class="n">i</span><span class="o">/</span><span class="mf">255.</span><span class="p">)[:</span><span class="mi">3</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">256</span><span class="p">)]</span>
+
+<span class="k">def</span> <span class="nf">_produce_cmap_hsv_image</span><span class="p">(</span><span class="n">image_1</span><span class="p">,</span> <span class="n">image_2</span><span class="p">,</span><span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;viridis&#39;</span><span class="p">):</span> 
+    <span class="c1"># image_1 and image_2 are arrays of pixels </span>
+    <span class="c1"># with integer values in the range 0 to 255. </span>
+    <span class="c1"># These will be mapped onto hue and brightness, </span>
+    <span class="c1"># respectively, with saturation fixed at 1. </span>
+    <span class="n">cols</span> <span class="o">=</span> <span class="n">_produce_colmap</span><span class="p">(</span><span class="n">cmap</span><span class="p">)</span>
+    <span class="n">cols</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">cols</span><span class="p">)</span> 
+
+    <span class="n">cols_2d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">cols</span><span class="p">),</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span> 
+    <span class="n">cols_2d</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">cols</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> 
+    <span class="n">cols_2d</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">cols</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> 
+    <span class="n">cols_2d</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">cols</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span> 
+    <span class="n">cols_hsv</span> <span class="o">=</span> <span class="n">rgb_to_hsv</span><span class="p">(</span><span class="n">cols_2d</span><span class="p">)</span> 
+    <span class="n">hue_viridis</span> <span class="o">=</span> <span class="n">cols_hsv</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> 
+
+    <span class="n">npix_x</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">image_1</span><span class="p">)</span> 
+    <span class="n">npix_y</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">image_1</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> 
+    <span class="k">if</span> <span class="n">image_2</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">output_image_hsv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">npix_x</span><span class="p">,</span> <span class="n">npix_y</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span> 
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">npix_x</span><span class="p">):</span> 
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">npix_y</span><span class="p">):</span> 
+                <span class="n">output_image_hsv</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">hue_viridis</span><span class="p">[</span><span class="n">image_1</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]]</span> 
+                <span class="n">output_image_hsv</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span> 
+                <span class="n">output_image_hsv</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">image_2</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">])</span> <span class="o">/</span> <span class="mf">255.0</span> 
+
+        <span class="n">output_image_rgb</span> <span class="o">=</span> <span class="n">hsv_to_rgb</span><span class="p">(</span><span class="n">output_image_hsv</span><span class="p">)</span> 
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">output_image_rgb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">npix_x</span><span class="p">,</span> <span class="n">npix_y</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span> 
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">npix_x</span><span class="p">):</span> 
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">npix_y</span><span class="p">):</span> 
+                <span class="n">output_image_rgb</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span><span class="o">=</span><span class="n">cols</span><span class="p">[</span><span class="n">image_1</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]]</span>
+                
+    <span class="k">return</span> <span class="n">output_image_rgb</span> 
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Alex Gurvich.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

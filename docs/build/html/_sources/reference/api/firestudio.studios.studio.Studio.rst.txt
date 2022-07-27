@@ -1,0 +1,40 @@
+firestudio.studios.studio.Studio
+================================
+
+.. currentmodule:: firestudio.studios.studio
+
+.. autoclass:: Studio
+   :members:
+   :show-inheritance:
+   :inherited-members:
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Studio.__init__
+      ~Studio.addScaleBar
+      ~Studio.addText
+      ~Studio.computeFrameBoundaries
+      ~Studio.cullFrameIndices
+      ~Studio.drawCoordinateAxes
+      ~Studio.get_HSML
+      ~Studio.gradientBlendImages
+      ~Studio.load_SnapshotData
+      ~Studio.plotImage
+      ~Studio.print_ImageParams
+      ~Studio.render
+      ~Studio.renormalizeTransposeImage
+      ~Studio.saveFigure
+      ~Studio.set_CacheFile
+      ~Studio.set_ImageParams
+   
+   
+
+   
+   
+   

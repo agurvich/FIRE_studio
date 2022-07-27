@@ -1,0 +1,51 @@
+firestudio.studios.FIRE\_studio.FIREStudio
+==========================================
+
+.. currentmodule:: firestudio.studios.FIRE_studio
+
+.. autoclass:: FIREStudio
+   :members:
+   :show-inheritance:
+   :inherited-members:
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~FIREStudio.__init__
+      ~FIREStudio.addScaleBar
+      ~FIREStudio.addText
+      ~FIREStudio.computeFrameBoundaries
+      ~FIREStudio.cullFrameIndices
+      ~FIREStudio.drawCoordinateAxes
+      ~FIREStudio.get_HSML
+      ~FIREStudio.get_gasThreebandImage
+      ~FIREStudio.gradientBlendImages
+      ~FIREStudio.load_SnapshotData
+      ~FIREStudio.plotImage
+      ~FIREStudio.predictParameters
+      ~FIREStudio.prepareCoordinates
+      ~FIREStudio.print_ImageParams
+      ~FIREStudio.produceImage
+      ~FIREStudio.quick_get_gasThreebandImage
+      ~FIREStudio.render
+      ~FIREStudio.renormalizeTransposeImage
+      ~FIREStudio.saveFigure
+      ~FIREStudio.set_CacheFile
+      ~FIREStudio.set_ImageParams
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~FIREStudio.required_snapdict_keys
+   
+   

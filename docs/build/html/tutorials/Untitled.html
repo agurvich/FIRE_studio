@@ -1,0 +1,1218 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Untitled.ipynb &mdash; firestudio 2.0.0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="API Reference" href="../reference/api/api.html" />
+    <link rel="prev" title="StarStudio_example.ipynb" href="StarStudio_example.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> firestudio
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../gas_projection.html">Gas projections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../mock_hubble.html">Mock hubble images</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Tutorial Notebooks</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="GasStudio_collisionless_example.html">GasStudio_collisionless_example.ipynb</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GasStudio_example.html">GasStudio_example.ipynb</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HeaderImage.html">HeaderImage.ipynb</a></li>
+<li class="toctree-l2"><a class="reference internal" href="StarStudio_example.html">StarStudio_example.ipynb</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Untitled.ipynb</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#this-isn-t-here">this isn’t here</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/api/api.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">firestudio</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="index.html">Tutorial Notebooks</a> &raquo;</li>
+      <li>Untitled.ipynb</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/tutorials/Untitled.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  
+<style>
+/* CSS for nbsphinx extension */
+
+/* remove conflicting styling from Sphinx themes */
+div.nbinput.container div.prompt *,
+div.nboutput.container div.prompt *,
+div.nbinput.container div.input_area pre,
+div.nboutput.container div.output_area pre,
+div.nbinput.container div.input_area .highlight,
+div.nboutput.container div.output_area .highlight {
+    border: none;
+    padding: 0;
+    margin: 0;
+    box-shadow: none;
+}
+
+div.nbinput.container > div[class*=highlight],
+div.nboutput.container > div[class*=highlight] {
+    margin: 0;
+}
+
+div.nbinput.container div.prompt *,
+div.nboutput.container div.prompt * {
+    background: none;
+}
+
+div.nboutput.container div.output_area .highlight,
+div.nboutput.container div.output_area pre {
+    background: unset;
+}
+
+div.nboutput.container div.output_area div.highlight {
+    color: unset;  /* override Pygments text color */
+}
+
+/* avoid gaps between output lines */
+div.nboutput.container div[class*=highlight] pre {
+    line-height: normal;
+}
+
+/* input/output containers */
+div.nbinput.container,
+div.nboutput.container {
+    display: -webkit-flex;
+    display: flex;
+    align-items: flex-start;
+    margin: 0;
+    width: 100%;
+}
+@media (max-width: 540px) {
+    div.nbinput.container,
+    div.nboutput.container {
+        flex-direction: column;
+    }
+}
+
+/* input container */
+div.nbinput.container {
+    padding-top: 5px;
+}
+
+/* last container */
+div.nblast.container {
+    padding-bottom: 5px;
+}
+
+/* input prompt */
+div.nbinput.container div.prompt pre {
+    color: #307FC1;
+}
+
+/* output prompt */
+div.nboutput.container div.prompt pre {
+    color: #BF5B3D;
+}
+
+/* all prompts */
+div.nbinput.container div.prompt,
+div.nboutput.container div.prompt {
+    width: 4.5ex;
+    padding-top: 5px;
+    position: relative;
+    user-select: none;
+}
+
+div.nbinput.container div.prompt > div,
+div.nboutput.container div.prompt > div {
+    position: absolute;
+    right: 0;
+    margin-right: 0.3ex;
+}
+
+@media (max-width: 540px) {
+    div.nbinput.container div.prompt,
+    div.nboutput.container div.prompt {
+        width: unset;
+        text-align: left;
+        padding: 0.4em;
+    }
+    div.nboutput.container div.prompt.empty {
+        padding: 0;
+    }
+
+    div.nbinput.container div.prompt > div,
+    div.nboutput.container div.prompt > div {
+        position: unset;
+    }
+}
+
+/* disable scrollbars on prompts */
+div.nbinput.container div.prompt pre,
+div.nboutput.container div.prompt pre {
+    overflow: hidden;
+}
+
+/* input/output area */
+div.nbinput.container div.input_area,
+div.nboutput.container div.output_area {
+    -webkit-flex: 1;
+    flex: 1;
+    overflow: auto;
+}
+@media (max-width: 540px) {
+    div.nbinput.container div.input_area,
+    div.nboutput.container div.output_area {
+        width: 100%;
+    }
+}
+
+/* input area */
+div.nbinput.container div.input_area {
+    border: 1px solid #e0e0e0;
+    border-radius: 2px;
+    /*background: #f5f5f5;*/
+}
+
+/* override MathJax center alignment in output cells */
+div.nboutput.container div[class*=MathJax] {
+    text-align: left !important;
+}
+
+/* override sphinx.ext.imgmath center alignment in output cells */
+div.nboutput.container div.math p {
+    text-align: left;
+}
+
+/* standard error */
+div.nboutput.container div.output_area.stderr {
+    background: #fdd;
+}
+
+/* ANSI colors */
+.ansi-black-fg { color: #3E424D; }
+.ansi-black-bg { background-color: #3E424D; }
+.ansi-black-intense-fg { color: #282C36; }
+.ansi-black-intense-bg { background-color: #282C36; }
+.ansi-red-fg { color: #E75C58; }
+.ansi-red-bg { background-color: #E75C58; }
+.ansi-red-intense-fg { color: #B22B31; }
+.ansi-red-intense-bg { background-color: #B22B31; }
+.ansi-green-fg { color: #00A250; }
+.ansi-green-bg { background-color: #00A250; }
+.ansi-green-intense-fg { color: #007427; }
+.ansi-green-intense-bg { background-color: #007427; }
+.ansi-yellow-fg { color: #DDB62B; }
+.ansi-yellow-bg { background-color: #DDB62B; }
+.ansi-yellow-intense-fg { color: #B27D12; }
+.ansi-yellow-intense-bg { background-color: #B27D12; }
+.ansi-blue-fg { color: #208FFB; }
+.ansi-blue-bg { background-color: #208FFB; }
+.ansi-blue-intense-fg { color: #0065CA; }
+.ansi-blue-intense-bg { background-color: #0065CA; }
+.ansi-magenta-fg { color: #D160C4; }
+.ansi-magenta-bg { background-color: #D160C4; }
+.ansi-magenta-intense-fg { color: #A03196; }
+.ansi-magenta-intense-bg { background-color: #A03196; }
+.ansi-cyan-fg { color: #60C6C8; }
+.ansi-cyan-bg { background-color: #60C6C8; }
+.ansi-cyan-intense-fg { color: #258F8F; }
+.ansi-cyan-intense-bg { background-color: #258F8F; }
+.ansi-white-fg { color: #C5C1B4; }
+.ansi-white-bg { background-color: #C5C1B4; }
+.ansi-white-intense-fg { color: #A1A6B2; }
+.ansi-white-intense-bg { background-color: #A1A6B2; }
+
+.ansi-default-inverse-fg { color: #FFFFFF; }
+.ansi-default-inverse-bg { background-color: #000000; }
+
+.ansi-bold { font-weight: bold; }
+.ansi-underline { text-decoration: underline; }
+
+
+div.nbinput.container div.input_area div[class*=highlight] > pre,
+div.nboutput.container div.output_area div[class*=highlight] > pre,
+div.nboutput.container div.output_area div[class*=highlight].math,
+div.nboutput.container div.output_area.rendered_html,
+div.nboutput.container div.output_area > div.output_javascript,
+div.nboutput.container div.output_area:not(.rendered_html) > img{
+    padding: 5px;
+    margin: 0;
+}
+
+/* fix copybtn overflow problem in chromium (needed for 'sphinx_copybutton') */
+div.nbinput.container div.input_area > div[class^='highlight'],
+div.nboutput.container div.output_area > div[class^='highlight']{
+    overflow-y: hidden;
+}
+
+/* hide copybtn icon on prompts (needed for 'sphinx_copybutton') */
+.prompt .copybtn {
+    display: none;
+}
+
+/* Some additional styling taken form the Jupyter notebook CSS */
+div.rendered_html table {
+  border: none;
+  border-collapse: collapse;
+  border-spacing: 0;
+  color: black;
+  font-size: 12px;
+  table-layout: fixed;
+}
+div.rendered_html thead {
+  border-bottom: 1px solid black;
+  vertical-align: bottom;
+}
+div.rendered_html tr,
+div.rendered_html th,
+div.rendered_html td {
+  text-align: right;
+  vertical-align: middle;
+  padding: 0.5em 0.5em;
+  line-height: normal;
+  white-space: normal;
+  max-width: none;
+  border: none;
+}
+div.rendered_html th {
+  font-weight: bold;
+}
+div.rendered_html tbody tr:nth-child(odd) {
+  background: #f5f5f5;
+}
+div.rendered_html tbody tr:hover {
+  background: rgba(66, 165, 245, 0.2);
+}
+
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<section id="Untitled.ipynb">
+<h1>Untitled.ipynb<a class="headerlink" href="#Untitled.ipynb" title="Permalink to this headline"></a></h1>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">abg_python.galaxy.gal_utils</span> <span class="kn">import</span> <span class="n">Galaxy</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="o">%</span><span class="k">matplotlib</span> inline
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="o">%</span><span class="k">load_ext</span> autoreload
+<span class="o">%</span><span class="k">autoreload</span> 2
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s1">&#39;figure.dpi&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">240</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><br/><span></span><span class="n">galaxy</span> <span class="o">=</span> <span class="n">Galaxy</span><span class="p">(</span><span class="s1">&#39;m12b_res57000&#39;</span><span class="p">,</span><span class="mi">600</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Couldn&#39;t find a metadata file... for
+ Metadata object at /Users/agurvich/scratch/data/metal_diffusion/m12b_res57000/metadata/meta_Galaxy_600.hdf5
+No rstar 1/2 in halo or metadata files, we will need to calculate it ourselves.
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+/Users/agurvich/miniconda3/envs/firefly/lib/python3.9/site-packages/numpy/core/_asarray.py:171: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify &#39;dtype=object&#39; when creating the ndarray.
+  return array(a, dtype, copy=False, order=order, subok=True)
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">galaxy</span><span class="o">.</span><span class="n">extractMainHalo</span><span class="p">(</span><span class="n">use_saved_subsnapshots</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+cache star_extract compute_rstar_half(m12b_res57000 at 600,){} fail :[ No unloaded or loaded metadata attrs matches star_extract_rstar_half!
+Loading star particles of m12b_res57000 at 600 at /Users/agurvich/snaps/metal_diffusion/m12b_res57000/output
+compute_rstar_half(m12b_res57000 at 600,){} 3.56 s elapsed
+Failed to open saved sub-snapshots AssertionError(&#39;Told not to use saved sub-snapshots&#39;)
+Loading gas particles of m12b_res57000 at 600 at /Users/agurvich/snaps/metal_diffusion/m12b_res57000/output
+Loading dark matter particles of m12b_res57000 at 600 at /Users/agurvich/snaps/metal_diffusion/m12b_res57000/output
+Reorienting...
+Done.
+extract_halo_inner(m12b_res57000 at 600,){&#39;orient_stars&#39;: True, &#39;use_saved_subsnapshots&#39;: False} 20.71 s elapsed
+Snapshot memory free
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+(12.27201256901771,
+ True,
+ 13.610546783496492,
+ -23.753615253930974,
+ 331.60968,
+ 2.454402513803542,
+ 140.56429531755958)
+</pre></div></div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="k">matplotlib</span> inline
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">firestudio.interpolate.interpolate</span> <span class="kn">import</span> <span class="n">InterpolationHandler</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">interp_handler</span> <span class="o">=</span> <span class="n">InterpolationHandler</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span><span class="mi">13</span><span class="p">,</span><span class="mf">13.805</span><span class="p">,</span><span class="n">fps</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+<span class="n">interp_handler</span><span class="o">.</span><span class="n">scene_handler</span><span class="o">.</span><span class="n">add_keyframe</span><span class="p">(</span><span class="mf">2.5</span><span class="p">,</span><span class="n">quaternion</span><span class="o">=</span><span class="p">[</span><span class="mf">.707</span><span class="p">,</span><span class="mf">.707</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">])</span>
+<span class="n">interp_handler</span><span class="o">.</span><span class="n">scene_handler</span><span class="o">.</span><span class="n">add_keyframe</span><span class="p">(</span><span class="mf">2.5</span><span class="p">,</span><span class="n">scale_line_length</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
+<span class="n">interp_handler</span><span class="o">.</span><span class="n">scene_handler</span><span class="o">.</span><span class="n">add_keyframe</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="n">interp_handler</span><span class="o">.</span><span class="n">scene_handler</span><span class="o">.</span><span class="n">add_keyframe</span><span class="p">(</span><span class="mf">2.5</span><span class="p">,</span><span class="n">quaternion</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">])</span>
+<span class="n">interp_handler</span><span class="o">.</span><span class="n">scene_handler</span><span class="o">.</span><span class="n">add_keyframe</span><span class="p">(</span><span class="mf">2.5</span><span class="p">,</span><span class="n">scale_line_length</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span>
+<span class="n">interp_handler</span><span class="o">.</span><span class="n">scene_handler</span><span class="o">.</span><span class="n">add_keyframe</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+hello
+SceneInterpolationHandler(41/320 frames (2 keyframes) - [&#39;quaternion&#39;])
+SceneInterpolationHandler(81/320 frames (3 keyframes) - [&#39;quaternion&#39;, &#39;scale_line_length&#39;])
+SceneInterpolationHandler(161/320 frames (4 keyframes) - [&#39;quaternion&#39;, &#39;scale_line_length&#39;])
+SceneInterpolationHandler(201/320 frames (5 keyframes) - [&#39;quaternion&#39;, &#39;scale_line_length&#39;])
+SceneInterpolationHandler(241/320 frames (6 keyframes) - [&#39;quaternion&#39;, &#39;scale_line_length&#39;])
+time since last keyframe too large, this segment (241 + 80 frames) would exceed total duration: 320 frames (20 sec)... clipping to 79 frames instead
+SceneInterpolationHandler(320/320 frames (7 keyframes) - [&#39;quaternion&#39;, &#39;scale_line_length&#39;])
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">interp_handler</span><span class="o">.</span><span class="n">interpolateAndRender</span><span class="p">({</span><span class="s1">&#39;name&#39;</span><span class="p">:</span><span class="s1">&#39;m12b_res57000&#39;</span><span class="p">})</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+0 [555 556] [12.995635 13.018571]
+loading 555 from disk
+Couldn&#39;t find a metadata file... for
+ Metadata object at /Users/agurvich/scratch/data/metal_diffusion/m12b_res57000/metadata/meta_Galaxy_555.hdf5
+Couldn&#39;t find header.
+Snapshot 555 not found in /Users/agurvich/snaps/metal_diffusion/m12b_res57000/output
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
+<span class="ansi-red-fg">AssertionError</span>                            Traceback (most recent call last)
+<span class="ansi-green-fg">~/python/abg_python/galaxy/metadata_utils.py</span> in <span class="ansi-cyan-fg">wrapper</span><span class="ansi-blue-fg">(*func_args, **func_kwargs)</span>
+<span class="ansi-green-intense-fg ansi-bold">    464</span>                 <span class="ansi-green-fg">if</span> <span class="ansi-green-fg">not</span> use_metadata<span class="ansi-blue-fg">:</span>
+<span class="ansi-green-fg">--&gt; 465</span><span class="ansi-red-fg">                     </span><span class="ansi-green-fg">raise</span> AssertionError<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">&#34;Told to not use metadata.&#34;</span><span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">    466</span>
+
+<span class="ansi-red-fg">AssertionError</span>: Told to not use metadata.
+
+During handling of the above exception, another exception occurred:
+
+<span class="ansi-red-fg">AttributeError</span>                            Traceback (most recent call last)
+<span class="ansi-green-fg">&lt;ipython-input-14-6fd3b9f66cf1&gt;</span> in <span class="ansi-cyan-fg">&lt;module&gt;</span>
+<span class="ansi-green-fg">----&gt; 1</span><span class="ansi-red-fg"> </span>interp_handler<span class="ansi-blue-fg">.</span>interpolateAndRender<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">{</span><span class="ansi-blue-fg">&#39;name&#39;</span><span class="ansi-blue-fg">:</span><span class="ansi-blue-fg">&#39;m12b_res57000&#39;</span><span class="ansi-blue-fg">}</span><span class="ansi-blue-fg">)</span>
+
+<span class="ansi-green-fg">~/python/firestudio/interpolate/interpolate.py</span> in <span class="ansi-cyan-fg">interpolateAndRender</span><span class="ansi-blue-fg">(self, galaxy_kwargs, studio_kwargs, render_kwargs, savefig, which_studio, multi_threads)</span>
+<span class="ansi-green-intense-fg ansi-bold">     70</span>                 <span class="ansi-red-fg">#this_kwargs.update(time_kwargs)</span>
+<span class="ansi-green-intense-fg ansi-bold">     71</span>
+<span class="ansi-green-fg">---&gt; 72</span><span class="ansi-red-fg">             return self.time_handler.interpolateAndRender(
+</span><span class="ansi-green-intense-fg ansi-bold">     73</span>                 galaxy_kwargs<span class="ansi-blue-fg">,</span> <span class="ansi-red-fg">## only 1 dict, shared by all frames</span>
+<span class="ansi-green-intense-fg ansi-bold">     74</span>                 frame_kwargss<span class="ansi-blue-fg">=</span>frame_kwargss<span class="ansi-blue-fg">,</span> <span class="ansi-red-fg">## nframe dicts, 1 for each frame</span>
+
+<span class="ansi-green-fg">~/python/firestudio/interpolate/time_interpolate.py</span> in <span class="ansi-cyan-fg">interpolateAndRender</span><span class="ansi-blue-fg">(self, galaxy_kwargs, frame_kwargss, studio_kwargs, render_kwargs, savefig, which_studio, multi_threads)</span>
+<span class="ansi-green-intense-fg ansi-bold">    101</span>         <span class="ansi-green-fg">if</span> multi_threads <span class="ansi-blue-fg">==</span> <span class="ansi-cyan-fg">1</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-intense-fg ansi-bold">    102</span>             <span class="ansi-red-fg">## collect positional arguments for worker_function</span>
+<span class="ansi-green-fg">--&gt; 103</span><span class="ansi-red-fg">             return single_threaded_control_flow(
+</span><span class="ansi-green-intense-fg ansi-bold">    104</span>                 which_studio<span class="ansi-blue-fg">,</span>
+<span class="ansi-green-intense-fg ansi-bold">    105</span>                 self<span class="ansi-blue-fg">.</span>times_gyr<span class="ansi-blue-fg">,</span>
+
+<span class="ansi-green-fg">~/python/firestudio/interpolate/time_helper.py</span> in <span class="ansi-cyan-fg">single_threaded_control_flow</span><span class="ansi-blue-fg">(which_studio, times, snap_pairs, snap_pair_times, galaxy_kwargs, studio_kwargs, render_kwargs, savefigs)</span>
+<span class="ansi-green-intense-fg ansi-bold">     82</span>         <span class="ansi-red-fg">## determine if the galaxies in the pair are actually</span>
+<span class="ansi-green-intense-fg ansi-bold">     83</span>         <span class="ansi-red-fg">##  changed, and if so, open their data from the disk.</span>
+<span class="ansi-green-fg">---&gt; 84</span><span class="ansi-red-fg">         prev_galaxy,next_galaxy,changed = load_gals_from_disk(
+</span><span class="ansi-green-intense-fg ansi-bold">     85</span>             prev_snapnum<span class="ansi-blue-fg">,</span>next_snapnum<span class="ansi-blue-fg">,</span>
+<span class="ansi-green-intense-fg ansi-bold">     86</span>             pair<span class="ansi-blue-fg">,</span>
+
+<span class="ansi-green-fg">~/python/firestudio/interpolate/time_helper.py</span> in <span class="ansi-cyan-fg">load_gals_from_disk</span><span class="ansi-blue-fg">(prev_snapnum, next_snapnum, pair, prev_galaxy, next_galaxy, testing, **kwargs)</span>
+<span class="ansi-green-intense-fg ansi-bold">    157</span>         <span class="ansi-green-fg">if</span> <span class="ansi-green-fg">not</span> testing<span class="ansi-blue-fg">:</span>
+<span class="ansi-green-intense-fg ansi-bold">    158</span>             prev_galaxy <span class="ansi-blue-fg">=</span> Galaxy<span class="ansi-blue-fg">(</span>snapnum<span class="ansi-blue-fg">=</span>pair<span class="ansi-blue-fg">[</span><span class="ansi-cyan-fg">0</span><span class="ansi-blue-fg">]</span><span class="ansi-blue-fg">,</span><span class="ansi-blue-fg">**</span>kwargs<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-fg">--&gt; 159</span><span class="ansi-red-fg">             </span>prev_galaxy<span class="ansi-blue-fg">.</span>extractMainHalo<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">    160</span>         <span class="ansi-green-fg">else</span><span class="ansi-blue-fg">:</span> prev_galaxy <span class="ansi-blue-fg">=</span> pair<span class="ansi-blue-fg">[</span><span class="ansi-cyan-fg">0</span><span class="ansi-blue-fg">]</span>
+<span class="ansi-green-intense-fg ansi-bold">    161</span>         changed <span class="ansi-blue-fg">=</span> <span class="ansi-green-fg">True</span>
+
+<span class="ansi-green-fg">~/python/abg_python/galaxy/gal_utils.py</span> in <span class="ansi-cyan-fg">extractMainHalo</span><span class="ansi-blue-fg">(self, save_meta, orient_stars, overwrite_full_snaps_with_rotated_versions, free_mem, extract_DM, loud, **kwargs)</span>
+<span class="ansi-green-intense-fg ansi-bold">    885</span>                 self.rgas_half)
+<span class="ansi-green-intense-fg ansi-bold">    886</span>
+<span class="ansi-green-fg">--&gt; 887</span><span class="ansi-red-fg">         return_value = extract_halo_inner(
+</span><span class="ansi-green-intense-fg ansi-bold">    888</span>             self<span class="ansi-blue-fg">,</span>
+<span class="ansi-green-intense-fg ansi-bold">    889</span>             orient_stars<span class="ansi-blue-fg">=</span>orient_stars<span class="ansi-blue-fg">,</span>
+
+<span class="ansi-green-fg">~/python/abg_python/galaxy/metadata_utils.py</span> in <span class="ansi-cyan-fg">wrapper</span><span class="ansi-blue-fg">(*func_args, **func_kwargs)</span>
+<span class="ansi-green-intense-fg ansi-bold">    498</span>                 init <span class="ansi-blue-fg">=</span> time<span class="ansi-blue-fg">.</span>time<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">    499</span>                 <span class="ansi-red-fg">## go ahead and actually call the function</span>
+<span class="ansi-green-fg">--&gt; 500</span><span class="ansi-red-fg">                 </span>return_value <span class="ansi-blue-fg">=</span> func<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">*</span>func_args<span class="ansi-blue-fg">,</span><span class="ansi-blue-fg">**</span>func_kwargs<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">    501</span>                 duration <span class="ansi-blue-fg">=</span> time<span class="ansi-blue-fg">.</span>time<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">-</span>init
+<span class="ansi-green-intense-fg ansi-bold">    502</span>                 <span class="ansi-green-fg">if</span> loud<span class="ansi-blue-fg">:</span>
+
+<span class="ansi-green-fg">~/python/abg_python/galaxy/gal_utils.py</span> in <span class="ansi-cyan-fg">extract_halo_inner</span><span class="ansi-blue-fg">(self, orient_stars, radius, use_saved_subsnapshots, force, force_theta_TB, force_phi_TB)</span>
+<span class="ansi-green-intense-fg ansi-bold">    701</span>             <span class="ansi-red-fg">## handle default remappings</span>
+<span class="ansi-green-intense-fg ansi-bold">    702</span>
+<span class="ansi-green-fg">--&gt; 703</span><span class="ansi-red-fg">             </span><span class="ansi-green-fg">if</span> self<span class="ansi-blue-fg">.</span>scom <span class="ansi-green-fg">is</span> <span class="ansi-green-fg">None</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-intense-fg ansi-bold">    704</span>                 self<span class="ansi-blue-fg">.</span>load_stars<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">    705</span>                 self.scom = iterativeCoM(
+
+<span class="ansi-red-fg">AttributeError</span>: &#39;Galaxy&#39; object has no attribute &#39;scom&#39;
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[68]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">time_handler</span> <span class="o">=</span> <span class="n">foo</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="mi">60</span><span class="p">,</span><span class="mi">15</span><span class="p">,</span><span class="mi">10</span><span class="p">,</span><span class="mf">13.805</span><span class="p">,</span><span class="kc">None</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+TimeInterpolationHandler with 1800 snapshot pairs:
+[[...],
+[589,590],
+[590,591],
+[591,592],
+[592,593],
+[593,594],
+[594,595],
+[595,596],
+[596,597],
+[597,598],
+[598,599]]
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[84]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">Scene</span><span class="p">(</span><span class="n">camera_pos</span><span class="o">=</span><span class="p">[</span><span class="mi">15</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span><span class="n">camera_focus</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[84]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Scene([&#39;quaternion&#39;])
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[87]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">a</span><span class="o">=</span> <span class="p">{</span><span class="mi">1</span><span class="p">:</span><span class="mi">2</span><span class="p">}</span>
+<span class="n">a</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="mi">3</span><span class="p">:</span><span class="mi">5</span><span class="p">})</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[87]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+{1: 2, 3: 5}
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[72]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">time_handler</span><span class="o">.</span><span class="n">frame_kwargs</span><span class="p">[:</span><span class="mi">10</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[72]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+[{&#39;time_gyr&#39;: 10.0,
+  &#39;snap_pair&#39;: array([431, 432]),
+  &#39;snap_pair_time&#39;: array([ 9.997467, 10.022765])},
+ {&#39;time_gyr&#39;: 10.002115063924402,
+  &#39;snap_pair&#39;: array([431, 432]),
+  &#39;snap_pair_time&#39;: array([ 9.997467, 10.022765])},
+ {&#39;time_gyr&#39;: 10.004230127848805,
+  &#39;snap_pair&#39;: array([431, 432]),
+  &#39;snap_pair_time&#39;: array([ 9.997467, 10.022765])},
+ {&#39;time_gyr&#39;: 10.006345191773207,
+  &#39;snap_pair&#39;: array([431, 432]),
+  &#39;snap_pair_time&#39;: array([ 9.997467, 10.022765])},
+ {&#39;time_gyr&#39;: 10.00846025569761,
+  &#39;snap_pair&#39;: array([431, 432]),
+  &#39;snap_pair_time&#39;: array([ 9.997467, 10.022765])},
+ {&#39;time_gyr&#39;: 10.010575319622012,
+  &#39;snap_pair&#39;: array([431, 432]),
+  &#39;snap_pair_time&#39;: array([ 9.997467, 10.022765])},
+ {&#39;time_gyr&#39;: 10.012690383546415,
+  &#39;snap_pair&#39;: array([431, 432]),
+  &#39;snap_pair_time&#39;: array([ 9.997467, 10.022765])},
+ {&#39;time_gyr&#39;: 10.014805447470817,
+  &#39;snap_pair&#39;: array([431, 432]),
+  &#39;snap_pair_time&#39;: array([ 9.997467, 10.022765])},
+ {&#39;time_gyr&#39;: 10.01692051139522,
+  &#39;snap_pair&#39;: array([431, 432]),
+  &#39;snap_pair_time&#39;: array([ 9.997467, 10.022765])},
+ {&#39;time_gyr&#39;: 10.019035575319622,
+  &#39;snap_pair&#39;: array([431, 432]),
+  &#39;snap_pair_time&#39;: array([ 9.997467, 10.022765])}]
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[30]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">my_studio</span><span class="o">.</span><span class="n">render</span><span class="p">(</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">(),</span>
+    <span class="n">weight_name</span><span class="o">=</span><span class="s1">&#39;Masses&#39;</span><span class="p">,</span>
+    <span class="n">quantity_name</span><span class="o">=</span><span class="s1">&#39;Temperature&#39;</span><span class="p">,</span>
+    <span class="n">quantity_adjustment_function</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">,</span>
+    <span class="n">min_quantity</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+    <span class="n">max_quantity</span><span class="o">=</span><span class="mi">7</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+cache npix1200_width15.00kpc_depth15.00kpc_x0.00_y0.00_z0.00_quat_0.50_-0.50_-0.50_-0.50_aspect1.00 inner_weight_along_los(GasStudio instance, None, &#39;Masses&#39;, None, &#39;Temperature&#39;){} success!
+min_Temperature =  2
+max_Temperature =  7
+Image range (Temperature):  2.9986382 6.6820135
+Image range (8bit):  50.930546 238.78268
+
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/tutorials_Untitled_13_1.png" src="../_images/tutorials_Untitled_13_1.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[28]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">galaxy</span><span class="o">.</span><span class="n">drawGasGalaxy</span><span class="p">(</span><span class="n">radius</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[28]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+(&lt;Figure size 864x432 with 2 Axes&gt;,
+ &lt;AxesSubplot:xlabel=&#39;x (kpc)&#39;, ylabel=&#39;y (kpc)&#39;&gt;,
+ &lt;AxesSubplot:xlabel=&#39;x (kpc)&#39;, ylabel=&#39;z (kpc)&#39;&gt;)
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/tutorials_Untitled_14_1.png" src="../_images/tutorials_Untitled_14_1.png" />
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">matplotlib.colors</span> <span class="kn">import</span> <span class="n">LogNorm</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">firestudio.utils.camera_utils</span> <span class="kn">import</span> <span class="n">Camera</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[136]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">camera_pos</span> <span class="o">=</span> <span class="p">[</span><span class="mi">25</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">camera_focus</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">camera</span> <span class="o">=</span> <span class="n">Camera</span><span class="p">(</span><span class="n">camera_pos</span><span class="p">,</span><span class="n">camera_focus</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">camera</span><span class="o">.</span><span class="n">quaternion</span><span class="p">)</span>
+<span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">camera</span><span class="o">.</span><span class="n">quat_rot_matrix</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+0.0 -90.0 0
+[ 0.70710678  0.         -0.70710678  0.        ]
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[136]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+array([[-0.41, -0.  , -1.  ],
+       [ 0.  ,  0.59, -0.  ],
+       [ 1.  ,  0.  , -0.41]])
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[153]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">np</span><span class="o">.</span><span class="n">arccos</span><span class="p">(</span><span class="mf">0.70710678</span><span class="p">)</span><span class="o">*</span><span class="mi">2</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="mi">180</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[153]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+90.00000019228827
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[258]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">camera_pos</span> <span class="o">=</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span><span class="o">-</span><span class="mi">25</span><span class="p">,</span><span class="mi">5</span><span class="p">]</span>
+<span class="n">camera_focus</span><span class="o">=</span><span class="p">[</span><span class="mi">10</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">5</span><span class="p">]</span>
+<span class="n">camera</span> <span class="o">=</span> <span class="n">Camera</span><span class="p">(</span><span class="n">camera_pos</span><span class="p">,</span><span class="n">camera_focus</span><span class="p">)</span>
+<span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">camera</span><span class="o">.</span><span class="n">quat_rot_matrix</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[258]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+array([[ 1., -0.,  0.],
+       [ 0.,  0.,  1.],
+       [-0., -1.,  0.]])
+</pre></div></div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">q_mult</span><span class="p">(</span><span class="n">q1</span><span class="p">,</span> <span class="n">q2</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; rip &quot;&quot;&quot;</span>
+    <span class="n">w1</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">y1</span><span class="p">,</span> <span class="n">z1</span> <span class="o">=</span> <span class="n">q1</span>
+    <span class="n">w2</span><span class="p">,</span> <span class="n">x2</span><span class="p">,</span> <span class="n">y2</span><span class="p">,</span> <span class="n">z2</span> <span class="o">=</span> <span class="n">q2</span>
+    <span class="n">w</span> <span class="o">=</span> <span class="n">w1</span> <span class="o">*</span> <span class="n">w2</span> <span class="o">-</span> <span class="n">x1</span> <span class="o">*</span> <span class="n">x2</span> <span class="o">-</span> <span class="n">y1</span> <span class="o">*</span> <span class="n">y2</span> <span class="o">-</span> <span class="n">z1</span> <span class="o">*</span> <span class="n">z2</span> <span class="c1"># q1[0]*q2[0] - np.dot(q1[1:],q2[1:])</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">w1</span> <span class="o">*</span> <span class="n">x2</span> <span class="o">+</span> <span class="n">x1</span> <span class="o">*</span> <span class="n">w2</span> <span class="o">+</span> <span class="n">y1</span> <span class="o">*</span> <span class="n">z2</span> <span class="o">-</span> <span class="n">z1</span> <span class="o">*</span> <span class="n">y2</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">w1</span> <span class="o">*</span> <span class="n">y2</span> <span class="o">+</span> <span class="n">y1</span> <span class="o">*</span> <span class="n">w2</span> <span class="o">+</span> <span class="n">z1</span> <span class="o">*</span> <span class="n">x2</span> <span class="o">-</span> <span class="n">x1</span> <span class="o">*</span> <span class="n">z2</span> <span class="c1">## cross terms off by a minus sign</span>
+    <span class="n">z</span> <span class="o">=</span> <span class="n">w1</span> <span class="o">*</span> <span class="n">z2</span> <span class="o">+</span> <span class="n">z1</span> <span class="o">*</span> <span class="n">w2</span> <span class="o">+</span> <span class="n">x1</span> <span class="o">*</span> <span class="n">y2</span> <span class="o">-</span> <span class="n">y1</span> <span class="o">*</span> <span class="n">x2</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">w</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[319]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">my_q_mult</span><span class="p">(</span><span class="n">q1</span><span class="p">,</span><span class="n">q2</span><span class="p">):</span>
+    <span class="n">outer</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">outer</span><span class="p">(</span><span class="n">q1</span><span class="p">,</span><span class="n">q2</span><span class="p">)</span>
+    <span class="n">vector_components</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span><span class="n">outer</span><span class="p">[</span><span class="mi">1</span><span class="p">:,</span><span class="mi">1</span><span class="p">:])</span>
+    <span class="n">q3</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+
+    <span class="n">signs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+    <span class="n">signs</span><span class="p">[</span><span class="mi">1</span><span class="p">:,</span><span class="mi">1</span><span class="p">:]</span><span class="o">*=-</span><span class="mi">1</span>
+
+    <span class="n">q3</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">signs</span><span class="o">*</span><span class="n">outer</span><span class="p">)</span>
+    <span class="n">outer</span><span class="p">[</span><span class="mi">1</span><span class="p">:,</span><span class="mi">1</span><span class="p">:]</span> <span class="o">=</span> <span class="n">vector_components</span>
+    <span class="n">q3</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">outer</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)[</span><span class="mi">1</span><span class="p">:]</span><span class="o">+</span><span class="n">outer</span><span class="p">[</span><span class="mi">1</span><span class="p">:,</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">q3</span>
+
+<span class="k">def</span> <span class="nf">multi_q_mult</span><span class="p">(</span><span class="n">q1</span><span class="p">,</span><span class="n">q2s</span><span class="p">):</span>
+    <span class="n">q1s</span> <span class="o">=</span> <span class="n">q1</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">4</span><span class="p">)</span>
+    <span class="n">outers</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tensordot</span><span class="p">(</span><span class="n">q1s</span><span class="p">[</span><span class="kc">None</span><span class="p">,:],</span><span class="n">q2s</span><span class="p">[</span><span class="kc">None</span><span class="p">,:],</span><span class="n">axes</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">))</span>
+    <span class="n">outers</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">moveaxis</span><span class="p">(</span><span class="n">outers</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="n">vector_componentss</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="mi">3</span><span class="p">)[</span><span class="kc">None</span><span class="p">,:],</span><span class="n">outers</span><span class="p">[:,</span><span class="mi">1</span><span class="p">:,</span><span class="mi">1</span><span class="p">:])</span>
+
+    <span class="n">q3s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">q2s</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="mi">4</span><span class="p">))</span>
+    <span class="n">signs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+    <span class="n">signs</span><span class="p">[</span><span class="mi">1</span><span class="p">:,</span><span class="mi">1</span><span class="p">:]</span><span class="o">*=-</span><span class="mi">1</span>
+    <span class="n">q3s</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">signs</span><span class="p">[</span><span class="kc">None</span><span class="p">,:]</span><span class="o">*</span><span class="n">outers</span><span class="p">,</span><span class="n">axis1</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">axis2</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+    <span class="n">outers</span><span class="p">[:,</span><span class="mi">1</span><span class="p">:,</span><span class="mi">1</span><span class="p">:]</span> <span class="o">=</span> <span class="n">vector_componentss</span>
+
+    <span class="n">q3s</span><span class="p">[:,</span><span class="mi">1</span><span class="p">:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">outers</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)[:,</span><span class="mi">1</span><span class="p">:]</span><span class="o">+</span><span class="n">outers</span><span class="p">[:,</span><span class="mi">1</span><span class="p">:,</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">q3s</span>
+
+<span class="k">def</span> <span class="nf">multi_qv_mult</span><span class="p">(</span><span class="n">q1</span><span class="p">,</span><span class="n">v2s</span><span class="p">):</span>
+    <span class="n">q1s</span> <span class="o">=</span> <span class="n">q1</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">4</span><span class="p">)</span>
+    <span class="n">outers</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tensordot</span><span class="p">(</span><span class="n">q1s</span><span class="p">[</span><span class="kc">None</span><span class="p">,:],</span><span class="n">v2s</span><span class="p">[</span><span class="kc">None</span><span class="p">,:],</span><span class="n">axes</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">))</span>
+    <span class="n">outers</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">moveaxis</span><span class="p">(</span><span class="n">outers</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="n">vector_componentss</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="mi">3</span><span class="p">)[</span><span class="kc">None</span><span class="p">,:],</span><span class="n">outers</span><span class="p">[:,</span><span class="mi">1</span><span class="p">:,:])</span>
+    <span class="n">v3s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">v2s</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="mi">3</span><span class="p">))</span><span class="o">+</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+
+    <span class="n">outers</span><span class="p">[:,</span><span class="mi">1</span><span class="p">:,:]</span> <span class="o">=</span> <span class="n">vector_componentss</span>
+
+    <span class="n">v3s</span><span class="p">[:,:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">outers</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)[:,:]</span><span class="c1">#+outers[:,1:,0]</span>
+    <span class="k">return</span> <span class="n">v3s</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[320]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">cs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">8</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">4</span><span class="p">)</span>
+<span class="n">cs</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[321]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">multi_qv_mult</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">cs</span><span class="p">[:,</span><span class="mi">1</span><span class="p">:])</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[321]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+array([[ 3.,  2.,  7.],
+       [ 3., 26.,  7.]])
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[323]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">multi_q_mult</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">cs</span><span class="p">)[:,</span><span class="mi">1</span><span class="p">:]</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[323]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+array([[ 3.,  2.,  7.],
+       [ 3., 26.,  7.]])
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[226]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">multi_q_mult</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">b</span><span class="p">,</span><span class="n">a</span><span class="p">,</span><span class="n">a</span><span class="o">+</span><span class="n">b</span><span class="p">]))</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+(3, 3, 3)
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[226]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+array([[-357.,   67.,  137.,  137.],
+       [ -79.,   12.,   20.,   28.],
+       [-436.,   79.,  157.,  165.]])
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[213]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">my_q_mult</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">),</span><span class="n">my_q_mult</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">a</span><span class="p">),</span><span class="n">my_q_mult</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">a</span><span class="o">+</span><span class="n">b</span><span class="p">)])</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[213]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+array([[-357.,   67.,  137.,  137.],
+       [ -79.,   12.,   20.,   28.],
+       [-436.,   79.,  157.,  165.]])
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[123]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">np</span><span class="o">.</span><span class="n">outer</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[123]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+array([[ 26,  34,  46,  62],
+       [ 39,  51,  69,  93],
+       [ 65,  85, 115, 155],
+       [ 91, 119, 161, 217]])
+</pre></div></div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">7</span><span class="p">])</span>
+<span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">13</span><span class="p">,</span><span class="mi">17</span><span class="p">,</span><span class="mi">23</span><span class="p">,</span><span class="mi">31</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">q_mult</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">),</span><span class="n">q_mult</span><span class="p">(</span><span class="n">b</span><span class="p">,</span><span class="n">a</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+(array([-357,   67,  137,  137]), array([-357,   79,   85,  169]))
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">my_q_mult</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">),</span><span class="n">my_q_mult</span><span class="p">(</span><span class="n">b</span><span class="p">,</span><span class="n">a</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+(array([-357.,   67.,  137.,  137.]), array([-357.,   79.,   85.,  169.]))
+</pre></div></div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="p">[</span>
+    <span class="p">[</span><span class="mi">0</span>    <span class="p">,</span> <span class="n">x1z2</span> <span class="p">,</span> <span class="o">-</span><span class="n">x1y2</span><span class="p">],</span>
+    <span class="p">[</span><span class="o">-</span><span class="n">y1z2</span><span class="p">,</span> <span class="mi">0</span>    <span class="p">,</span> <span class="n">y1x2</span> <span class="p">],</span>
+    <span class="p">[</span><span class="n">z1y2</span> <span class="p">,</span> <span class="o">-</span><span class="n">z1x2</span><span class="p">,</span> <span class="mi">0</span>    <span class="p">]</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[279]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">string</span> <span class="o">=</span> <span class="s1">&#39;xyz&#39;</span>
+<span class="n">vecs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">cross_signs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">))</span><span class="o">+</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+<span class="n">cross_signs</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">cross_signs</span><span class="p">[</span><span class="mi">0</span><span class="p">,:]</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">4</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">4</span><span class="p">):</span>
+        <span class="n">cross_signs</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">vecs</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span><span class="n">vecs</span><span class="p">[</span><span class="n">j</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
+        <span class="k">if</span> <span class="n">i</span> <span class="o">==</span><span class="n">j</span><span class="p">:</span> <span class="n">cross_signs</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+<span class="n">cross_signs</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[279]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+array([[ 1.,  1.,  1.,  1.],
+       [ 1., -1.,  1., -1.],
+       [ 1., -1., -1.,  1.],
+       [ 1.,  1., -1., -1.]])
+</pre></div></div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="p">[</span>
+    <span class="p">[</span><span class="s1">&#39;w1w2&#39;</span><span class="p">,</span><span class="s1">&#39;w1x2&#39;</span><span class="p">,</span><span class="s1">&#39;w1y2&#39;</span><span class="p">,</span><span class="s1">&#39;w1z2&#39;</span><span class="p">],</span>
+    <span class="p">[</span><span class="s1">&#39;x1w2&#39;</span><span class="p">,</span><span class="s1">&#39;x1x2&#39;</span><span class="p">,</span><span class="s1">&#39;x1y2&#39;</span><span class="p">,</span><span class="s1">&#39;x1z2&#39;</span><span class="p">],</span>
+    <span class="p">[</span><span class="s1">&#39;y1w2&#39;</span><span class="p">,</span><span class="s1">&#39;y1x2&#39;</span><span class="p">,</span><span class="s1">&#39;y1y2&#39;</span><span class="p">,</span><span class="s1">&#39;y1z2&#39;</span><span class="p">],</span>
+    <span class="p">[</span><span class="s1">&#39;z1w2&#39;</span><span class="p">,</span><span class="s1">&#39;z1x2&#39;</span><span class="p">,</span><span class="s1">&#39;z1y2&#39;</span><span class="p">,</span><span class="s1">&#39;z1z2&#39;</span><span class="p">]</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[289]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">outer</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">)[</span><span class="mi">1</span><span class="p">:,</span><span class="mi">1</span><span class="p">:])</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+[[ 51  69  93]
+ [ 85 115 155]
+ [119 161 217]]
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[259]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">coords</span> <span class="o">=</span> <span class="n">galaxy</span><span class="o">.</span><span class="n">sub_snap</span><span class="p">[</span><span class="s1">&#39;Coordinates&#39;</span><span class="p">]</span>
+<span class="n">rmask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">coords</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">&lt;</span><span class="mi">15</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span><span class="n">coords</span><span class="p">[:,</span><span class="mi">2</span><span class="p">]</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">rmask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">rmask</span><span class="p">,</span><span class="n">coords</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">new_coords</span><span class="p">,</span><span class="n">_</span> <span class="o">=</span> <span class="n">camera</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">coords</span><span class="p">[</span><span class="n">rmask</span><span class="p">],</span><span class="kc">None</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">hist2d</span><span class="p">(</span><span class="n">new_coords</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span><span class="n">new_coords</span><span class="p">[:,</span><span class="mi">1</span><span class="p">],</span><span class="n">bins</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span><span class="n">norm</span><span class="o">=</span><span class="n">LogNorm</span><span class="p">())</span>
+<span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="s1">&#39;.&#39;</span><span class="p">,</span><span class="n">c</span><span class="o">=</span><span class="s1">&#39;red&#39;</span><span class="p">)</span>
+
+<span class="n">px</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">camera</span><span class="o">.</span><span class="n">camera_pos</span><span class="p">)</span><span class="o">-</span><span class="n">camera</span><span class="o">.</span><span class="n">camera_focus</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="o">-</span><span class="n">px</span><span class="p">,</span><span class="n">px</span><span class="p">],[</span><span class="n">px</span><span class="p">,</span><span class="n">px</span><span class="p">],</span><span class="n">ls</span><span class="o">=</span><span class="s1">&#39;-&#39;</span><span class="p">,</span><span class="n">c</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="o">-</span><span class="n">px</span><span class="p">,</span><span class="n">px</span><span class="p">],[</span><span class="o">-</span><span class="n">px</span><span class="p">,</span><span class="o">-</span><span class="n">px</span><span class="p">],</span><span class="n">ls</span><span class="o">=</span><span class="s1">&#39;-&#39;</span><span class="p">,</span><span class="n">c</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="n">px</span><span class="p">,</span><span class="n">px</span><span class="p">],[</span><span class="o">-</span><span class="n">px</span><span class="p">,</span><span class="n">px</span><span class="p">],</span><span class="n">ls</span><span class="o">=</span><span class="s1">&#39;-&#39;</span><span class="p">,</span><span class="n">c</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="o">-</span><span class="n">px</span><span class="p">,</span><span class="o">-</span><span class="n">px</span><span class="p">],[</span><span class="o">-</span><span class="n">px</span><span class="p">,</span><span class="n">px</span><span class="p">],</span><span class="n">ls</span><span class="o">=</span><span class="s1">&#39;-&#39;</span><span class="p">,</span><span class="n">c</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">)</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="o">-</span><span class="mi">40</span><span class="p">,</span><span class="mi">40</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="o">-</span><span class="mi">40</span><span class="p">,</span><span class="mi">40</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_aspect</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+[ 0.70710678 -0.70710678  0.          0.        ]
+
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/tutorials_Untitled_35_1.png" src="../_images/tutorials_Untitled_35_1.png" />
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="StarStudio_example.html" class="btn btn-neutral float-left" title="StarStudio_example.ipynb" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../reference/api/api.html" class="btn btn-neutral float-right" title="API Reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Alex Gurvich.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

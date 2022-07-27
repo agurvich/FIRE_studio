@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GasStudio_example.ipynb &mdash; firestudio 2.0.0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="HeaderImage.ipynb" href="HeaderImage.html" />
+    <link rel="prev" title="GasStudio_collisionless_example.ipynb" href="GasStudio_collisionless_example.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> firestudio
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../gas_projection.html">Gas projections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../mock_hubble.html">Mock hubble images</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Tutorial Notebooks</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="GasStudio_collisionless_example.html">GasStudio_collisionless_example.ipynb</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">GasStudio_example.ipynb</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#Make-a-simple-2D-histogram-to-give-us-an-idea-of-what-to-expect">Make a simple 2D histogram to give us an idea of what to expect</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Creating-the-GasStudio-class-instance">Creating the GasStudio class instance</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Plotting-weights-instead-of-quantities">Plotting weights instead of quantities</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Computing-a-derived-quantity-and-passing-it-into-the-projection-routine">Computing a derived quantity and passing it into the projection routine</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Plotting-two-color-images">Plotting two color images</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="HeaderImage.html">HeaderImage.ipynb</a></li>
+<li class="toctree-l2"><a class="reference internal" href="StarStudio_example.html">StarStudio_example.ipynb</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Untitled.html">Untitled.ipynb</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#this-isn-t-here">this isn’t here</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/api/api.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">firestudio</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="index.html">Tutorial Notebooks</a> &raquo;</li>
+      <li>GasStudio_example.ipynb</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/tutorials/GasStudio_example.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  
+<style>
+/* CSS for nbsphinx extension */
+
+/* remove conflicting styling from Sphinx themes */
+div.nbinput.container div.prompt *,
+div.nboutput.container div.prompt *,
+div.nbinput.container div.input_area pre,
+div.nboutput.container div.output_area pre,
+div.nbinput.container div.input_area .highlight,
+div.nboutput.container div.output_area .highlight {
+    border: none;
+    padding: 0;
+    margin: 0;
+    box-shadow: none;
+}
+
+div.nbinput.container > div[class*=highlight],
+div.nboutput.container > div[class*=highlight] {
+    margin: 0;
+}
+
+div.nbinput.container div.prompt *,
+div.nboutput.container div.prompt * {
+    background: none;
+}
+
+div.nboutput.container div.output_area .highlight,
+div.nboutput.container div.output_area pre {
+    background: unset;
+}
+
+div.nboutput.container div.output_area div.highlight {
+    color: unset;  /* override Pygments text color */
+}
+
+/* avoid gaps between output lines */
+div.nboutput.container div[class*=highlight] pre {
+    line-height: normal;
+}
+
+/* input/output containers */
+div.nbinput.container,
+div.nboutput.container {
+    display: -webkit-flex;
+    display: flex;
+    align-items: flex-start;
+    margin: 0;
+    width: 100%;
+}
+@media (max-width: 540px) {
+    div.nbinput.container,
+    div.nboutput.container {
+        flex-direction: column;
+    }
+}
+
+/* input container */
+div.nbinput.container {
+    padding-top: 5px;
+}
+
+/* last container */
+div.nblast.container {
+    padding-bottom: 5px;
+}
+
+/* input prompt */
+div.nbinput.container div.prompt pre {
+    color: #307FC1;
+}
+
+/* output prompt */
+div.nboutput.container div.prompt pre {
+    color: #BF5B3D;
+}
+
+/* all prompts */
+div.nbinput.container div.prompt,
+div.nboutput.container div.prompt {
+    width: 4.5ex;
+    padding-top: 5px;
+    position: relative;
+    user-select: none;
+}
+
+div.nbinput.container div.prompt > div,
+div.nboutput.container div.prompt > div {
+    position: absolute;
+    right: 0;
+    margin-right: 0.3ex;
+}
+
+@media (max-width: 540px) {
+    div.nbinput.container div.prompt,
+    div.nboutput.container div.prompt {
+        width: unset;
+        text-align: left;
+        padding: 0.4em;
+    }
+    div.nboutput.container div.prompt.empty {
+        padding: 0;
+    }
+
+    div.nbinput.container div.prompt > div,
+    div.nboutput.container div.prompt > div {
+        position: unset;
+    }
+}
+
+/* disable scrollbars on prompts */
+div.nbinput.container div.prompt pre,
+div.nboutput.container div.prompt pre {
+    overflow: hidden;
+}
+
+/* input/output area */
+div.nbinput.container div.input_area,
+div.nboutput.container div.output_area {
+    -webkit-flex: 1;
+    flex: 1;
+    overflow: auto;
+}
+@media (max-width: 540px) {
+    div.nbinput.container div.input_area,
+    div.nboutput.container div.output_area {
+        width: 100%;
+    }
+}
+
+/* input area */
+div.nbinput.container div.input_area {
+    border: 1px solid #e0e0e0;
+    border-radius: 2px;
+    /*background: #f5f5f5;*/
+}
+
+/* override MathJax center alignment in output cells */
+div.nboutput.container div[class*=MathJax] {
+    text-align: left !important;
+}
+
+/* override sphinx.ext.imgmath center alignment in output cells */
+div.nboutput.container div.math p {
+    text-align: left;
+}
+
+/* standard error */
+div.nboutput.container div.output_area.stderr {
+    background: #fdd;
+}
+
+/* ANSI colors */
+.ansi-black-fg { color: #3E424D; }
+.ansi-black-bg { background-color: #3E424D; }
+.ansi-black-intense-fg { color: #282C36; }
+.ansi-black-intense-bg { background-color: #282C36; }
+.ansi-red-fg { color: #E75C58; }
+.ansi-red-bg { background-color: #E75C58; }
+.ansi-red-intense-fg { color: #B22B31; }
+.ansi-red-intense-bg { background-color: #B22B31; }
+.ansi-green-fg { color: #00A250; }
+.ansi-green-bg { background-color: #00A250; }
+.ansi-green-intense-fg { color: #007427; }
+.ansi-green-intense-bg { background-color: #007427; }
+.ansi-yellow-fg { color: #DDB62B; }
+.ansi-yellow-bg { background-color: #DDB62B; }
+.ansi-yellow-intense-fg { color: #B27D12; }
+.ansi-yellow-intense-bg { background-color: #B27D12; }
+.ansi-blue-fg { color: #208FFB; }
+.ansi-blue-bg { background-color: #208FFB; }
+.ansi-blue-intense-fg { color: #0065CA; }
+.ansi-blue-intense-bg { background-color: #0065CA; }
+.ansi-magenta-fg { color: #D160C4; }
+.ansi-magenta-bg { background-color: #D160C4; }
+.ansi-magenta-intense-fg { color: #A03196; }
+.ansi-magenta-intense-bg { background-color: #A03196; }
+.ansi-cyan-fg { color: #60C6C8; }
+.ansi-cyan-bg { background-color: #60C6C8; }
+.ansi-cyan-intense-fg { color: #258F8F; }
+.ansi-cyan-intense-bg { background-color: #258F8F; }
+.ansi-white-fg { color: #C5C1B4; }
+.ansi-white-bg { background-color: #C5C1B4; }
+.ansi-white-intense-fg { color: #A1A6B2; }
+.ansi-white-intense-bg { background-color: #A1A6B2; }
+
+.ansi-default-inverse-fg { color: #FFFFFF; }
+.ansi-default-inverse-bg { background-color: #000000; }
+
+.ansi-bold { font-weight: bold; }
+.ansi-underline { text-decoration: underline; }
+
+
+div.nbinput.container div.input_area div[class*=highlight] > pre,
+div.nboutput.container div.output_area div[class*=highlight] > pre,
+div.nboutput.container div.output_area div[class*=highlight].math,
+div.nboutput.container div.output_area.rendered_html,
+div.nboutput.container div.output_area > div.output_javascript,
+div.nboutput.container div.output_area:not(.rendered_html) > img{
+    padding: 5px;
+    margin: 0;
+}
+
+/* fix copybtn overflow problem in chromium (needed for 'sphinx_copybutton') */
+div.nbinput.container div.input_area > div[class^='highlight'],
+div.nboutput.container div.output_area > div[class^='highlight']{
+    overflow-y: hidden;
+}
+
+/* hide copybtn icon on prompts (needed for 'sphinx_copybutton') */
+.prompt .copybtn {
+    display: none;
+}
+
+/* Some additional styling taken form the Jupyter notebook CSS */
+div.rendered_html table {
+  border: none;
+  border-collapse: collapse;
+  border-spacing: 0;
+  color: black;
+  font-size: 12px;
+  table-layout: fixed;
+}
+div.rendered_html thead {
+  border-bottom: 1px solid black;
+  vertical-align: bottom;
+}
+div.rendered_html tr,
+div.rendered_html th,
+div.rendered_html td {
+  text-align: right;
+  vertical-align: middle;
+  padding: 0.5em 0.5em;
+  line-height: normal;
+  white-space: normal;
+  max-width: none;
+  border: none;
+}
+div.rendered_html th {
+  font-weight: bold;
+}
+div.rendered_html tbody tr:nth-child(odd) {
+  background: #f5f5f5;
+}
+div.rendered_html tbody tr:hover {
+  background: rgba(66, 165, 245, 0.2);
+}
+
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<section id="GasStudio_example.ipynb">
+<h1>GasStudio_example.ipynb<a class="headerlink" href="#GasStudio_example.ipynb" title="Permalink to this headline"></a></h1>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="k">load_ext</span> autoreload
+<span class="o">%</span><span class="k">autoreload</span> 2
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">matplotlib</span>
+
+<span class="o">%</span><span class="k">matplotlib</span> inline
+
+
+<span class="kn">from</span> <span class="nn">abg_python.galaxy.gal_utils</span> <span class="kn">import</span> <span class="n">Galaxy</span>
+<span class="kn">from</span> <span class="nn">abg_python.all_utils</span> <span class="kn">import</span> <span class="n">filterDictionary</span>
+
+<span class="kn">from</span> <span class="nn">firestudio.studios.gas_studio</span> <span class="kn">import</span> <span class="n">GasStudio</span>
+<br/></pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">matplotlib</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s1">&#39;figure.dpi&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">150</span>
+</pre></div>
+</div>
+</div>
+<p>Create an abg_python<span class="math notranslate nohighlight">\(^\mathrm{TM}\)</span> Galaxy instance</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">snapdir</span> <span class="o">=</span> <span class="s2">&quot;/scratch/projects/xsede/GalaxiesOnFIRE/metal_diffusion/m12i_res7100/output&quot;</span>
+<span class="n">snapnum</span> <span class="o">=</span> <span class="mi">600</span>
+<span class="n">galaxy</span> <span class="o">=</span> <span class="n">Galaxy</span><span class="p">(</span>
+    <span class="s1">&#39;m12i_res7100&#39;</span><span class="p">,</span>
+    <span class="n">snapdir</span><span class="p">,</span>
+    <span class="mi">600</span><span class="p">,</span>
+    <span class="n">datadir</span><span class="o">=</span><span class="s1">&#39;/scratch/04210/tg835099/data/metal_diffusion&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Couldn&#39;t find a metadata file... for
+ Metadata object at /scratch/04210/tg835099/data/metal_diffusion/m12i_res7100/metadata/meta_Galaxy_600.hdf5
+</pre></div></div>
+</div>
+<p>Locate the main halo, center our coordinates, and rotate to be face-on.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">galaxy</span><span class="o">.</span><span class="n">extractMainHalo</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Using the saved sub-snapshots
+Successfully loaded a pre-extracted subsnap
+Reorienting...
+Done.
+extract_halo_inner(m12i_res7100_md at 600,){&#39;orient_stars&#39;: True} 17.16 s elapsed
+Snapshot memory free
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+(14.389217379832706,
+ True,
+ 2.5881896910344975,
+ -2.7838931910077562,
+ 35229529313569.195,
+ 44642473899919.32,
+ 268.00569800569804,
+ 2.877843475966541)
+</pre></div></div>
+</div>
+<section id="Make-a-simple-2D-histogram-to-give-us-an-idea-of-what-to-expect">
+<h2>Make a simple 2D histogram to give us an idea of what to expect<a class="headerlink" href="#Make-a-simple-2D-histogram-to-give-us-an-idea-of-what-to-expect" title="Permalink to this headline"></a></h2>
+<p>We’ll restrict our plot to a 20 kpc cube.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">disk_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">galaxy</span><span class="o">.</span><span class="n">sub_snap</span><span class="p">[</span><span class="s1">&#39;Masses&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+<span class="n">xs</span><span class="p">,</span><span class="n">ys</span><span class="p">,</span><span class="n">zs</span> <span class="o">=</span> <span class="n">galaxy</span><span class="o">.</span><span class="n">sub_snap</span><span class="p">[</span><span class="s1">&#39;Coordinates&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">T</span>
+
+<span class="n">disk_mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">xs</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">20</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">ys</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">20</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">zs</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">20</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>Let’s do a mass-weighted temperature histogram</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">matplotlib.colors</span> <span class="kn">import</span> <span class="n">LogNorm</span>
+<span class="n">h_mt</span><span class="p">,</span><span class="n">xedges</span><span class="p">,</span><span class="n">yedges</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram2d</span><span class="p">(</span>
+    <span class="n">xs</span><span class="p">[</span><span class="n">disk_mask</span><span class="p">],</span>
+    <span class="n">ys</span><span class="p">[</span><span class="n">disk_mask</span><span class="p">],</span>
+    <span class="n">bins</span><span class="o">=</span><span class="mi">1200</span><span class="p">,</span>
+    <span class="n">weights</span><span class="o">=</span><span class="n">galaxy</span><span class="o">.</span><span class="n">sub_snap</span><span class="p">[</span><span class="s1">&#39;Masses&#39;</span><span class="p">][</span><span class="n">disk_mask</span><span class="p">]</span><span class="o">*</span><span class="n">galaxy</span><span class="o">.</span><span class="n">sub_snap</span><span class="p">[</span><span class="s1">&#39;Temperature&#39;</span><span class="p">][</span><span class="n">disk_mask</span><span class="p">])</span>
+
+<span class="n">h_m</span><span class="p">,</span><span class="n">xedges</span><span class="p">,</span><span class="n">yedges</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram2d</span><span class="p">(</span>
+    <span class="n">xs</span><span class="p">[</span><span class="n">disk_mask</span><span class="p">],</span>
+    <span class="n">ys</span><span class="p">[</span><span class="n">disk_mask</span><span class="p">],</span>
+    <span class="n">bins</span><span class="o">=</span><span class="mi">1200</span><span class="p">,</span>
+    <span class="n">weights</span><span class="o">=</span><span class="n">galaxy</span><span class="o">.</span><span class="n">sub_snap</span><span class="p">[</span><span class="s1">&#39;Masses&#39;</span><span class="p">][</span><span class="n">disk_mask</span><span class="p">])</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">((</span><span class="n">h_mt</span><span class="o">/</span><span class="n">h_m</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">,</span><span class="n">norm</span><span class="o">=</span><span class="n">LogNorm</span><span class="p">(</span><span class="n">vmin</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span><span class="n">vmax</span><span class="o">=</span><span class="mf">1e7</span><span class="p">),</span><span class="n">origin</span><span class="o">=</span><span class="s1">&#39;lower&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span><span class="o">.</span><span class="n">set_aspect</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;T (K)&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+/home1/04210/tg835099/work/miniconda3/envs/python3/lib/python3.6/site-packages/ipykernel_launcher.py:14: RuntimeWarning: divide by zero encountered in true_divide
+
+/home1/04210/tg835099/work/miniconda3/envs/python3/lib/python3.6/site-packages/ipykernel_launcher.py:14: RuntimeWarning: invalid value encountered in true_divide
+
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&lt;matplotlib.colorbar.Colorbar at 0x2ba32815d748&gt;
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+/home1/04210/tg835099/work/miniconda3/envs/python3/lib/python3.6/site-packages/matplotlib/colors.py:1110: RuntimeWarning: invalid value encountered in less_equal
+  mask |= resdat &lt;= 0
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/tutorials_GasStudio_example_11_3.png" src="../_images/tutorials_GasStudio_example_11_3.png" />
+</div>
+</div>
+</section>
+<section id="Creating-the-GasStudio-class-instance">
+<h2>Creating the GasStudio class instance<a class="headerlink" href="#Creating-the-GasStudio-class-instance" title="Permalink to this headline"></a></h2>
+<p>Create the GasStudio instance. Any keyword argument that’s used by <code class="docutils literal notranslate"><span class="pre">set_ImageParams</span></code> can be passed into the initialization call. Those keyword arguments, and their descriptions, can be found <a class="reference external" href="https://github.com/agurvich/FIRE_studio/wiki/gas_studio#studioset_imageparams">here</a>.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">## let&#39;s put the FIREstudio projections into a sub-directory of our Galaxy class instance</span>
+<span class="n">studio_datadir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">galaxy</span><span class="o">.</span><span class="n">datadir</span><span class="p">),</span><span class="s1">&#39;firestudio&#39;</span><span class="p">)</span>
+
+<span class="c1">## initialize the GasStudio instance</span>
+<span class="n">my_gasStudio</span> <span class="o">=</span> <span class="n">GasStudio</span><span class="p">(</span>
+    <span class="n">studio_datadir</span><span class="p">,</span>
+    <span class="n">galaxy</span><span class="o">.</span><span class="n">snapnum</span><span class="p">,</span>
+    <span class="n">studio_datadir</span><span class="p">,</span>
+    <span class="n">gas_snapdict</span><span class="o">=</span><span class="n">galaxy</span><span class="o">.</span><span class="n">sub_snap</span><span class="p">,</span> <span class="c1">## pass in snapshot dictionary</span>
+    <span class="n">star_snapdict</span><span class="o">=</span><span class="n">galaxy</span><span class="o">.</span><span class="n">sub_star_snap</span><span class="p">,</span> <span class="c1">## pass in snapshot dictionary</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+setting use_colorbar to default value of: False
+setting cbar_label to default value of:
+setting cbar_logspace to default value of: True
+setting snapnum to user value of: 600
+setting sim_name to user value of: /scratch/04210/tg835099/data/metal_diffusion/firestudio
+setting frame_half_width to default value of: 15
+setting frame_half_thickness to default value of: 15
+setting frame_center to default value of: [0. 0. 0.]
+setting theta to default value of: 0
+setting phi to default value of: 0
+setting psi to default value of: 0
+setting aspect_ratio to default value of: 1
+setting pixels to default value of: 1200
+setting figure_label to default value of:
+setting scale_bar to default value of: True
+setting scale_line_length to default value of: 5
+setting noaxis to default value of: True
+setting savefig to default value of: None
+setting fontsize to default value of: 12
+setting snapdir to default value of: None
+</pre></div></div>
+</div>
+<p>Make a mass-weighted Temperature map by declaring the weights to be the snapshot dictionary key ‘Masses’ and the quantity to be the snapshot dictionary key ‘Temperature.’ These keys are mandatory, but one can avoid having to add things to the snapshot dictionary by passing in the optional keyword arguments <code class="docutils literal notranslate"><span class="pre">weights</span></code> and <code class="docutils literal notranslate"><span class="pre">quantities</span></code>.</p>
+<p>By setting <code class="docutils literal notranslate"><span class="pre">min_quantity</span></code> and <code class="docutils literal notranslate"><span class="pre">max_quantity</span></code> by keyword argument we specify that we want to plot the quantity of interest, in this case the Temperature. We will return to this point later on.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">quantity_adjustment_function</span></code> is applied <em>after</em> projection and is useful for changing the units, or to take the log in the this case. The <code class="docutils literal notranslate"><span class="pre">min/max_quantity</span></code> applies to the post-adjusted map.</p>
+<p>After the first call the <code class="docutils literal notranslate"><span class="pre">massMap</span></code> and <code class="docutils literal notranslate"><span class="pre">massWeightedTemperatureMap</span></code> will be cached so future calls (for adjusting image properties, e.g. colorbar limits) will be much faster than the first.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">## main call to render</span>
+<span class="n">ax</span><span class="p">,</span> <span class="n">pixel_map</span> <span class="o">=</span>  <span class="n">my_gasStudio</span><span class="o">.</span><span class="n">render</span><span class="p">(</span>
+    <span class="n">weight_name</span><span class="o">=</span><span class="s1">&#39;Masses&#39;</span><span class="p">,</span>
+    <span class="n">quantity_name</span><span class="o">=</span><span class="s1">&#39;Temperature&#39;</span><span class="p">,</span>
+    <span class="n">min_quantity</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+    <span class="n">max_quantity</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span>
+    <span class="n">quantity_adjustment_function</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+cache npix1200_width30.00kpc_depth15.00kpc_x0.00_y0.00_z0.00_theta0.00_phi0.00_psi0.00_aspect1.00 inner_weight_along_los(GasStudio instance, None, &#39;Masses&#39;, None, &#39;Temperature&#39;){} success!
+min_Temperature =  2
+max_Temperature =  7
+Image range (Temperature):  2.9147637 6.6890955
+Image range (8bit):  46.652946 239.14388
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/tutorials_GasStudio_example_16_1.png" src="../_images/tutorials_GasStudio_example_16_1.png" />
+</div>
+</div>
+<p>Let’s add a colorbar and a colorbar label. These properties are specified as keyword arguments to <code class="docutils literal notranslate"><span class="pre">set_ImageParams</span></code>.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">my_gasStudio</span><span class="o">.</span><span class="n">set_ImageParams</span><span class="p">(</span>
+    <span class="n">use_colorbar</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">cbar_label</span><span class="o">=</span><span class="s1">&#39;T (K)&#39;</span><span class="p">)</span>
+
+<span class="n">ax</span><span class="p">,</span> <span class="n">pixel_map</span> <span class="o">=</span> <span class="n">my_gasStudio</span><span class="o">.</span><span class="n">render</span><span class="p">(</span>
+    <span class="n">weight_name</span><span class="o">=</span><span class="s1">&#39;Masses&#39;</span><span class="p">,</span>
+    <span class="n">quantity_name</span><span class="o">=</span><span class="s1">&#39;Temperature&#39;</span><span class="p">,</span>
+    <span class="n">min_quantity</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+    <span class="n">max_quantity</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span>
+    <span class="n">quantity_adjustment_function</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+setting use_colorbar to user value of: True
+setting cbar_label to user value of: T (K)
+cache npix1200_width30.00kpc_depth15.00kpc_x0.00_y0.00_z0.00_theta0.00_phi0.00_psi0.00_aspect1.00 inner_weight_along_los(GasStudio instance, None, &#39;Masses&#39;, None, &#39;Temperature&#39;){} success!
+min_Temperature =  2
+max_Temperature =  7
+Image range (Temperature):  2.9147637 6.6890955
+Image range (8bit):  46.652946 239.14388
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/tutorials_GasStudio_example_18_1.png" src="../_images/tutorials_GasStudio_example_18_1.png" />
+</div>
+</div>
+<p>That’s looking good! But notice the printed output above:</p>
+<blockquote>
+<div><p>Image range (Temperature): 2.9147222 6.6890903</p>
+</div></blockquote>
+<blockquote>
+<div><p>Image range (8bit): 46.650833 239.1436</p>
+</div></blockquote>
+<p>This is telling us that we’re not efficiently using the full 256 value color range. Let’s change that by passing in <code class="docutils literal notranslate"><span class="pre">min_quantity=3</span></code> and <code class="docutils literal notranslate"><span class="pre">max_quantity=6.5</span></code></p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ax</span><span class="p">,</span> <span class="n">pixel_map</span> <span class="o">=</span> <span class="n">my_gasStudio</span><span class="o">.</span><span class="n">render</span><span class="p">(</span>
+    <span class="n">weight_name</span><span class="o">=</span><span class="s1">&#39;Masses&#39;</span><span class="p">,</span>
+    <span class="n">quantity_name</span><span class="o">=</span><span class="s1">&#39;Temperature&#39;</span><span class="p">,</span>
+    <span class="n">min_quantity</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+    <span class="n">max_quantity</span><span class="o">=</span><span class="mf">6.5</span><span class="p">,</span>
+    <span class="n">quantity_adjustment_function</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+cache npix1200_width30.00kpc_depth15.00kpc_x0.00_y0.00_z0.00_theta0.00_phi0.00_psi0.00_aspect1.00 inner_weight_along_los(GasStudio instance, None, &#39;Masses&#39;, None, &#39;Temperature&#39;){} success!
+min_Temperature =  3
+max_Temperature =  6.5
+Image range (Temperature):  2.9147637 6.6890955
+Image range (8bit):  0.0 255.0
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/tutorials_GasStudio_example_20_1.png" src="../_images/tutorials_GasStudio_example_20_1.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">my_gasStudio</span><span class="o">.</span><span class="n">set_ImageParams</span><span class="p">(</span>
+    <span class="n">theta</span><span class="o">=</span><span class="mi">90</span><span class="p">,</span>
+    <span class="n">aspect_ratio</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">scale_line_length</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+
+<span class="n">ax</span><span class="p">,</span> <span class="n">pixel_map</span> <span class="o">=</span> <span class="n">my_gasStudio</span><span class="o">.</span><span class="n">render</span><span class="p">(</span>
+    <span class="n">weight_name</span><span class="o">=</span><span class="s1">&#39;Masses&#39;</span><span class="p">,</span>
+    <span class="n">quantity_name</span><span class="o">=</span><span class="s1">&#39;Temperature&#39;</span><span class="p">,</span>
+    <span class="n">min_quantity</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+    <span class="n">max_quantity</span><span class="o">=</span><span class="mf">6.5</span><span class="p">,</span>
+    <span class="n">quantity_adjustment_function</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+setting theta to user value of: 90
+setting aspect_ratio to user value of: 1
+setting scale_line_length to user value of: 10
+cache npix1200_width30.00kpc_depth15.00kpc_x0.00_y0.00_z0.00_theta90.00_phi0.00_psi0.00_aspect1.00 inner_weight_along_los(GasStudio instance, None, &#39;Masses&#39;, None, &#39;Temperature&#39;){} success!
+min_Temperature =  3
+max_Temperature =  6.5
+Image range (Temperature):  2.7982035 6.428994
+Image range (8bit):  0.0 249.82672
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/tutorials_GasStudio_example_21_1.png" src="../_images/tutorials_GasStudio_example_21_1.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">my_gasStudio</span><span class="o">.</span><span class="n">set_ImageParams</span><span class="p">(</span>
+    <span class="n">aspect_ratio</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+
+<span class="n">ax</span><span class="p">,</span> <span class="n">pixel_map</span> <span class="o">=</span> <span class="n">my_gasStudio</span><span class="o">.</span><span class="n">render</span><span class="p">(</span>
+    <span class="n">weight_name</span><span class="o">=</span><span class="s1">&#39;Masses&#39;</span><span class="p">,</span>
+    <span class="n">quantity_name</span><span class="o">=</span><span class="s1">&#39;Temperature&#39;</span><span class="p">,</span>
+    <span class="n">min_quantity</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+    <span class="n">max_quantity</span><span class="o">=</span><span class="mf">6.5</span><span class="p">,</span>
+    <span class="n">quantity_adjustment_function</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+setting aspect_ratio to user value of: 0.5
+cache npix1200_width30.00kpc_depth15.00kpc_x0.00_y0.00_z0.00_theta90.00_phi0.00_psi0.00_aspect0.50 inner_weight_along_los(GasStudio instance, None, &#39;Masses&#39;, None, &#39;Temperature&#39;){} success!
+min_Temperature =  3
+max_Temperature =  6.5
+Image range (Temperature):  2.7982032 6.4289937
+Image range (8bit):  0.0 249.82669
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/tutorials_GasStudio_example_22_1.png" src="../_images/tutorials_GasStudio_example_22_1.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">my_gasStudio</span><span class="o">.</span><span class="n">set_ImageParams</span><span class="p">(</span>
+    <span class="n">aspect_ratio</span><span class="o">=</span><span class="mf">0.25</span><span class="p">)</span>
+
+<span class="n">ax</span><span class="p">,</span> <span class="n">pixel_map</span> <span class="o">=</span> <span class="n">my_gasStudio</span><span class="o">.</span><span class="n">render</span><span class="p">(</span>
+    <span class="n">weight_name</span><span class="o">=</span><span class="s1">&#39;Masses&#39;</span><span class="p">,</span>
+    <span class="n">quantity_name</span><span class="o">=</span><span class="s1">&#39;Temperature&#39;</span><span class="p">,</span>
+    <span class="n">min_quantity</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+    <span class="n">max_quantity</span><span class="o">=</span><span class="mf">6.5</span><span class="p">,</span>
+    <span class="n">quantity_adjustment_function</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+setting aspect_ratio to user value of: 0.25
+cache npix1200_width30.00kpc_depth15.00kpc_x0.00_y0.00_z0.00_theta90.00_phi0.00_psi0.00_aspect0.25 inner_weight_along_los(GasStudio instance, None, &#39;Masses&#39;, None, &#39;Temperature&#39;){} success!
+min_Temperature =  3
+max_Temperature =  6.5
+Image range (Temperature):  2.7982035 6.379408
+Image range (8bit):  0.0 246.214
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/tutorials_GasStudio_example_23_1.png" src="../_images/tutorials_GasStudio_example_23_1.png" />
+</div>
+</div>
+</section>
+<section id="Plotting-weights-instead-of-quantities">
+<h2>Plotting weights instead of quantities<a class="headerlink" href="#Plotting-weights-instead-of-quantities" title="Permalink to this headline"></a></h2>
+<p>Let’s flip the script and instead plot the mass map, rather than the Temperature map. This is easily done by instead passing in <code class="docutils literal notranslate"><span class="pre">min_weight</span></code> and <code class="docutils literal notranslate"><span class="pre">max_weight</span></code> rather than <code class="docutils literal notranslate"><span class="pre">min_quantity</span></code> and <code class="docutils literal notranslate"><span class="pre">max_quantity</span></code>. We’ll also update the image parameters to change the colorbar label.</p>
+<p>In this case, the <code class="docutils literal notranslate"><span class="pre">weight_adjustment_function</span></code> is used to convert between the output map which is the total deposited mass along the LoS in the pixel to a surface density using the special attribute <code class="docutils literal notranslate"><span class="pre">my_gasStudio.Acell</span></code>, which is the area of each pixel in the length units of the coordinates.</p>
+<p>We’ll also change the colormap for the thrill of it by passing it as a keyword argument to render.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">my_gasStudio</span><span class="o">.</span><span class="n">set_ImageParams</span><span class="p">(</span>
+    <span class="n">use_colorbar</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">cbar_label</span><span class="o">=</span><span class="s1">&#39;$\Sigma_g$ (Msun pc$^{-2}$)&#39;</span><span class="p">,</span>
+    <span class="n">scale_line_length</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+    <span class="n">cbar_logspace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">theta</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">aspect_ratio</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="n">pixels</span> <span class="o">=</span> <span class="n">my_gasStudio</span><span class="o">.</span><span class="n">render</span><span class="p">(</span>
+    <span class="n">weight_name</span><span class="o">=</span><span class="s1">&#39;Masses&#39;</span><span class="p">,</span>
+    <span class="n">quantity_name</span><span class="o">=</span><span class="s1">&#39;Temperature&#39;</span><span class="p">,</span>
+<span class="c1">#    min_quantity=3,</span>
+<span class="c1">#    max_quantity=6.5,</span>
+    <span class="n">quantity_adjustment_function</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">,</span>
+    <span class="n">min_weight</span><span class="o">=-</span><span class="mf">0.5</span><span class="p">,</span>
+    <span class="n">max_weight</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+    <span class="n">weight_adjustment_function</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">x</span><span class="o">/</span><span class="n">my_gasStudio</span><span class="o">.</span><span class="n">Acell</span><span class="p">)</span> <span class="o">+</span> <span class="mi">10</span> <span class="o">-</span> <span class="mi">6</span><span class="p">,</span> <span class="c1">## msun/pc^2</span>
+    <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;afmhot&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+setting use_colorbar to user value of: True
+setting cbar_label to user value of: $\Sigma_g$ (Msun pc$^{-2}$)
+setting cbar_logspace to user value of: True
+setting scale_line_length to user value of: 10
+setting theta to user value of: 0
+setting aspect_ratio to user value of: 1
+cache npix1200_width30.00kpc_depth15.00kpc_x0.00_y0.00_z0.00_theta0.00_phi0.00_psi0.00_aspect1.00 inner_weight_along_los(GasStudio instance, None, &#39;Masses&#39;, None, &#39;Temperature&#39;){} success!
+min_Masses =  -0.5
+max_Masses =  3
+Image range (Masses):  -0.965189 3.096508
+Image range (8bit):  0.0 255.0
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/tutorials_GasStudio_example_26_1.png" src="../_images/tutorials_GasStudio_example_26_1.png" />
+</div>
+</div>
+</section>
+<section id="Computing-a-derived-quantity-and-passing-it-into-the-projection-routine">
+<h2>Computing a derived quantity and passing it into the projection routine<a class="headerlink" href="#Computing-a-derived-quantity-and-passing-it-into-the-projection-routine" title="Permalink to this headline"></a></h2>
+<p>One can also compute an arbitrary quantity for each particle and project it along the line-of-sight. Let’s do the cylindrical radial velocity, for example.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">## compute the cylindrical radial velocity by dotting the velocities with their</span>
+<span class="c1">##  corresponding cylindrical radial unit vectors</span>
+<span class="n">rhats</span> <span class="o">=</span> <span class="n">galaxy</span><span class="o">.</span><span class="n">sub_snap</span><span class="p">[</span><span class="s1">&#39;Coordinates&#39;</span><span class="p">]</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">galaxy</span><span class="o">.</span><span class="n">sub_snap</span><span class="p">[</span><span class="s1">&#39;Coordinates&#39;</span><span class="p">],</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)[:,</span><span class="kc">None</span><span class="p">]</span>
+<span class="n">vrs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">rhats</span><span class="o">*</span><span class="n">galaxy</span><span class="o">.</span><span class="n">sub_snap</span><span class="p">[</span><span class="s1">&#39;Velocities&#39;</span><span class="p">],</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="c1">## let&#39;s see what these quantities look like</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">vrs</span><span class="p">[</span><span class="n">disk_mask</span><span class="p">],</span><span class="n">bins</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mi">100</span><span class="p">,</span><span class="mi">100</span><span class="p">,</span><span class="mi">50</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">()</span><span class="c1">## suppress output for cell</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/tutorials_GasStudio_example_29_1.png" src="../_images/tutorials_GasStudio_example_29_1.png" />
+</div>
+</div>
+<p>Udate the image parameters, first print them to confirm what needs to be changed, then change the ones that don’t match (<code class="docutils literal notranslate"><span class="pre">cbar_label</span></code> and <code class="docutils literal notranslate"><span class="pre">cbar_logspace</span></code>).</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">my_gasStudio</span><span class="o">.</span><span class="n">print_ImageParams</span><span class="p">()</span>
+<span class="n">my_gasStudio</span><span class="o">.</span><span class="n">set_ImageParams</span><span class="p">(</span>
+    <span class="n">cbar_label</span><span class="o">=</span><span class="s1">&#39;$v_r$ (km s$^{-1}$)&#39;</span><span class="p">,</span>
+    <span class="n">cbar_logspace</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+use_colorbar = True
+cbar_label = $\Sigma_g$ (Msun pc$^{-2}$)
+cbar_logspace = True
+frame_half_width = 15
+frame_half_thickness = 15
+frame_center = [0. 0. 0.]
+theta = 0
+phi = 0
+psi = 0
+aspect_ratio = 1
+pixels = 1200
+figure_label =
+scale_bar = True
+noaxis = True
+savefig = None
+fontsize = 12
+snapdir = None
+snapnum = 600
+setting cbar_label to user value of: $v_r$ (km s$^{-1}$)
+setting cbar_logspace to user value of: False
+</pre></div></div>
+</div>
+<p>Make a “1 color” image of radial velocity</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">## compute mass weighted radial velocity.</span>
+<span class="c1">##  pass vrs in as an array using quantities</span>
+<span class="n">pixels</span> <span class="o">=</span> <span class="n">my_gasStudio</span><span class="o">.</span><span class="n">render</span><span class="p">(</span>
+    <span class="n">weight_name</span><span class="o">=</span><span class="s1">&#39;Masses&#39;</span><span class="p">,</span>
+    <span class="n">quantity_name</span><span class="o">=</span><span class="s1">&#39;vr&#39;</span><span class="p">,</span>
+    <span class="n">quantities</span><span class="o">=</span><span class="n">vrs</span><span class="p">,</span>
+    <span class="n">min_quantity</span> <span class="o">=-</span><span class="mi">100</span><span class="p">,</span>
+    <span class="n">max_quantity</span><span class="o">=</span> <span class="mi">100</span><span class="p">,</span>
+    <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;Spectral&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+cache npix1200_width30.00kpc_depth15.00kpc_x0.00_y0.00_z0.00_theta0.00_phi0.00_psi0.00_aspect1.00 inner_weight_along_los(GasStudio instance, None, &#39;Masses&#39;, array([-384.33050333, -386.96856607,  -60.82537439, ..., -141.17710656,
+       -115.19238739, -101.03451018]), &#39;vr&#39;){} success!
+min_vr =  -100
+max_vr =  100
+Image range (vr):  -154.47926 159.90678
+Image range (8bit):  0.0 255.0
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/tutorials_GasStudio_example_33_1.png" src="../_images/tutorials_GasStudio_example_33_1.png" />
+</div>
+</div>
+<p>Make a 2-color image of the radial velocity</p>
+</section>
+<section id="Plotting-two-color-images">
+<h2>Plotting two color images<a class="headerlink" href="#Plotting-two-color-images" title="Permalink to this headline"></a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">pixels</span> <span class="o">=</span> <span class="n">my_gasStudio</span><span class="o">.</span><span class="n">render</span><span class="p">(</span>
+    <span class="n">weight_name</span><span class="o">=</span><span class="s1">&#39;Masses&#39;</span><span class="p">,</span>
+    <span class="n">quantity_name</span><span class="o">=</span><span class="s1">&#39;vr&#39;</span><span class="p">,</span>
+    <span class="n">quantities</span><span class="o">=</span><span class="n">vrs</span><span class="p">,</span>
+    <span class="n">min_quantity</span> <span class="o">=-</span><span class="mi">150</span><span class="p">,</span>
+    <span class="n">max_quantity</span><span class="o">=</span> <span class="mi">150</span><span class="p">,</span>
+    <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;Spectral&#39;</span><span class="p">,</span>
+    <span class="n">min_weight</span><span class="o">=-</span><span class="mf">0.5</span><span class="p">,</span>
+    <span class="n">max_weight</span><span class="o">=</span><span class="mf">1.8</span><span class="p">,</span>
+    <span class="n">weight_adjustment_function</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">x</span><span class="o">/</span><span class="n">my_gasStudio</span><span class="o">.</span><span class="n">Acell</span><span class="p">)</span> <span class="o">+</span> <span class="mi">10</span> <span class="o">-</span> <span class="mi">6</span><span class="p">)</span> <span class="c1">## msun/pc^2</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">gcf</span><span class="p">()</span><span class="o">.</span><span class="n">set_facecolor</span><span class="p">(</span><span class="s1">&#39;white&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+cache npix1200_width30.00kpc_depth15.00kpc_x0.00_y0.00_z0.00_theta0.00_phi0.00_psi0.00_aspect1.00 inner_weight_along_los(GasStudio instance, None, &#39;Masses&#39;, array([-384.33050333, -386.96856607,  -60.82537439, ..., -141.17710656,
+       -115.19238739, -101.03451018]), &#39;vr&#39;){} success!
+min_Masses =  -0.5
+max_Masses =  1.8
+Image range (Masses):  -0.965189 3.096508
+Image range (8bit):  0.0 255.0
+min_vr =  -150
+max_vr =  150
+Image range (vr):  -154.47926 159.90678
+Image range (8bit):  0.0 255.0
+TODO:Need to create a 2-axis colorbar.
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/tutorials_GasStudio_example_36_1.png" src="../_images/tutorials_GasStudio_example_36_1.png" />
+</div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="GasStudio_collisionless_example.html" class="btn btn-neutral float-left" title="GasStudio_collisionless_example.ipynb" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="HeaderImage.html" class="btn btn-neutral float-right" title="HeaderImage.ipynb" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Alex Gurvich.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
