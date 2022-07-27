@@ -3,6 +3,7 @@
 
 # You can set these variables from the command line, and also
 # from the environment for the first two.
+PRECOMMAND = #sphinx-apidoc -o source/reference/api --no-toc -eM -t source/_templates ../src/firestudio
 SPHINXOPTS    ?=
 SPHINXBUILD   ?= sphinx-build
 SOURCEDIR     = source
@@ -16,5 +17,9 @@ help:
 
 # Catch-all target: route all unknown targets to Sphinx using the new
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
+clean:
+	@rm -f source/reference/api/firestudio*rst
+	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 %: Makefile
+	@$(PRECOMMAND)
 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
