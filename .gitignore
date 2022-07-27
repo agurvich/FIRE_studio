@@ -1,20 +1,27 @@
-# ignore these file types!
+## build artifacts for pypi
 build/*
-*.sw*
+src/*egg*/*
+dist/*
+
+## ignore compiled files
 *.pyc
 *.o
 *.so
-src/*egg*/*
-dist/*
 src/firestudio/utils/stellar_utils/BPASSv2.2.1_bin-imf135_300/*
-src/firestudio/scripts/log*
-src/firestudio/ntbks/.ipynb_checkpoints/*
+
+## ignore various types of cache files
+*.sw*
+site/.jekyll-cache/*
 *.code-workspace
-*.sh
-Untitled*ipynb
+src/firestudio/ntbks/.ipynb_checkpoints/*
+src/firestudio/scripts/log*
 *.DS_Store
-docs/source/reference/api/firestudio*rst
 .vscode/settings.json
 
+## ignore automatically generated files (that are not necessary) from sphinx
+docs/source/reference/api/firestudio*rst
 *doctree*
-site/.jekyll-cache/*
+
+## random stuff that's left that I use but don't want to track
+*.sh
+Untitled*ipynb
