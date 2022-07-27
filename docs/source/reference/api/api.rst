@@ -5,31 +5,5 @@ API Reference
 
 .. _studios api:
 
-Base classes
-------------
-.. autosummary::
-    :toctree: studios
-    :recursive:
-
-    firestudio.studios.studio.Studio
-
-
-utility functions
------------------
-
-.. autosummary::
-    :toctree: utilities
-    :recursive:
-
-    firestudio.utils.stellar_utils
-
-.. _interpolation api:
-
-interpolation
--------------
-
-.. autosummary::
-    :toctree: interpolation
-    :recursive:
-
-    firestudio.studios.star_studio.StarStudio
+    .. by indenting it will suppress the title that exists in firestudio.rst
+    .. include:: firestudio.rst
