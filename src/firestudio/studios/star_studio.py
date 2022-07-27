@@ -6,8 +6,8 @@ import numpy as np
 import copy
 
 ## abg_python imports
-from abg_python.plot_utils import addColorbar,nameAxes
-from abg_python import append_string_docstring,findIntersection
+from abg_python.plot_utils import nameAxes
+from abg_python import findIntersection
 from abg_python.galaxy.metadata_utils import metadata_cache
 
 ## firestudio imports
@@ -21,7 +21,7 @@ from ..utils.stellar_utils import (
 
 
 class StarStudio(Studio):
-    """ :class:`~firestudio.studios.studio.studio` class for making mock hubble images with attenuation along the line of sight. """
+    """ :class:`~firestudio.studios.studio.Studio` class for making mock hubble images with attenuation along the line of sight. """
 
     required_snapdict_keys = [
         'Masses',
@@ -35,7 +35,6 @@ class StarStudio(Studio):
     def __repr__(self):
         return 'StarStudio instance'
 
-####### makeOutputDirectories implementation #######
     def set_ImageParams(
         self,
         use_defaults:bool=False,
@@ -52,9 +51,6 @@ class StarStudio(Studio):
         :param loud: 
             flag to print which parameters are being set/updated, defaults to ``True``
         :type loud: bool, optional
-        :raises an: _description_
-        :return: _description_
-        :rtype: _type_
          
         :kwargs:
             * **maxden** (`float`, `optional`) -- \
@@ -75,13 +71,12 @@ class StarStudio(Studio):
                 flag for switching between Hubble vs. SDSS false color remapping, defaults to ``True``
 
         :Example usage:
-        ---------------
-        .. code-block:: python
+            .. code-block:: python
 
-            starStudio.set_ImageParams(
-                maxden=0.1,
-                dynrange=10,
-                figure_label='Hubble')
+                starStudio.set_ImageParams(
+                    maxden=0.1,
+                    dynrange=10,
+                    figure_label='Hubble')
         """
 
         default_kwargs = {
@@ -125,8 +120,6 @@ class StarStudio(Studio):
         super().set_ImageParams(use_defaults=use_defaults,**kwargs)
         if self.no_dust: self.this_setup_id+='_no_dust'
         if self.age_max_gyr is not None: self.this_setup_id+='_age_max%0.3f'%self.age_max_gyr
-
-    #append_function_docstring(set_ImageParams,Studio.set_ImageParams,prepend_string='passes `kwargs` to:\n')
 
     def print_ImageParams(self):
         """ Prints current image setup to console."""
@@ -652,17 +645,15 @@ class StarStudio(Studio):
 
 
         :Example usage:
-        ---------------
+            .. code-block:: python
 
-        .. code-block:: python
-
-            starStudio.plotParameterGrid(
-                dynrange_init=1e3,
-                maxden_init=1,
-                dynrange_step=.1,
-                maxden_step=.1,
-                nsteps=2,
-                use_colorscheme_nasa=False)
+                starStudio.plotParameterGrid(
+                    dynrange_init=1e3,
+                    maxden_init=1,
+                    dynrange_step=.1,
+                    maxden_step=.1,
+                    nsteps=2,
+                    use_colorscheme_nasa=False)
         """
         
         ## initialize the steps for each thumbnail in the grid

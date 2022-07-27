@@ -654,14 +654,12 @@ class Studio(Drawer):
         :raises ValueError: if ``camera=None`` is passed explicitly, instead pass an open :class:`firestudio.utils.camera_utils.Camera` instance
 
         :Example usage:
-        ---------------
+            .. code-block:: python
 
-        .. code-block:: python
-
-            studio.set_ImageParams(
-                this_setup_id='my_custom_setup',
-                scale_bar=False,
-                figure_label='high redshift')
+                studio.set_ImageParams(
+                    this_setup_id='my_custom_setup',
+                    scale_bar=False,
+                    figure_label='high redshift')
         """
         
 
