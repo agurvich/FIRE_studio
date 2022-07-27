@@ -13,15 +13,39 @@ class Composition(object):
 
     def __init__(
         self,
-        studios_tuple,
+        studios_tuple:tuple,
         *args,
-        size_inches=None,
-        nrows=None,
-        ncols=None,
-        subplots_kwargs=None,
-        savefig=None,
-        studio_kwargss=None,
+        savefig:str=None,
+        size_inches:tuple=None,
+        ncols:int=2,
+        nrows:int=None,
+        subplots_kwargs:dict=None,
+        studio_kwargss:dict=None,
         **kwargs):
+        """ Make a single matplotlib figure with subplots contianing different studios with the same view.
+
+        :param studios_tuple: tuple of :class:`firestudio.studios.studio.Studio` sub-classes
+        :type studios_tuple: tuple
+        :param savefig: name of file that final image should be written to. If ``None`` no file is written, defaults to ``None``
+        :type savefig: str, optional
+        :param size_inches: tuple of ``(width,height)`` size of figure in inches, defaults to ``None``
+        :type size_inches: tuple, optional
+        :param ncols: number of columns to plot side-by-side, defaults to ``2``
+        :type ncols: int, optional
+        :param nrows: 
+            number of rows, if ``None`` calculates as many rows as necessary given\
+            ``len(studios_tuple)`` and ``ncols`` defaults to ``None``
+        :type nrows: int, optional
+        :param subplots_kwargs: keyword arguments to be passed to ``fig.subplots_adjust``, defaults to ``None``
+        :type subplots_kwargs: dict, optional
+        :param studio_kwargss: 
+            list of keyword argument dictionaries to be passed to each studio\
+            in ``studios_tuple`` (in order) at initialization, defaults to ``None``
+        :type studio_kwargss: dict, optional
+        :raises ValueError: if ``len(studio_kwargss) != len(studios_tuple)``
+        :raises ValueError: if ``nrows*ncols < len(studios_tuple)``
+        :raises TypeError: if ``studios_tuple`` is not a tuple of length ``>=2``
+        """
 
         nstudios = len(studios_tuple)
         if studio_kwargss is None: studio_kwargss = [{} for i in range(nstudios)]
@@ -73,13 +97,24 @@ class Composition(object):
         self.datadir = self.studios[0].datadir
     
     def set_ImageParams(self,**kwargs):
+        """ Calls each studio's ``set_ImageParams`` method to keep them synchronized. """
         for which_studio in self.studios:
             which_studio.set_ImageParams(**kwargs)
     
     def render(self,axs=None,**kwargs):
+        """ Renders each studio to each axis.
 
-        if axs is None: fig,axs = plt.subplots(
-            nrows=self.nrows,ncols=self.ncols)
+        :param axs: 
+            list of matplotlib axes to render to, if ``None``\
+            creates a new matplotlib figure, defaults to ``None``
+        :type axs: list, optional
+        :return: 
+            |  ``axs`` - list of matplotlib subplot axes
+            |  ``ims`` - list of image arrays
+        :rtype: list, list
+        """
+
+        if axs is None: fig,axs = plt.subplots( nrows=self.nrows,ncols=self.ncols)
 
         fig.subplots_adjust(**self.subplots_kwargs)
         fig.set_size_inches(self.size_inches)
@@ -88,7 +123,6 @@ class Composition(object):
             for ax,which_studio in zip(axs.flatten(),self.studios)]
 
         ## save the image
-        if self.savefig is not None:
-            self.saveFigure(fig,self.savefig)
+        if self.savefig is not None: self.saveFigure(fig,self.savefig)
 
         return axs,ims

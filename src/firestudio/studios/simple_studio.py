@@ -11,31 +11,43 @@ from tempfile import NamedTemporaryFile
 class SimpleStudio(Studio):
 
     required_snapdict_keys = ['Coordinates']
+    """ these are minimum required keys for :func:`~firestudio.studios.simple_studio.SimpleStudio.render` function to run."""
 
-    def produceImage(self,fancy=False,alpha='column_density',scale_alpha=0.065,scale_radius=10.,**kwargs):
-        '''
-        Args:
-            fancy (bool):
-                If True do a hackup that mimics a better program.
+    def produceImage(self,quick=True,alpha='column_density',scale_alpha=0.065,scale_radius=10.,**kwargs):
+        """ Make a scatter plot rather than do any kind of projection.
 
-            alpha (str or float):
-                Opacity of each scatter point.
-                Either 'column_density' for alpha to scale with column density,
-                or a number to apply to all alphas.
-            
-            scale_alpha (float):
-                What to scale alpha by. The default value is tuned for displaying ~50,000 particles.
+        :param quick: If True do a hackup that mimics a better program, defaults to ``True``
+        :type quick: bool, optional
+        :param alpha: 
+            Opacity of each scatter point.\
+            Either 'column_density' for alpha to scale with column density,\
+            or a number to apply to all alphas, defaults to ``'column_density'``
+        :type alpha: str or float, optional
+        :param scale_alpha: 
+            What to scale ``alpha`` by. The default value is tuned for displaying ~50,000 particles, defaults to ``0.065``
+        :type scale_alpha: float, optional
+        :param scale_radius: 
+                What to scale the radius by. The default value is tuned for displaying on ~100 kpc scales, defaults to ``10``
+        :type scale_radius: float, optional
 
-            scale_radius (float):
-                What to scale the radius by. The default value is tuned for displaying on ~100 kpc scales.
-        '''
-        (xs,ys,zs) = self.__prepareCoordinates(**kwargs)
+        :kwargs:
+            * **snapdict_name** (`str`, `optional`) --\
+                one of ``gas`` or ``star`` to identify which of ``self.gas_snapdict`` or ``self.star_snapdict`` to read data from.
+            * **age_max_gyr** (`float`, `optional`) --\
+                maximum age in Gyr to show stellar emission from. If ``None`` then emission from all star\
+                particles is considered, defaults to ``None``
+
+        :return: rgb image array
+        :rtype: np.array
+        """
+        
+        (xs,ys,zs) = self.prepareCoordinates(**kwargs)
 
         fig,ax = plt.subplots(nrows=1,ncols=1)
         fig.subplots_adjust(wspace=0,hspace=0,left=0,right=1,bottom=0,top=1)
         fig.set_size_inches(self.npix_x/300,self.npix_y/300)
 
-        if not fancy:
+        if quick:
 
             ax.scatter(
                 xs,
@@ -108,11 +120,24 @@ class SimpleStudio(Studio):
         plt.close(fig)
         return final_image
 
-    def __prepareCoordinates(
+    def prepareCoordinates(
         self,
         snapdict_name='star',
         age_max_gyr=14,
-        **kwargs):
+        **extra_kwargs):
+        """ filters coordinates and extracts any necessary field arrays.
+
+        :param snapdict_name: 
+            one of ``gas`` or ``star`` to identify which of ``self.gas_snapdict`` or ``self.star_snapdict`` to read data from.
+        :type snapdict_name: str
+        :param age_max_gyr: maximum age of star particles to filter in Gyr, defaults to ``14``
+        :type age_max_gyr: int, optional
+        :return:
+            |  ``xs`` - x coordinates
+            |  ``ys`` - y coordinates
+            |  ``zs`` - z coordinates
+        :rtype: np.ndarray, np.ndarray, np.ndarray
+        """
 
         full_snapdict_name = '%s_snapdict'%snapdict_name
         ## use the masked version of the snapdict if it was passed

@@ -17,7 +17,7 @@ from ..utils.camera_utils import Camera
 try:
     from numba import njit
     @njit()
-    def sample_gradient_at_angle(gradient_mask,image_1,angle):
+    def _sample_gradient_at_angle(gradient_mask,image_1,angle):
         new_gradient_mask = np.zeros(image_1.shape[:-1])
         ## coordinates are w.r.t. center of image so rotation is correct
         for pix_i in range(-image_1.shape[0]//2,image_1.shape[0]//2):
@@ -28,7 +28,8 @@ try:
         return new_gradient_mask
 except ImportError:
     ## don't have numba so gradient blending will be slow. oh well
-    def sample_gradient_at_angle(gradient_mask,image_1,angle):
+    def _sample_gradient_at_angle(gradient_mask,image_1,angle):
+        """ :meta private: """
         new_gradient_mask = np.zeros(image_1.shape[:-1])
         ## coordinates are w.r.t. center of image so rotation is correct
         for pix_i in range(-image_1.shape[0]//2,image_1.shape[0]//2):
@@ -339,7 +340,7 @@ class Drawer(object):
         
         ## sample gradient but rotate coordinates. this takes a while because it's a nested for loop over pixels
         ##  so we can use numba if we have it
-        new_gradient_mask = sample_gradient_at_angle(gradient_mask,image_1,angle)
+        new_gradient_mask = _sample_gradient_at_angle(gradient_mask,image_1,angle)
         
         final_image = np.ones(image_1.shape)
         ## apply the alpha blend from the gradient
