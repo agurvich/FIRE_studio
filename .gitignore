@@ -13,5 +13,7 @@ src/firestudio/ntbks/.ipynb_checkpoints/*
 *.sh
 Untitled*ipynb
 *.DS_Store
-docs/source/reference/api/*
+docs/source/reference/api/firestudio*rst
 .vscode/settings.json
+
+*doctree*
