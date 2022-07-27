@@ -6,38 +6,28 @@ import copy
 
 
 ## abg_python imports
-from abg_python import append_function_docstring,append_string_docstring
 from abg_python.plot_utils import plt,addColorbar,get_cmap
 from abg_python.galaxy.metadata_utils import metadata_cache
 
 ## firestudio imports
 from .studio import Studio
 
-def vfloat(x):
+def _vfloat(x):
     return x.ctypes.data_as(ctypes.POINTER(ctypes.c_float))
 
 class GasStudio(Studio):
-    """ `FIREstudio` class for making gas projection images.
-        Can be used for stars, but you will either have to pass smoothing lengths
-        in or allow FIREstudio to calculate them itself, which  can take a long time. 
-
-Important methods include: 
-
-* [`GasStudio.weightAvgAlongLOS`](#gasstudioweightavgalonglos) 
-* [`GasStudio.render`](#gasstudiorender) 
-* [`Studio.__init__`](#studio__init__) 
-* [`Studio.set_ImageParams`](#studioset_imageparams)"""
-
+    """ :class:`~firestudio.studios.studio.Studio` class for making gas projection images.\
+        Can be used for stars (or other collisionless particles), but you will either have to pass smoothing lengths\
+        or allow FIRE Studio to calculate them itself, which can take a long time.  """
 
     required_snapdict_keys = ['Coordinates','Masses','SmoothingLength','Temperature','Velocities']
+    """ these are minimum required keys for :func:`~firestudio.studios.gas_studio.GasStudio.render` function to run."""
 
     def __repr__(self):
         """ implementation of built-in __repr__ method for printing.
 
-        Returns
-        -------
-        str
-            string to print back to the console
+        :return: ``__repr__`` string
+        :rtype: str
         """
         return 'GasStudio instance'
 
@@ -46,37 +36,36 @@ Important methods include:
         use_defaults:bool=False,
         loud:bool=True,
         **kwargs):
-        """ Changes the parameters of the image such as camera orientation, frame size, etc. 
-            If `use_defaults=True` then default values of the parameters will be set and will 
-            overwrite the current state. Leave `use_defaults=False` to adjust only the keywords passed. 
+        """ Changes the parameters of the image. Also calls :class:`~firestudio.studios.studio.Studio`'s\
+            :func:`~firestudio.studios.studio.Studio.set_ImageParams`, passing along any unmatched kwargs.
 
-        Parameters
-        ----------
-        use_defaults : bool, optional
-            overwrite current state with default values of each parameter, useful for initialization
-            or resetting after making changes, by default False
-        loud : bool, optional
-            flag to print which parameters are being set/updated, by default True
+        :param use_defaults: 
+            If ``True`` then default values of the parameters will be set\
+            (potentially overwriting any previously specified parameters).\
+            If ``False`` adjust only the keywords passed, defaults to ``False``
+        :type use_defaults: bool, optional
+        :param loud: 
+            flag to print which parameters are being set/updated, defaults to ``True``
+        :type loud: bool, optional
 
-        Keywords
-        --------
-            use_colorbar: bool, optional
-                flag to add a colorbar to the image. not currently implemented for 
-                two-color images, by default False
-            cbar_label: str, optional
-                label for the colorbar, by default ''
-            cbar_logspace: bool, optional
-                flag for whether ticks on the colorbar should be log-spaced, by default False
+        :kwargs:
+            * **use_colorbar** (`bool`, `optional`) --\
+                flag to add a colorbar to the image. not currently implemented for \
+                two-color images, defaults to ``False``
+            * **cbar_label** (`str`, `optional`) -- \
+                label for the colorbar, defaults to ''
+            * **cbar_logspace** (`bool`, `optional`) --\
+                flag for whether ticks on the colorbar should be log-spaced, defaults to ``False``
 
+        :Example usage:
+            .. code-block:: python
 
-        Example usage
-        -------------
-        ```python 
-        gasStudio.set_ImageParams(
-            use_colorbar=True,
-            cbar_label='Temperature',
-            cbar_logspace=True,
-            figure_label='t = 13.8 Gyr')```"""
+                gasStudio.set_ImageParams(
+                    use_colorbar=True,
+                    cbar_label='Temperature',
+                    cbar_logspace=True,
+                    figure_label='t = 13.8 Gyr')
+        """
 
         default_kwargs = {
             'use_colorbar':False,
@@ -127,9 +116,6 @@ Important methods include:
     set_ImageParams.default_kwargs.update(
         Studio.set_ImageParams.default_kwargs)
 
-    append_function_docstring(set_ImageParams,Studio.set_ImageParams,prepend_string='passes `kwargs` to:\n')
-
-
     def print_ImageParams(self):
         """ Prints the current image parameters."""
 
@@ -158,51 +144,56 @@ Important methods include:
         loud:bool=True,
         **kwargs, 
         ):
-        """Projects a weighted quantity along the LOS into pixels. Projection is 
+        """ Projects a weighted quantity along the LOS into pixels. Projection is \
             done with a cubic spline kernel that is renormalized to conserve mass. 
 
-        I.e. 
-
-        `renorm_i = sum_j ( k(r_ij,h_i))`
-
-        where j is a sum over the pixels particle i contributes to.
-
+        I.e.  ``renorm_i = sum_j ( k(r_ij,h_i))`` where j is a sum over the pixels particle i contributes to. \
         The maps computed in the flattened pixel array at index j are then:
 
-        `W[j] = sum_i( k(r_ij,h_i)/renorm_i * weight)`
-        `Q[j] = sum_i( k(r_ij,h_i)/renorm_i * weight * quantity) / W[j]`
+        .. code-block:: python
 
-        Parameters
-        ----------
-        weights : np.ndarray, optional
-            array of weights to use alongside the smoothing kernel
-            (typically `self.snapdict['Masses']`).
-        weight_name : str
-            Name of the key in the snapdict that should be used as the weights
-            if weights are not passed.
-            special weight_names are `Volumes` and `Ones`, which do not 
-            have to be present in the snapdict.
-        quantities : np.ndarray, optional
+            W[j] = sum_i( k(r_ij,h_i)/renorm_i * weight)
+            Q[j] = sum_i( k(r_ij,h_i)/renorm_i * weight * quantity) / W[j]
+
+        :param weights: 
+            array of weights to use alongside the smoothing kernel\
+            (typically ``self.snapdict['Masses']``).
+        :type weights: np.ndarray
+        :param weight_name: 
+            Name of the key in the snapdict that should be used as the weights\
+            if weights are not passed.\
+            special weight_names are ``Volumes`` and ``Ones``, which do not \
+            have to be present in the snapdict.\
+        :type weight_name: str
+        :param quantities: 
             array of quantities to project along the line of sight.
-        quantity_name : str
-            Name of the field that is being projected, should be in the snapdict if 
+        :type quantities: np.ndarray
+        :param quantity_name: 
+            Name of the field that is being projected, should be in the snapdict if \
             quantities is not passed.
-        use_metadata : bool, optional
-            flag for whether a cached result should be used (if it exists), by default True
-        save_meta : bool, optional
-            flag to save the result in the cache, by default True
-        assert_cached : bool, optional
-            flag to require a cache hit and raise an exception otherwise, by default False
-        loud : bool, optional
-            flag for whether cache hits/misses should be announced
-            to the console., by default True
+        :type quantity_name: str
+        :param use_metadata: 
+            flag for whether a cached result should be used (if it exists), defaults to ``True``
+        :type use_metadata: bool, optional
+        :param save_meta: 
+            flag to save the result in the cache, defaults to ``True``
+        :type save_meta: bool, optional
+        :param assert_cached: 
+            flag to require a cache hit and raise an exception otherwise, defaults to ``False``
+        :type assert_cached: bool, optional
+        :param loud: 
+            flag for whether cache hits/misses should be announced\
+            to the console, defaults to ``True``
+        :type loud: bool, optional
 
-        Returns
-        -------
-        weightMap: np.ndarray
-            image of sum(weights) along the line of sight in each pixel
-        weightWeightedQuantityMap: np.ndarray
-            image of sum(weights*quantity) along the line of sight in each pixel
+        :kwargs:
+            * **snapdict_name** (`str`, `optional`) --\
+                one of ``gas`` or ``star`` to identify which of ``self.gas_snapdict`` or ``self.star_snapdict`` to read data from.
+
+        :return: 
+            | ``weightMap`` - image of ``sum(weights)`` along the line of sight in each pixel
+            | ``weightWeightedQuantityMap`` - image of ``sum(weights*quantity)`` along the line of sight in each pixel
+        :rtype: np.ndarray, np.ndarray
         """
         
 
@@ -226,8 +217,8 @@ Important methods include:
             snapdict_name:str='gas'):
 
             ## make the actual C call
-            weightMap, weightWeightedQuantityMap = getImageGrid(
-                *self.__prepareCoordinates( ## extract coordinates, weights, quantities from snapdict
+            weightMap, weightWeightedQuantityMap = _getImageGrid(
+                *self.prepareCoordinates( ## extract coordinates, weights, quantities from snapdict
                     snapdict_name,
                     weights,
                     weight_name,
@@ -235,8 +226,7 @@ Important methods include:
                     quantity_name),
                     loud=self.master_loud)
 
-            if self.master_loud:
-                print('-done')
+            if self.master_loud: print('-done')
 
             return weightMap, weightWeightedQuantityMap
 
@@ -248,61 +238,52 @@ Important methods include:
             quantity_name,
             **kwargs)
 
-    def __prepareCoordinates(
+    def prepareCoordinates(
         self,
         snapdict_name:str,
         weights:np.ndarray,
         weight_name:str,
         quantities:np.ndarray,
         quantity_name:str):
-        """ 
+        """_summary_
 
-        Parameters
-        ----------
-        snapdict_name : str
-            [description]
-        weights : np.ndarray
-            array of weights to use alongside the smoothing kernel
-            (typically `self.snapdict['Masses']`).
-        weight_name : str
-            Name of the key in the snapdict that should be used as the weights
-            if weights are not passed.
-            special weight_names are `Volumes` and `Ones`, which do not 
-            have to be present in the snapdict.
-        quantities : np.ndarray
+        :param snapdict_name: 
+            one of ``gas`` or ``star`` to identify which of ``self.gas_snapdict`` or ``self.star_snapdict`` to read data from.
+        :type snapdict_name: str
+        :param weights: 
+            array of weights to use alongside the smoothing kernel\
+            (typically ``self.snapdict['Masses']``).
+        :type weights: np.ndarray
+        :param weight_name: 
+            Name of the key in the snapdict that should be used as the weights\
+            if weights are not passed.\
+            special weight_names are ``Volumes`` and ``Ones``, which do not \
+            have to be present in the snapdict.\
+        :type weight_name: str
+        :param quantities: 
             array of quantities to project along the line of sight.
-        quantity_name : str
-            Name of the field that is being projected, should be in the snapdict if 
+        :type quantities: np.ndarray
+        :param quantity_name: 
+            Name of the field that is being projected, should be in the snapdict if \
             quantities is not passed.
+        :type quantity_name: str
 
-        Returns
-        -------
-        self.Xmin : float
-            minimum x value of coordinates, already applied just returned for convenience
-        self.Xmax : float
-            maximum x value of coordinates, already applied just returned for convenience
-        self.Ymin : float
-            minimum y value of coordinates, already applied just returned for convenience
-        self.Ymax : float
-            maximum y value of coordinates, already applied just returned for convenience
-        self.npix_x : float
-            number of pixels along the x axis
-        self.npix_y : float
-            number of pixels along the y axis
-        pos : np.ndarray
-            coordinate data for particles in kpc 
-        weights : np.ndarray
-            filtered array of weights to use alongside the smoothing kernel
-            (typically `self.snapdict['Masses']`).
-        quantities : np.ndarray
-            filtered array of quantities to project along the line of sight.
-        hsml : np.ndarray
-            filtered array of smoothing lengths/radii for each particle
+        :raises KeyError: if ``snapdict_name`` is not ``'gas'`` or ``'star'``
+        :raises KeyError: if ``weight_name`` is not in ``snapdict.keys()``
+        :raises KeyError: if ``quantity_name`` is not in ``snapdict.keys()``
 
-        Raises
-        ------
-        KeyError
-            if `snapdict_name` is not `'gas'` or `'star'`
+        :return: 
+            |  ``self.Xmin`` - minimum x value of coordinates, already applied just returned for convenience
+            |  ``self.Xmax`` - maximum x value of coordinates, already applied just returned for convenience
+            |  ``self.Ymin`` - minimum y value of coordinates, already applied just returned for convenience
+            |  ``self.Ymax`` - maximum y value of coordinates, already applied just returned for convenience
+            |  ``self.npix_x`` - number of pixels along the x axis
+            |  ``self.npix_y`` - number of pixels along the y axis
+            |  ``pos`` - coordinate data for particles in kpc 
+            |  ``weights`` - filtered array of weights to use alongside the smoothing kernel (typically ``self.snapdict['Masses']``).
+            |  ``quantities`` - filtered array of quantities to project along the line of sight.
+            |  ``hsml`` - filtered array of smoothing lengths/radii for each particle
+        :rtype: float, float, float, float, float, float, np.ndarray, np.ndarray, np.ndarray, np.ndarry
         """
         
 
@@ -342,7 +323,7 @@ Important methods include:
                 elif weight_name == 'Ones':
                     weights = np.ones(Coordinates.shape[0])
                 else:
-                    raise KeyError(weight_name,'is not in gas_snapdict')
+                    raise KeyError(weight_name,f'is not in {full_snapdict_name}')
             else:
                 weights = snapdict[weight_name]
 
@@ -361,9 +342,9 @@ Important methods include:
                     elif lower in snapdict:
                         quantities = np.log10(snapdict[lower])
                     else:
-                        raise KeyError(quantity_name,'is not in gas_snapdict')
+                        raise KeyError(quantity_name,f'is not in {full_snapdict_name}')
                 else:
-                    raise KeyError(quantity_name,'is not in gas_snapdict')
+                    raise KeyError(quantity_name,f'is not in {full_snapdict_name}')
             else:
                 quantities = snapdict[quantity_name]
 
@@ -373,8 +354,7 @@ Important methods include:
         ## cull the particles outside the frame and cast to float32
         box_mask = self.cullFrameIndices(pos)
 
-        if self.master_loud:
-            print("projecting %d particles"%np.sum(box_mask))
+        if self.master_loud: print("projecting %d particles"%np.sum(box_mask))
 
         pos = pos[box_mask].astype(np.float32)
         weights = weights[box_mask].astype(np.float32)
@@ -388,57 +368,49 @@ Important methods include:
             pos,weights,quantities,
             hsml)
 
-    def __quick_projectAlongLOS(
+    def quick_projectAlongLOS(
         self,
         weights:np.ndarray,
         weight_name:str,
         quantities:np.ndarray,
         quantity_name:str,
         snapdict_name='gas',
-        loud:bool=True,
         **kwargs):
-        """ approximates the projection of a weighted quantity along the LOS into pixels.
-            using a 2d histogram and assuming particles have 0 extent. much faster than the 
+        """ Approximates the projection of a weighted quantity along the LOS into pixels.\
+            using a 2d histogram and assuming particles have 0 extent. much faster than the \
             real thing and useful for quick and dirty testing.
 
-        Parameters
-        ----------
-        weights : np.ndarray, optional
-            array of weights to use alongside the smoothing kernel
-            (typically `self.snapdict['Masses']`).
-        weight_name : str
-            Name of the key in the snapdict that should be used as the weights
-            if weights are not passed.
-            special weight_names are `Volumes` and `Ones`, which do not 
-            have to be present in the snapdict.
-        quantities : np.ndarray, optional
+        :param weights: 
+            array of weights to use alongside the smoothing kernel\
+            (typically ``self.snapdict['Masses']``).
+        :type weights: np.ndarray
+        :param weight_name: 
+            Name of the key in the snapdict that should be used as the weights\
+            if weights are not passed.\
+            special weight_names are ``Volumes`` and ``Ones``, which do not \
+            have to be present in the snapdict.\
+        :type weight_name: str
+        :param quantities: 
             array of quantities to project along the line of sight.
-        quantity_name : str
-            Name of the field that is being projected, should be in the snapdict if 
+        :type quantities: np.ndarray
+        :param quantity_name: 
+            Name of the field that is being projected, should be in the snapdict if \
             quantities is not passed.
-        use_metadata : bool, optional
-            flag for whether a cached result should be used (if it exists), by default True
-        save_meta : bool, optional
-            flag to save the result in the cache, by default True
-        assert_cached : bool, optional
-            flag to require a cache hit and raise an exception otherwise, by default False
-        loud : bool, optional
-            flag for whether cache hits/misses should be announced
-            to the console., by default True
+        :type quantity_name: str
+        :param snapdict_name: one of ``gas`` or ``star`` to identify which of ``self.gas_snapdict`` or ``self.star_snapdict`` to read data from.
+        :type snapdict_name: str, optional
 
-        Returns
-        -------
-        weightMap: np.ndarray
-            image of sum(weights) along the line of sight in each pixel
-        weightWeightedQuantityMap: np.ndarray
-            image of sum(weights*quantity) along the line of sight in each pixel
+        :return: 
+            | ``weightMap`` - image of ``sum(weights)`` along the line of sight in each pixel
+            | ``weightWeightedQuantityMap`` - image of ``sum(weights*quantity)`` along the line of sight in each pixel
+        :rtype: np.ndarray, np.ndarray
         """
 
         (Xmin,Xmax,
         Ymin,Ymax,
         npix_x,npix_y,
         prep_pos,prep_weights,prep_quantities,
-        prep_hsml) = self.__prepareCoordinates(
+        prep_hsml) = self.prepareCoordinates(
             snapdict_name,
             weights,
             weight_name,
@@ -475,93 +447,96 @@ Important methods include:
         quick:bool=False,
         **kwargs
         ):
-        """ Generates a projected image using the stored image parameters.
-        Specify whether the image should be "one-color" (i.e. a simple projection map)
-        or "two-color" (a projection map where the hue is set by the
-        LOS projected weighted quantity and the saturation is set by the LOS projected weight)
-        by passing values for `min_weight`, `max_weight`, `min_quantity`, and `max_quantity`.
+        """ Generates a projected image using the stored image parameters.\
+            Specify whether the image should be "one-color" (i.e. a simple projection map)\
+            or "two-color" (a projection map where the hue is set by the\
+            LOS projected weighted quantity and the saturation is set by the LOS projected weight)\
+            by passing values for ``min_weight``, ``max_weight``, ``min_quantity``, and ``max_quantity``.
 
-        Parameters
-        ----------
-        weight_name : str, optional
-            Name of the key in the snapdict that should be used as the weights
-            if weights are not passed. Special weight_names are `Volumes` and `Ones`,
-            which do not have to be present in the snapdict, by default 'Masses'
-        quantity_name : str, optional
+        :param weight_name: 
+            Name of the key in the snapdict that should be used as the weights\
+            if weights are not passed. Special weight_names are ``Volumes`` and ``Ones``,\
+            which do not have to be present in the snapdict, defaults to ``'Masses'``
+        :type weight_name: str, optional
+        :param quantity_name: 
             Name of the field that is being projected, should be in the snapdict if 
-            quantities is not passed, by default 'Temperature'
-        weights : np.ndarray, optional
-            array of weights to use alongside the smoothing kernel
-            (typically `self.snapdict['Masses']`). 
-            If None searches `self.snapdict` for `weight_name`, by default None
-        quantities : np.ndarray, optional
-            array of quantities to project along the line of sight.
-            If None searches `self.snapdict` for `weight_name`, by default None
-        min_weight : float, optional
+            quantities is not passed, defaults to ``'Temperature'``
+        :type quantity_name: str, optional
+        :param weights: 
+            array of weights to use alongside the smoothing kernel\
+            (typically ``self.snapdict['Masses']``). \
+            If ``None`` searches ``self.snapdict`` for ``weight_name``, defaults to ``None``
+        :type weights: np.ndarray, optional
+        :param quantities: 
+            array of quantities to project along the line of sight.\
+            If ``None`` searches ``self.snapdict`` for ``weight_name``, defaults to ``None``
+        :type quantities: np.ndarray, optional
+        :param min_weight: 
             minimum value to use for the colorbar of weight projection maps
-            and saturation for two-color images, by default None
-        max_weight : float, optional
-            maximum value to use for the colorbar of weight projection maps
-            and saturation for two-color images, by default None
-        min_quantity : float, optional
-            minimum value to use for the colorbar of weighted quantity projection maps
-            and hue for two-color images, by default None
-        max_quantity : float, optional
-            maximum value to use for the colorbar of weighted quantity projection maps
-            and hue for two-color images, by default None
-        weight_adjustment_function : function, optional
-            function to apply to the `weightMap` after it is
-            returned by `~firestudio.studios.gas_studio.GasStudio.projectAlongLOS`
-            for the purposes of specifying `min_weight` and `max_weight`, by default None
-        quantity_adjustment_function : function, optional
-            function to apply to the `weightWeightedQuantityMap` after it is
-            returned by `~firestudio.studios.gas_studio.GasStudio.projectAlongLOS`
-            for the purposes of specifying `min_quantity` and `max_quantity`, by default None
-        cmap : str, optional
-            name of colormap to apply to image, by default 'viridis'
+            and saturation for two-color images, defaults to ``None``
+        :type min_weight: float, optional
+        :param max_weight: 
+            maximum value to use for the colorbar of weight projection maps\
+            and saturation for two-color images, defaults to ``None``
+        :type max_weight: float, optional
+        :param min_quantity: 
+            minimum value to use for the colorbar of weighted quantity projection maps\
+            and hue for two-color images, defaults to ``None``
+        :type min_quantity: float, optional
+        :param max_quantity: 
+            maximum value to use for the colorbar of weighted quantity projection maps\
+            and hue for two-color images, defaults to ``None``
+        :type max_quantity: float, optional
+        :param weight_adjustment_function: 
+            function to apply to the ``weightMap`` after it is\
+            returned by :func:`~firestudio.studios.gas_studio.GasStudio.projectAlongLOS`
+            for the purposes of specifying ``min_weight`` and ``max_weight``, defaults to ``None``
+        :type weight_adjustment_function: _type_, optional
+        :param quantity_adjustment_function: 
+            function to apply to the ``weightWeightedQuantityMap`` after it is\
+            returned by :func:`~firestudio.studios.gas_studio.GasStudio.projectAlongLOS`\
+            for the purposes of specifying ``min_quantity`` and ``max_quantity``, defaults to ``None``
+        :type quantity_adjustment_function: _type_, optional
+        :param cmap: 
+            name of colormap to apply to image, defaults to ``'viridis'``
+        :type cmap: str, optional
+        :raises ValueError: if an invalid combination of min/max weight/quantity parameters are passed.
 
-        Returns
-        -------
-        np.ndarray(npix_x,npix_y,3)
-            array of RGB image pixel values
+        :return: array of RGB image pixel values
+        :rtype: np.ndarray(npix_x,npix_y,3)
 
-        Raises
-        ------
-        ValueError
-            if an invalid combination of min/max weight/quantity parameters are 
-            passed.
+        :Example usage:
+            .. code-block:: python
 
-        Example usage
-        -------------
-        ```python
-        ## makes a gas surface density map
-        gasStudio.render(
-            weight_name='Masses',
-            min_weight=-0.1,
-            max_weight=1.5,
-            weight_adjustment_function= lambda x: np.log10(x/gasStudio.Acell)+10-6 ## log10(msun/pc^2)
-            )
+                ## makes a gas surface density map
+                gasStudio.render(
+                    weight_name='Masses',
+                    min_weight=-0.1,
+                    max_weight=1.5,
+                    weight_adjustment_function=lambda x:
+                        np.log10(x/gasStudio.Acell)+10-6) ## log10(msun/pc^2)
 
-        ## makes a mass weighted temperature map
-        gasStudio.render(
-            weight_name='Masses',
-            quantity_name='Temperature',
-            min_quantity=2,
-            max_quantity=7,
-            quantity_adjustment_function= np.log10
-            )
+                ## makes a mass weighted temperature map
+                gasStudio.render(
+                    weight_name='Masses',
+                    quantity_name='Temperature',
+                    min_quantity=2,
+                    max_quantity=7,
+                    quantity_adjustment_function= np.log10
+                    )
 
-        ## makes a saturation-hue gas surface density + Temperature map
-        gasStudio.render(
-            weight_name='Masses',
-            min_weight=-0.1,
-            max_weight=1.5,
-            weight_adjustment_function= lambda x: np.log10(x/gasStudio.Acell)+10-6 ## log10(msun/pc^2)
-            quantity_name='Temperature',
-            min_quantity=2,
-            max_quantity=7,
-            quantity_adjustment_function= np.log10
-            )```"""
+                ## makes a saturation-hue gas surface density + Temperature map
+                gasStudio.render(
+                    weight_name='Masses',
+                    min_weight=-0.1,
+                    max_weight=1.5,
+                    weight_adjustment_function=lambda x:
+                        np.log10(x/gasStudio.Acell)+10-6 ## log10(msun/pc^2)
+                    quantity_name='Temperature',
+                    min_quantity=2,
+                    max_quantity=7,
+                    quantity_adjustment_function= np.log10)
+        """
 
         self.cmap = cmap
 
@@ -575,7 +550,7 @@ Important methods include:
                 quantity_name,
                 **kwargs)
         else:
-            weightMap, weightWeightedQuantityMap = self.__quick_projectAlongLOS(
+            weightMap, weightWeightedQuantityMap = self.quick_projectAlongLOS(
                 weights,
                 weight_name,
                 quantities,
@@ -651,7 +626,7 @@ Important methods include:
         else: raise ValueError("Use (min/max)_(weight/quantity) kwargs to set image")
 
         ## convert the images from 0->1 space to 0-> 255 space
-        final_image = produce_cmap_hsv_image(image_Q, image_W, cmap=self.cmap) 
+        final_image = _produce_cmap_hsv_image(image_Q, image_W, cmap=self.cmap) 
 
         return final_image
 
@@ -660,19 +635,15 @@ Important methods include:
         self,
         ax:plt.Axes,
         final_image:np.ndarray):
-        """Implementation of overlaying artists on top of projected image.
-        if `self.use_colorbar==True`
-            we add a colorbar to the image
-        See `~firestudio.studios.gas_studio.GasStudio.set_ImageParams` for details.
+        """ Implementation of overlaying artists on top of projected image. \
+        Also calls the base method :func:`~firestudio.studios.studio.Studio.plotImage`. \
+        If ``self.use_colorbar`` we add a colorbar to the image, \
+        see :func:`~firestudio.studios.gas_studio.GasStudio.set_ImageParams` for details.
 
-        Also calls the base method `firestudio.studios.studio.Studio.plotImage`. 
-
-        Parameters
-        ----------
-        ax : plt.Axes
-            axis to plot image to 
-        final_image : np.ndarray
-            array of RGB image pixel values
+        :param ax: matplotlib axis to plot image to 
+        :type ax: plt.Axes
+        :param final_image: array of RGB image pixel values
+        :type final_image: np.ndarray
         """
 
         ## run Studio's plotImage method
@@ -694,7 +665,7 @@ Important methods include:
                 fontsize=self.fontsize,
                 cmap_number=0.25)
 
-def getImageGrid(
+def _getImageGrid(
     Xmin,Xmax,
     Ymin,Ymax,
     npix_x,npix_y,
@@ -739,11 +710,11 @@ def getImageGrid(
 
     c_obj.hsml_project( 
         ctypes.c_int(n_smooth), ## number of particles
-        vfloat(copy.copy(pos[:,0])),vfloat(copy.copy(pos[:,1])), ## x-y positions of particles
-        vfloat(hsml),  ## smoothing lengths of star + gas particles
-        vfloat(weight), ## attenuation masses of star + gas particles, stars are 0 
+        _vfloat(copy.copy(pos[:,0])),_vfloat(copy.copy(pos[:,1])), ## x-y positions of particles
+        _vfloat(hsml),  ## smoothing lengths of star + gas particles
+        _vfloat(weight), ## attenuation masses of star + gas particles, stars are 0 
         ## emission in each band of star+gas particles, gas is 0 
-        vfloat(quantity),  
+        _vfloat(quantity),  
         ## x-y limits of the image
         ctypes.c_float(Xmin),ctypes.c_float(Xmax),
         ctypes.c_float(Ymin),ctypes.c_float(Ymax), 
@@ -774,17 +745,17 @@ def getImageGrid(
 
 ###### Color helper functions
 from matplotlib.colors import rgb_to_hsv, hsv_to_rgb 
-def produce_colmap(cmap_name):
+def _produce_colmap(cmap_name):
     cmap = get_cmap(cmap_name)
     ## discretize the colormap into 256 parts...
     return [list(cmap(i/255.)[:3]) for i in range(0,256)]
 
-def produce_cmap_hsv_image(image_1, image_2,cmap='viridis'): 
+def _produce_cmap_hsv_image(image_1, image_2,cmap='viridis'): 
     # image_1 and image_2 are arrays of pixels 
     # with integer values in the range 0 to 255. 
     # These will be mapped onto hue and brightness, 
     # respectively, with saturation fixed at 1. 
-    cols = produce_colmap(cmap)
+    cols = _produce_colmap(cmap)
     cols = np.array(cols) 
 
     cols_2d = np.ones((len(cols), 1, 3)) 
@@ -812,4 +783,3 @@ def produce_cmap_hsv_image(image_1, image_2,cmap='viridis'):
                 output_image_rgb[i,j]=cols[image_1[i,j]]
                 
     return output_image_rgb 
-
