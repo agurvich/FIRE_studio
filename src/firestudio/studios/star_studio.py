@@ -153,7 +153,7 @@ class StarStudio(Studio):
         self,
         lums:np.ndarray=None,
         nu_effs:list=None,
-        BAND_IDS:list=None,
+        BAND_NAMES:list=None,
         **kwargs
         ):
         """Approximate the `~firestudio.studios.StarStudio.get_mockHubbleImage` routine using a 2d histogram.
@@ -162,14 +162,14 @@ class StarStudio(Studio):
         ----------
         lums : np.ndarray, optional
             array of luminosities for each star particle. If None then luminosities are calculated in
-            the bands specified by `BAND_IDS`, by default None
+            the bands specified by `BAND_NAMES`, by default None
         nu_effs : list, optional
             list of effective frequencies corresponding to the bands of luminosities
             provides in the `lums`. If None, uses the frequencies corresponding to the
-            specified `BAND_IDS`., by default None
-        BAND_IDS : list, optional
-            List of indices that identify which bands to model stellar emission in. 
-            If None uses Sloan UGR bands `(1,2,3)`, by default None
+            specified `BAND_NAMES`., by default None
+        BAND_NAMES : list, optional
+            List of names that identify which bands to model stellar emission in.
+            If None uses Sloan UGR bands `('sdss_u','sdss_g','sdss_r')`, by default None
             ```
             lambda_eff=np.array([
                 ## Bolometric (?)
@@ -194,13 +194,13 @@ class StarStudio(Studio):
             out_2 - 2d map of luminosities in third band in Lsun/kpc^2
         """
 
-        if BAND_IDS is None:
-            BAND_IDS=[1,2,3] ## used if corresponding column of lums is all 0s
+        if BAND_NAMES is None:
+            BAND_NAMES=['sdss_u','sdss_g','sdss_r'] ## used if corresponding column of lums is all 0s
        
         # apply filters, rotations, unpack snapshot data, etc...
         (kappas, lums,
             star_pos, h_star,
-            gas_pos , mgas , gas_metals ,  h_gas) = self.prepareCoordinates(lums,nu_effs,BAND_IDS)
+            gas_pos , mgas , gas_metals ,  h_gas) = self.prepareCoordinates(lums,nu_effs,BAND_NAMES)
 
         star_xs,star_ys,star_zs = star_pos.T
         gas_xs,gas_ys,gas_zs = gas_pos.T
@@ -281,16 +281,16 @@ class StarStudio(Studio):
             self:StarStudio,
             lums:np.ndarray=None,
             nu_effs:list=None,
-            BAND_IDS:list=None,
+            BAND_NAMES:list=None,
             fixed_star_hsml=0.028):
 
-            if BAND_IDS is None:
-                BAND_IDS=[1,2,3] ## used if corresponding column of lums is all 0s
+            if BAND_NAMES is None:
+                BAND_NAMES=['sdss_u','sdss_g','sdss_r'] ## used if corresponding column of lums is all 0s
             
             # apply filters, rotations, unpack snapshot data, etc...
             (kappas, lums,
                 star_pos, h_star,
-                gas_pos , mgas , gas_metals ,  h_gas) = self.prepareCoordinates(lums,nu_effs,BAND_IDS,fixed_star_hsml)
+                gas_pos , mgas , gas_metals ,  h_gas) = self.prepareCoordinates(lums,nu_effs,BAND_NAMES,fixed_star_hsml)
 
             ## do the actual raytracing
             gas_out,out_u,out_g,out_r = raytrace_ugr_attenuation(
@@ -316,7 +316,7 @@ class StarStudio(Studio):
         self,
         lums:np.ndarray=None,
         nu_effs:list=None,
-        BAND_IDS:list=None,
+        BAND_NAMES:list=None,
         fixed_star_hsml:float=None):
         """Reads snapshot data from `self.snapdict` and `self.star_snapdict` in the
         imaging volume defined by `self.Xmin`,`self.Xmax`,`self.Ymin`,`self.Ymax`,`self.Zmin`,`self.Zmax`.
@@ -326,14 +326,14 @@ class StarStudio(Studio):
         ----------
         lums : np.ndarray, optional
             array of luminosities for each star particle. If None then luminosities are calculated in
-            the bands specified by `BAND_IDS`, by default None
+            the bands specified by `BAND_NAMES`, by default None
         nu_effs : list, optional
             list of effective frequencies corresponding to the bands of luminosities
             provides in the `lums`. If None, uses the frequencies corresponding to the
-            specified `BAND_IDS`., by default None
-        BAND_IDS : list, optional
-            List of indices that identify which bands to model stellar emission in. 
-            If None uses Sloan UGR bands `(1,2,3)`, by default None
+            specified `BAND_NAMES`., by default None
+        BAND_NAMES : list, optional
+            List of names that identify which bands to model stellar emission in.
+            If None uses Sloan UGR bands `('sdss_u','sdss_g','sdss_r')`, by default None
             ```
             lambda_eff=np.array([
                 ## Bolometric (?)
@@ -410,10 +410,10 @@ class StarStudio(Studio):
         if lums is not None:
             lums = lums[:,star_ind_box]
 
-        ## will fill any columns of lums with appropriate BAND_ID 
+        ## will fill any columns of lums with appropriate BAND_NAME
         ##  if nu_eff for that column is not None
         lums,nu_effs = read_band_lums_from_tables(
-            BAND_IDS, 
+            BAND_NAMES,
             mstar,ages,metals,
             ## flag to return luminosity in each band requested without projecting
             nu_effs=nu_effs,
