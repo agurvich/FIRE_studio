@@ -202,7 +202,7 @@ def colors_table(
         nu_eff = 2.998e18 / lam_eff ## c/lambda
         if RETURN_NU_EFF: return nu_eff
         if RETURN_LAMBDA_EFF: return lam_eff
-# yes
+
     # allow for extreme metallicities (extrapolate linearly past table)
     push_metals = 1;
     # we're working with Lsun/Msun NOT log(Lsun/Msun) here.. might fuss things up
