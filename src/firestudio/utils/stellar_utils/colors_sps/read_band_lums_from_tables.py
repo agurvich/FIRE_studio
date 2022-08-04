@@ -25,7 +25,7 @@ def read_band_lums_from_tables(
     ## require that we attenuate 3 bands to combine since attenuation
     ##  routine is hardcoded to accept 3 weights
     if (Nbands != 3): 
-        print("stellar_raytrace needs 3 bands, you gave ",Nbands,", you idiot")
+        print("stellar_raytrace needs 3 bands, you gave ",Nbands)
         return -1,-1,-1
 
     ## check if stellar metallicity is a matrix
@@ -143,8 +143,9 @@ def colors_table(
         except: print("No FSPS module! Download and install pythonFSPS (https://dfm.io/python-fsps)...")
         # file either didn't exist or the filter/band didn't have a table!
         if not band_name in fsps.find_filter(''):
-            print("BAND: %s not supported by (this? build of) FSPS. I'm going to break now..." % band_name)
-            return -1
+            if not band_name == 'Bolometric':
+                print("BAND: %s not supported by (this? build of) FSPS. I'm going to break now..." % band_name)
+                return -1
         if (QUIET == 0): print("No valid FSPS Tables Found (BAND: %s)!! Doing it ourselves" % band_name)
         if (QUIET == 0): print("Initializing FSPS SSPs...")
         if (QUIET == 0): print("Computing SSP for logZ=", logZ_pts_array[0])
@@ -155,29 +156,40 @@ def colors_table(
         Na = len(age_pts_array)
         Nz = len(logZ_pts_array)
 
+        bol_bool = 0
+        if band_name == 'Bolometric':
+            bol_bool = 1
+            band_name = 'sdss_u' # dummy filter, since 'Bolometric' isn't a filter in FSPS
         lband = np.zeros((Na, Nz), dtype=np.float64);
-        lband[:, 0] = sp.get_mags(bands=[band_name])[:, 0]
+        lband[:, 0] = 10.**sp.get_mags(bands=[band_name])[:, 0]
+        if bol_bool: lband[:, 0] = sp.log_lbol
         # build array of mags for band in age/Z space
         for zz in range(1, len(logZ_pts_array)):
             if (QUIET == 0): print("Computing SSP for logZ=", logZ_pts_array[zz])
             sp.params['logzsol'] = logZ_pts_array[zz]
             lband[:, zz] = sp.get_mags(bands=[band_name])[:, 0] # in M_ab/Msun units
+            if bol_bool: lband[:, zz] = 10.**sp.log_lbol[:, 0]
 
         # convert to solar Luminosity units
-        lband = 10. ** ((lband - fsps.get_filter(band_name).msun_ab) / -2.5) # now in Lsun/Msun units!
-
+        if not bol_bool: lband = 10. ** ((lband - fsps.get_filter(band_name).msun_ab) / -2.5) # now in Lsun/Msun units!
         # Now saving the dataset under BAND_NAME, closing the file.
         fsps_colors.create_group(band_name)
         fsps_colors.create_dataset(band_name+'/lband', data=lband)
-        fsps_colors.create_dataset(band_name+'/msun_ab', data=fsps.get_filter(band_name).msun_ab)
-        fsps_colors.create_dataset(band_name+'/lambda_eff', data=fsps.get_filter(band_name).lambda_eff)
+        if bol_bool:
+            fsps_colors.create_dataset(band_name+'/msun_ab', data=4.74)
+            fsps_colors.create_dataset(band_name+'/lambda_eff', data=4243.93)
+        else:
+            fsps_colors.create_dataset(band_name + '/msun_ab', data=fsps.get_filter(band_name).msun_ab)
+            fsps_colors.create_dataset(band_name + '/lambda_eff', data=fsps.get_filter(band_name).lambda_eff)
         if not ("SSP_ages" in fsps_colors.keys()):
             fsps_colors.create_dataset("SSP_ages", data=age_pts_array)
         if not ("logZ_pts" in fsps_colors.keys()):
             fsps_colors.create_dataset("logZ_pts", data=logZ_pts_array)
 
 
-        if (QUIET == 0): print("FSPS Tables Built (BAND: %s)!!" % band_name)
+        if (QUIET == 0):
+            if bol_bool: print("FSPS Tables Built (BAND: Bolometric)!!")
+            else: print("FSPS Tables Built (BAND: %s)!!" % band_name)
         # done with FSPS
     # load out filter properties
     lam_eff = float(np.array(fsps_colors[band_name]['lambda_eff']))
