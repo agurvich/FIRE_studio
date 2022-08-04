@@ -25,7 +25,7 @@ def read_band_lums_from_tables(
     ## require that we attenuate 3 bands to combine since attenuation
     ##  routine is hardcoded to accept 3 weights
     if (Nbands != 3): 
-        print("stellar_raytrace needs 3 bands, you gave ",Nbands)
+        print("stellar_raytrace needs 3 bands, you gave",Nbands)
         return -1,-1,-1
 
     ## check if stellar metallicity is a matrix
