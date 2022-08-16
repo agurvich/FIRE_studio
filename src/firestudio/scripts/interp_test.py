@@ -14,7 +14,7 @@ from firestudio.studios.simple_studio import SimpleStudio
 def main(
     name='m12b_res7100',
     suite_name='metal_diffusion',
-    multi_threads=5,
+    multi_threads=4,
     savefig_str=''):
 
     if savefig_str == '': savefig_str = 'interp_test'
@@ -23,20 +23,22 @@ def main(
     many_galaxy = ManyGalaxy(name,suite_name=suite_name)
 
     last_galaxy = many_galaxy.loadAtSnapshot(many_galaxy.finsnap)
+    last_galaxy.get_snapshotTimes()
+    many_galaxy.get_snapshotTimes()
     snapnums,rcoms,rvirs = last_galaxy.get_rockstar_file_output()
 
-    first_index = np.argmin(
-        (many_galaxy.snapnums-snapnums[0])**2)
+    first_index = np.argmin((last_galaxy.snapnums-snapnums[0])**2)
 
     interp_handler = InterpolationHandler(
         5, ## duration of movie, 10 sec
         many_galaxy.snap_gyrs[267]-0.1, ## begininng time in Gyr
-        many_galaxy.snap_gyrs[268]-0.001+0.1, ## end time in Gyr
+        many_galaxy.snap_gyrs[268]+0.1, ## end time in Gyr
         ## fixed position of camera, optionally could move camera around
         ## defines the fov as +- zdist
         camera_pos=[0,0,50],  
         ## how long should the line in the bottom left corner be?
         scale_line_length=10,
+        snapshot_times=last_galaxy.snap_gyrs
     )
 
     figs = interp_handler.interpolateAndRender(
@@ -48,7 +50,6 @@ def main(
             'name':many_galaxy.name, ## 
             'final_orientation':True, ## face-on at z=0
             'loud_metadata':False, ## reduce print statements
-            'use_rockstar_first':True, ## use rockstar over AHF if both exist
             'suite_name':suite_name},  ## path s.t. ~/snaps/{suite_name}/name/output
             ## use a soft-link:
             ## cd ~
@@ -65,8 +66,8 @@ def main(
             }], ## kwargs for StarStudio initialization
         multi_threads=multi_threads,
         which_studios=[SimpleStudio],
-        check_exists=False, ## skip rendering a frame if the png already exists
-        timestamp=7.11419974, ## offset the timestamp by 0 Gyr ## 
+        check_exists=True, ## skip rendering a frame if the png already exists
+        timestamp=last_galaxy.get_bursty_regime()[0]/1e3, ## offset the timestamp by 0 Gyr ## 
         add_composition=False)  ## will add a composition frame of the requested Studios
 
 if __name__ == '__main__':

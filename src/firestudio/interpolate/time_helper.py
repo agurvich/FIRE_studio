@@ -328,10 +328,6 @@ def get_interpolated_snaps(
             #print("converting gas to DF")
             prev_gas_df = convertToDF(prev_galaxy.sub_snap,keys_to_extract,polar)
             next_gas_df = convertToDF(next_galaxy.sub_snap,keys_to_extract,polar)
-            ## add AgeGyr arrays which will be used to disappear gas particles
-            ##  when we multi index match them with splits/stars
-            prev_gas_df['AgeGyr'] = np.ones(prev_gas_df.shape[0])
-            next_gas_df['AgeGyr'] = np.ones(next_gas_df.shape[0])
         
         ## create the star dataframes if necessary
         if load_star:
@@ -343,11 +339,17 @@ def get_interpolated_snaps(
         ##  of particles between them
         if load_gas and load_star:
             #print("cross-matching starformed gas")
+
+            ## add AgeGyr arrays which will be used to disappear gas particles
+            ##  when we multi index match them with splits/stars
+            prev_gas_df['AgeGyr'] = np.ones(prev_gas_df.shape[0])
+            next_gas_df['AgeGyr'] = np.ones(next_gas_df.shape[0])
+
             (prev_gas_df,
             next_gas_df,
             prev_star_df,
             next_star_df) = cross_match_starformed_gas(
-                t1,t0,
+                t0,t1,
                 prev_gas_df,next_gas_df,
                 prev_star_df,next_star_df)
 
