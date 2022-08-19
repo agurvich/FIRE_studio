@@ -24,15 +24,14 @@ def main(
 
     last_galaxy = many_galaxy.loadAtSnapshot(many_galaxy.finsnap)
     last_galaxy.get_snapshotTimes()
-    many_galaxy.get_snapshotTimes()
     snapnums,rcoms,rvirs = last_galaxy.get_rockstar_file_output()
 
     first_index = np.argmin((last_galaxy.snapnums-snapnums[0])**2)
 
     interp_handler = InterpolationHandler(
-        5, ## duration of movie, 10 sec
-        many_galaxy.snap_gyrs[267]-0.1, ## begininng time in Gyr
-        many_galaxy.snap_gyrs[268]+0.1, ## end time in Gyr
+        30, ## duration of movie, 10 sec
+        many_galaxy.snap_gyrs[243]+1e-5, ## begininng time in Gyr
+        many_galaxy.snap_gyrs[250]-1e-5, ## end time in Gyr
         ## fixed position of camera, optionally could move camera around
         ## defines the fov as +- zdist
         camera_pos=[0,0,50],  
@@ -55,17 +54,19 @@ def main(
             ## cd ~
             ## ln -s /scratch/projects/xsede/GalaxiesOnFIRE snaps
         render_kwargss=[
-            {'age_max_gyr':25/1e3, ## 25 Myr
-            'use_metadata':False,
-            'save_meta':False}], ## kwargs for StarStudio render call
+            {
+                #'age_max_gyr':25/1e3, ## 25 Myr
+                'use_metadata':False,
+                'save_meta':False
+            }], ## kwargs for StarStudio render call
         studio_kwargss=[
             {
-            'savefig':savefig_str,
+                'savefig':savefig_str,
                 # 'maxden':2.2e8,'dynrange':4.7e2,
             #'no_dust':True,
             }], ## kwargs for StarStudio initialization
         multi_threads=multi_threads,
-        which_studios=[SimpleStudio],
+        which_studios=[FIREStudio],
         check_exists=True, ## skip rendering a frame if the png already exists
         timestamp=last_galaxy.get_bursty_regime()[0]/1e3, ## offset the timestamp by 0 Gyr ## 
         add_composition=False)  ## will add a composition frame of the requested Studios
