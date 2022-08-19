@@ -1,8 +1,6 @@
-import sys
-import getopt
-
 import numpy as np
 
+from abg_python.function_utils import CLI_args
 from abg_python.plot_utils import plt
 plt.rcParams['figure.dpi']=300
 from abg_python.galaxy.gal_utils import Galaxy
@@ -14,19 +12,18 @@ from firestudio.studios.FIRE_studio import FIREStudio
 from firestudio.studios.composition import Composition
 
 
+@CLI_args()
 def main(
     name='m12b_res7100',
     suite_name='metal_diffusion',
-    multi_threads=5,
-    take_avg_L = True,
-    slice_index = None,
-    nslices = None,
-    duration = 60, # s
-    savefig = 'full_bursty'
+    multi_threads=3,
+    take_avg_L=True,
+    slice_index=None,
+    nslices=None,
+    duration=90, # s
+    savefig='full_bursty'
     ):
 
-
-    #galaxy = Galaxy('m12b_res7100',600)
     galaxy = Galaxy(name,600)
     _,bursty_time,_,_ = galaxy.get_bursty_regime(save_meta=True)
     galaxy.get_snapshotTimes()
@@ -43,15 +40,16 @@ def main(
 
     interp_handler = InterpolationHandler(
         duration,
-        galaxy.snap_gyrs[bursty_snap_index]-1,
-        galaxy.snap_gyrs[bursty_snap_index]+1,#+2,
+        galaxy.snap_gyrs[bursty_snap_index]-2,
+        galaxy.snap_gyrs[bursty_snap_index]+1,
         camera_pos=[0,0,15],
-        scale_line_length=5)
+        scale_line_length=5,
+        snapshot_times=galaxy.snap_gyrs
+        )
 
     figs = interp_handler.interpolateAndRender(
         {'name':galaxy.name,
         ##'ABG_force_multithread':60,
-        'use_rockstar_first':True,
         'suite_name':suite_name,
         'take_avg_L':take_avg_L,
         'keys_to_extract':['Metallicity','AgeGyr'],
@@ -59,49 +57,55 @@ def main(
         'loud_metadata':False},
         render_kwargss=[
             ## flagship FIRE studio
-            {'save_meta':True },
+            {
+                'save_meta':True
+            },
             ## gas map
-            {'weight_name':'Masses',
-            'quantity_name':'Temperature',
-            'min_quantity':2,
-            'max_quantity':7,
-            'quantity_adjustment_function':np.log10,
-            'save_meta':True,
-            'use_metadata':False,
-            #'assert_cached':False,
-            #'min_weight':-0.5,
-            #'max_weight':3, 
+            {
+                'weight_name':'Masses',
+                'quantity_name':'Temperature',
+                'min_quantity':2,
+                'max_quantity':7,
+                'quantity_adjustment_function':np.log10,
+                'save_meta':True,
+                'use_metadata':False,
+                #'assert_cached':False,
+                #'min_weight':-0.5,
+                #'max_weight':3, 
             },
             ## hubble map
-            {'quick':False,#'use_metadata':True,
-            'save_meta':True,#'assert_cached':False,
-            'use_metadata':False,
+            {
+                'quick':False,#'use_metadata':True,
+                'save_meta':True,#'assert_cached':False,
+                'use_metadata':False,
             #'min_quantity':2,'max_quantity':7,
             #'min_weight':-0.5,'max_weight':3 
             },
             ## young stars map
             {
-            #'save_meta':False,#'assert_cached':False,
-            #'use_metadata':False,
+                #'save_meta':False,#'assert_cached':False,
+                #'use_metadata':False,
             }], ## msun/pc^2,
         studio_kwargss=[
             {
-            'savefig':'FIREmap'
+                'savefig':'FIREmap'
             },
             {
-            'savefig':None
+                'savefig':None
             },
-            {'maxden':2.2e8,
-            'dynrange':4.7e2,
-            'savefig':None,
-            #'no_dust':True,
-            #'age_max_gyr':25/1e3, ## 25 Myr
+            {
+                'maxden':2.2e8,
+                'dynrange':4.7e2,
+                'savefig':None,
+                #'no_dust':True,
+                #'age_max_gyr':25/1e3, ## 25 Myr
             },
-            {'savefig':'young_StarStudio',
-            'maxden':2.2e8,
-            'dynrange':4.7e2,
-            'no_dust':True,
-            'age_max_gyr':25/1e3, ## 25 Myr
+            {
+                'savefig':'young_StarStudio',
+                'maxden':2.2e8,
+                'dynrange':4.7e2,
+                'no_dust':True,
+                'age_max_gyr':25/1e3, ## 25 Myr
             }],
         multi_threads=multi_threads,
         which_studios=[FIREStudio,GasStudio,StarStudio,StarStudio],
@@ -111,25 +115,4 @@ def main(
         time_slice=time_slice)
 
 if __name__ == '__main__':
-    argv = sys.argv[1:]
-    opts,args = getopt.getopt(
-        argv,'',[
-        'name=',
-        'suite_name=',
-        'multi_threads=',
-        'take_avg_L=',
-        'slice_index=',
-        'nslices='
-        ])
-
-    for i,opt in enumerate(opts):
-        if opt[1]=='':
-            opts[i]=('mode',opt[0].replace('-',''))
-        else:
-            try:
-                ## if it's an int or a float this should work
-                opts[i]=(opt[0].replace('-',''),eval(opt[1]))
-            except:
-                ## if it's a string... not so much
-                opts[i]=(opt[0].replace('-',''),opt[1])
-    main(**dict(opts))
+    main()

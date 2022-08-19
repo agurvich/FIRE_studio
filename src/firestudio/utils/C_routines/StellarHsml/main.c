@@ -38,11 +38,13 @@ int stellarhsml(int N_in, float* x, float* y, float* z, int DesNgb, float Hmax, 
 	  xyz[2]=P3d[i+1]->Pos[2]+1.0e-10;
 	  h2=ngb3d_treefind( xyz, DesNgb ,1.04*h_guess, &ngblist, &r2list, Hmax, &ngbfound); 
 
+    /*
     if(!(i%10000))
     {
     printf("i=%d hmax=%g h_guess=%g h=%g xyz=%g|%g|%g ngb=%d \n",
         i,Hmax,h_guess,sqrt(h2),xyz[0],xyz[1],xyz[2],ngbfound); fflush(stdout);
     }
+    */
       H_OUT[i] = sqrt(h2);
       h_guess = H_OUT[i]; // use this value for next guess, should speed things up // 
       //if (h_guess>10.*h_guess_0) h_guess=2.*h_guess_0;

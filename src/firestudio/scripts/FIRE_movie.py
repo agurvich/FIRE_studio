@@ -10,14 +10,15 @@ from firestudio.studios.FIRE_studio import FIREStudio
 
 
 def main(
-    name='m12b_res57000',
+    name='m12b_res7100',
     suite_name='metal_diffusion',
-    multi_threads=25):
-
+    multi_threads=4):
 
     many_galaxy = ManyGalaxy(name,suite_name=suite_name)
 
     last_galaxy = many_galaxy.loadAtSnapshot(many_galaxy.finsnap)
+    last_galaxy.get_snapshotTimes()
+    many_galaxy.get_snapshotTimes()
     snapnums,rcoms,rvirs = last_galaxy.get_rockstar_file_output()
 
     first_index = np.argmin(
@@ -41,7 +42,6 @@ def main(
             'name':many_galaxy.name, ## 
             'final_orientation':True, ## face-on at z=0
             'loud_metadata':False, ## reduce print statements
-            'use_rockstar_first':True, ## use rockstar over AHF if both exist
             'suite_name':suite_name},  ## path s.t. ~/snaps/{suite_name}/name/output
             ## use a soft-link:
             ## cd ~
