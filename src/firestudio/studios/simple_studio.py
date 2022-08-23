@@ -119,7 +119,8 @@ class SimpleStudio(Studio):
                 dpi=300,
                 facecolor='k')
             final_image = imread(f.name)
-        final_image = final_image[::-1]
+        final_image = np.transpose(final_image[::-1],axes=(1,0,2))
+        #final_image = final_image[::-1]
 
         plt.close(fig)
         return final_image
