@@ -94,8 +94,16 @@ class BaseInterpolate(object):
             snap_pairs = [scene_kwargs['snap_pair'] for scene_kwargs in scene_kwargss]
         else: snap_pairs = None
 
+        if multi_threads == 'shared':
+            ## return the parameters required for scene_handler.interpolateAndRenderMultiprocessing
+            return (
+                galaxy_kwargs,
+                scene_kwargss,
+                studio_kwargss,
+                render_kwargss,
+                which_studios)
         ## single threaded, the vanilla experience
-        if multi_threads == 1:
+        elif multi_threads == 1:
             ## collect positional arguments for worker_function
             return_value = single_threaded_control_flow(
                 which_studios,
@@ -172,11 +180,11 @@ class BaseInterpolate(object):
 
         if time_slice is None: time_slice = slice(0,None)
 
-        if 'keys_to_extract' not in galaxy_kwargs:
-            keys_to_extract = []
-            for which_studio in which_studios:
-                keys_to_extract+=which_studio.required_snapdict_keys
-            galaxy_kwargs['keys_to_extract'] = list(np.unique(keys_to_extract))
+        if 'keys_to_extract' not in galaxy_kwargs: keys_to_extract = []
+
+        for which_studio in which_studios:
+            keys_to_extract+=which_studio.required_snapdict_keys
+        galaxy_kwargs['keys_to_extract'] = list(np.unique(keys_to_extract))
 
         ## prepended to frame_%0{log10(N)//1+1}d.png
         for which_studio,studio_kwargs in zip(which_studios,studio_kwargss):
