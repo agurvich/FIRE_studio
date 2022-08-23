@@ -154,7 +154,11 @@ class Drawer(object):
         ## main imshow call
         imgplot = ax.imshow(
             final_image, 
-            extent = (self.Xmin,self.Xmax,self.Ymin,self.Ymax),
+            extent = (
+                -self.camera.frame_half_width,
+                self.camera.frame_half_width,
+                -self.camera.frame_half_width,
+                self.camera.frame_half_width),
             origin = 'lower')
 
         ## set the y units to equal the x units-- make sure nothing
@@ -486,7 +490,10 @@ class Studio(Drawer):
         #self.makeOutputDirectories(datadir)
  
         if 'camera' not in kwargs or kwargs['camera'] is None:
-            camera_kwargs = {'camera_pos':[0,0,15],'camera_focus':[0,0,0],'camera_north':None}
+            camera_kwargs = {
+                'camera_pos':[0,0,15],
+                'camera_focus':[0,0,0],
+                'camera_north':None}
             for ckwarg in list(camera_kwargs.keys())+['quaternion']:
                 if ckwarg in kwargs: camera_kwargs[ckwarg] = kwargs.pop(ckwarg)
             kwargs['camera'] = Camera(**camera_kwargs)
@@ -675,8 +682,6 @@ class Studio(Drawer):
         
         Keywords
         --------
-        frame_half_thickness : float
-            half-thickness of image in z direction, by default self.camera.camera_dist
         aspect_ratio: float
             ratio of number of pixels in each direction determining 
             the shape of image, y/x, by default 1
@@ -723,7 +728,6 @@ studio.set_ImageParams(
 
         default_kwargs = {
             'camera':None,
-            'frame_half_thickness':None, ## half-thickness of image in z direction
             'aspect_ratio':1, ## shape of image, y/x TODO figure out if this is necessary to pass?
             'pixels':1200, ## pixels in x direction, resolution of image
             'figure_label':'', ## string to be put in upper right corner
@@ -765,10 +769,6 @@ studio.set_ImageParams(
                 raise ValueError('Cannot explicitly set camera = None,'+
                 ' pass a utils.camera_utils.Camera instance instead.')
 
-            if ('frame_half_thickness' in default_kwargs and 
-                default_kwargs['frame_half_thickness'] is None):
-                default_kwargs['frame_half_thickness'] = self.camera.camera_dist
-             
             ## set the remaining image parameters to their default values
             for default_arg in default_kwargs:
                 value = default_kwargs[default_arg]
@@ -877,10 +877,11 @@ studio.set_ImageParams(
             np.round(self.camera.quaternion[3],decimals=2))
 
         self.this_setup_id = (
-        "npix%d_width%.2fkpc_depth%.2fkpc_x%.2f_y%.2f_z%.2f_%s_aspect%.2f"%(
+        "npix%d_half_width%.2fkpc_zmin%.2fkpc_zmax%.2fkpc_x%.2f_y%.2f_z%.2f_%s_aspect%.2f"%(
             self.pixels, 
-                np.round(self.camera.camera_dist,decimals=2),
-                np.round(self.frame_half_thickness,decimals=2),
+                np.round(self.camera.frame_half_width,decimals=2),
+                np.round(self.camera.zmin,decimals=2),
+                np.round(self.camera.zmax,decimals=2),
                 np.round(self.camera.camera_focus[0],decimals=2),
                 np.round(self.camera.camera_focus[1],decimals=2),
                 np.round(self.camera.camera_focus[2],decimals=2),
@@ -903,41 +904,15 @@ studio.set_ImageParams(
                 
         """
         ## +- camera_dist limits -> 45 degree FOV
-        self.Xmin,self.Xmax = self.camera.camera_focus[0] + np.array(
-            [-self.camera.camera_dist,self.camera.camera_dist])
+        self.Xmin,self.Xmax = -self.camera.frame_half_width,self.camera.frame_half_width
 
-        self.Ymin,self.Ymax = self.camera.camera_focus[1] + np.array(
-            [-self.camera.camera_dist,self.camera.camera_dist])*self.aspect_ratio
+        self.Ymin,self.Ymax = np.array(
+            [-self.camera.frame_half_width,self.camera.frame_half_width])*self.aspect_ratio
 
-        self.Zmin,self.Zmax = self.camera.camera_focus[2] + np.array(
-            [-self.frame_half_thickness,self.frame_half_thickness])
+        self.Zmin,self.Zmax = -self.camera.zmin,self.camera.zmax
 
         ## Set image size 
         self.npix_x   = self.pixels #1200 by default
         self.npix_y   = int(self.pixels*self.aspect_ratio) #1200 by default
 
         self.Acell = (self.Xmax-self.Xmin)/self.npix_x * (self.Ymax-self.Ymin)/self.npix_y
-
-    def cullFrameIndices(self,Coordinates:np.ndarray):
-        """ boolean mask of those particles within the volume defined by 
-            Xmin-Xmax, Ymin-Ymax, and Zmin-Zmax
-
-        Parameters
-        ----------
-        Coordinates : (N,3) np.ndarray 
-            array of particle coordinates
-
-        Returns
-        -------
-        bool np.ndarray
-            a boolean mask which is `True` for particles in the extraction volume
-            and `False` outside.
-            
-        """
-
-        ## extract a cube of particles that are in relevant area
-        ind_box = ((Coordinates[:,0] > self.Xmin) & (Coordinates[:,0] < self.Xmax) &
-                   (Coordinates[:,1] > self.Ymin) & (Coordinates[:,1] < self.Ymax) &
-                   (Coordinates[:,2] > self.Zmin) & (Coordinates[:,2] < self.Zmax))
-
-        return ind_box

@@ -6,7 +6,17 @@ class Camera(object):
     def __repr__(self):
         return "Camera(%s,%s) - %s "%(repr(self.camera_pos),repr(self.camera_focus),repr(self.quaternion))
 
-    def __init__(self,camera_pos,camera_focus=None,camera_north=None,quaternion=None):
+    def __init__(
+        self,
+        camera_pos,
+        camera_focus=None,
+        camera_north=None,
+        quaternion=None,
+        frame_half_width=None,
+        zmin=None,
+        zmax=None):
+
+
         camera_pos = np.array(camera_pos,ndmin=1)
 
         ## default to looking at the center
@@ -16,9 +26,14 @@ class Camera(object):
         self.camera_focus = camera_focus
         self.camera_pos = camera_pos
 
-        camera_normal = camera_pos-camera_focus
+        camera_normal = camera_focus-camera_pos
         self.camera_dist = np.linalg.norm(camera_normal)
-        camera_normal = camera_normal/self.camera_dist
+        self.camera_normal = camera_normal/self.camera_dist
+
+        self.zmin = 0 if zmin is None else zmin
+        ## 2x: 1x -> to get to the camera focus + another 1x to make symmetric across the camera focus
+        self.zmax = 2*self.camera_dist if zmax is None else zmax
+        self.frame_half_width = self.camera_dist if frame_half_width is None else frame_half_width
 
         if quaternion is None:
 
@@ -26,17 +41,17 @@ class Camera(object):
             ##  based on my definition of getThetasTaitBryan which was originally 
             ##  designed to align along angular momentum vector which pointed from 
             ##  the origin to the camera rather than from the camera to the origin
-            theta, phi = getThetasTaitBryan(camera_normal)
+            theta, phi = getThetasTaitBryan(self.camera_normal)
 
             #https://yt-project.org/doc/_modules/yt/visualization/volume_rendering/off_axis_projection.html#off_axis_projection
             ##  the below is some voodoo from yt which figures out the "appropriate" camera north
             ##  somehow it nails it and gives intuitive results but i do not understand why
             if camera_north is None:
                 vecs = np.identity(3)
-                t = np.cross(vecs, camera_normal).sum(axis=1)
+                t = np.cross(vecs, self.camera_normal).sum(axis=1)
                 ax = t.argmax()
-                east_vector = np.cross(vecs[ax, :], camera_normal).ravel()
-                camera_north = np.cross(camera_normal, east_vector).ravel()
+                east_vector = np.cross(vecs[ax, :], self.camera_normal).ravel()
+                camera_north = np.cross(self.camera_normal, east_vector).ravel()
             else:
                 camera_north = np.array(camera_north)
                 camera_north = camera_north / np.linalg.norm(camera_north)
@@ -55,6 +70,12 @@ class Camera(object):
         else: self.quaternion = quaternion
         
         self.quat_rot_matrix = q_to_rotation_matrix(self.quaternion)
+
+        self.rotated_center = np.array(np.matmul(
+            self.quat_rot_matrix,
+            self.camera_pos.reshape(3,1)).T,
+            order='C',
+            dtype=np.float32)[0]
     
     def convolve_quaternion(self,new_quat):
         quaternion = q_mult(new_quat,self.quaternion)
@@ -63,6 +84,11 @@ class Camera(object):
     def replace_quaternion(self,new_quat):
         self.quaternion = new_quat
         self.quat_rot_matrix = q_to_rotation_matrix(self.quaternion)
+        self.rotated_center = np.array(np.matmul(
+            self.quat_rot_matrix,
+            self.camera_pos.reshape(3,1)).T,
+            order='C',
+            dtype=np.float32)[0]
 
     def rotate_array(self,arr,offset=False):
         rotated_positions = np.array(np.matmul(
@@ -71,19 +97,14 @@ class Camera(object):
             order='C',
             dtype=np.float32)
 
-        if offset: rotated_center = np.array(np.matmul(
-            self.quat_rot_matrix,
-            self.camera_focus.reshape(3,1)).T,
-            order='C',
-            dtype=np.float32)
-        else: rotated_center = 0
+        if offset: return rotated_positions - self.rotated_center
+        else: return rotated_positions
 
-        return rotated_positions - rotated_center
 
     def clip(self,coords,vels):
 
-        new_coords = self.rotate_array(coords,offset=True)
-        new_vels = self.rotate_array(vels) if vels is not None else None
+        new_coords = self.rotate_array(coords,offset=True).astype(np.float32)
+        new_vels = self.rotate_array(vels).astype(np.float32) if vels is not None else None
 
         ## then determine the camera distance from the camera focus
         ##  and take FOV = 45 degrees left + 45 degrees right i.e. 
@@ -91,11 +112,17 @@ class Camera(object):
         ##  ymin,ymax = -z,+z
         ##  where z is measured as the distance from the camera to the camera focus
         mask = np.logical_and(
-            np.abs(new_coords[:,0])<self.camera_dist,
-            np.abs(new_coords[:,1])<self.camera_dist)
+            np.abs(new_coords[:,0])<self.frame_half_width,
+            np.abs(new_coords[:,1])<self.frame_half_width)
+        
+        zmask = new_coords[:,-1]>self.zmin
+
+        if self.zmax is not None: zmask = np.logical_and(zmask,new_coords[:,-1]<self.zmax)
+
+        mask = np.logical_and(mask,zmask)
 
         new_coords = new_coords[mask]
         if new_vels is not None: new_vels = new_vels[mask]
 
-        return new_coords, new_vels
+        return new_coords, new_vels, mask
 
