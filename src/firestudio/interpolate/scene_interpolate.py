@@ -8,7 +8,7 @@ from abg_python.parallel.multiproc_utils import copySnapshotNamesToMPSharedMemor
 from abg_python.galaxy.gal_utils import Galaxy
 
 from .time_interpolate import TimeInterpolationHandler
-from .time_helper import get_single_snap,get_load_flags,multi_worker_function
+from .time_helper import get_single_snap,get_load_flags,multi_worker_function,render_ffmpeg_frames
 
 studio_kwargs = {
     'quaternion':(1,0,0,0),
@@ -287,8 +287,12 @@ class SceneInterpolationHandler(TimeInterpolationHandler):
                 ## handle case where multiprocessing isn't used
                 if shm_buffer is not None:
                     shm_buffer.close()
-                    shm_buffer.unlink()
+                    try: shm_buffer.unlink()
+                    except FileNotFoundError: pass
             del star_shm_buffers
+
+        ## use ffmpeg to produce an mp4 of the frames
+        render_ffmpeg_frames(studio_kwargss,galaxy_kwargs,self.nframes,self.fps)
 
         return these_figs
 

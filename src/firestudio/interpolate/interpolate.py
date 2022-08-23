@@ -95,7 +95,7 @@ class InterpolationHandler(BaseInterpolate):
 
         ## point many threads at a single shared memory buffer to render multiple orientations 
         ##  of the same snapshot simultaneously, super powerful!
-        if shared_memory: 
+        if shared_memory and return_value is not None: 
             return_value = self.scene_handler.interpolateAndRenderMultiprocessing(multi_threads,*return_value)
     
         return return_value

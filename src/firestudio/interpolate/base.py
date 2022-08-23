@@ -6,9 +6,7 @@ import time
 
 import numpy as np
 
-from abg_python.plot_utils import plt,ffmpeg_frames
 from abg_python.galaxy.gal_utils import ManyGalaxy
-from abg_python.galaxy.gal_utils import Galaxy
 
 from ..studios.gas_studio import GasStudio
 from ..studios.star_studio import StarStudio 
@@ -16,7 +14,7 @@ from ..studios.FIRE_studio import FIREStudio
 from ..studios.simple_studio import SimpleStudio
 from ..studios.composition import Composition
 
-from .time_helper import single_threaded_control_flow
+from .time_helper import single_threaded_control_flow,render_ffmpeg_frames
 
 class BaseInterpolate(object):
     def interpolateAndRender(
@@ -86,7 +84,7 @@ class BaseInterpolate(object):
         if len(scene_kwargss) == 0:
             print('all frames already rendered, exiting...')
             render_ffmpeg_frames(studio_kwargss,galaxy_kwargs,self.nframes,self.fps)
-            return [None]
+            return None
         ## print out which frame numbers need to be rendered
         #else: print([this['savefig_suffix'].split('_')[2].split('.png')[0] for this in scene_kwargss])
 
@@ -305,26 +303,6 @@ def png_frame_cache(scene_kwargss,studio_kwargss,datadir):
                 break
 
     return frames_to_do
-
-def render_ffmpeg_frames(studio_kwargss,galaxy_kwargs,nframes,fps):
-    for studio_kwargs in studio_kwargss:
-        if 'keys_to_extract' in galaxy_kwargs: galaxy_kwargs.pop('keys_to_extract')
-
-        if 'snapnum' not in galaxy_kwargs: galaxy_kwargs['snapnum'] = None
-        galaxy = Galaxy(**galaxy_kwargs)
-
-        this_savefig = studio_kwargs['savefig']
-        ## in case we rendered multiple types of frames
-        ##  we'll loop through a list of savefigs (even if there's only one)
-        if this_savefig is not None:
-            format_str = '%s'%this_savefig + '_frame_%0'+'%dd.png'%(np.ceil(np.log10(nframes)))
-            ## ffmpeg the frames
-            ffmpeg_frames(
-                os.path.join(galaxy.datadir,'firestudio'),
-                [format_str],
-                savename=galaxy_kwargs['name'],
-                framerate=fps,
-                extension='.mp4')
 
 #### MPS LOAD BALANCING
 def split_into_n_approx_equal_chunks(snap_pairs,nchunks):
