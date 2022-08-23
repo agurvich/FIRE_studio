@@ -101,7 +101,7 @@ class Camera(object):
         else: return rotated_positions
 
 
-    def clip(self,coords,vels):
+    def clip(self,coords,vels=None):
 
         new_coords = self.rotate_array(coords,offset=True).astype(np.float32)
         new_vels = self.rotate_array(vels).astype(np.float32) if vels is not None else None
@@ -124,5 +124,6 @@ class Camera(object):
         new_coords = new_coords[mask]
         if new_vels is not None: new_vels = new_vels[mask]
 
-        return new_coords, new_vels, mask
+        if new_vels is not None: return new_coords, new_vels, mask
+        else: return new_coords, mask
 

@@ -147,11 +147,8 @@ class SimpleStudio(Studio):
 
         coords = snapdict['Coordinates']
 
-        ## rotate by euler angles if necessary
-        coords = self.camera.rotate_array(coords,offset=True)
-
         ## cull the particles outside the frame and cast to float32
-        box_mask = self.cullFrameIndices(coords)
+        coords,box_mask = self.camera.clip(coords)
 
         if fixed_hsml is not None:
             hs = np.repeat(fixed_hsml,coords.shape[0]) ## kpc
@@ -161,9 +158,9 @@ class SimpleStudio(Studio):
 
 
         return (
-            coords[:,0][box_mask],
-            coords[:,1][box_mask],
-            coords[:,2][box_mask],
+            coords[:,0],
+            coords[:,1],
+            coords[:,2],
             hs[box_mask],snapdict['Masses'][box_mask],
             snapdict[colorby][box_mask] if colorby is not None else None)
 

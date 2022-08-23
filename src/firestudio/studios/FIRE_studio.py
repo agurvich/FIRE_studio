@@ -228,16 +228,11 @@ fireStudio.set_ImageParams(
         else:
             hsml = snapdict['SmoothingLength'] ## kpc
 
-        ## rotate by euler angles if necessary
-        coords = self.camera.rotate_array(coords,offset=True)
-
         ## cull the particles outside the frame and cast to float32
-        box_mask = self.cullFrameIndices(coords)
+        coords,box_mask = self.camera.clip(coords)
 
-        if self.master_loud:
-            print("projecting %d particles"%np.sum(box_mask))
+        if self.master_loud: print("projecting %d particles"%np.sum(box_mask))
 
-        coords = coords[box_mask].astype(np.float32)
         hsml = hsml[box_mask].astype(np.float32)
 
         gas_T = snapdict['Temperature'][box_mask].astype(np.float32)
