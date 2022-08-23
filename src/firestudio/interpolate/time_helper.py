@@ -622,15 +622,17 @@ def worker_function(
     #print(which_studio)
     #print(studio_kwargs)
     #print(render_kwargs)
+    if ('time' in studio_kwargs.keys() and studio_kwargs['time'] is not None): 
+        setup_id_append = "_time%.5f"%studio_kwargs['time']
+    else: setup_id_append = ''
+
     my_studio = which_studio(
         os.path.join(this_snapdict['datadir'],'firestudio'),
         this_snapdict['snapnum'], ## attribute this data to the next_snapnum's projection file
         this_snapdict['name'],
         gas_snapdict=this_snapdict,
         star_snapdict=this_star_snapdict,
-        setup_id_append="_time%.5f"%studio_kwargs['time']
-            if studio_kwargs['time'] is not None  
-            else None,
+        setup_id_append=setup_id_append,
         **{'master_loud':False,**studio_kwargs,'savefig':this_savefig})
 
     if which_studio is GasStudio and render_kwargs['weight_name'] == 'Masses':
