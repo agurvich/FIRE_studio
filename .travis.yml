@@ -9,6 +9,7 @@ install:
 script:
 - pytest
 deploy:
+  skip_cleanup: true
   provider: pypi
   username: "__token__"
   password:
