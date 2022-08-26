@@ -67,7 +67,7 @@ setup(
     packages=find_packages(where="src"),
     python_requires=">=3.6",
     install_requires=[            
-          'abg_python>=1.1.0',
+          'abg_python>=1.1.1',
           'numpy',
           'scipy',
           'matplotlib'
