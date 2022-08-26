@@ -451,7 +451,11 @@ fireStudio.render()
             ax.axvline(bottom,c='C1',ls='--',alpha=0.25)
             ax.axvline(top,c='C1')
             ax.text(np.sqrt(bottom*top),0.5/1.1,'dynrange',ha='center')
-            nameAxes(ax,None,"'den' (L$_\odot$ kpc$^{-2}$)","1/N dN/d('den')",logflag=(1,0),
+            nameAxes(
+                ax,None,
+                r"'den' (L$_\odot$ kpc$^{-2}$)",
+                r"1/N dN/d('den')",
+                logflag=(1,0),
                 supertitle="maxden=%.2g\ndynrange=%2d"%(maxden,dynrange))
             ax.get_figure().set_dpi(120)
 
