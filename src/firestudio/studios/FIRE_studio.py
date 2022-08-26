@@ -229,7 +229,7 @@ fireStudio.set_ImageParams(
             hsml = snapdict['SmoothingLength'] ## kpc
 
         ## cull the particles outside the frame and cast to float32
-        coords,box_mask = self.camera.clip(coords)
+        coords,box_mask = self.camera.project_and_clip(coords)
 
         if self.master_loud: print("projecting %d particles"%np.sum(box_mask))
 
@@ -375,7 +375,7 @@ fireStudio.render()
 
         final_image = layer_band_images(image24, massmap)
 
-        return np.transpose(final_image,axes=(1,0,2))
+        return final_image#np.transpose(final_image,axes=(1,0,2))
 
     def predictParameters(self,all_bands=None,**kwargs):
 

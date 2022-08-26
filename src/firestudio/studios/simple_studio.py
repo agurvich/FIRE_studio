@@ -148,7 +148,7 @@ class SimpleStudio(Studio):
         coords = snapdict['Coordinates']
 
         ## cull the particles outside the frame and cast to float32
-        coords,box_mask = self.camera.clip(coords)
+        coords,box_mask = self.camera.project_and_clip(coords)
 
         if fixed_hsml is not None:
             hs = np.repeat(fixed_hsml,coords.shape[0]) ## kpc

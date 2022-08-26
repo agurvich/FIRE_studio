@@ -370,7 +370,7 @@ class StarStudio(Studio):
         star_pos = self.star_snapdict['Coordinates']
 
         ## cull the particles outside the frame and cast to float32
-        star_pos,star_mask = self.camera.clip(star_pos)
+        star_pos,star_mask = self.camera.project_and_clip(star_pos)
 
         ages = self.star_snapdict['AgeGyr']
         if self.age_max_gyr is not None:
@@ -394,9 +394,6 @@ class StarStudio(Studio):
 
         ## attempt to pass these indices along
         h_star = Hsml[star_mask].astype(np.float32)
-
-        ## and now filter the positions
-        star_pos = star_pos[star_mask].astype(np.float32)
 
         mstar = self.star_snapdict['Masses'][star_mask].astype(np.float32)
         metals = self.star_snapdict['Metallicity']
@@ -429,12 +426,8 @@ class StarStudio(Studio):
         KAPPA_UNITS=2.08854068444 ## cm^2/g -> kpc^2/mcode
         kappas = [KAPPA_UNITS*opacity_per_solar_metallicity(nu_eff) for nu_eff in nu_effs]
 
-
-        ## rotate by euler angles if necessary
-        gas_pos = self.camera.rotate_array(self.gas_snapdict['Coordinates'],offset=True)
-
         ## cull the particles outside the frame and cast to float32
-        gas_pos,gas_mask = self.camera.clip(gas_pos)
+        gas_pos,gas_mask = self.camera.project_and_clip(self.gas_snapdict['Coordinates'])
 
         if self.master_loud: print(np.sum(gas_mask),'many gas particles in volume')
 

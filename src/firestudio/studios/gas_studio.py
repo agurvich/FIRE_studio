@@ -368,7 +368,7 @@ Important methods include:
                 quantities = snapdict[quantity_name]
 
         ## cull the particles outside the frame and cast to float32
-        pos,box_mask = self.camera.clip(pos)
+        pos,box_mask = self.camera.project_and_clip(pos)
 
         if self.master_loud: print("projecting %d particles"%np.sum(box_mask))
 
