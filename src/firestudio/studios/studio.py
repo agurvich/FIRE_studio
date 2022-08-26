@@ -98,7 +98,7 @@ class Drawer(object):
         """
 
         if colors is None:
-            colors = ['red','blue','green']
+            colors = ['red','green','blue']
         
         ## create the axis lines
         points = np.arange(spacing,length+spacing,spacing)
@@ -111,7 +111,8 @@ class Drawer(object):
             coordinates[points.size*i:points.size*(i+1),i] = points 
         
         ## perform the rotation
-        coordinates = self.camera.rotate_array(coordinates,offset=True)
+        coordinates,mask = self.camera.project_and_clip(coordinates)
+        if np.sum(mask) == 0: return ax
 
         ## plot the new x-y coordiantes
         for i in range(3):
@@ -121,8 +122,20 @@ class Drawer(object):
         ax.plot(0,0,'.',c=colors[-1])
         for i,label in enumerate(['x','y','z']):
             x,y,z = coordinates[points.size*(i+1)-1]
-            ax.text(x,y,label)
+            ax.text(x,y,label,fontdict={'color':'white'})
 
+        ax.set_facecolor('k')
+        ax.set_aspect(1)
+        ax.set_xlim(-length,length)
+        ax.set_ylim(-length,length)
+
+        subtitle = str(np.round(self.camera.project_array(np.identity(3),offset=False),1))
+        subtitle = subtitle.replace('[','').replace(']','')
+        nameAxes(
+            ax,None,None,None,
+            subtitle=subtitle,
+            supertitle=str(np.round(self.camera.camera_pos,0)),
+            swap_annotate_side=True,font_color='w')
         return ax
 
     def plotImage(
@@ -869,24 +882,22 @@ studio.set_ImageParams(
         str
             a stringified combination of image parameters
         """
-        ## uniquely identify this projection setup using a simple "hash"
-        rotation_string = 'quat_%.2f_%.2f_%.2f_%.2f'%(
-            np.round(self.camera.quaternion[0],decimals=2),
-            np.round(self.camera.quaternion[1],decimals=2),
-            np.round(self.camera.quaternion[2],decimals=2),
-            np.round(self.camera.quaternion[3],decimals=2))
 
+        camera:Camera = self.camera
+        ## uniquely identify this projection setup using a simple "hash"
+        camera_string = 'camera'
+        for vector in [camera.camera_pos,camera.camera_focus,camera.camera_north]:
+            for component in vector: camera_string += f"_{component:0.2f}"
+        
         self.this_setup_id = (
-        "npix%d_half_width%.2fkpc_zmin%.2fkpc_zmax%.2fkpc_x%.2f_y%.2f_z%.2f_%s_aspect%.2f"%(
+        "npix%d_half_width%.2fkpc_zmin%.2fkpc_zmax%.2fkpc_%s_aspect%.2f"%(
             self.pixels, 
-                np.round(self.camera.frame_half_width,decimals=2),
-                np.round(self.camera.zmin,decimals=2),
-                np.round(self.camera.zmax,decimals=2),
-                np.round(self.camera.camera_focus[0],decimals=2),
-                np.round(self.camera.camera_focus[1],decimals=2),
-                np.round(self.camera.camera_focus[2],decimals=2),
-                rotation_string,
+                np.round(camera.frame_half_width,decimals=2),
+                np.round(camera.zmin,decimals=2),
+                np.round(camera.zmax,decimals=2),
+                camera_string,
                 np.round(self.aspect_ratio,decimals=2)))
+
         return self.this_setup_id
 
     def computeFrameBoundaries(self):
