@@ -1,6 +1,7 @@
 # FIRE_studio
-<a href="https://ascl.net/2202.006"><img src="https://img.shields.io/badge/ascl-2202.006-blue.svg?colorB=262255" alt="ascl:2202.006" /></a>
+[![Build Status](https://travis-ci.com/agurvich/FIRE_studio.svg?branch=main)](https://app.travis-ci.com/agurvich/FIRE_studio)
 [![PyPI version](https://badge.fury.io/py/firestudio.svg)](https://badge.fury.io/py/firestudio)
+<a href="https://ascl.net/2202.006"><img src="https://img.shields.io/badge/ascl-2202.006-blue.svg?colorB=262255" alt="ascl:2202.006" /></a>
 
 Movie Making Utilities for FIRE simulations
 
