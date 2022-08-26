@@ -48,7 +48,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name="firestudio",
-    version="2.0.1",
+    version="2.1.0",
     author = 'Alex Gurvich',
     author_email = 'agurvich@u.northwestern.edu',
     description="Rendering code for FIRE simulation data.",
@@ -67,7 +67,7 @@ setup(
     packages=find_packages(where="src"),
     python_requires=">=3.6",
     install_requires=[            
-          'abg_python',
+          'abg_python>=1.1.0',
           'numpy',
           'scipy',
           'matplotlib'
