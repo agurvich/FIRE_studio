@@ -1,5 +1,6 @@
 import os
 import numpy as np 
+import inspect
 
 import matplotlib.pyplot as plt
 from matplotlib.colors import rgb_to_hsv,hsv_to_rgb
@@ -503,12 +504,13 @@ class Studio(Drawer):
         #self.makeOutputDirectories(datadir)
  
         if 'camera' not in kwargs or kwargs['camera'] is None:
-            camera_kwargs = {
-                'camera_pos':[0,0,15],
-                'camera_focus':[0,0,0],
-                'camera_north':None}
-            for ckwarg in list(camera_kwargs.keys())+['quaternion']:
+            camera_kwargs = {'camera_pos':[0,0,15]}
+
+            signature = inspect.signature(Camera.__init__)
+            for ckwarg,parameter in signature.parameters.items(): 
                 if ckwarg in kwargs: camera_kwargs[ckwarg] = kwargs.pop(ckwarg)
+
+            print(camera_kwargs)
             kwargs['camera'] = Camera(**camera_kwargs)
 
         ## initialize the object with some default image params that will
