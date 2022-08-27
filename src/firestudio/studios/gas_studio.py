@@ -367,16 +367,11 @@ Important methods include:
             else:
                 quantities = snapdict[quantity_name]
 
-        ## rotate by euler angles if necessary
-        pos = self.camera.rotate_array(Coordinates,offset=True)
-
         ## cull the particles outside the frame and cast to float32
-        box_mask = self.cullFrameIndices(pos)
+        pos,box_mask = self.camera.project_and_clip(pos)
 
-        if self.master_loud:
-            print("projecting %d particles"%np.sum(box_mask))
+        if self.master_loud: print("projecting %d particles"%np.sum(box_mask))
 
-        pos = pos[box_mask].astype(np.float32)
         weights = weights[box_mask].astype(np.float32)
         quantities = quantities[box_mask].astype(np.float32)
         hsml = Hsml[box_mask].astype(np.float32)

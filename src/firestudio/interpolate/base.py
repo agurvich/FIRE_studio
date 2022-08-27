@@ -6,9 +6,7 @@ import time
 
 import numpy as np
 
-from abg_python.plot_utils import plt,ffmpeg_frames
 from abg_python.galaxy.gal_utils import ManyGalaxy
-from abg_python.galaxy.gal_utils import Galaxy
 
 from ..studios.gas_studio import GasStudio
 from ..studios.star_studio import StarStudio 
@@ -16,7 +14,7 @@ from ..studios.FIRE_studio import FIREStudio
 from ..studios.simple_studio import SimpleStudio
 from ..studios.composition import Composition
 
-from .time_helper import single_threaded_control_flow
+from .time_helper import single_threaded_control_flow,render_ffmpeg_frames
 
 class BaseInterpolate(object):
     def interpolateAndRender(
@@ -86,7 +84,7 @@ class BaseInterpolate(object):
         if len(scene_kwargss) == 0:
             print('all frames already rendered, exiting...')
             render_ffmpeg_frames(studio_kwargss,galaxy_kwargs,self.nframes,self.fps)
-            return [None]
+            return None
         ## print out which frame numbers need to be rendered
         #else: print([this['savefig_suffix'].split('_')[2].split('.png')[0] for this in scene_kwargss])
 
@@ -94,8 +92,16 @@ class BaseInterpolate(object):
             snap_pairs = [scene_kwargs['snap_pair'] for scene_kwargs in scene_kwargss]
         else: snap_pairs = None
 
+        if multi_threads == 'shared':
+            ## return the parameters required for scene_handler.interpolateAndRenderMultiprocessing
+            return (
+                galaxy_kwargs,
+                scene_kwargss,
+                studio_kwargss,
+                render_kwargss,
+                which_studios)
         ## single threaded, the vanilla experience
-        if multi_threads == 1:
+        elif multi_threads == 1:
             ## collect positional arguments for worker_function
             return_value = single_threaded_control_flow(
                 which_studios,
@@ -172,11 +178,11 @@ class BaseInterpolate(object):
 
         if time_slice is None: time_slice = slice(0,None)
 
-        if 'keys_to_extract' not in galaxy_kwargs:
-            keys_to_extract = []
-            for which_studio in which_studios:
-                keys_to_extract+=which_studio.required_snapdict_keys
-            galaxy_kwargs['keys_to_extract'] = list(np.unique(keys_to_extract))
+        if 'keys_to_extract' not in galaxy_kwargs: keys_to_extract = []
+
+        for which_studio in which_studios:
+            keys_to_extract+=which_studio.required_snapdict_keys
+        galaxy_kwargs['keys_to_extract'] = list(np.unique(keys_to_extract))
 
         ## prepended to frame_%0{log10(N)//1+1}d.png
         for which_studio,studio_kwargs in zip(which_studios,studio_kwargss):
@@ -297,26 +303,6 @@ def png_frame_cache(scene_kwargss,studio_kwargss,datadir):
                 break
 
     return frames_to_do
-
-def render_ffmpeg_frames(studio_kwargss,galaxy_kwargs,nframes,fps):
-    for studio_kwargs in studio_kwargss:
-        if 'keys_to_extract' in galaxy_kwargs: galaxy_kwargs.pop('keys_to_extract')
-
-        if 'snapnum' not in galaxy_kwargs: galaxy_kwargs['snapnum'] = None
-        galaxy = Galaxy(**galaxy_kwargs)
-
-        this_savefig = studio_kwargs['savefig']
-        ## in case we rendered multiple types of frames
-        ##  we'll loop through a list of savefigs (even if there's only one)
-        if this_savefig is not None:
-            format_str = '%s'%this_savefig + '_frame_%0'+'%dd.png'%(np.ceil(np.log10(nframes)))
-            ## ffmpeg the frames
-            ffmpeg_frames(
-                os.path.join(galaxy.datadir,'firestudio'),
-                [format_str],
-                savename=galaxy_kwargs['name'],
-                framerate=fps,
-                extension='.mp4')
 
 #### MPS LOAD BALANCING
 def split_into_n_approx_equal_chunks(snap_pairs,nchunks):

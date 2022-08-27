@@ -1,6 +1,7 @@
 # FIRE_studio
-<a href="https://ascl.net/2202.006"><img src="https://img.shields.io/badge/ascl-2202.006-blue.svg?colorB=262255" alt="ascl:2202.006" /></a>
+[![Build Status](https://travis-ci.com/agurvich/FIRE_studio.svg?branch=main)](https://app.travis-ci.com/agurvich/FIRE_studio)
 [![PyPI version](https://badge.fury.io/py/firestudio.svg)](https://badge.fury.io/py/firestudio)
+<a href="https://ascl.net/2202.006"><img src="https://img.shields.io/badge/ascl-2202.006-blue.svg?colorB=262255" alt="ascl:2202.006" /></a>
 
 Movie Making Utilities for FIRE simulations
 
@@ -17,7 +18,7 @@ Note that I only support the most recent version of FIRE studio by default and y
 requirements:
 [abg_python](https://www.github.com/agurvich/abg_python)
 
-![Sample Rendering](docs/source/imgs/final.png)
+![Sample Rendering](https://github.com/agurvich/FIRE_studio/blob/main/docs/source/imgs/final.png)
 
 ## Installation
 To install (with ssh) clone the repository and its dependency

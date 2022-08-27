@@ -36,6 +36,9 @@ class SimpleStudio(Studio):
             scale_radius (float):
                 What to scale the radius by. The default value is tuned for displaying on ~100 kpc scales.
         '''
+
+        if not fancy and 'fixed_hsml' not in kwargs: kwargs['fixed_hsml'] = np.nan
+
         (xs,ys,zs,hs,ms,colorby) = self.__prepareCoordinates(**kwargs)
         if fancy and colorby is None: 
             if self.master_loud: print(
@@ -48,14 +51,15 @@ class SimpleStudio(Studio):
 
         if not fancy:
 
-            if cmap is None: cmap = 'C0'
+            if colorby is None: colorby = 'C0'
+
             ax.scatter(
                 xs,
                 ys,
                 alpha=0.2,
                 rasterized=True,
                 s=1,
-                c=cmap)
+                c=colorby)
 
         else:
 
@@ -117,9 +121,11 @@ class SimpleStudio(Studio):
                 f.name,
                 bbox_inches='tight',
                 dpi=300,
-                facecolor='k')
-            final_image = imread(f.name)
-        final_image = final_image[::-1]
+                facecolor='k',
+                pad_inches=0)
+            ## [::-1] because imread inherently reverses row orders
+            final_image = imread(f.name)[::-1]
+        final_image = np.transpose(final_image,axes=(1,0,2))
 
         plt.close(fig)
         return final_image
@@ -146,23 +152,21 @@ class SimpleStudio(Studio):
 
         coords = snapdict['Coordinates']
 
-        ## rotate by euler angles if necessary
-        coords = self.camera.rotate_array(coords,offset=True)
-
         ## cull the particles outside the frame and cast to float32
-        box_mask = self.cullFrameIndices(coords)
+        coords,box_mask = self.camera.project_and_clip(coords)
 
-        if fixed_hsml is not None:
-            hs = np.repeat(fixed_hsml,coords.shape[0]) ## kpc
+        if fixed_hsml is not None: hs = np.repeat(fixed_hsml,coords.shape[0]) ## kpc
         else:
             if "SmoothingLength"  in snapdict: hs = snapdict['SmoothingLength']
             else: hs = self.get_HSML(snapdict_name)
 
+        masses = snapdict['Masses'] if 'Masses' in snapdict.keys() else np.repeat(np.nan,coords.shape[0])
 
         return (
-            coords[:,0][box_mask],
-            coords[:,1][box_mask],
-            coords[:,2][box_mask],
-            hs[box_mask],snapdict['Masses'][box_mask],
+            coords[:,0],
+            coords[:,1],
+            coords[:,2],
+            hs[box_mask],
+            masses[box_mask],
             snapdict[colorby][box_mask] if colorby is not None else None)
 

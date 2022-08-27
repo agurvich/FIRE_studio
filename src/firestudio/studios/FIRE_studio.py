@@ -228,16 +228,11 @@ fireStudio.set_ImageParams(
         else:
             hsml = snapdict['SmoothingLength'] ## kpc
 
-        ## rotate by euler angles if necessary
-        coords = self.camera.rotate_array(coords,offset=True)
-
         ## cull the particles outside the frame and cast to float32
-        box_mask = self.cullFrameIndices(coords)
+        coords,box_mask = self.camera.project_and_clip(coords)
 
-        if self.master_loud:
-            print("projecting %d particles"%np.sum(box_mask))
+        if self.master_loud: print("projecting %d particles"%np.sum(box_mask))
 
-        coords = coords[box_mask].astype(np.float32)
         hsml = hsml[box_mask].astype(np.float32)
 
         gas_T = snapdict['Temperature'][box_mask].astype(np.float32)
@@ -380,7 +375,7 @@ fireStudio.render()
 
         final_image = layer_band_images(image24, massmap)
 
-        return np.transpose(final_image,axes=(1,0,2))
+        return final_image#np.transpose(final_image,axes=(1,0,2))
 
     def predictParameters(self,all_bands=None,**kwargs):
 
@@ -456,7 +451,11 @@ fireStudio.render()
             ax.axvline(bottom,c='C1',ls='--',alpha=0.25)
             ax.axvline(top,c='C1')
             ax.text(np.sqrt(bottom*top),0.5/1.1,'dynrange',ha='center')
-            nameAxes(ax,None,"'den' (L$_\odot$ kpc$^{-2}$)","1/N dN/d('den')",logflag=(1,0),
+            nameAxes(
+                ax,None,
+                r"'den' (L$_\odot$ kpc$^{-2}$)",
+                r"1/N dN/d('den')",
+                logflag=(1,0),
                 supertitle="maxden=%.2g\ndynrange=%2d"%(maxden,dynrange))
             ax.get_figure().set_dpi(120)
 

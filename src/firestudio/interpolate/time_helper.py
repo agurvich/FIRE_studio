@@ -8,7 +8,7 @@ import warnings
 
 from abg_python.interpolate.time_interpolate_utils import convertToDF,cross_match_starformed_gas,finalize_df,make_interpolated_snap
 from abg_python.galaxy.gal_utils import Galaxy
-from abg_python.plot_utils import plt
+from abg_python.plot_utils import plt,ffmpeg_frames
 from abg_python.physics_utils import addCircularVelocities
 
 from firestudio.studios.gas_studio import GasStudio
@@ -189,6 +189,29 @@ def render_this_scene(
     if not ABG_force_multithread:
         return snapdict,star_snapdict,return_value
     else: return return_value
+
+def render_ffmpeg_frames(studio_kwargss,galaxy_kwargs,nframes,fps):
+    for studio_kwargs in studio_kwargss:
+        if 'keys_to_extract' in galaxy_kwargs: galaxy_kwargs.pop('keys_to_extract')
+        if 'use_saved_subsnapshots' in galaxy_kwargs: galaxy_kwargs.pop('use_saved_subsnapshots')
+        if 'force_theta_TB' in galaxy_kwargs: galaxy_kwargs.pop('force_theta_TB')
+        if 'force_phi_TB' in galaxy_kwargs: galaxy_kwargs.pop('force_phi_TB')
+
+        if 'snapnum' not in galaxy_kwargs: galaxy_kwargs['snapnum'] = None
+        galaxy = Galaxy(**galaxy_kwargs)
+
+        this_savefig = studio_kwargs['savefig']
+        ## in case we rendered multiple types of frames
+        ##  we'll loop through a list of savefigs (even if there's only one)
+        if this_savefig is not None:
+            format_str = '%s'%this_savefig + '_frame_%0'+'%dd.png'%(np.ceil(np.log10(nframes)))
+            ## ffmpeg the frames
+            ffmpeg_frames(
+                os.path.join(galaxy.datadir,'firestudio'),
+                [format_str],
+                savename=galaxy_kwargs['name'],
+                framerate=fps,
+                extension='.mp4')
 
 def load_data_from_disk_if_necessary(
     galaxy_kwargs,
@@ -605,15 +628,17 @@ def worker_function(
     #print(which_studio)
     #print(studio_kwargs)
     #print(render_kwargs)
+    if ('time' in studio_kwargs.keys() and studio_kwargs['time'] is not None): 
+        setup_id_append = "_time%.5f"%studio_kwargs['time']
+    else: setup_id_append = ''
+
     my_studio = which_studio(
         os.path.join(this_snapdict['datadir'],'firestudio'),
         this_snapdict['snapnum'], ## attribute this data to the next_snapnum's projection file
         this_snapdict['name'],
         gas_snapdict=this_snapdict,
         star_snapdict=this_star_snapdict,
-        setup_id_append="_time%.5f"%studio_kwargs['time']
-            if studio_kwargs['time'] is not None  
-            else None,
+        setup_id_append=setup_id_append,
         **{'master_loud':False,**studio_kwargs,'savefig':this_savefig})
 
     if which_studio is GasStudio and render_kwargs['weight_name'] == 'Masses':

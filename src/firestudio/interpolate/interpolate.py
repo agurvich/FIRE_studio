@@ -79,19 +79,6 @@ class InterpolationHandler(BaseInterpolate):
             self.snap_pairs = None
             self.coord_interp_mode = None
 
-        ## point many threads at a single shared memory buffer to render multiple orientations 
-        ##  of the same snapshot simultaneously, super powerful!
-        if shared_memory: 
-            raise NotImplementedError('havent implemented shared memory buffer rendering quite yet')
-            return_value = self.scene_handler.interpolateAndRenderMultiprocessing(
-                galaxy_kwargs,
-                self.scene_handler.scene_kwargss,
-                studio_kwargss,
-                render_kwargss,
-                which_studios,
-                multi_threads,
-                keyframes,
-                check_exists)
 
         return_value = super().interpolateAndRender(
             galaxy_kwargs, ## only 1 dict, shared by all frames
@@ -100,10 +87,15 @@ class InterpolationHandler(BaseInterpolate):
             render_kwargss, ## only 1 dict, shared by all frames
             which_studios,
             keyframes=keyframes,
-            multi_threads=multi_threads,
+            multi_threads=multi_threads if not shared_memory else 'shared',
             timestamp=timestamp,
             check_exists=check_exists,
             add_composition=add_composition,
             time_slice=time_slice)
+
+        ## point many threads at a single shared memory buffer to render multiple orientations 
+        ##  of the same snapshot simultaneously, super powerful!
+        if shared_memory and return_value is not None: 
+            return_value = self.scene_handler.interpolateAndRenderMultiprocessing(multi_threads,*return_value)
     
         return return_value

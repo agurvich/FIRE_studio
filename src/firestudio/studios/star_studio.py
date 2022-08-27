@@ -369,17 +369,14 @@ class StarStudio(Studio):
         ## dont' filter star positions just yet
         star_pos = self.star_snapdict['Coordinates']
 
-        ## rotate by euler angles if necessary
-        star_pos = self.camera.rotate_array(star_pos,offset=True)
-
         ## cull the particles outside the frame and cast to float32
-        star_ind_box = self.cullFrameIndices(star_pos)
+        star_pos,star_mask = self.camera.project_and_clip(star_pos)
+
         ages = self.star_snapdict['AgeGyr']
         if self.age_max_gyr is not None:
-            star_ind_box = np.logical_and(star_ind_box,ages<self.age_max_gyr)
-        ages = ages[star_ind_box].astype(np.float32)
-        if self.master_loud:
-            print(np.sum(star_ind_box),'many star particles in volume')
+            star_mask = np.logical_and(star_mask,ages<self.age_max_gyr)
+        ages = ages[star_mask].astype(np.float32)
+        if self.master_loud: print(np.sum(star_mask),'many star particles in volume')
         
         ## try opening the stellar smoothing lengths, if we fail
         ##  let's calculate them and save them to the projection 
@@ -396,19 +393,16 @@ class StarStudio(Studio):
                     Hsml = self.get_HSML('star',use_metadata=False,save_meta=True)
 
         ## attempt to pass these indices along
-        h_star = Hsml[star_ind_box].astype(np.float32)
+        h_star = Hsml[star_mask].astype(np.float32)
 
-        ## and now filter the positions
-        star_pos = star_pos[star_ind_box].astype(np.float32)
-
-        mstar = self.star_snapdict['Masses'][star_ind_box].astype(np.float32)
+        mstar = self.star_snapdict['Masses'][star_mask].astype(np.float32)
         metals = self.star_snapdict['Metallicity']
         if len(np.shape(metals)) > 1: metals = metals[:,0]
-        metals = metals[star_ind_box].astype(np.float32)
+        metals = metals[star_mask].astype(np.float32)
 
         ## apply frame mask to band luminosities
         if lums is not None:
-            lums = lums[:,star_ind_box]
+            lums = lums[:,star_mask]
 
         ## will fill any columns of lums with appropriate BAND_ID 
         ##  if nu_eff for that column is not None
@@ -432,32 +426,24 @@ class StarStudio(Studio):
         KAPPA_UNITS=2.08854068444 ## cm^2/g -> kpc^2/mcode
         kappas = [KAPPA_UNITS*opacity_per_solar_metallicity(nu_eff) for nu_eff in nu_effs]
 
-
-        ## rotate by euler angles if necessary
-        gas_pos = self.camera.rotate_array(self.gas_snapdict['Coordinates'],offset=True)
-
         ## cull the particles outside the frame and cast to float32
-        gas_ind_box = self.cullFrameIndices(gas_pos)
-        if self.master_loud:
-            print(np.sum(gas_ind_box),'many gas particles in volume')
+        gas_pos,gas_mask = self.camera.project_and_clip(self.gas_snapdict['Coordinates'])
 
-        ## unpack the gas information
-        gas_pos = gas_pos[gas_ind_box].astype(np.float32)
+        if self.master_loud: print(np.sum(gas_mask),'many gas particles in volume')
 
-
-        mgas = self.gas_snapdict['Masses'][gas_ind_box].astype(np.float32)
+        mgas = self.gas_snapdict['Masses'][gas_mask].astype(np.float32)
         gas_metals = self.gas_snapdict['Metallicity']
         if len(np.shape(gas_metals)) > 1: gas_metals = gas_metals[:,0]
-        gas_metals = gas_metals[gas_ind_box].astype(np.float32)
+        gas_metals = gas_metals[gas_mask].astype(np.float32)
 
         ## set metallicity of hot gas to 0 so there is no dust extinction
-        temperatures = self.gas_snapdict['Temperature'][gas_ind_box]
+        temperatures = self.gas_snapdict['Temperature'][gas_mask]
         gas_metals[temperatures>1e5] = 0
 
         if "SmoothingLength" not in self.gas_snapdict:
-            h_gas = self.get_HSML('gas')[gas_ind_box]
+            h_gas = self.get_HSML('gas')[gas_mask]
         else:
-            h_gas = self.gas_snapdict['SmoothingLength'][gas_ind_box].astype(np.float32)
+            h_gas = self.gas_snapdict['SmoothingLength'][gas_mask].astype(np.float32)
         
         if self.no_dust: 
             mgas = np.zeros(1)
@@ -604,7 +590,11 @@ class StarStudio(Studio):
             ax.axvline(bottom,c='C1',ls='--',alpha=0.25)
             ax.axvline(top,c='C1')
             ax.text(np.sqrt(bottom*top),0.5/1.1,'dynrange',ha='center')
-            nameAxes(ax,None,"'den' (L$_\odot$ kpc$^{-2}$)","1/N dN/d('den')",logflag=(1,0),
+            nameAxes(
+                ax,None,
+                r"'den' (L$_\odot$ kpc$^{-2}$)",
+                r"1/N dN/d('den')",
+                logflag=(1,0),
                 supertitle="maxden=%.2g\ndynrange=%2d"%(maxden,dynrange))
             ax.get_figure().set_dpi(120)
 
