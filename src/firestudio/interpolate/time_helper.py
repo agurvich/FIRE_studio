@@ -17,6 +17,7 @@ from firestudio.studios.FIRE_studio import FIREStudio
 from firestudio.studios.simple_studio import SimpleStudio
 from firestudio.studios.composition import Composition
 
+## global variables
 prev_galaxy,next_galaxy = None,None
 merged_gas_df,merged_star_df = None,None
 
@@ -47,16 +48,13 @@ def single_threaded_control_flow(
     ## initialize the variables which we'll use
     ##  to avoid loading from disk unless we have to
     ##  i.e. moving next -> prev, etc...
-    prev_snapnum,next_snapnum = None,None
     snapdict,star_snapdict = None,None
 
     snap_pairs = [scene_kwargs['snap_pair'] for scene_kwargs in scene_kwargss]
     if not ABG_force_multithread:
         return_values = []
         for scene_kwargs in scene_kwargss:     
-            (prev_snapnum, next_snapnum,
-            snapdict,star_snapdict,
-            return_value) = render_this_scene(
+            snapdict,star_snapdict,return_value = render_this_scene(
                 which_studios, ##Nstudios
                 galaxy_kwargs, ## 1 dictionary shared by all scenes
                 scene_kwargs, ## 1 dictionary for this scene
@@ -65,7 +63,6 @@ def single_threaded_control_flow(
                 datadir,
                 timestamp,
                 load_gas,load_star,
-                prev_snapnum,next_snapnum,
                 snapdict,star_snapdict,
                 ABG_force_multithread,
                 polar)
@@ -76,7 +73,6 @@ def single_threaded_control_flow(
         (t0,t1) = scene_kwargss[0]['snap_pair_time']
         this_time = scene_kwargss[0]['time']
         snapdict,star_snapdict = get_interpolated_snaps(
-            prev_snapnum,next_snapnum,
             pair,
             t0,t1,
             this_time,
@@ -84,7 +80,6 @@ def single_threaded_control_flow(
             polar=polar,
             **galaxy_kwargs)
 
-        prev_snapnum,next_snapnum = pair
         ## set inside get_interpolated snaps, we won't need them
         ##  anymore
         global next_galaxy,prev_galaxy
@@ -108,8 +103,6 @@ def single_threaded_control_flow(
             itertools.repeat(timestamp),
             itertools.repeat(load_gas),
             itertools.repeat(load_star),
-            itertools.repeat(prev_snapnum),
-            itertools.repeat(next_snapnum),
             itertools.repeat(snapdict),
             itertools.repeat(star_snapdict),
             itertools.repeat(ABG_force_multithread),
@@ -132,7 +125,6 @@ def render_this_scene(
     datadir,
     timestamp,
     load_gas,load_star,
-    prev_snapnum,next_snapnum,
     snapdict,star_snapdict,
     ABG_force_multithread,
     polar=True):
@@ -172,16 +164,15 @@ def render_this_scene(
             studio_kwargss,
             [{'assert_cached':True,'loud':False,**render_kwargs} for render_kwargs in render_kwargss])
         if not ABG_force_multithread:
-            return prev_snapnum,next_snapnum,snapdict,star_snapdict,return_value
+            return snapdict,star_snapdict,return_value
         else: return return_value
     ## yeah alright, it was worth a shot. let's load from disk and project then
     except (AssertionError,KeyError): pass #raise
 
     ## determine if we've already loaded the data or if we need to open it from disk
-    snapdict,star_snapdict,prev_snapnum,next_snapnum = load_data_from_disk_if_necessary(
+    snapdict,star_snapdict = load_data_from_disk_if_necessary(
         galaxy_kwargs,
         scene_kwargs,
-        prev_snapnum,next_snapnum,
         snapdict,star_snapdict,
         load_gas,load_star,
         polar=polar) ## determines what coordinates we save in snapdict
@@ -196,13 +187,12 @@ def render_this_scene(
         render_kwargss)
 
     if not ABG_force_multithread:
-        return prev_snapnum,next_snapnum,snapdict,star_snapdict,return_value
+        return snapdict,star_snapdict,return_value
     else: return return_value
 
 def load_data_from_disk_if_necessary(
     galaxy_kwargs,
     scene_kwargs,
-    prev_snapnum,next_snapnum,
     snapdict,star_snapdict,
     load_gas,load_star,
     polar=True):
@@ -221,15 +211,13 @@ def load_data_from_disk_if_necessary(
         (t0,t1) = scene_kwargs['snap_pair_time']
         this_time = scene_kwargs['time']
         snapdict,star_snapdict = get_interpolated_snaps(
-            prev_snapnum,next_snapnum,
             pair,
             t0,t1,
             this_time,
             load_gas,load_star,
             polar=polar,
             **galaxy_kwargs)
-        prev_snapnum,next_snapnum = pair
-    return snapdict,star_snapdict,prev_snapnum,next_snapnum
+    return snapdict,star_snapdict,
 
 def get_single_snap(
     load_gas,
@@ -289,8 +277,6 @@ def get_single_snap(
     return snapdict,star_snapdict
     
 def get_interpolated_snaps(
-    prev_snapnum,
-    next_snapnum,
     pair,
     t0,t1,
     this_time,
@@ -308,7 +294,6 @@ def get_interpolated_snaps(
     ## determine if the galaxies in the pair are actually
     ##  changed, and if so, open their data from the disk.
     prev_galaxy,next_galaxy,changed = load_gals_from_disk(
-        prev_snapnum,next_snapnum,
         pair,
         prev_galaxy,
         next_galaxy,
@@ -317,7 +302,6 @@ def get_interpolated_snaps(
         **galaxy_kwargs)
 
     ## update the previous/next snapnums
-    prev_snapnum,next_snapnum = pair
     ## make an interpolated snapshot with these galaxies,
     ##  this takes a while so we'll hold onto it and only 
     ##  make a new one if necessary.
@@ -439,7 +423,6 @@ def get_interpolated_snaps(
 
 
 def load_gals_from_disk(
-    prev_snapnum,next_snapnum,
     pair,
     prev_galaxy,next_galaxy,
     testing=False,
@@ -460,9 +443,9 @@ def load_gals_from_disk(
 
     ## -- check the prev galaxy
     ## keep the current snapnum
-    if pair[0] == prev_snapnum: prev_galaxy=prev_galaxy
+    if prev_galaxy is not None and pair[0] == prev_galaxy.snapnum: prev_galaxy=prev_galaxy
     ## step forward in time, swap pointers
-    elif pair[0] == next_snapnum:
+    elif next_galaxy is not None and pair[0] == next_galaxy.snapnum:
         prev_galaxy = next_galaxy
         next_galaxy = None
     ## will need to read from disk
@@ -470,7 +453,7 @@ def load_gals_from_disk(
     
     ## -- now the next galaxy
     ## keep the current snapnum
-    if pair[1] == next_snapnum: next_galaxy = next_galaxy
+    if next_galaxy is not None and pair[1] == next_galaxy.snapnum: next_galaxy = next_galaxy
     ## will need to read from disk
     else: next_galaxy = None
 
