@@ -163,7 +163,7 @@ class Drawer(object):
 
         ## fill the pixels of the the scale bar with white
         if self.scale_bar:
-            self.addScaleBar(final_image)
+            self.addScaleBar(ax,final_image)
 
         ## main imshow call
         imgplot = ax.imshow(
@@ -192,7 +192,7 @@ class Drawer(object):
         self.addText(ax)
 
 ####### image utilities #######
-    def addScaleBar(self,image:np.ndarray):
+    def addScaleBar(self,ax:plt.Axes,image:np.ndarray):
         """[summary]
 
         Parameters
@@ -209,19 +209,17 @@ class Drawer(object):
         ## set scale bar length
         self.scale_label_text = r"$\mathbf{%1g \, \rm{kpc}}$"%self.scale_line_length
 
-        # Convert to pixel space
-        length_per_pixel = (self.Xmax - self.Xmin) / self.npix_x
-        self.scale_line_length_px = int(self.scale_line_length / length_per_pixel)
 
-        # Position in terms of image array indices
-        scale_line_x_start = int(0.05 * self.npix_x)
-        scale_line_x_end = min(scale_line_x_start + self.scale_line_length_px,self.npix_x)
-        scale_line_y = int(0.02 * self.npix_y)
 
-        npix_thick = 12
-        # Go through pixels for scale bar, setting them to white
-        for x_index in range(scale_line_x_start, scale_line_x_end):
-            image[scale_line_y:scale_line_y+npix_thick, x_index,:3] = 1 if self.font_color in ['w','white'] else 0
+        xstart = -0.90*self.camera.frame_half_width
+        scale_line_y = -0.95*self.camera.frame_half_width
+        ax.plot(
+            [xstart,xstart+self.scale_line_length],
+            [scale_line_y,scale_line_y],
+            color='w' if self.font_color in ['w','white'] else 'k',
+            lw=3
+            )
+
         return image
 
     def addText(self,ax:plt.Axes):
@@ -510,7 +508,6 @@ class Studio(Drawer):
             for ckwarg,parameter in signature.parameters.items(): 
                 if ckwarg in kwargs: camera_kwargs[ckwarg] = kwargs.pop(ckwarg)
 
-            print(camera_kwargs)
             kwargs['camera'] = Camera(**camera_kwargs)
 
         ## initialize the object with some default image params that will
@@ -859,7 +856,7 @@ studio.set_ImageParams(
     def print_ImageParams(self):
         """ Prints the current image parameters."""
         default_kwargs = [
-            'frame_half_thickness',
+            'camera',
             'aspect_ratio',
             'pixels', 
             'figure_label', 
