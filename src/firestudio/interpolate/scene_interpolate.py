@@ -97,12 +97,13 @@ class SceneInterpolationHandler(TimeInterpolationHandler):
         time_since_last_keyframe_sec,
         time_clip=True,
         loud=True,
+        nsteps=None,
         **kwargs):
 
         new_kwargs = self.parse_kwargs(**kwargs)
         prev_kwargs = self.scene_kwargss[-1]
 
-        nsteps = int(np.ceil(time_since_last_keyframe_sec*self.fps))
+        if nsteps is None: nsteps = int(np.ceil(time_since_last_keyframe_sec*self.fps))
 
         ## handle case when we are asked to interpolate past
         ##  the total duration of the movie
@@ -139,22 +140,23 @@ class SceneInterpolationHandler(TimeInterpolationHandler):
                     sub_prev_kwargs[new_kwarg] = default_kwargs[new_kwarg]
         
         if nsteps == 1: self.scene_kwargss.append(new_kwargs)
-        ## start at i = 1 to avoid repeating frames
-        for i in range(1,nsteps+1):
-            this_kwargs = {}
-            for kwarg in new_kwargs:
-                pval = prev_kwargs[kwarg]
-                nval = new_kwargs[kwarg]
-                ## convert args that are lists/tuples to arrays
-                if kwarg in ['quaternion','camera_pos','camera_focus','font_color']:
-                    pval = np.array(pval)
-                    nval = np.array(nval)
-                ## TODO should have some kind of interpolation function
-                ##  so we don't have to do just linear
-                ##  then again we can always string together keyframes
-                ##  to get complex interpolations
-                this_kwargs[kwarg] = pval + i*(nval-pval)/(nsteps)
-            self.scene_kwargss.append(this_kwargs)
+        else:
+            ## start at i = 1 to avoid repeating frames
+            for i in range(1,nsteps+1):
+                this_kwargs = {}
+                for kwarg in new_kwargs:
+                    pval = prev_kwargs[kwarg]
+                    nval = new_kwargs[kwarg]
+                    ## convert args that are lists/tuples to arrays
+                    if kwarg in ['quaternion','camera_pos','camera_focus','font_color']:
+                        pval = np.array(pval)
+                        nval = np.array(nval)
+                    ## TODO should have some kind of interpolation function
+                    ##  so we don't have to do just linear
+                    ##  then again we can always string together keyframes
+                    ##  to get complex interpolations
+                    this_kwargs[kwarg] = pval + i*(nval-pval)/(nsteps)
+                self.scene_kwargss.append(this_kwargs)
 
         ## note the index of this keyframe
         self.keyframes.append(len(self.scene_kwargss)-1)
@@ -280,7 +282,8 @@ class SceneInterpolationHandler(TimeInterpolationHandler):
                 ## handle case where multiprocessing isn't used
                 if shm_buffer is not None:
                     shm_buffer.close()
-                    shm_buffer.unlink()
+                    try: shm_buffer.unlink()
+                    except FileNotFoundError: pass
 
             del gas_shm_buffers
             for shm_buffer in star_shm_buffers:
