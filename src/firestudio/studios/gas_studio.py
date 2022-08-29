@@ -350,7 +350,7 @@ Important methods include:
             if quantity_name not in snapdict:
                 ## need to rotate the velocities in here
                 if quantity_name in ['Vx','Vy','Vz']:
-                    vels = self.camera.rotate_array(snapdict['Velocities'])
+                    vels = self.camera.project_array(snapdict['Velocities'],offset=False)
                     quantities = vels[:,['Vx','Vy','Vz'].index(quantity_name)]
                 ## was passed something that we don't know what to do with
                 elif 'Log' in quantity_name or 'log' in quantity_name:
@@ -368,7 +368,7 @@ Important methods include:
                 quantities = snapdict[quantity_name]
 
         ## cull the particles outside the frame and cast to float32
-        pos,box_mask = self.camera.project_and_clip(pos)
+        pos,box_mask = self.camera.project_and_clip(Coordinates)
 
         if self.master_loud: print("projecting %d particles"%np.sum(box_mask))
 
