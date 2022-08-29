@@ -4,7 +4,9 @@ from abg_python.math_utils import rotateQuaternion_math
 
 class Camera(object):
     def __repr__(self):
-        return "Camera(%s,%s) - %s "%(repr(self.camera_pos),repr(self.camera_focus),repr(self.quaternion))
+        
+        roll_str = f"{self.camera_roll}" if self.camera_roll is not None else ''
+        return "Camera(pos=%s,focus=%s%s)"%(repr(self.camera_pos),repr(self.camera_focus),roll_str)
 
     def __init__(
         self,
@@ -43,7 +45,9 @@ class Camera(object):
         """
 
         ## for some reason this seems to work best when everything is negated?? lmfao
-        camera_pos = np.array(camera_pos,ndmin=1)
+        camera_pos = np.array(camera_pos,ndmin=1,dtype=float)
+
+        if np.allclose(camera_pos[:2],[0,0]): camera_pos[0]=camera_pos[0]+1e-5
 
         ## default to looking at the origin 
         if camera_focus is None: camera_focus = np.zeros(3)
@@ -75,6 +79,7 @@ class Camera(object):
         self.camera_east /= np.linalg.norm(self.camera_east)
         self.camera_north = np.cross(self.camera_normal, self.camera_east).ravel()
 
+        self.camera_roll = camera_roll
         ## roll the camera about its normal vector if requested
         ##  easiest to do with a quaternion rotation
         if camera_roll is not None:
