@@ -44,6 +44,7 @@ class Drawer(object):
     def render(
         self,
         ax:plt.Axes=None,
+        inset_axes:bool=False,
         **kwargs):
         """ Generates an image with the `produceImage` method and then plots it with the `plotImage` method.
 
@@ -67,18 +68,32 @@ class Drawer(object):
         ## plot that RGB image and overlay scale bars/text
         self.plotImage(ax,final_image)
 
+        if inset_axes: self.drawInsetAxes(ax)
+
         ## save the image
         if self.savefig is not None:
             self.saveFigure(fig,self.savefig)
 
         return ax,final_image
 
+    def drawInsetAxes(
+        self,
+        ax:plt.Axes,
+        loc='bottom right',
+        **kwargs):
+
+        if loc != 'bottom right': raise NotImplementedError
+        bounds = [0.75,0.01,0.2,0.2]
+        new_ax = ax.inset_axes(bounds)
+        self.drawCoordinateAxes(new_ax,add_labels=False)
+
     def drawCoordinateAxes(
         self,
         ax:plt.Axes,
         spacing:float=1,
         length:float=10,
-        colors:list=None):
+        colors:list=None,
+        add_labels:bool=True):
         """[summary]
 
         Parameters
@@ -125,18 +140,19 @@ class Drawer(object):
             x,y,z = coordinates[points.size*(i+1)-1]
             ax.text(x,y,label,fontdict={'color':'white'})
 
-        ax.set_facecolor('k')
+        ax.set_facecolor('None')
         ax.set_aspect(1)
         ax.set_xlim(-length,length)
         ax.set_ylim(-length,length)
 
         subtitle = str(np.round(self.camera.project_array(np.identity(3),offset=False),1))
         subtitle = subtitle.replace('[','').replace(']','')
-        nameAxes(
-            ax,None,None,None,
-            subtitle=subtitle,
-            supertitle=str(np.round(self.camera.camera_pos,0)),
-            swap_annotate_side=True,font_color='w')
+        if add_labels:
+            nameAxes(
+                ax,None,None,None,
+                subtitle=subtitle,
+                supertitle=str(np.round(self.camera.camera_pos,0)),
+                swap_annotate_side=True,font_color='w')
         return ax
 
     def plotImage(

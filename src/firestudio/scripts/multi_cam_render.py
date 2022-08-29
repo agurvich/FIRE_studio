@@ -82,7 +82,8 @@ def main(
         #'no_dust':True,
         #'age_max_gyr':25/1e3, ## 25 Myr
         #'use_metadata':False,
-        'save_meta':True
+        'save_meta':True,
+        'inset_axes':True
     })
 
     velocity_projection.studio_kwargs.update({
@@ -113,11 +114,11 @@ def main(
         render_kwargss=[production.render_kwargs for production in productions], 
         studio_kwargss=[production.studio_kwargs for production in productions],
         multi_threads=None,
-        shared_memory=False,
+        shared_memory=True,
         which_studios=[production.which_studio for production in productions],
         check_exists=True, ## skip rendering a frame if the png already exists
         #timestamp=last_galaxy.get_bursty_regime()[0]/1e3, ## offset the timestamp by 0 Gyr ## 
-        add_composition=True)  ## will add a composition frame of the requested Studios
+        add_composition=False)  ## will add a composition frame of the requested Studios
 
 if __name__ == '__main__':
     main(savefig_str=sys.argv[1])
