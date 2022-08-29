@@ -610,15 +610,7 @@ def worker_function(
     else: this_savefig = None
 
     ## decide what we want to pass to the GasStudio
-    if which_studio is GasStudio: render_kwargs = {
-        'weight_name':'Masses',
-        'quantity_name':'Temperature',
-        'min_quantity':2,
-        'max_quantity':7,
-        'quantity_adjustment_function':np.log10,
-        #'min_weight':-0.5,
-        #'max_weight':3,
-        }
+    if which_studio is GasStudio: render_kwargs = {}
     elif which_studio is StarStudio: render_kwargs = {}
     elif which_studio is FIREStudio: render_kwargs = {}
     elif which_studio is SimpleStudio: render_kwargs = {}
@@ -648,15 +640,12 @@ def worker_function(
         setup_id_append=setup_id_append,
         **{'master_loud':False,**studio_kwargs,'savefig':this_savefig})
 
-    if which_studio is GasStudio and render_kwargs['weight_name'] == 'Masses':
-        render_kwargs['weight_adjustment_function'] = lambda x: np.log10(x/my_studio.Acell) + 10 - 6 ## msun/pc^2,
-    
-
     ## ignore warnings to reduce console spam
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         ## overwrite loud rendering to reduce console spam
         ax,im = my_studio.render(None,**{**render_kwargs,'loud':False})
+
     axs = np.array([ax]).reshape(-1)
     fig = axs[0].get_figure()
 

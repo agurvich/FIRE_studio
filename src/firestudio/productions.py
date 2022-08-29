@@ -33,15 +33,18 @@ class __Production(object):
 
         self.studio.render(ax,**kwargs)
 
+## not going to actually work, just needs to be a place-holder for now
+def __msun_pc2_adjust_fn(x): return np.log10(x/my_studio.Acell) + 10 - 6 ## msun/pc^2
+
 __velocity_projection_kwargs = {
     'studio':GasStudio,
     'render_kwargs':{
+        'weight_name':'Masses',
         'quantity_name':'Vz',
-        'use_metadata':False,
-        'save_meta':True,
         'cmap':'coolwarm',
         'min_quantity':-200,
-        'max_quantity':200},
+        'max_quantity':200,
+    },
     'studio_kwargs':{}
 }
 
@@ -51,13 +54,12 @@ __mock_hubble_kwargs = {
     'studio_kwargs':{'maxden':2.2e8,'dynrange':4.7e2} 
 }
 
-def register_production(prod_name,kwargs):
-    print('registering a production:',key[2:-len('_kwargs')]) 
+def register_production(prod_name,kwargs,loud=True):
+    if loud: print('registering a production:',key[2:-len('_kwargs')]) 
     globals()[prod_name] = __Production(kwargs)
+    if loud: print(globals()[key[2:-len('_kwargs')]])
 
 ## algorithmically register 'productions' by the dictionaries that are listed above
 for key in list(globals().keys()):
     if key[-len('_kwargs'):] == '_kwargs':
-        register_production(key[2:-len('_kwargs')],globals()[key])
-        print(globals()[key[2:-len('_kwargs')]])
-        
+        register_production(key[2:-len('_kwargs')],globals()[key],loud=False)
