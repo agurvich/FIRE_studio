@@ -329,101 +329,105 @@ def get_interpolated_snaps(
     ##  this takes a while so we'll hold onto it and only 
     ##  make a new one if necessary.
     #changed = True
-    if changed:
-        ## create the gas dataframes if necessary
-        if load_gas: 
-            #print("converting gas to DF")
-            prev_gas_df = convertToDF(prev_galaxy.sub_snap,keys_to_extract,polar)
-            next_gas_df = convertToDF(next_galaxy.sub_snap,keys_to_extract,polar)
-        
-        ## create the star dataframes if necessary
-        if load_star:
-            #print("converting stars to DF")
-            prev_star_df = convertToDF(prev_galaxy.sub_star_snap,keys_to_extract,polar)
-            next_star_df = convertToDF(next_galaxy.sub_star_snap,keys_to_extract,polar)
-
-        ## if we have both, we can try to cross-match the positions
-        ##  of particles between them
-        if load_gas and load_star:
-            #print("cross-matching starformed gas")
-
-            ## add AgeGyr arrays which will be used to disappear gas particles
-            ##  when we multi index match them with splits/stars
-            prev_gas_df['AgeGyr'] = np.ones(prev_gas_df.shape[0])
-            next_gas_df['AgeGyr'] = np.ones(next_gas_df.shape[0])
-
-            (prev_gas_df,
-            next_gas_df,
-            prev_star_df,
-            next_star_df) = cross_match_starformed_gas(
-                t0,t1,
-                prev_gas_df,next_gas_df,
-                prev_star_df,next_star_df)
-
-
-        if load_gas:
-            ## look for ancestor gas particles for those particles which split
-            """
-            merged_gas_df = search_multi_ids(
-                merged_gas_df, ## df to search for ancestors
-                merged_gas_df, ## df w/ targets
-                forward=False) ## look in the past
-                
-            if load_star:
-                ## find final position that gas particles which turn into stars
-                ##  should interpolate toward
-                search_multi_ids(
-                    merged_star_df, ## df to use as lookup
-                    merged_gas_df, ## df w/ targets
-                    forward=True) ## look in the future
-            """
-            ## merge rows of dataframes based on particle ID
-            merged_gas_df = prev_gas_df.join(
-                next_gas_df,
-                rsuffix='_next',
-                how='outer')
+    if pair[0] == pair[1]:
+        interp_gas_snapdict = prev_galaxy.sub_snap if load_gas else {}
+        interp_star_snapdict = prev_galaxy.sub_star_snap if load_star else {}
+    else:
+        if changed:
+            ## create the gas dataframes if necessary
+            if load_gas: 
+                #print("converting gas to DF")
+                prev_gas_df = convertToDF(prev_galaxy.sub_snap,keys_to_extract,polar)
+                next_gas_df = convertToDF(next_galaxy.sub_snap,keys_to_extract,polar)
             
-            del prev_galaxy.sub_snap
-            #del next_galaxy.sub_snap ## don't delete this b.c. we'll need it when we load the next one
+            ## create the star dataframes if necessary
+            if load_star:
+                #print("converting stars to DF")
+                prev_star_df = convertToDF(prev_galaxy.sub_star_snap,keys_to_extract,polar)
+                next_star_df = convertToDF(next_galaxy.sub_star_snap,keys_to_extract,polar)
 
-            ## fill values w. extrapolation in both directions
-            ##  add polar coordinates and velocities, and drop any remaining nans or duplicates
-            merged_gas_df = finalize_df(
-                t0,t1,
-                merged_gas_df,
-                polar=polar,
-                take_avg_L=take_avg_L)
+            ## if we have both, we can try to cross-match the positions
+            ##  of particles between them
+            if load_gas and load_star:
+                #print("cross-matching starformed gas")
 
-        if load_star: 
-            ## merge rows of dataframes based on particle ID
-            merged_star_df = prev_star_df.join(
-                next_star_df,
-                rsuffix='_next',
-                how='outer')
+                ## add AgeGyr arrays which will be used to disappear gas particles
+                ##  when we multi index match them with splits/stars
+                prev_gas_df['AgeGyr'] = np.ones(prev_gas_df.shape[0])
+                next_gas_df['AgeGyr'] = np.ones(next_gas_df.shape[0])
 
-            del prev_galaxy.sub_star_snap
-            #del next_galaxy.sub_star_snap ## don't delete this b.c. we'll need it when we load the next one
+                (prev_gas_df,
+                next_gas_df,
+                prev_star_df,
+                next_star_df) = cross_match_starformed_gas(
+                    t0,t1,
+                    prev_gas_df,next_gas_df,
+                    prev_star_df,next_star_df)
 
-            ## fill values w. extrapolation in both directions
-            ##  add polar coordinates and velocities, and drop any remaining nans or duplicates
-            merged_star_df = finalize_df(
-                t0,t1,
-                merged_star_df,
-                polar=polar,
-                take_avg_L=take_avg_L)
-    else: pass ## [ if changed: ] 
 
-    ## create the interp_snap with new values for the new time
-    if load_gas: interp_gas_snapdict = make_interpolated_snap(
-        t0,t1,
-        merged_gas_df,
-        this_time) 
-    else: interp_gas_snapdict = {}            
-    if load_star: interp_star_snapdict = make_interpolated_snap(
-        t0,t1,
-        merged_star_df,
-        this_time)
-    else: interp_star_snapdict = {}
+            if load_gas:
+                ## look for ancestor gas particles for those particles which split
+                """
+                merged_gas_df = search_multi_ids(
+                    merged_gas_df, ## df to search for ancestors
+                    merged_gas_df, ## df w/ targets
+                    forward=False) ## look in the past
+                    
+                if load_star:
+                    ## find final position that gas particles which turn into stars
+                    ##  should interpolate toward
+                    search_multi_ids(
+                        merged_star_df, ## df to use as lookup
+                        merged_gas_df, ## df w/ targets
+                        forward=True) ## look in the future
+                """
+                ## merge rows of dataframes based on particle ID
+                merged_gas_df = prev_gas_df.join(
+                    next_gas_df,
+                    rsuffix='_next',
+                    how='outer')
+                
+                del prev_galaxy.sub_snap
+                #del next_galaxy.sub_snap ## don't delete this b.c. we'll need it when we load the next one
+
+                ## fill values w. extrapolation in both directions
+                ##  add polar coordinates and velocities, and drop any remaining nans or duplicates
+                merged_gas_df = finalize_df(
+                    t0,t1,
+                    merged_gas_df,
+                    polar=polar,
+                    take_avg_L=take_avg_L)
+
+            if load_star: 
+                ## merge rows of dataframes based on particle ID
+                merged_star_df = prev_star_df.join(
+                    next_star_df,
+                    rsuffix='_next',
+                    how='outer')
+
+                del prev_galaxy.sub_star_snap
+                #del next_galaxy.sub_star_snap ## don't delete this b.c. we'll need it when we load the next one
+
+                ## fill values w. extrapolation in both directions
+                ##  add polar coordinates and velocities, and drop any remaining nans or duplicates
+                merged_star_df = finalize_df(
+                    t0,t1,
+                    merged_star_df,
+                    polar=polar,
+                    take_avg_L=take_avg_L)
+        else: pass ## [ if changed: ] 
+
+        ## create the interp_snap with new values for the new time
+        if load_gas: interp_gas_snapdict = make_interpolated_snap(
+            t0,t1,
+            merged_gas_df,
+            this_time) 
+        else: interp_gas_snapdict = {}            
+        if load_star: interp_star_snapdict = make_interpolated_snap(
+            t0,t1,
+            merged_star_df,
+            this_time)
+        else: interp_star_snapdict = {}
 
     ## keep outside the conditional b.c. worker function
     ##  looks for them in gas_snapdict
@@ -503,6 +507,9 @@ def load_gals_from_disk(
                     prev_galaxy.sub_star_snap])
         else: prev_galaxy = pair[0]
         changed = True
+    
+    ## handle the scenario when we're interpolating in space, not in time
+    if pair[0] == pair[1]: next_galaxy = prev_galaxy
     if next_galaxy is None:
         print('loading',pair[1],'from disk')
         if not testing:

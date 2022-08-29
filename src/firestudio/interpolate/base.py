@@ -88,10 +88,6 @@ class BaseInterpolate(object):
         ## print out which frame numbers need to be rendered
         #else: print([this['savefig_suffix'].split('_')[2].split('.png')[0] for this in scene_kwargss])
 
-        if 'snap_pair' in scene_kwargss[0]:
-            snap_pairs = [scene_kwargs['snap_pair'] for scene_kwargs in scene_kwargss]
-        else: snap_pairs = None
-
         if multi_threads == 'shared':
             ## return the parameters required for scene_handler.interpolateAndRenderMultiprocessing
             return (
@@ -101,7 +97,7 @@ class BaseInterpolate(object):
                 render_kwargss,
                 which_studios)
         ## single threaded, the vanilla experience
-        elif multi_threads == 1:
+        elif multi_threads == 1 or multi_threads is None:
             ## collect positional arguments for worker_function
             return_value = single_threaded_control_flow(
                 which_studios,
@@ -117,6 +113,7 @@ class BaseInterpolate(object):
         ##  so definitely not *completely* thread-safe but usually 
         ##  one can get around this by just resubmitting the job
         elif multi_threads > 1:
+            snap_pairs = [scene_kwargs['snap_pair'] for scene_kwargs in scene_kwargss]
             ## split the pairs of snapshots into approximately equal chunks
             ##  prioritizing  matching pairs of snapshots
             mps_indices = split_into_n_approx_equal_chunks(snap_pairs,multi_threads)
@@ -272,6 +269,14 @@ class BaseInterpolate(object):
                 studio_kwargss,
                 datadir)
         else: frames_to_do = np.ones(scene_kwargss.shape[0],dtype=bool)
+
+        ## handle single snapshot space interpolation
+        if 'snap_pair' not in scene_kwargss[0]:
+            ## copy the snapnum from the galaxy_kwargs, one of these better have them!
+            if 'snapnum' not in galaxy_kwargs.keys(): raise KeyError(
+                f"No snapshot specification in scene_kwargs:\n{scene_kwargss[0]}\nor galaxy kwargs:\n{galaxy_kwargs}")
+            for scene_kwargs in scene_kwargss: 
+                scene_kwargs['snap_pair'] = (galaxy_kwargs['snapnum'],galaxy_kwargs['snapnum'])
 
         return which_studios,galaxy_kwargs,scene_kwargss[frames_to_do],studio_kwargss,render_kwargss
 

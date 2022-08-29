@@ -76,7 +76,7 @@ class InterpolationHandler(BaseInterpolate):
         else:
             if 'snapnum' not in galaxy_kwargs: raise KeyError("galaxy_kwargs must contain snapnum.")
             scene_kwargss = self.scene_handler.scene_kwargss
-            self.snap_pairs = None
+            self.snap_pairs = [(galaxy_kwargs['snapnum'],galaxy_kwargs['snapnum'])]
             self.coord_interp_mode = None
 
 
