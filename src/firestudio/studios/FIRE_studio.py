@@ -308,41 +308,6 @@ fireStudio.set_ImageParams(
 
 
 ####### produceImage implementation #######
-    def render(
-        self,
-        ax=None,
-        **kwargs):
-        """Plots a projected image using the stored image parameters.
-
-            Input: 
-
-                ax = None -- axis to plot image to, if None will create a new figure
-
-            Output:
-
-                ax -- the axis the image was plotted to
-                final_image -- Npix_x x Npix_y x 3 RGB pixel array
-
-Example usage:
-```python
-fireStudio.render()
-```"""
-
-
-        if ax is None: fig,ax = plt.figure(),plt.gca()
-        else: fig = ax.get_figure()
-
-        ## remap the C output to RGB space
-        final_image = self.produceImage(**kwargs)
-
-        ## plot that RGB image and overlay scale bars/text
-        self.plotImage(ax,final_image)
-
-        ## save the image
-        if self.savefig is not None: self.saveFigure(fig,self.savefig)
-
-        return ax,final_image
-
     def produceImage(
         self,
         quick=False,
