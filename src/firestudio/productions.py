@@ -1,5 +1,7 @@
 import warnings
 
+import numpy as np
+
 from .studios.gas_studio import GasStudio
 from .studios.star_studio import StarStudio
 from .studios.FIRE_studio import FIREStudio
@@ -31,14 +33,31 @@ class __Production(object):
     def render(self,ax,**kwargs):
 
         for key,value in self.render_kwargs.items():
-            if key not in kwargs.keys(): kwargs[key] = value 
+            if key not in kwargs.keys(): 
+                kwargs[key] = value if 'adjustment_function' not in key else lambda x: value(x,self.studio.Acell)
+            
+
 
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             self.studio.render(ax,**kwargs)
 
 ## not going to actually work, just needs to be a place-holder for now
-def __msun_pc2_adjust_fn(x): return np.log10(x/my_studio.Acell) + 10 - 6 ## msun/pc^2
+def __msun_pc2_adjust_fn(x,Acell): 
+    return np.log10(x/Acell) + 10 - 6 ## msun/pc^2
+
+__mass_projection_kwargs = {
+    'studio':GasStudio,
+    'render_kwargs':{
+        'weight_name':'Masses',
+        'quantity_name':'Temperature',
+        'cmap':'viridis',
+        'min_weight':-2,
+        'max_weight':4,
+        'weight_adjustment_function':__msun_pc2_adjust_fn
+    },
+    'studio_kwargs':{}
+}
 
 __velocity_projection_kwargs = {
     'studio':GasStudio,
