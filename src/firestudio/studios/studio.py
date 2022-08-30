@@ -86,6 +86,7 @@ class Drawer(object):
         bounds = [0.75,0.01,0.2,0.2]
         new_ax = ax.inset_axes(bounds)
         self.drawCoordinateAxes(new_ax,add_labels=False)
+        new_ax.axis('off')
 
     def drawCoordinateAxes(
         self,
@@ -127,15 +128,15 @@ class Drawer(object):
             coordinates[points.size*i:points.size*(i+1),i] = points 
         
         ## perform the rotation
-        coordinates,mask = self.camera.project_and_clip(coordinates)
-        if np.sum(mask) == 0: return ax
+        coordinates = self.camera.project_array(coordinates,offset=False)
+        #if np.sum(mask) == 0: return ax
 
         ## plot the new x-y coordiantes
         for i in range(3):
             these_coords = coordinates[points.size*i:points.size*(i+1)]
-            ax.plot(these_coords[:,0],these_coords[:,1],'.',color=colors[i])
+            ax.plot(these_coords[:,0],these_coords[:,1],ls='-',marker='.',markersize=3,lw=3,color=colors[i])
 
-        ax.plot(0,0,'.',c=colors[-1])
+        #ax.plot(0,0,c=colors[-1])
         for i,label in enumerate(['x','y','z']):
             x,y,z = coordinates[points.size*(i+1)-1]
             ax.text(x,y,label,fontdict={'color':'white'})
