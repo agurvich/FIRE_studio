@@ -306,7 +306,7 @@ def get_interpolated_snaps(
     load_gas,load_star,
     keys_to_extract=None,
     polar=True, ## use polar interpolation for coordinates?
-    take_avg_L=False,
+    take_avg_L=True,
     **galaxy_kwargs):
 
     if keys_to_extract is None: keys_to_extract = []
