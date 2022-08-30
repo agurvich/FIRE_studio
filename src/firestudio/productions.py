@@ -1,6 +1,8 @@
-from tkinter import W
+import warnings
+
 from .studios.gas_studio import GasStudio
 from .studios.star_studio import StarStudio
+from .studios.FIRE_studio import FIREStudio
 
 class __Production(object):
     def __repr__(self):
@@ -31,7 +33,9 @@ class __Production(object):
         for key,value in self.render_kwargs.items():
             if key not in kwargs.keys(): kwargs[key] = value 
 
-        self.studio.render(ax,**kwargs)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            self.studio.render(ax,**kwargs)
 
 ## not going to actually work, just needs to be a place-holder for now
 def __msun_pc2_adjust_fn(x): return np.log10(x/my_studio.Acell) + 10 - 6 ## msun/pc^2
@@ -52,6 +56,12 @@ __mock_hubble_kwargs = {
     'studio':StarStudio,
     'render_kwargs':{},
     'studio_kwargs':{'maxden':2.2e8,'dynrange':4.7e2} 
+}
+
+__fire_3_color_kwargs = {
+    'studio':FIREStudio,
+    'render_kwargs':{},
+    'studio_kwargs':{} 
 }
 
 def register_production(prod_name,kwargs,loud=True):
