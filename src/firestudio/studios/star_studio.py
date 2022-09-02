@@ -374,6 +374,9 @@ class StarStudio(Studio):
 
         ages = self.star_snapdict['AgeGyr']
         if self.age_max_gyr is not None:
+            ## apply the new age max to the star positions
+            star_pos = star_pos[ages[star_mask]<self.age_max_gyr]
+            ## now compute a new single mask to apply to the velocities and scalar field arrays
             star_mask = np.logical_and(star_mask,ages<self.age_max_gyr)
         ages = ages[star_mask].astype(np.float32)
         if self.master_loud: print(np.sum(star_mask),'many star particles in volume')
