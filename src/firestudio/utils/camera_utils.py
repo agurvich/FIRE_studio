@@ -45,9 +45,7 @@ class Camera(object):
         """
 
         ## for some reason this seems to work best when everything is negated?? lmfao
-        camera_pos = np.array(camera_pos,ndmin=1,dtype=float)
-
-        if np.allclose(camera_pos[:2],[0,0]): camera_pos[0]=camera_pos[0]+1e-5
+        camera_pos = np.array(camera_pos,ndmin=1,dtype=float)#*-1
 
         ## default to looking at the origin 
         if camera_focus is None: camera_focus = np.zeros(3)
@@ -59,9 +57,10 @@ class Camera(object):
 
         ## define the look vector as pointing from the camera *to* the focus
         ##  i.e. a positive projection along camera_normal -> in front of the camera
-        ## TODO why does self.camera_pos need to be negated??
-        ##  camera_test() produces intuitive results only when it is :\
-        self.camera_normal = self.camera_focus-(-self.camera_pos) 
+        self.camera_normal = self.camera_focus-self.camera_pos
+
+        if np.allclose(self.camera_normal[:2],[0,0]): self.camera_normal[0]=self.camera_normal[0]+1e-5
+
         self.camera_dist = np.linalg.norm(self.camera_normal)
         self.camera_normal = self.camera_normal/self.camera_dist
 
@@ -109,9 +108,7 @@ class Camera(object):
         :rtype: np.ndarray
         """
 
-        ## TODO why does self.camera_pos need to be negated??
-        ##  camera_test() produces intuitive results only when it is :\
-        if offset: offset = -self.camera_pos
+        if offset: offset = self.camera_pos
         else: offset = 0
 
         projected_arr = np.sum(self.camera_axes*(arr-offset)[:,None],axis=-1) 

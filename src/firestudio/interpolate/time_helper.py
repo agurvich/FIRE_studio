@@ -17,7 +17,7 @@ from firestudio.studios.FIRE_studio import FIREStudio
 from firestudio.studios.simple_studio import SimpleStudio
 from firestudio.studios.composition import Composition
 
-## global variables
+### global variables
 prev_galaxy,next_galaxy = None,None
 merged_gas_df,merged_star_df = None,None
 

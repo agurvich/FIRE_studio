@@ -1,3 +1,4 @@
+import copy
 import numpy as np
 
 from abg_python.function_utils import CLI_args
@@ -11,17 +12,19 @@ from firestudio.studios.star_studio import StarStudio
 from firestudio.studios.FIRE_studio import FIREStudio
 from firestudio.studios.composition import Composition
 
+from firestudio.productions import mock_hubble,fire_3_color
+
 
 @CLI_args()
 def main(
     name='m12b_res7100',
     suite_name='metal_diffusion',
-    multi_threads=3,
+    multi_threads=10,
     take_avg_L=True,
     slice_index=None,
     nslices=None,
-    duration=90, # s
-    savefig='full_bursty'
+    duration=60, # s
+    savefig='space_telescope'
     ):
 
     galaxy = Galaxy(name,600)
@@ -40,75 +43,37 @@ def main(
 
     interp_handler = InterpolationHandler(
         duration,
-        galaxy.snap_gyrs[bursty_snap_index]-2,
-        galaxy.snap_gyrs[bursty_snap_index]+1,
-        camera_pos=[0,0,15],
+        galaxy.snap_gyrs[243]+1e-3,
+        galaxy.snap_gyrs[396]-1e-3,
+        camera_pos=[0,0,25],
         scale_line_length=5,
         snapshot_times=galaxy.snap_gyrs
         )
+
+    ## select the images we want to make from predefined "productions"
+    from firestudio.productions import mock_hubble,velocity_projection,fire_3_color,young_mock_hubble
+    productions = [fire_3_color,mock_hubble]#velocity_projection,mock_hubble,young_mock_hubble]
+
+    ## update the settings of the productions for our purposes here
+    for production in productions:
+        ## ensure we are doing a fresh projection every time (don't use the cache)
+        ##  in this script but make it available for future use if we change our mind
+        production.render_kwargs.update({'use_metadata':False,'save_meta':True})
+        ## indicate that we want each image to get its own frame output (not just be included in the composition)
+        production.studio_kwargs['savefig'] = f"{savefig}_{production.name}"
 
     figs = interp_handler.interpolateAndRender(
         {'name':galaxy.name,
         ##'ABG_force_multithread':60,
         'suite_name':suite_name,
         'take_avg_L':take_avg_L,
-        'keys_to_extract':['Metallicity','AgeGyr'],
         'final_orientation':True,
         'loud_metadata':False},
-        render_kwargss=[
-            ## flagship FIRE studio
-            {
-                'save_meta':True
-            },
-            ## gas map
-            {
-                'weight_name':'Masses',
-                'quantity_name':'Temperature',
-                'min_quantity':2,
-                'max_quantity':7,
-                'quantity_adjustment_function':np.log10,
-                'save_meta':True,
-                'use_metadata':False,
-                #'assert_cached':False,
-                #'min_weight':-0.5,
-                #'max_weight':3, 
-            },
-            ## hubble map
-            {
-                'quick':False,#'use_metadata':True,
-                'save_meta':True,#'assert_cached':False,
-                'use_metadata':False,
-            #'min_quantity':2,'max_quantity':7,
-            #'min_weight':-0.5,'max_weight':3 
-            },
-            ## young stars map
-            {
-                #'save_meta':False,#'assert_cached':False,
-                #'use_metadata':False,
-            }], ## msun/pc^2,
-        studio_kwargss=[
-            {
-                'savefig':'FIREmap'
-            },
-            {
-                'savefig':None
-            },
-            {
-                'maxden':2.2e8,
-                'dynrange':4.7e2,
-                'savefig':None,
-                #'no_dust':True,
-                #'age_max_gyr':25/1e3, ## 25 Myr
-            },
-            {
-                'savefig':'young_StarStudio',
-                'maxden':2.2e8,
-                'dynrange':4.7e2,
-                'no_dust':True,
-                'age_max_gyr':25/1e3, ## 25 Myr
-            }],
+         ## msun/pc^2,
+        render_kwargss=[production.render_kwargs for production in productions], 
+        studio_kwargss=[production.studio_kwargs for production in productions],
         multi_threads=multi_threads,
-        which_studios=[FIREStudio,GasStudio,StarStudio,StarStudio],
+        which_studios=[production.which_studio for production in productions],
         check_exists=True, ## skip rendering a frame if the png already exists
         timestamp=bursty_time,
         add_composition=savefig,  ## will add a composition frame of the requested Studios
