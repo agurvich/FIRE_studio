@@ -17,7 +17,7 @@ from firestudio.studios.FIRE_studio import FIREStudio
 from firestudio.studios.simple_studio import SimpleStudio
 from firestudio.studios.composition import Composition
 
-## global variables
+### global variables
 prev_galaxy,next_galaxy = None,None
 merged_gas_df,merged_star_df = None,None
 
@@ -328,7 +328,6 @@ def get_interpolated_snaps(
     ## make an interpolated snapshot with these galaxies,
     ##  this takes a while so we'll hold onto it and only 
     ##  make a new one if necessary.
-    #changed = True
     if pair[0] == pair[1]:
         interp_gas_snapdict = prev_galaxy.sub_snap if load_gas else {}
         interp_star_snapdict = prev_galaxy.sub_star_snap if load_star else {}
@@ -339,6 +338,15 @@ def get_interpolated_snaps(
                 #print("converting gas to DF")
                 prev_gas_df = convertToDF(prev_galaxy.sub_snap,keys_to_extract,polar)
                 next_gas_df = convertToDF(next_galaxy.sub_snap,keys_to_extract,polar)
+
+                ## debugging tool for trying to force consistent sets of particles
+                ##  across snapshot boundaries
+                #if merged_gas_df is not None and False:
+                    #print('previous filtering')
+                    #prev_snap = merged_gas_df.index[merged_gas_df.index.isin(prev_gas_df.index)]
+                    #prev_gas_df = prev_gas_df.loc[prev_snap]
+                    #prev_snap = merged_gas_df.index[merged_gas_df.index.isin(next_gas_df.index)]
+                    #next_gas_df = next_gas_df.loc[prev_snap]
             
             ## create the star dataframes if necessary
             if load_star:
@@ -366,21 +374,6 @@ def get_interpolated_snaps(
 
 
             if load_gas:
-                ## look for ancestor gas particles for those particles which split
-                """
-                merged_gas_df = search_multi_ids(
-                    merged_gas_df, ## df to search for ancestors
-                    merged_gas_df, ## df w/ targets
-                    forward=False) ## look in the past
-                    
-                if load_star:
-                    ## find final position that gas particles which turn into stars
-                    ##  should interpolate toward
-                    search_multi_ids(
-                        merged_star_df, ## df to use as lookup
-                        merged_gas_df, ## df w/ targets
-                        forward=True) ## look in the future
-                """
                 ## merge rows of dataframes based on particle ID
                 merged_gas_df = prev_gas_df.join(
                     next_gas_df,

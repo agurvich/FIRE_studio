@@ -61,9 +61,9 @@ class InterpolationHandler(BaseInterpolate):
             if keyframes: self.time_handler.keyframes = self.scene_handler.keyframes
             elif hasattr(self.time_handler,'keyframes'): del self.time_handler.keyframes
 
-            ndiff =  self.nframes - len(self.scene_handler.frame_kwargss)
-            scene_kwargs = self.scene_handler.frame_kwargss + [
-                copy.copy(self.scene_handler.frame_kwargss[-1]) 
+            ndiff =  self.nframes - len(self.scene_handler.scene_kwargss)
+            scene_kwargs = self.scene_handler.scene_kwargss + [
+                copy.copy(self.scene_handler.scene_kwargss[-1]) 
                 for i in range(ndiff)]
 
             ## merge dictionaries with priority such that
