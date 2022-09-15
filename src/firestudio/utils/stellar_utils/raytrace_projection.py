@@ -24,21 +24,22 @@ def stellar_raytrace(
     stellar_x,stellar_y,stellar_z, 
     stellar_hsml, 
     gas_x,gas_y,gas_z,
-    gas_mass,gas_metallicity,
+    gas_mass,gas_weight,
     gas_hsml, 
     kappa,lums,
     xlim=0,ylim=0,zlim=0,
-    pixels=720, 
+    pixels=720,
+    live_dust=False,
     QUIET=False):
     """
     routine to use 'raytrace_projection_compute' to make mock stellar images, 
     treating the starlight as sources and accounting for gas extinction via ray-tracing
     """
 
-    ## check if metallicity is a matrix
-    ##  i.e. mass fraction of many species. If so,
-    ##  take the total metallicity which should be the first column
-    if (len(gas_metallicity.shape)>1): gas_metallicity=gas_metallicity[:,0]
+    ## check if attenuation weight is a matrix
+    ##  i.e. metallicty/dust mass fraction of many species. If so,
+    ##  take the total metallicity/dust which should be the first column
+    if (len(gas_weight.shape)>1): gas_weight=gas_weight[:,0]
 
     ## count particles we're using
     Nstars = np.array(stellar_x).shape[0]
@@ -48,8 +49,12 @@ def stellar_raytrace(
     gas_lum = np.zeros(Ngas) ## gas has no 'source term' for this calculation
     stellar_mass_attenuation = np.zeros(Nstars) ## stars have no 'attenuation term'
 
-    ## convert from metal mass fraction in solar units to actual metal mass
-    gas_mass_metal = gas_mass * (gas_metallicity/0.02)
+    ## if 'live' dust, attenuation weight is dust-to-gas ratio (D/G)/dust mass fraction so scale by MW D/G
+    if live_dust:
+        gas_mass_attenuation = gas_mass * (gas_weight/0.0075)
+    ## if no 'live' dust, attenuation weight is metallicity so convert from metal mass fraction in solar units to actual metal mass
+    else:
+        gas_mass_attenuation = gas_mass * (gas_weight/0.02)
     
     ## combine the relevant arrays so it can all be fed into the ray-tracing
     ##  positions
@@ -58,7 +63,7 @@ def stellar_raytrace(
     z = np.concatenate([stellar_z,gas_z])
     
     ##  masses for attenuation purposes
-    mass = np.concatenate([stellar_mass_attenuation,gas_mass_metal])
+    mass = np.concatenate([stellar_mass_attenuation,gas_mass_attenuation])
     ##  smoothing lengths 
     hsml = np.concatenate([stellar_hsml,gas_hsml])
 
@@ -74,7 +79,7 @@ def stellar_raytrace(
         print("Projecting with attenuation...")
         print('total lum before attenuation in each band (Lsun/1e10):',np.sum(lums,axis=1))
         print('opacity in each band:',kappa)
-        print('total gas mass:',np.sum(gas_mass_metal))
+        print('total attentuation gas mass:',np.sum(gas_mass_attenuation))
 
     return raytrace_projection_compute(
         x,y,z,

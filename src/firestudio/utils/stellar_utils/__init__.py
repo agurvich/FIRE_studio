@@ -1,5 +1,5 @@
 ## unify namespace for convenience
-from .cross_section import opacity_per_solar_metallicity
+from .cross_section import opacity_per_solar_metallicity,opacity_given_dust
 from .colors_sps.read_band_lums_from_tables import read_band_lums_from_tables
 from .raytrace_projection import stellar_raytrace,raytrace_projection_compute
 from .make_threeband_image import make_threeband_image_process_bandmaps,layer_band_images
