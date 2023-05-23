@@ -395,14 +395,14 @@ class StarStudio(Studio):
         ##  file
 
         if 'SmoothingLength' in self.star_snapdict:
-            Hsml = self.star_snapdict['SmoothingLength'] 
+            Hsml = self.star_snapdict['SmoothingLength'][star_mask]
         else:
             if fixed_star_hsml is not None:
                 Hsml = np.repeat(fixed_star_hsml,star_pos.shape[0]) ## kpc
             else:
                 Hsml = self.get_HSML('star')
                 if Hsml.size != star_pos.shape[0]:
-                    Hsml = self.get_HSML('star',use_metadata=False,save_meta=True)
+                    Hsml = self.get_HSML('star',use_metadata=False,save_meta=True)[star_mask]
 
         ## attempt to pass these indices along
         h_star = Hsml.astype(np.float32)
@@ -434,7 +434,8 @@ class StarStudio(Studio):
         mgas = self.gas_snapdict['Masses'][gas_mask].astype(np.float32)
         if self.live_dust:
             print("Using live dust fields for Hubble image!")
-            if 'Flag_Dust' in self.gas_snapdict.keys():
+            # Need to keep the second check for older snapshots
+            if 'ISMDustChem_NumberOfSpecies' in self.gas_snapdict.keys() or 'Flag_Dust' in self.gas_snapdict.keys():
                 gas_weight = self.gas_snapdict['DustMetallicity']
                 # Assume all C depleted onto dust is only in carbonaceous dust and all other depleted elements are in silicate dust
                 # That way it doesn't matter if you use the dust by species or dust by element dust routines
@@ -478,8 +479,9 @@ class StarStudio(Studio):
         ##   mass and size. the default it to assume gadget units (M=10^10 M_sun, l=kpc)
         KAPPA_UNITS=2.08854068444 ## cm^2/g -> kpc^2/mcode
         if self.live_dust:
+            sc_ratio = np.median(sc_ratios[temperatures<1E4]) # only care about dust in dense/cool environments
             # Use the average silicate-to-carbonaceous dust ratio to automatically choose MW,LMC,or SMC-like dust for kappa
-            kappas = [KAPPA_UNITS*opacity_given_dust(nu_eff, sc_ratio=np.median(sc_ratios), force_dust_type=self.force_dust_type) for nu_eff in nu_effs]
+            kappas = [KAPPA_UNITS*opacity_given_dust(nu_eff, sc_ratio=sc_ratio, force_dust_type=self.force_dust_type) for nu_eff in nu_effs]
         else:
             kappas = [KAPPA_UNITS*opacity_per_solar_metallicity(nu_eff, force_dust_type=self.force_dust_type) for nu_eff in nu_effs]
 

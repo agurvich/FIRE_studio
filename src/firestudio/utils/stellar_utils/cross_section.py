@@ -104,7 +104,7 @@ def morrison_photoelec( frequency ):
 # Function to calculate the cross section per H atom at a given 
 #    frequency f (in Hz)
 #--------------------------------------------------------------------------
-def cross_section( f0, METALLICITY_OVER_SOLAR=1., dg_ratio:np.ndarray=None, sc_ratio:np.ndarray=None, force_dust_type:str=None):
+def cross_section( f0, METALLICITY_OVER_SOLAR=1., dg_ratio:np.ndarray=None, sc_ratio:float=None, force_dust_type:str=None):
     f0=np.array(f0);
     SIGMA = 0.0*np.array(f0);
 
