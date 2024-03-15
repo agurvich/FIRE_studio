@@ -14,6 +14,7 @@ from abg_python.galaxy.metadata_utils import metadata_cache
 from .studio import Studio
 
 from ..utils.stellar_utils import (
+    opacity_given_dust, ## calculate dust opacity using 'live' dust for arbitrary wavelengths
     opacity_per_solar_metallicity, ## calculate dust opacity for arbitrary wavelengths
     read_band_lums_from_tables, ## calculate luminosities in specific tabulated bands
     stellar_raytrace, ## project along the LoS and attenuate by obscuring dust column for 3 bands simultaneously
@@ -71,6 +72,9 @@ class StarStudio(Studio):
             of the image surface brightness, by default None
         nodust : bool
             flag for whether dust attenuantion should be ignored, by default False
+        live_dust : bool
+            flag for whether data includes 'live' dust to be used for dust attenuation. If not
+            then just assume a constant fraction of metals are in dust.
         age_max_gyr : float
             maximum age in Gyr to show stellar emission from. If None then emission from all star
             particles is considered, by default None
@@ -93,6 +97,8 @@ class StarStudio(Studio):
             'dynrange':None, ## controls the saturation of the image in a non-obvious way
             'color_scheme_nasa':True,
             'no_dust':False,
+            'live_dust': False, ## use 'live' dust from snapshot to determine dust attenuation
+            'force_dust_type': None, ## use to force dust type to SMC, LMC, or MW-type dust
             'age_max_gyr':None} ## flag to use nasa colors (vs. SDSS if false)
 
         for kwarg in list(kwargs.keys()):
@@ -128,6 +134,7 @@ class StarStudio(Studio):
         ## set any other image params here
         super().set_ImageParams(use_defaults=use_defaults,**kwargs)
         if self.no_dust: self.this_setup_id+='_no_dust'
+        if self.live_dust: self.this_setup_id+='_live_dust'
         if self.age_max_gyr is not None: self.this_setup_id+='_age_max%0.3f'%self.age_max_gyr
 
     append_function_docstring(set_ImageParams,Studio.set_ImageParams,prepend_string='passes `kwargs` to:\n')
@@ -140,6 +147,7 @@ class StarStudio(Studio):
             'dynrange' : 100.0, ## controls the saturation of the image in a non-obvious way
             'color_scheme_nasa' : True, ## flag to use nasa colors (vs. SDSS if false)
             'no_dust':False,
+            'live_dust':False, ## use 'live' dust from snapshot to determine dust attenuation
             'age_max_gyr':None} ## flag to use nasa colors (vs. SDSS if false)
 
         ## print the current value, not the default value
@@ -200,7 +208,7 @@ class StarStudio(Studio):
         # apply filters, rotations, unpack snapshot data, etc...
         (kappas, lums,
             star_pos, h_star,
-            gas_pos , mgas , gas_metals ,  h_gas) = self.prepareCoordinates(lums,nu_effs,BAND_IDS)
+            gas_pos , mgas , gas_weight , h_gas) = self.prepareCoordinates(lums,nu_effs,BAND_IDS)
 
         star_xs,star_ys,star_zs = star_pos.T
         gas_xs,gas_ys,gas_zs = gas_pos.T
@@ -214,10 +222,10 @@ class StarStudio(Studio):
 
         outs = np.zeros((3,xedges.size-1,yedges.size-1))
 
-        metal_mass_map,xedges,yedges = np.histogram2d(
+        weight_mass_map,xedges,yedges = np.histogram2d(
             gas_xs,gas_ys,
             bins=[xedges,yedges],
-            weights=mgas*gas_metals)
+            weights=mgas*gas_weight)
 
         for i,lum in enumerate(lums):
             outs[i],xedges,yedges = np.histogram2d(
@@ -225,11 +233,11 @@ class StarStudio(Studio):
                 bins=[xedges,yedges],
                 weights=lum)
         
-            outs[i]*=np.exp(-kappas[i]*metal_mass_map/dA*5)
+            outs[i]*=np.exp(-kappas[i]*weight_mass_map/dA*5)
 
         unit_factor = 1e10/self.Acell
 
-        return metal_mass_map*unit_factor,outs[0]*unit_factor,outs[1]*unit_factor,outs[2]*unit_factor
+        return weight_mass_map*unit_factor,outs[0]*unit_factor,outs[1]*unit_factor,outs[2]*unit_factor
 
     def get_mockHubbleImage(
         self,
@@ -290,16 +298,17 @@ class StarStudio(Studio):
             # apply filters, rotations, unpack snapshot data, etc...
             (kappas, lums,
                 star_pos, h_star,
-                gas_pos , mgas , gas_metals ,  h_gas) = self.prepareCoordinates(lums,nu_effs,BAND_IDS,fixed_star_hsml)
+                gas_pos , mgas , gas_weight ,  h_gas) = self.prepareCoordinates(lums,nu_effs,BAND_IDS,fixed_star_hsml)
 
             ## do the actual raytracing
             gas_out,out_u,out_g,out_r = raytrace_ugr_attenuation(
                 star_pos[:,0],star_pos[:,1],star_pos[:,2],
                 h_star,
                 gas_pos[:,0],gas_pos[:,1],gas_pos[:,2],
-                mgas,gas_metals,h_gas,
+                mgas,gas_weight,h_gas,
                 kappas,lums,
                 pixels=self.pixels,
+                live_dust=self.live_dust,
                 QUIET=not self.master_loud,
                 xlim = (self.Xmin, self.Xmax),
                 ylim = (self.Ymin, self.Ymax),
@@ -360,7 +369,7 @@ class StarStudio(Studio):
         np.ndarray(Ngas)
             mgas : mass data for attenuating gas in 10^10 Msun
         np.ndarray(Ngas)
-            gas_metals : total metal mass fraction for each gas particle
+            gas_weight : weights for attentuation, either total metal mass fraction or total dust mass fraction (if live dust) for each gas particle
         np.ndarray(Ngas)
             h_gas : smoothing length/radius for each gas particle in kpc
         """
@@ -386,17 +395,17 @@ class StarStudio(Studio):
         ##  file
 
         if 'SmoothingLength' in self.star_snapdict:
-            Hsml = self.star_snapdict['SmoothingLength'] 
+            Hsml = self.star_snapdict['SmoothingLength'][star_mask]
         else:
             if fixed_star_hsml is not None:
                 Hsml = np.repeat(fixed_star_hsml,star_pos.shape[0]) ## kpc
             else:
                 Hsml = self.get_HSML('star')
                 if Hsml.size != star_pos.shape[0]:
-                    Hsml = self.get_HSML('star',use_metadata=False,save_meta=True)
+                    Hsml = self.get_HSML('star',use_metadata=False,save_meta=True)[star_mask]
 
         ## attempt to pass these indices along
-        h_star = Hsml[star_mask].astype(np.float32)
+        h_star = Hsml.astype(np.float32)
 
         mstar = self.star_snapdict['Masses'][star_mask].astype(np.float32)
         metals = self.star_snapdict['Metallicity']
@@ -417,31 +426,36 @@ class StarStudio(Studio):
             lums=lums,
             QUIET=not self.master_loud)
 
-        ## calculate the kappa in this band using:
-        ##  Thompson scattering + 
-        ##  Pei (1992) + -- 304 < lambda[Angstroms] < 2e7
-        ##  Morrison & McCammon (1983) -- 1.2 < lambda[Angstroms] < 413
-        ## get opacities and luminosities at frequencies we need:
-
-        ## important to set KAPPA_UNITS appropriately: code loads opacity (kappa) for 
-        ##   the bands of interest in cgs (cm^2/g), must be converted to match units of input 
-        ##   mass and size. the default it to assume gadget units (M=10^10 M_sun, l=kpc)
-        KAPPA_UNITS=2.08854068444 ## cm^2/g -> kpc^2/mcode
-        kappas = [KAPPA_UNITS*opacity_per_solar_metallicity(nu_eff) for nu_eff in nu_effs]
-
         ## cull the particles outside the frame and cast to float32
         gas_pos,gas_mask = self.camera.project_and_clip(self.gas_snapdict['Coordinates'])
 
         if self.master_loud: print(np.sum(gas_mask),'many gas particles in volume')
 
         mgas = self.gas_snapdict['Masses'][gas_mask].astype(np.float32)
-        gas_metals = self.gas_snapdict['Metallicity']
-        if len(np.shape(gas_metals)) > 1: gas_metals = gas_metals[:,0]
-        gas_metals = gas_metals[gas_mask].astype(np.float32)
+        if self.live_dust:
+            print("Using live dust fields for Hubble image!")
+            # Need to keep the second check for older snapshots
+            if 'ISMDustChem_NumberOfSpecies' in self.gas_snapdict.keys() or 'Flag_Dust' in self.gas_snapdict.keys():
+                gas_weight = self.gas_snapdict['DustMetallicity']
+                # Assume all C depleted onto dust is only in carbonaceous dust and all other depleted elements are in silicate dust
+                # That way it doesn't matter if you use the dust by species or dust by element dust routines
+                sil_frac = np.sum(self.gas_snapdict['DustMetallicity'][:,3:11],axis=1)[gas_mask]
+                carb_frac = self.gas_snapdict['DustMetallicity'][:,2][gas_mask]
+                # Set sil-to-carb ratio to a arbitrarily large number when there is no carbonaceous dust
+                sc_ratios = np.where(carb_frac>0, sil_frac/carb_frac, 1E4)
+            else:
+                print("Wait, this snapshot doesn't have live dust! Will revert back to no live dust.")
+                self.live_dust = False
+                gas_weight = self.gas_snapdict['Metallicity']
+        else:
+            gas_weight = self.gas_snapdict['Metallicity']
+        if len(np.shape(gas_weight)) > 1: gas_weight = gas_weight[:,0]
+        gas_weight = gas_weight[gas_mask].astype(np.float32)
 
-        ## set metallicity of hot gas to 0 so there is no dust extinction
         temperatures = self.gas_snapdict['Temperature'][gas_mask]
-        gas_metals[temperatures>1e5] = 0
+        if not self.live_dust:
+            ## set metallicity of hot gas to 0 so there is no dust extinction
+            gas_weight[temperatures>1e5] = 0
 
         if "SmoothingLength" not in self.gas_snapdict:
             h_gas = self.get_HSML('gas')[gas_mask]
@@ -451,12 +465,29 @@ class StarStudio(Studio):
         if self.no_dust: 
             mgas = np.zeros(1)
             gas_pos = np.zeros((1,3))
-            gas_metals = np.zeros(1)
+            gas_weight = np.zeros(1)
             h_gas = np.array([1e-3])
+
+       ## calculate the kappa in this band using:
+        ##  Thompson scattering +
+        ##  Pei (1992) + -- 304 < lambda[Angstroms] < 2e7
+        ##  Morrison & McCammon (1983) -- 1.2 < lambda[Angstroms] < 413
+        ## get opacities and luminosities at frequencies we need:
+
+        ## important to set KAPPA_UNITS appropriately: code loads opacity (kappa) for
+        ##   the bands of interest in cgs (cm^2/g), must be converted to match units of input
+        ##   mass and size. the default it to assume gadget units (M=10^10 M_sun, l=kpc)
+        KAPPA_UNITS=2.08854068444 ## cm^2/g -> kpc^2/mcode
+        if self.live_dust:
+            sc_ratio = np.median(sc_ratios[temperatures<1E4]) # only care about dust in dense/cool environments
+            # Use the average silicate-to-carbonaceous dust ratio to automatically choose MW,LMC,or SMC-like dust for kappa
+            kappas = [KAPPA_UNITS*opacity_given_dust(nu_eff, sc_ratio=sc_ratio, force_dust_type=self.force_dust_type) for nu_eff in nu_effs]
+        else:
+            kappas = [KAPPA_UNITS*opacity_per_solar_metallicity(nu_eff, force_dust_type=self.force_dust_type) for nu_eff in nu_effs]
 
         return (kappas, lums,
                 star_pos, h_star,
-                gas_pos , mgas , gas_metals ,  h_gas)
+                gas_pos , mgas , gas_weight ,  h_gas)
 
 ####### produceImage implementation #######
     def produceImage(
@@ -714,11 +745,12 @@ def raytrace_ugr_attenuation(
     x,y,z,
     h_star, 
     gx,gy,gz,
-    mgas, gas_metals,
+    mgas, gas_weight,
     h_gas,
     kappas,lums,
     pixels = 1200,
     xlim = None, ylim = None, zlim = None,
+    live_dust=False,
     QUIET=False,
     ):
 
@@ -735,11 +767,12 @@ def raytrace_ugr_attenuation(
         x,y,z,
         h_star,
         gx,gy,gz,
-        mgas,gas_metals,
+        mgas,gas_weight,
         h_gas,
         kappas,lums,
         xlim=xlim,ylim=ylim,zlim=zlim,
         pixels=pixels,
+        live_dust=live_dust,
         QUIET=QUIET) 
 
 __doc__  = ''

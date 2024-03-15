@@ -13,3 +13,4 @@ src/firestudio/ntbks/.ipynb_checkpoints/*
 *.sh
 Untitled*ipynb
 *.DS_Store
+.idea/
