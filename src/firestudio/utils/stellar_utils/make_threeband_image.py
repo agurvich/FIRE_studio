@@ -3,7 +3,7 @@ import matplotlib
 
 def checklen(x): return np.array(x).shape[0]
 
-def int_round(x): return np.int(np.round(x))
+def int_round(x): return np.int64(np.round(x))
 
 def ok_scan(arr,xmax=1.0e10,pos=0):
     if (pos==0): return np.logical_and(
@@ -83,7 +83,7 @@ def make_threeband_image_process_bandmaps(
 
     f_saturated=0.0004  ## fraction of pixels that should be saturated
     f_saturated=0.0001  ## fraction of pixels that should be saturated
-    x0 = int_round( f_saturated * (np.float(checklen(r)) - 1.) )
+    x0 = int_round( f_saturated * (np.float64(checklen(r)) - 1.) )
 
     for rgb_v in [r,g,b]: 
         rgbm = single_vec_sorted(rgb_v,reverse=True)

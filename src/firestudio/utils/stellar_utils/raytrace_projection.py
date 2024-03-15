@@ -4,7 +4,7 @@ import ctypes
 
 def checklen(x): return np.array(x,ndmin=1).shape[0]
 
-def int_round(x): return np.int(np.round(x))
+def int_round(x): return np.int64(np.round(x))
 
 def ok_scan(arr,xmax=1.0e30,pos=0):
     if (pos==0): return np.logical_and(
@@ -125,7 +125,7 @@ def raytrace_projection_compute(
     ## determine shape of output
     aspect_ratio = ylen/xlen
     Xpixels = int_round(pixels)
-    Ypixels = int_round(aspect_ratio*np.float(Xpixels))
+    Ypixels = int_round(aspect_ratio*np.float32(Xpixels))
     N_pixels = Xpixels*Ypixels
 
     if (TRIM_PARTICLES==1): tolfac = 0.05

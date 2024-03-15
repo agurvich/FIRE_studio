@@ -24,7 +24,7 @@ def get_particle_hsml( x, y, z, DesNgb=32, Hmax=0.):
             np.max(y)-np.min(y),
             np.max(z)-np.min(z)]) 
 
-        Hmax=5.*max_dx*(np.float(num_points)**(-1./3.)) ## mean inter-particle spacing
+        Hmax=5.*max_dx*(np.float64(num_points)**(-1./3.)) ## mean inter-particle spacing
 
     ## load the routine we need
     ## find the path of the parent directory, removing any symbolic links for safety
