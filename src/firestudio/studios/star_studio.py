@@ -439,8 +439,8 @@ class StarStudio(Studio):
                 gas_weight = self.gas_snapdict['DustMetallicity']
                 # Assume all C depleted onto dust is only in carbonaceous dust and all other depleted elements are in silicate dust
                 # That way it doesn't matter if you use the dust by species or dust by element dust routines
-                sil_frac = np.sum(self.gas_snapdict['DustMetallicity'][:,3:11],axis=1)
-                carb_frac = self.gas_snapdict['DustMetallicity'][:,2]
+                sil_frac = np.sum(self.gas_snapdict['DustMetallicity'][:,3:11],axis=1)[gas_mask]
+                carb_frac = self.gas_snapdict['DustMetallicity'][:,2][gas_mask]
                 # Set sil-to-carb ratio to a arbitrarily large number when there is no carbonaceous dust
                 sc_ratios = np.where(carb_frac>0, sil_frac/carb_frac, 1E4)
             else:
@@ -452,9 +452,9 @@ class StarStudio(Studio):
         if len(np.shape(gas_weight)) > 1: gas_weight = gas_weight[:,0]
         gas_weight = gas_weight[gas_mask].astype(np.float32)
 
+        temperatures = self.gas_snapdict['Temperature'][gas_mask]
         if not self.live_dust:
             ## set metallicity of hot gas to 0 so there is no dust extinction
-            temperatures = self.gas_snapdict['Temperature'][gas_mask]
             gas_weight[temperatures>1e5] = 0
 
         if "SmoothingLength" not in self.gas_snapdict:
